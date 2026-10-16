@@ -201,6 +201,14 @@
             "level": 7,
             "minReliefMetres": 2000
           },
+          "finest": {
+            "$comment": "Lot 53, pas 3 : le Copernicus DEM GLO-30, tiré et réduit à 5″ par scripts/pull-glo30.mjs (.cache/glo30-5s/), recuit sur les MÊMES boîtes aux niveaux 8 et 9 (~4,9″ par échantillon au niveau 9). Mesuré le 2026-10-16 : 5″ perd 10 à 13 m RMS contre 1″, les ~20″ du niveau 7 en perdaient 47 à 62 ; le niveau 11 coûterait ~196 Go. La grille de GIBS ne le reçoit PAS : le moteur ne prend une tuile de hauteurs que de niveau inférieur ou égal à celui de l'imagerie (core/heightPyramid.ts), et l'imagerie de GIBS s'arrête au niveau 8, où le 15″ d'ETOPO est déjà à la finesse d'un échantillon.",
+            "cells": ".cache/glo30-5s",
+            "pixelsPerDegree": 720,
+            "noData": -32768,
+            "levels": [8, 9],
+            "productId": "Copernicus DEM GLO-30 (moyenne de surface à 5″)"
+          },
           "water": {
             "template": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Water_Mask/default/250m/{TileMatrix}/{TileRow}/{TileCol}.png",
             "level": 5,

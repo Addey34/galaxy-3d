@@ -1314,6 +1314,8 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     };
 
     let fineTiles = 0;
+    let finestSamples = 0;
+    let finestFallback = 0;
     for (const box of boxes) {
       const b = box.bounds;
       // Fenêtre d'échantillons de 15″ couvrant la boîte, avec une marge d'un échantillon pour
@@ -1402,13 +1404,152 @@ async function bakeSet(set, { cacheDir, dryRun }) {
         );
         fineTiles += 1;
       }
+      // LE RELIEF À 5″ (lot 53, pas 3) : la même boîte, recuite aux niveaux plus fins depuis le
+      // Copernicus DEM GLO-30, tiré et réduit à 5″ par `scripts/pull-glo30.mjs`. Même masque
+      // d'eau et même géoïde que l'étape à 15″ (GLO-30 est en altitudes EGM2008, comme le
+      // géoïde d'ETOPO) ; un degré absent de GLO-30 (la mer) ou pas encore tiré retombe sur la
+      // valeur ETOPO de la même formule, et le compte en est publié.
+      let finestLevels = [];
+      const finest = set.base.geotiff?.finest;
+      if (finest) {
+        const fppd = finest.pixelsPerDegree;
+        const fWest = Math.floor(b.west * fppd - 1) / fppd;
+        const fNorth = Math.ceil(b.north * fppd + 1) / fppd;
+        const fColumns = Math.round((b.east - b.west) * fppd) + 2;
+        const fRows = Math.round((b.north - b.south) * fppd) + 2;
+        const fValues = new Float32Array(fColumns * fRows);
+        const cells = new Map();
+        const cellAt = (south, westDeg) => {
+          const key = `${south},${westDeg}`;
+          if (!cells.has(key)) {
+            const name =
+              `${south >= 0 ? 'N' : 'S'}${String(Math.abs(south)).padStart(2, '0')}` +
+              `${westDeg >= 0 ? 'E' : 'W'}${String(Math.abs(westDeg)).padStart(3, '0')}`;
+            const path = join(ROOT, finest.cells, `${name}.i16`);
+            if (existsSync(path)) {
+              const raw = readFileSync(path);
+              cells.set(
+                key,
+                new Int16Array(raw.buffer, raw.byteOffset, raw.length / 2)
+              );
+            } else cells.set(key, null);
+          }
+          return cells.get(key);
+        };
+        for (let j = 0; j < fRows; j += 1) {
+          const latitude = Math.max(
+            -89.999,
+            Math.min(89.999, fNorth - (j + 0.5) / fppd)
+          );
+          for (let i = 0; i < fColumns; i += 1) {
+            let longitude = fWest + (i + 0.5) / fppd;
+            if (longitude >= 180) longitude -= 360;
+            if (longitude < -180) longitude += 360;
+            const maskRow = Math.min(
+              ctx.maskHeight - 1,
+              Math.floor((90 - latitude) * ctx.maskPixelsPerDegree)
+            );
+            const maskColumn = Math.min(
+              ctx.maskWidth - 1,
+              Math.floor((longitude + 180) * ctx.maskPixelsPerDegree)
+            );
+            if (ctx.waterMask[maskRow * ctx.maskWidth + maskColumn]) {
+              fValues[j * fColumns + i] = baseDem.elevationAt(
+                latitude,
+                longitude
+              );
+              continue;
+            }
+            const tileNorth = Math.floor(latitude / 15) * 15 + 15;
+            const tileWest = Math.floor(longitude / 15) * 15;
+            const src = loaded.get(sourceName(tileNorth, tileWest));
+            if (!src)
+              throw new Error(
+                `source ${sourceName(tileNorth, tileWest)} non chargée pour la boîte`
+              );
+            const x = Math.min(
+              15 * ppd - 1,
+              Math.floor((longitude - tileWest) * ppd)
+            );
+            const y = Math.min(
+              15 * ppd - 1,
+              Math.floor((tileNorth - latitude) * ppd)
+            );
+            const at = y * 15 * ppd + x;
+            const ellipsoidM =
+              (renderRadiusAt(ctx.figure, latitude, longitude) - ctx.datumKm) *
+              1000;
+            const cellSouth = Math.floor(latitude);
+            const cellWest = Math.floor(longitude);
+            const cell = cellAt(cellSouth, cellWest);
+            let orthometric = src.surface[at];
+            if (cell) {
+              const row = Math.min(
+                fppd - 1,
+                Math.floor((cellSouth + 1 - latitude) * fppd)
+              );
+              const column = Math.min(
+                fppd - 1,
+                Math.floor((longitude - cellWest) * fppd)
+              );
+              const v = cell[row * fppd + column];
+              if (v !== finest.noData) {
+                orthometric = v;
+                finestSamples += 1;
+              } else finestFallback += 1;
+            } else finestFallback += 1;
+            fValues[j * fColumns + i] =
+              ellipsoidM + src.geoid[at] + orthometric;
+          }
+        }
+        const fDem = new DemGrid(
+          {
+            productId: finest.productId,
+            pixelsPerDegree: fppd,
+            westDeg: fWest,
+            eastDeg: fWest + fColumns / fppd,
+            northDeg: fNorth,
+            southDeg: fNorth - fRows / fppd,
+            lines: fRows,
+            lineSamples: fColumns,
+            quantumMetres: 1,
+            radiusKm: ctx.datumKm,
+          },
+          fValues
+        );
+        for (const level of finest.levels)
+          for (const tile of tilesForBox(grid, level, b)) {
+            emit(
+              tile.level,
+              tile.row,
+              tile.column,
+              bakeTile(
+                fDem,
+                grid,
+                tile.level,
+                tile.row,
+                tile.column,
+                quantum,
+                poles
+              )
+            );
+            fineTiles += 1;
+          }
+        finestLevels = finest.levels;
+      }
       coverage.push({
         level: fine.level,
-        levels: [fine.level],
+        levels: [fine.level, ...finestLevels],
         bounds: b,
         reliefMetres: Math.round(box.relief),
         sourcePixelsPerDegree: ppd,
         sourceProductId: 'ETOPO_2022_v1_15s (surface + géoïde)',
+        ...(finestLevels.length > 0
+          ? {
+              finestPixelsPerDegree: set.base.geotiff.finest.pixelsPerDegree,
+              finestProductId: set.base.geotiff.finest.productId,
+            }
+          : {}),
       });
       // Au-delà de huit paires gardées (≈ 100 Mo chacune), on libère celles que cette boîte n'a pas
       // lues : les boîtes voisines, cuites ensuite, sont les plus susceptibles de les reprendre.
@@ -1419,6 +1560,11 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     console.log(
       `ETOPO 15″ : ${fineTiles} tuiles, ${sources.size} sources encore en mémoire`
     );
+    if (set.base.geotiff?.finest)
+      console.log(
+        `GLO-30 5″ : ${finestSamples} échantillons de terre lus, ${finestFallback} retombés sur ETOPO ` +
+          `(${((100 * finestFallback) / Math.max(1, finestSamples + finestFallback)).toFixed(2)} %)`
+      );
   }
 
   // Aires nommées.

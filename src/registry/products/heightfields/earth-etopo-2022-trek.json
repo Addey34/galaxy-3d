@@ -3,7 +3,7 @@
   "id": "earth-etopo-2022-trek",
   "type": "heightfield",
   "body": "earth",
-  "title": "ETOPO 2022 Global Relief Model, ice surface (60 arc-second, 15 arc-second over the strongest relief), with its EGM2008 geoid heights, on the EOX Sentinel-2 imagery grid",
+  "title": "ETOPO 2022 Global Relief Model, ice surface (60 arc-second, 15 arc-second over the strongest relief), with its EGM2008 geoid heights, and the Copernicus DEM GLO-30 (5 arc-second area mean) at the finest levels over the same relief, on the EOX Sentinel-2 imagery grid",
   "mission": "ETOPO 2022",
   "instrument": "Global relief compilation (topography and bathymetry)",
   "manifest": "assets/height-tiles/earth-trek/manifest.json",
@@ -12,7 +12,7 @@
     "interval": [["1998-01-01T00:00:00Z", "2022-09-01T23:59:59Z"]]
   },
   "license": "other",
-  "rights": "public-domain",
+  "rights": "notice",
   "links": [
     {
       "rel": "license",
@@ -29,6 +29,14 @@
     {
       "rel": "via",
       "href": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/"
+    },
+    {
+      "rel": "license",
+      "href": "https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM"
+    },
+    {
+      "rel": "via",
+      "href": "https://copernicus-dem-30m.s3.amazonaws.com/"
     }
   ],
   "providers": [
@@ -38,10 +46,15 @@
       "url": "https://www.ncei.noaa.gov/products/etopo-global-relief-model"
     },
     {
+      "name": "Copernicus DEM GLO-30, produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved",
+      "roles": ["producer"],
+      "url": "https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM"
+    },
+    {
       "name": "Water mask: NASA GIBS (MODIS/SRTM)",
       "roles": ["processor"],
       "url": "https://gibs.earthdata.nasa.gov/"
     }
   ],
-  "verified": "2026-10-12"
+  "verified": "2026-10-16"
 }

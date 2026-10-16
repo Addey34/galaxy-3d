@@ -432,7 +432,12 @@ const heightfieldSet = z
       })
       .strict(),
     license: spdxOrOther,
-    rights: z.enum(['public-domain']).optional(),
+    /**
+     * Pourquoi `other` : domaine public, ou licence libre qui exige une MENTION (`notice`, le
+     * Copernicus DEM GLO-30, lot 53). Une mention exigée est portée par un fournisseur dont le
+     * nom la contient mot pour mot, parce que c'est le nom des fournisseurs que le badge affiche.
+     */
+    rights: z.enum(['public-domain', 'notice']).optional(),
     links: z.array(link).min(1),
     providers: z.array(provider).min(1),
     /** Date à laquelle la fiche a été confrontée à la source (étiquette, emprise, quantum). */
@@ -450,6 +455,15 @@ const heightfieldSet = z
         ctx.addIssue({
           code: 'custom',
           message: '« other » exige un lien rel=license',
+        });
+      if (
+        product.rights === 'notice' &&
+        !product.providers.some((p) => /all rights reserved/.test(p.name))
+      )
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            '« notice » exige un fournisseur dont le nom porte la mention exigée, affichée par le badge',
         });
     }
     // L'étiquette PDS lue par le cuiseur est le document qui porte le quantum et l'emprise :
