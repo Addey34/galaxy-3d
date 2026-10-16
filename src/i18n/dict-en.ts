@@ -401,6 +401,7 @@ export const en = {
   'weather.precipModel': 'Rain (model)',
   'weather.wind': 'Wind (model)',
   'weather.thermal': 'Air temperature (MERRA-2)',
+  'weather.seaTemperature': 'Sea surface temperature (GHRSST)',
   'weather.thermalModel': 'Air temperature (model)',
   'weather.clouds.note':
     "Real cloud cover from NASA satellite imagery (day's snapshot).",
@@ -448,6 +449,7 @@ export const en = {
   // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
   'time.category.live': 'live',
   'time.category.observed': 'observed',
+  'time.category.analysed': 'analysed (interpolated measurements)',
   'time.category.reported': 'reported',
   'time.category.reconstructed': 'reconstructed (model)',
   'time.category.predicted': 'predicted',
@@ -469,6 +471,8 @@ export const en = {
   'weather.wind.note':
     'Modelled wind 10 m above the ground: colour and motion follow its speed, and calm air shows little flow.',
   'weather.thermal.note': 'Air temperature near the surface (MERRA-2 monthly):',
+  'weather.seaTemperature.note':
+    'Sea surface temperature (GHRSST MUR daily analysis, built from several satellites):',
 
   // ── Divers ──
   'fullscreen.title': 'Fullscreen',

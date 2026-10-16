@@ -6,6 +6,7 @@ import {
   overlayLabelBounds,
 } from '@/core/labelSpace';
 import type { LabelSpace } from '@/core/labelSpace';
+import type { ScreenOcclusion } from '@/core/screenOcclusion';
 import {
   featuresToLabel,
   iauLongitudeToSceneLongitude,
@@ -143,7 +144,14 @@ export class GazetteerOverlay {
     camera: THREE.PerspectiveCamera,
     target: CelestialObject | undefined,
     targetName: string | null,
-    space: LabelSpace | null
+    space: LabelSpace | null,
+    /**
+     * Les AUTRES corps entre la caméra et un nom le cachent (lot 53) : la Lune devant la Terre
+     * laissait écrire « Rio de Janeiro » par-dessus elle. Même occultation que les autres
+     * couches 2D (`core/screenOcclusion.ts`, ligne 45.8), la cible exclue : sa propre face
+     * cachée est déjà écartée plus bas.
+     */
+    occlusion: ScreenOcclusion | null = null
   ): void {
     this.lastDrawn = 0;
     // Le compte PUBLIÉ se remet à zéro AVANT les sorties anticipées, pas seulement à la fin :
@@ -207,6 +215,15 @@ export class GazetteerOverlay {
       this._normal.subVectors(this._point, this._centre).normalize();
       this._toCamera.subVectors(this._camera, this._point).normalize();
       if (this._normal.dot(this._toCamera) <= 0) continue;
+      if (
+        occlusion?.hides(
+          this._point.x,
+          this._point.y,
+          this._point.z,
+          targetName
+        )
+      )
+        continue;
 
       this._point.project(camera);
       if (

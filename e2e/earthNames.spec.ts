@@ -59,3 +59,20 @@ test('écrit les noms de la Terre à l’approche, dans la langue de l’interfa
   expect(drawn).toMatch(/océan /);
   expect(drawn).not.toMatch(/ Ocean\b/);
 });
+
+test('un nom caché par un autre corps n’est pas écrit', async ({ page }) => {
+  // Au 2026-08-10 à midi, la visite de la Terre place la Lune devant l'Amérique du Sud (capture
+  // lue le 2026-10-16) : « Rio de Janeiro » s'écrivait par-dessus la Lune.
+  await boot(page, '?body=earth&date=2026-08-10T12:00:00Z', 'fr');
+  const overlay = page.locator('#gazetteer-overlay');
+  await expect
+    .poll(
+      async () => Number((await overlay.getAttribute('data-names')) ?? '0'),
+      { timeout: 30_000 }
+    )
+    .toBeGreaterThan(0);
+  const drawn = ((await overlay.getAttribute('data-drawn')) ?? '').split('|');
+  // LE TÉMOIN : un nom de la face visible, hors de la Lune, est bien écrit.
+  expect(drawn).toContain('New York');
+  expect(drawn).not.toContain('Rio de Janeiro');
+});

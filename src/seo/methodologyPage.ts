@@ -1678,6 +1678,13 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       'pt-BR':
         'uma medição de um instante passado, como uma imagem de satélite daquele dia.',
     },
+    analysed: {
+      en: 'a field built from measurements of several satellites, with the gaps between their passes filled by statistical interpolation and not by a physical model, such as the GHRSST MUR sea surface temperature. Between two passes the value is estimated, so it is neither a measurement nor a model.',
+      fr: 'un champ construit à partir des mesures de plusieurs satellites, les lacunes entre leurs passages comblées par une interpolation statistique et non par un modèle physique, par exemple la température de surface de la mer GHRSST MUR. Entre deux passages la valeur est estimée : ce n’est donc ni une mesure ni un modèle.',
+      es: 'un campo construido a partir de las mediciones de varios satélites, con los huecos entre sus pasos rellenados por interpolación estadística y no por un modelo físico, como la temperatura de la superficie del mar GHRSST MUR. Entre dos pasos el valor es estimado: no es ni una medición ni un modelo.',
+      'pt-BR':
+        'um campo construído a partir das medições de vários satélites, com as lacunas entre as suas passagens preenchidas por interpolação estatística e não por um modelo físico, como a temperatura da superfície do mar GHRSST MUR. Entre duas passagens o valor é estimado: não é nem uma medição nem um modelo.',
+    },
     reported: {
       en: 'an event a third party reported and another party gathered, such as a wildfire or a storm listed by NASA EONET. It is neither a measurement nor a model, and EONET itself asks that its extents not be taken as official. An event with no declared end is shown as ongoing rather than given an invented end date.',
       fr: 'un événement rapporté par un tiers et agrégé par un autre, par exemple un incendie ou une tempête listés par NASA EONET. Ce n’est ni une mesure ni un modèle, et EONET demande lui-même que ses emprises ne soient pas tenues pour officielles. Un événement sans fin déclarée est affiché « en cours » plutôt que doté d’une date de fin inventée.',

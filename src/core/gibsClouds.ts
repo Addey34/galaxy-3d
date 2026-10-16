@@ -64,6 +64,17 @@ export const GIBS_LST_LAYER = 'MERRA2_2m_Air_Temperature_Monthly';
 export const GIBS_LST_MIN_DATE = '1980-01-01';
 
 /**
+ * TEMPÉRATURE DE SURFACE DE LA MER, GHRSST MUR de niveau 4 (lot 53) : une analyse quotidienne à
+ * 1 km, sans lacune, construite à partir de plusieurs satellites. La terre y est TRANSPARENTE
+ * (mesuré sur deux tuiles le 2026-10-16), donc la couche ne peint que l'océan. Même service WMS que
+ * les nuages ; barème en °C rendu par nous (`core/gibsLegend.ts`).
+ */
+export const GIBS_SST_LAYER = 'GHRSST_L4_MUR_Sea_Surface_Temperature';
+
+/** Premier jour publié par GIBS, lu dans ses capacités WMTS le 2026-10-16. */
+export const GIBS_SST_MIN_DATE = '2002-06-01';
+
+/**
  * Première date où la couche VIIRS SNPP est disponible sur GIBS (~fin 2015). Avant
  * cette borne, aucune image → l'appelant garde le fallback statique.
  */

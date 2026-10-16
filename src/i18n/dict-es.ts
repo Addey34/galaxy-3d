@@ -389,6 +389,7 @@ export const es: Record<MessageKey, string> = {
   'weather.precipModel': 'Lluvia (modelo)',
   'weather.wind': 'Viento (modelo)',
   'weather.thermal': 'Temperatura del aire (MERRA-2)',
+  'weather.seaTemperature': 'Temperatura del mar (GHRSST)',
   'weather.thermalModel': 'Temperatura del aire (modelo)',
   'weather.clouds.note':
     'Cobertura nubosa real, imagen de satélite de la NASA (imagen del día).',
@@ -436,6 +437,7 @@ export const es: Record<MessageKey, string> = {
   // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
   'time.category.live': 'en directo',
   'time.category.observed': 'observado',
+  'time.category.analysed': 'analizado (mediciones interpoladas)',
   'time.category.reported': 'comunicado',
   'time.category.reconstructed': 'reconstruido (modelo)',
   'time.category.predicted': 'previsto',
@@ -458,6 +460,8 @@ export const es: Record<MessageKey, string> = {
     'Viento modelado a 10 m del suelo: el color y el movimiento siguen su velocidad, y el aire en calma muestra poco flujo.',
   'weather.thermal.note':
     'Temperatura del aire cerca del suelo (MERRA-2 mensual):',
+  'weather.seaTemperature.note':
+    'Temperatura de la superficie del mar (análisis diario GHRSST MUR, construido a partir de varios satélites):',
 
   // ── Divers ──
   'fullscreen.title': 'Pantalla completa',

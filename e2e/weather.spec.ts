@@ -51,8 +51,8 @@ test('desktop weather defaults are explicit and satellite-first', async ({
 }) => {
   await openWeatherPanel(page);
 
-  // Neuf depuis le 2026-10-12 : le vent, rallumé sur le service de données (lot 46).
-  await expect(page.locator('#weather-layers .wl-item')).toHaveCount(9);
+  // Dix depuis le 2026-10-16 : la température de la mer (lot 53) ; neuf depuis le 2026-10-12.
+  await expect(page.locator('#weather-layers .wl-item')).toHaveCount(10);
   await expect(
     weatherRow(page, 'Wind (model)').locator('input')
   ).not.toBeChecked();
@@ -73,6 +73,9 @@ test('desktop weather defaults are explicit and satellite-first', async ({
   ).not.toBeChecked();
   await expect(
     weatherRow(page, 'Air temperature (model)').locator('input')
+  ).not.toBeChecked();
+  await expect(
+    weatherRow(page, 'Sea surface temperature (GHRSST)').locator('input')
   ).not.toBeChecked();
   await expect(
     weatherRow(page, 'Sea-level pressure (model)').locator('input')
@@ -210,8 +213,8 @@ test.describe('mobile weather defaults', () => {
   }) => {
     await openWeatherPanel(page);
 
-    // Neuf depuis le 2026-10-12 : le vent, rallumé sur le service de données (lot 46).
-    await expect(page.locator('#weather-layers .wl-item')).toHaveCount(9);
+    // Dix depuis le 2026-10-16 : la température de la mer (lot 53) ; neuf depuis le 2026-10-12.
+    await expect(page.locator('#weather-layers .wl-item')).toHaveCount(10);
     await expect(
       weatherRow(page, 'Wind (model)').locator('input')
     ).not.toBeChecked();

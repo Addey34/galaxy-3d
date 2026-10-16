@@ -14,7 +14,7 @@
  *
  * Module PUR : ni DOM, ni réseau.
  */
-import colormap from '@/config/gibsColormap.json';
+import colormaps from '@/config/gibsColormap.json';
 
 export interface GibsColormap {
   layer: string;
@@ -26,7 +26,27 @@ export interface GibsColormap {
   stops: { offset: number; rgb: number[] }[];
 }
 
-export const GIBS_COLORMAP = colormap as GibsColormap;
+/**
+ * Les couches GIBS dont la légende est rendue par nous, seule liste du dépôt : l'outil
+ * `scripts/import-gibs-colormap.mjs` la LIT ici (d'où sa forme littérale), et la garde exige que
+ * le fichier livré porte exactement ces barèmes.
+ */
+export const GIBS_LEGEND_LAYERS = [
+  'MERRA2_2m_Air_Temperature_Monthly',
+  'GHRSST_L4_MUR_Sea_Surface_Temperature',
+] as const;
+
+export type GibsLegendLayer = (typeof GIBS_LEGEND_LAYERS)[number];
+
+/** Le barème d'une couche de la liste. */
+export function gibsColormap(layer: GibsLegendLayer): GibsColormap {
+  const map = (colormaps as Record<string, GibsColormap>)[layer];
+  if (!map) throw new Error(`barème GIBS absent : ${layer}`);
+  return map;
+}
+
+/** Le barème de la température de l'air (MERRA-2), la première couche à en avoir eu un. */
+export const GIBS_COLORMAP = gibsColormap('MERRA2_2m_Air_Temperature_Monthly');
 
 /** Zéro absolu en degrés Celsius : la conversion kelvin → °C, et rien d'autre. */
 const KELVIN_OFFSET = 273.15;
@@ -51,10 +71,18 @@ export function colormapBoundsC(map: GibsColormap = GIBS_COLORMAP): {
   lo: string;
   hi: string;
 } {
-  if (map.units !== 'K')
-    throw new Error(`barème GIBS en ${map.units}, attendu en kelvins`);
-  const label = (kelvin: number): string => {
-    const celsius = Math.round(kelvin - KELVIN_OFFSET);
+  // Le barème DIT son unité : la température de l'air en kelvins, celle de la mer en degrés
+  // Celsius. Toute autre unité est refusée plutôt que lue comme l'une des deux.
+  const toCelsius =
+    map.units === 'K'
+      ? (v: number): number => v - KELVIN_OFFSET
+      : map.units === '°C'
+        ? (v: number): number => v
+        : null;
+  if (!toCelsius)
+    throw new Error(`barème GIBS en ${map.units}, attendu en kelvins ou en °C`);
+  const label = (value: number): string => {
+    const celsius = Math.round(toCelsius(value));
     return `${celsius < 0 ? '−' : '+'}${Math.abs(celsius)} °C`;
   };
   return { lo: label(map.min), hi: label(map.max) };

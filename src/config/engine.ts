@@ -632,6 +632,21 @@ export const THERMAL_SETTINGS = {
   visibleByDefault: false,
 };
 
+// Couche TEMPÉRATURE DE SURFACE DE LA MER (lot 53) : GHRSST MUR de niveau 4, quotidienne depuis
+// 2002, sur le mesh `thermal` (groupe exclusif des températures). Valeurs mesurées le 2026-10-16 :
+// l'image entière pèse 776 610 o à 2048 px (~20 km par pixel ; 2 423 908 o à 4096), et un jour
+// pas encore publié rend une image VIDE de 8 221 o en HTTP 200, d'où le seuil.
+export const SEA_SURFACE_TEMPERATURE_SETTINGS = {
+  enabled: true,
+  resolution: 2048,
+  // L'analyse du jour J paraît vers J+1 ou J+2 : capacités lues le 2026-10-16, dernier jour 14.
+  latencyDays: 2,
+  stepBackDays: 3,
+  minTileBytes: 50_000,
+  opacity: 0.8,
+  visibleByDefault: false,
+};
+
 // Couche VENT : particules advectées par le champ de vent réel (Open-Meteo, prévision ou archive
 // ERA5 selon la date). Voir core/windField.ts, components/celestial/WindParticles.ts,
 // ui/windLayer.ts. Désactivée du 2026-08-19 au 2026-10-12 (« rendu peu lisible en particules

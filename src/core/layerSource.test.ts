@@ -5,6 +5,7 @@ import {
   resolveCloudFractionNightSource,
   resolvePrecipSources,
   resolveThermalSources,
+  resolveSeaSurfaceTemperatureSources,
 } from './layerSource';
 
 const NOW = new Date('2026-08-13T12:00:00Z');
@@ -148,5 +149,47 @@ describe('resolveThermalSources', () => {
     expect(c[1].realDate).toBe('2026-06-01'); // recule bien
     expect(c[2].realDate).toBe('2026-05-01');
     expect(c[1].approx).toBe(true);
+  });
+});
+
+describe('resolveSeaSurfaceTemperatureSources (lot 53)', () => {
+  it('le jour de la scène, puis les jours d’avant, en analyse sur la journée', () => {
+    const c = resolveSeaSurfaceTemperatureSources(
+      new Date('2010-03-05T15:00:00Z'),
+      NOW
+    );
+    expect(c.map((x) => x.realDate)).toEqual([
+      '2010-03-05',
+      '2010-03-04',
+      '2010-03-03',
+      '2010-03-02',
+    ]);
+    expect(c[0]!.approx).toBe(false);
+    expect(c[1]!.approx).toBe(true);
+    // Une analyse de niveau 4 n'est PAS une mesure : elle se lit « reconstruite ».
+    expect(c[0]!.product?.kind).toBe('analysis');
+    expect(c[0]!.url).toContain('LAYERS=GHRSST_L4_MUR_Sea_Surface_Temperature');
+    expect(c[0]!.url).toContain('FORMAT=image%2Fpng');
+  });
+
+  it('une scène future prend la dernière analyse publiée, jamais un jour à venir', () => {
+    const c = resolveSeaSurfaceTemperatureSources(
+      new Date('2099-01-01T00:00:00Z'),
+      NOW
+    );
+    const latest = new Date(NOW);
+    latest.setUTCDate(latest.getUTCDate() - 2);
+    expect(c[0]!.realDate).toBe(latest.toISOString().slice(0, 10));
+  });
+
+  it('rien avant le premier jour publié, et le recul s’arrête à cette borne', () => {
+    expect(
+      resolveSeaSurfaceTemperatureSources(new Date('2002-05-31T12:00:00Z'), NOW)
+    ).toEqual([]);
+    const c = resolveSeaSurfaceTemperatureSources(
+      new Date('2002-06-02T12:00:00Z'),
+      NOW
+    );
+    expect(c.map((x) => x.realDate)).toEqual(['2002-06-02', '2002-06-01']);
   });
 });

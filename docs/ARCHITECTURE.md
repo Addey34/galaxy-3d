@@ -4536,13 +4536,21 @@ MERRA-2, un instant pour une position), `observationTime` / `publicationTime` (q
 n'en dépend), et `now`, l'instant RÉEL, seul à séparer ce qui a pu être observé de ce qui ne peut
 être que prédit.
 
-**La source déclare une NATURE** (`ProductKind` : `measurement`, `reanalysis`, `forecastModel`,
-`ephemeris`) et `classifyTemporal` en tire une catégorie : `live`, `observed`, `reconstructed`,
-`predicted`, `extrapolated`, `unavailable`. La règle, dans cet ordre : hors de la fenêtre où
-l'écart de la source a été MESURÉ → `extrapolated` ; scène et donnée au présent, si la source
-l'autorise (`liveToleranceMs`) → `live` ; intervalle commençant avant `now` → `observed` pour une
-mesure, `reconstructed` pour un modèle ; sinon `predicted`, en confiance réduite au-delà de
-`reliableHorizonMs`.
+**La source déclare une NATURE** (`ProductKind` : `measurement`, `reanalysis`, `analysis`,
+`forecastModel`, `ephemeris`, `report`) et `classifyTemporal` en tire une catégorie : `live`,
+`observed`, `analysed`, `reported`, `reconstructed`, `predicted`, `extrapolated`, `unavailable`. La
+règle, dans cet ordre : hors de la fenêtre où l'écart de la source a été MESURÉ → `extrapolated` ;
+scène et donnée au présent, si la source l'autorise (`liveToleranceMs`) → `live` ; intervalle
+commençant avant `now` → `observed` pour une mesure, `reported` pour un événement rapporté,
+`analysed` pour une analyse, `reconstructed` pour un modèle ; sinon `predicted`, en confiance
+réduite au-delà de `reliableHorizonMs`. (Ce paragraphe ne nommait ni `report` ni `reported`
+jusqu'au 2026-10-16, alors que le code les portait depuis EONET.)
+
+**`analysis`, ajoutée au lot 53** : un champ SANS LACUNE construit à partir de mesures de
+plusieurs capteurs par interpolation statistique, sans modèle physique (une « analyse de niveau
+4 », GHRSST MUR). Ni une mesure (entre deux passages, la valeur est estimée), ni un modèle : la
+catégorie visible « analysé (mesures interpolées) » le dit, et `/methodology` la décrit avec les
+autres, depuis `TEMPORAL_CATEGORIES`.
 
 **Catégorie et exactitude sont deux axes.** Une éphéméride de Jupiter en 2050 et une prévision
 météo à 12 jours sont toutes deux « prédites » et n'ont rien de commun : l'écart mesuré s'affiche
@@ -5099,6 +5107,10 @@ Wikidata (CC0).
   la LANGUE de l'interface ; le portugais du Brésil lit le portugais de Wikidata (`pt`), la source
   n'ayant pas de variante brésilienne. Le canevas publie `data-drawn`, les noms écrits, parce
   qu'un canevas ne se lit pas et que la langue d'un nom doit se vérifier.
+- **Un nom caché par un autre corps n'est pas écrit** (2026-10-16, pour tous les corps) : la Lune
+  devant la Terre laissait écrire « Rio de Janeiro » par-dessus elle (capture lue). La couche
+  reçoit l'occultation des autres couches 2D (`core/screenOcclusion.ts`, ligne 45.8), la cible
+  exclue ; garde dans `e2e/earthNames.spec.ts`, falsifiée.
 
 Gardes : `src/core/earthNames.test.ts` (conversion, règle, langue), `src/config/earthNames.test.ts`
 (fichier contre index, témoins Everest, Méditerranée, Himalaya, licence) et `e2e/earthNames.spec.ts`
@@ -6649,3 +6661,30 @@ fragment au lieu de quatre.
 Ce qui rouvrirait la question : une source de nuages plus fine (les tuiles VIIRS à 250 m du fond
 « jour de la scène » en sont une, mais les nuages y sont déjà dans le sol), qui déplacerait le
 grossissement auquel la couche s'efface sans changer la règle.
+
+### La température de la mer du jour de la scène (lot 53, pas 2)
+
+La couche « Température de la mer (GHRSST) » montre l'analyse **GHRSST MUR de niveau 4**, servie
+par GIBS (`GHRSST_L4_MUR_Sea_Surface_Temperature`), quotidienne depuis le 2002-06-01 (lu dans les
+capacités WMTS le 2026-10-16). `core/layerSource.ts::resolveSeaSurfaceTemperatureSources` demande
+le jour de la scène, puis recule de trois jours au plus quand l'analyse du jour n'est pas encore
+publiée ; une scène future prend la dernière analyse, jamais un jour à venir.
+
+- **Nature `analysis`, catégorie « analysé »** (§ « Modèle temporel ») : ni « observé », ni
+  « reconstruit (modèle) », ce que le badge aurait dit faussement dans les deux cas.
+- **Le mesh `thermal`, dans le groupe exclusif des températures** (`MainSolarSystemApp.ts`) : une
+  seule couche de température à la fois. La terre est transparente dans la source (mesuré sur deux
+  tuiles), donc seule la mer est peinte.
+- **Mesures qui ont fixé les réglages** (`SEA_SURFACE_TEMPERATURE_SETTINGS`) : l'image entière pèse
+  776 610 o à 2 048 px de large (~20 km par pixel ; 2 423 908 o à 4 096), et un jour pas encore
+  publié rend une image VIDE de 8 221 o en HTTP 200, d'où le seuil de 50 000 o.
+- **La légende est le barème de la NASA, en °C** : `pnpm gibs:colormap` lit désormais TOUTES les
+  couches de `core/gibsLegend.ts::GIBS_LEGEND_LAYERS` (seule liste), et l'adresse de chaque palette
+  dans les capacités de sa couche, parce que son nom n'est pas celui de la couche
+  (`GHRSST_Sea_Surface_Temperature.xml` ; la construire rendait un 404). `colormapBoundsC` lit
+  l'unité DÉCLARÉE (K ou °C) et refuse toute autre.
+
+Gardes : `src/core/layerSource.test.ts` (jour, recul, borne basse, scène future),
+`src/core/temporal.test.ts` (« analysé », témoin « observé »), `src/core/gibsLegend.test.ts`
+(fichier contre liste, unités), `e2e/seaTemperature.spec.ts` (le bon jour demandé, le badge
+« analysed », la légende de 0 à 32 °C ; falsifié en déclarant une mesure : « observed »).
