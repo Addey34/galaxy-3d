@@ -5042,10 +5042,15 @@ mémoire GPU qu'un téléphone n'a pas. Le lot 54 les MESURE avant d'y toucher.
 le moteur de surface le faisait déjà pour ses carreaux. Les octets donnés au GPU sont les mêmes
 (retournée au décodage puis `flipY = false`, alpha non prémultiplié, conversion de couleur par
 défaut) ; Safari avant 17 et Firefox avant 98, qui ignorent ces options, gardent l'ancien chemin
-(la règle du chargeur glTF de Three.js). Mesuré sous frein CPU × 4 : la texture 8k de la Terre
+(la règle du chargeur glTF de Three.js). **En rendu matériel seulement** : en rendu LOGICIEL
+(SwiftShader, celui de la CI et des machines sans GPU), les fils de décodage concurrencent ceux
+qui rastérisent, et deux runs de CI simultanés, à ce seul détail près, ont rendu l'ancien chemin
+sain et le nouveau non sain (un shard rouge, des dizaines de réessais). Le moteur de rendu est lu
+au premier chargement (`WEBGL_debug_renderer_info`). Mesuré sous frein CPU × 4 : la texture 8k de la Terre
 bloque 108 ms au lieu de 966, et l'approche de la Terre en Explo 3,4 s au lieu de 11,6. Le détail
 par scène est au journal du lot. `?debug-decode-img` force l'ancien chemin, pour un A/B. Garde :
-`e2e/textureDecode.spec.ts` rend la même texture par les deux chemins dans une cible hors écran,
+`e2e/textureDecode.spec.ts` rend la même texture par les deux chemins (le nouveau appelé
+explicitement, `decodeTextureOffThread`, puisque la CI rend en logiciel) dans une cible hors écran,
 relit les pixels et exige le même résultat (falsifiée : une image non retournée donne un écart de
 225 sur 255).
 

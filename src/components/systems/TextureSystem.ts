@@ -88,6 +88,29 @@ export interface TextureSystemConfig {
 // tout le catalogue en zoom max) contre une croissance mémoire sans borne du cache.
 const MAX_CACHE_ENTRIES = 64;
 
+/**
+ * Une texture décodée HORS du fil principal (`createImageBitmap`), retournée au décodage pour
+ * donner au GPU les mêmes octets que `TextureLoader` (cf. `TextureSystem.decodeOffThread`).
+ * Exportée pour que la sonde `?debug-perf` compare CE chemin à l'ancien, même là où le rendu
+ * logiciel le laisse inactif (`e2e/textureDecode.spec.ts`).
+ */
+export async function decodeTextureOffThread(
+  path: string
+): Promise<THREE.Texture> {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const bitmap = await createImageBitmap(await response.blob(), {
+    imageOrientation: 'flipY',
+    premultiplyAlpha: 'none',
+    colorSpaceConversion: 'default',
+  });
+  const texture = new THREE.Texture(bitmap);
+  texture.flipY = false;
+  // Une ImageBitmap tient sa mémoire hors du tas JavaScript : elle se ferme avec la texture.
+  texture.addEventListener('dispose', () => bitmap.close());
+  return texture;
+}
+
 export class TextureSystem {
   static #instance: TextureSystem | undefined;
 
@@ -102,6 +125,11 @@ export class TextureSystem {
    * l'alpha, avec la conversion de couleur par défaut du navigateur, exactement ce que faisait
    * l'ancien chemin. Safari avant 17 et Firefox avant 98 ignorent ces options (image à l'envers) :
    * ils gardent `TextureLoader`, la règle même du chargeur glTF de Three.js.
+   *
+   * EN RENDU MATÉRIEL SEULEMENT (`_decodesOffThread`). En rendu LOGICIEL (SwiftShader, celui de
+   * la CI et des machines sans GPU), les fils de décodage concurrencent ceux qui rastérisent :
+   * deux runs de CI SIMULTANÉS, à un détail près, ont rendu l'ancien chemin SAIN et le nouveau
+   * NON SAIN (un shard rouge, des dizaines de réessais ; runs 39012234411 et 39012235825).
    */
   private readonly decodeOffThread = ((): boolean => {
     if (
@@ -121,35 +149,34 @@ export class TextureSystem {
     return true;
   })();
 
+  /** Rendu matériel ? Lu une fois, au premier chargement après le branchement du moteur. */
+  private _hardware: boolean | null = null;
+
+  private _decodesOffThread(): boolean {
+    if (!this.decodeOffThread || !this.renderer) return false;
+    if (this._hardware === null) {
+      const gl = this.renderer.getContext();
+      const info = gl.getExtension('WEBGL_debug_renderer_info');
+      const name = info
+        ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL))
+        : '';
+      this._hardware = !/swiftshader|llvmpipe|software|basic render/i.test(
+        name
+      );
+    }
+    return this._hardware;
+  }
+
   private _load(
     path: string,
     onLoad: (texture: THREE.Texture) => void,
     onError: (error: unknown) => void
   ): void {
-    if (!this.decodeOffThread) {
+    if (!this._decodesOffThread()) {
       this.textureLoader.load(path, onLoad, undefined, onError);
       return;
     }
-    fetch(path)
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.blob();
-      })
-      .then((blob) =>
-        createImageBitmap(blob, {
-          imageOrientation: 'flipY',
-          premultiplyAlpha: 'none',
-          colorSpaceConversion: 'default',
-        })
-      )
-      .then((bitmap) => {
-        const texture = new THREE.Texture(bitmap);
-        texture.flipY = false;
-        // Une ImageBitmap tient sa mémoire hors du tas JavaScript : elle se ferme avec la texture.
-        texture.addEventListener('dispose', () => bitmap.close());
-        onLoad(texture);
-      })
-      .catch(onError);
+    decodeTextureOffThread(path).then(onLoad, onError);
   }
   private readonly config: TextureSystemConfig;
   private readonly cache = new Map<string, THREE.Texture>();

@@ -16,6 +16,7 @@
 import * as THREE from 'three';
 import type { PublicAPI } from '@/SolarSystemApp';
 import { hasDebugFlag } from '@/utils/debugFlags';
+import { decodeTextureOffThread } from '@/components/systems/TextureSystem';
 
 /** Ce que la sonde rend à chaque lecture. */
 export interface PerfSnapshot {
@@ -281,7 +282,9 @@ export function setupPerfProbe(api: PublicAPI): () => void {
         ([, t]) => t === loaded
       )?.[0] ?? '';
     // Une copie : régler la copie ne touche pas la texture du cache, que la scène emploie.
-    const fromSystem = read(loaded.clone());
+    // Le chemin hors du fil, appelé EXPLICITEMENT : en rendu logiciel (la CI), `TextureSystem`
+    // garde l'ancien, et comparer le cache à `TextureLoader` ne prouverait plus rien.
+    const fromSystem = read(await decodeTextureOffThread(url));
     const fromLoader = read(await new THREE.TextureLoader().loadAsync(url));
     let maxDiff = 0;
     for (let i = 0; i < fromSystem.length; i += 1)
@@ -289,8 +292,61 @@ export function setupPerfProbe(api: PublicAPI): () => void {
     return { maxDiff, width, height, url };
   };
 
+  /**
+   * Les attentes d'édition de liens relevées par le script de mesure (`window.__shaderLinks`,
+   * posé avant l'application), nommées par le programme de Three.js qui les a causées.
+   */
+  const shaderLinks = (): {
+    name: string;
+    ms: number;
+    at: number;
+    method: string;
+  }[] => {
+    const raw =
+      (
+        window as unknown as {
+          __shaderLinks?: {
+            program: WebGLProgram;
+            ms: number;
+            at: number;
+            method: string;
+          }[];
+        }
+      ).__shaderLinks ?? [];
+    // Le programme de chaque objet de la scène, par les propriétés internes du moteur de rendu :
+    // c'est ce qui dit QUEL corps a payé une attente, là où la clé de cache ne le dit pas.
+    const names = new Map<WebGLProgram, string>();
+    api.sceneSystem.scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      const materials = mesh.material
+        ? Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material]
+        : [];
+      for (const material of materials) {
+        const current = (
+          renderer.properties.get(material) as {
+            currentProgram?: { program: WebGLProgram };
+          }
+        ).currentProgram;
+        if (!current) continue;
+        let path = object.name || object.type;
+        for (let o = object.parent; o && path.length < 80; o = o.parent)
+          if (o.name) path = `${o.name}/${path}`;
+        names.set(current.program, `${material.type} ${path}`);
+      }
+    });
+    return raw.map((l) => ({
+      name: names.get(l.program) ?? '(shader, ou programme hors scène)',
+      ms: l.ms,
+      at: l.at,
+      method: l.method,
+    }));
+  };
+
   const probe = {
     snapshot,
+    shaderLinks,
     uploadTest,
     decodeEquivalence,
     /** Repart de zéro : les durées d'image et les blocages d'une scène, pas des précédentes. */

@@ -1,6 +1,6 @@
 /* global console, process, window */
 /* Les rappels passés à `addInitScript` tournent DANS la page, pas dans Node : d'où ces globaux. */
-/* global localStorage, PerformanceObserver */
+/* global localStorage, PerformanceObserver, WebGL2RenderingContext, performance */
 /**
  * CE QUE COÛTE UNE SCÈNE HORS OCTETS (lot 54) : images par seconde, blocages du fil principal,
  * mémoire GPU estimée, appels de dessin. Mesuré dans un vrai navigateur, scène par scène, par la
@@ -26,6 +26,7 @@
  *   node scripts/measure-perf.mjs --origin http://127.0.0.1:4173 --cpu 4 --json reports/perf/x.json
  *   node scripts/measure-perf.mjs --only earth-surface
  *   node scripts/measure-perf.mjs --only earth-surface --profile approach   (ou steady, ou boot)
+ *   node scripts/measure-perf.mjs --only earth-explo --links   (attentes d'édition de liens, par programme)
  *
  * `--profile` enregistre un profil CPU (domaine Profiler du protocole DevTools) pendant la phase
  * nommée et imprime les fonctions au plus fort temps PROPRE : ce qui coûte, pas qui appelle.
@@ -47,6 +48,7 @@ const CPU = Number(flag('--cpu', '1'));
 const ONLY = flag('--only', null);
 const JSON_OUT = flag('--json', null);
 const PROFILE = flag('--profile', null);
+const LINKS = args.includes('--links');
 /** Paramètres ajoutés à chaque adresse, pour un A/B sur le même build (`--extra debug-decode-img`). */
 const EXTRA = flag('--extra', null);
 
@@ -99,9 +101,14 @@ const SCENES = [
   },
 ].filter((s) => !ONLY || s.id === ONLY);
 
-const browser = await chromium.launch({
-  args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'],
-});
+// `--software` : le rendu LOGICIEL (SwiftShader) de la CI, sans GPU. Payé le 2026-10-17 : le
+// décodage hors du fil, gagnant sur la RTX, a rendu la suite e2e de la CI non saine.
+const SOFTWARE = args.includes('--software');
+const browser = await chromium.launch(
+  SOFTWARE
+    ? {}
+    : { args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] }
+);
 const results = [];
 for (const scene of SCENES) {
   const context = await browser.newContext({
@@ -119,6 +126,39 @@ for (const scene of SCENES) {
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) tasks.push(entry.duration);
     }).observe({ type: 'longtask' });
+    // L'attente d'une édition de liens de shaders, programme par programme : la trace du
+    // démarrage montrait des images de 400 ms dans `GetProgramiv` (2026-10-17).
+    const links = [];
+    window.__shaderLinks = links;
+    for (const method of [
+      'getProgramParameter',
+      'getProgramInfoLog',
+      'getShaderInfoLog',
+      'getShaderParameter',
+      'getUniformLocation',
+      'getActiveUniform',
+      'getAttribLocation',
+    ]) {
+      const original = WebGL2RenderingContext.prototype[method];
+      WebGL2RenderingContext.prototype[method] = function (target, ...rest) {
+        const start = performance.now();
+        const value = original.call(this, target, ...rest);
+        const ms = performance.now() - start;
+        if (ms > 20) {
+          // Les #define des shaders attachés : ce qui distingue deux variantes d'un même matériau.
+          const defines = (this.getAttachedShaders(target) ?? [])
+            .map((shader) =>
+              (this.getShaderSource(shader) ?? '')
+                .split('\n')
+                .filter((line) => line.startsWith('#define'))
+                .join(' ')
+            )
+            .join(' | ');
+          links.push({ program: target, ms, at: start, method, defines });
+        }
+        return value;
+      };
+    }
   });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
@@ -155,6 +195,27 @@ for (const scene of SCENES) {
   }
   await page.waitForTimeout(8000);
   const approach = await page.evaluate(() => window.perfProbe.snapshot());
+  if (LINKS) {
+    const links = await page.evaluate(() => window.perfProbe.shaderLinks());
+    for (const l of links)
+      console.log(
+        `  lien ${l.ms.toFixed(0).padStart(5)} ms à ${l.at.toFixed(0)} ms  ${l.method}  ${l.name}`
+      );
+    const heavy = await page.evaluate(() =>
+      window.__shaderLinks
+        .filter((l) => l.ms > 100)
+        .map((l) => ({
+          ms: l.ms,
+          at: l.at,
+          defines: l.defines,
+          method: l.method,
+        }))
+    );
+    for (const l of heavy)
+      console.log(
+        `  ${l.ms.toFixed(0)} ms à ${l.at.toFixed(0)} ms ${l.method} : ${l.defines.includes('FLIP_SIDED') ? 'face arrière' : 'face avant'}${l.defines.includes('VIEW_SAMPLES') ? ', perspective aérienne' : ''}`
+      );
+  }
   if (PROFILE === 'approach') {
     const { profile } = await cdp.send('Profiler.stop');
     for (const [k, ms] of topSelf(profile))
