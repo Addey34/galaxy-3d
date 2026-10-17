@@ -361,17 +361,25 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
   // caméra descendait à 3,2 km SOUS le sol, l'ellipsoïde et le relief dépassant la sphère. Le
   // plancher ne descend qu'à mesure que des niveaux plus fins se peignent : on descend donc par
   // crans, jusqu'au niveau le plus fin, avant de lire la sonde.
-  await expect
-    .poll(
-      async () => {
-        await zoomIn(page);
-        return Number((await badge.getAttribute('data-level')) ?? 0);
-      },
-      { timeout: 150_000, intervals: [1500] }
-    )
-    // 12 et non 13 : à 0,9 km au-dessus d'un sol à 5 000 m, le niveau servi est le 12 ; sous le
-    // sol, la caméra fautive atteignait le 13 (mesuré des deux côtés).
-    .toBeGreaterThanOrEqual(12);
+  try {
+    await expect
+      .poll(
+        async () => {
+          await zoomIn(page);
+          return Number((await badge.getAttribute('data-level')) ?? 0);
+        },
+        { timeout: 150_000, intervals: [1500] }
+      )
+      // 12 et non 13 : à 0,9 km au-dessus d'un sol à 5 000 m, le niveau servi est le 12 ; sous le
+      // sol, la caméra fautive atteignait le 13 (mesuré des deux côtés).
+      .toBeGreaterThanOrEqual(12);
+  } catch (error) {
+    // Bloqué au niveau 11 sur certains coureurs, quel que soit le temps donné (2026-10-17) : ce
+    // que la caméra et le moteur disaient à ce moment, pour diagnostiquer sans rejouer.
+    const probe = (await page.locator('#surface-probe').textContent()) ?? '';
+    console.log(`[sentinel] ${probe.replace(/\s+/g, ' ').slice(0, 1200)}`);
+    throw error;
+  }
   await zoomIn(page);
   await expect
     .poll(
