@@ -2118,9 +2118,9 @@ de `core/tileUrl.ts`), sans Web Mercator, et le relief, aligné sur cette grille
   38985771615, vu en CI seulement) ; calculé pour la finesse MAXIMALE de l'IGN, il la laissait
   descendre à 23 m du sol, où 64 carreaux n'atteignent que le niveau 12 : une bouillie à l'écran.
   Progressif, il s'arrête de lui-même là où le budget de carreaux du palier de qualité ne
-  subdivise plus (mesuré : 733 m au-dessus de Paris, niveau 13, 63 carreaux sur 64). **C'est
-  désormais le budget qui borne la finesse montrée**, et non la source ; le relever se mesure en
-  images par seconde et en mémoire GPU, ce qui appartient au lot 54.
+  subdivise plus : c'est le budget, et non la source, qui borne la finesse montrée. Mesuré au-dessus
+  de Paris : 733 m (15 m par texel) avec 64 carreaux, **183 m (4 m par texel) avec 256**, le budget
+  du palier « haut » en rendu matériel depuis le lot 54 (§ « La performance hors octets »).
 - **Près du sol, la caméra tourne avec le corps** (`CameraSystem`, `CO_ROTATION_RADII` = 1,1
   rayon, `CameraTarget.getSpinQuaternion`) : à vitesse réelle, le sol de Paris défilait sous elle
   à ~300 m/s, la visée glissait de 1,5° en sept minutes et les tuiles fines ne se posaient jamais.
@@ -5110,6 +5110,13 @@ lisent le ROUGE (rugosité, masque océanique des nuages), le seul canal d'un R8
 `core/textureColorSpace.ts` (`SINGLE_CHANNEL_KEYS`) ; garde `src/config/singleChannelTextures.test.ts` :
 tout fichier livré sous ces clés, pour tout corps et à tout palier, doit rester gris (falsifiée :
 déclarer la couleur à un canal fait rougir 85 fichiers).
+
+**Le budget de carreaux du moteur de surface vaut 256 en rendu matériel** au palier « haut »
+(64 auparavant), et reste 64 en rendu logiciel (`ui/surfacePanel.ts`, `surfaceTileBudget` ; la
+détection est partagée avec le décodage, `components/systems/rendererKind.ts`). Mesuré sur la
+descente vers Paris : plancher de 733 à 183 m, de 15 à 4 m par texel sous la caméra, pour +64 Mio
+de textures et 151 appels de dessin au lieu de 79, à 60 i/s. `?debug-tiles=N` force le budget pour
+un A/B sur le même build. Garde : `src/ui/surfaceTileBudget.test.ts` (falsifiée).
 
 **La couverture d'une imagerie régionale se teste par plages, ligne par ligne** (`coversBounds`,
 `touchesCoverage`), jamais boîte par boîte : appelée pour chaque nœud de la sélection à chaque
