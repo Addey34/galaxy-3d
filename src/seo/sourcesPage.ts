@@ -81,6 +81,13 @@ export interface HeightfieldProvenance {
    * finesse affichée se calcule sur ELLE, pas sur la grille de Trek (lot 48).
    */
   baseLevel: number;
+  /**
+   * Les boîtes de GRAND RELIEF (ni socle global, ni aire nommée) : leur nombre et leur niveau le
+   * plus fin, ou `null`. Le socle se lisait sur le maximum de TOUTES les entrées non nommées, si
+   * bien que la page annonçait la finesse des boîtes de montagne comme celle du socle global (lot
+   * 48 : 489 m au lieu de 1,85 km sur la grille de GIBS ; lot 53 : 153 m sur celle de Sentinel-2).
+   */
+  reliefBoxes: { count: number; level: number } | null;
   matrix: TileMatrixShape;
   /** Hôte qui sert les tuiles quand ce n'est pas le site lui-même, sinon `null`. */
   servedBy: string | null;
@@ -96,7 +103,12 @@ export interface HeightManifestSummary {
   tileOrigin?: string;
   tiles: number;
   bytes: number;
-  coverage: { level: number; levels?: number[]; area?: { name: string } }[];
+  coverage: {
+    level: number;
+    levels?: number[];
+    global?: boolean;
+    area?: { name: string };
+  }[];
 }
 
 /**
@@ -126,9 +138,18 @@ export function heightfieldProvenance(
       product.links.find((l) => l.rel === 'describedby')!.href,
     baseLevel: Math.max(
       ...manifest.coverage
-        .filter((entry) => !entry.area)
+        .filter((entry) => entry.global)
         .flatMap((entry) => entry.levels ?? [entry.level])
     ),
+    reliefBoxes: ((boxes) =>
+      boxes.length === 0
+        ? null
+        : {
+            count: boxes.length,
+            level: Math.max(
+              ...boxes.flatMap((entry) => entry.levels ?? [entry.level])
+            ),
+          })(manifest.coverage.filter((entry) => !entry.global && !entry.area)),
     matrix: manifest.matrix,
     servedBy: manifest.tileOrigin ? new URL(manifest.tileOrigin).host : null,
     areas: manifest.coverage
@@ -980,7 +1001,17 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       set.sourceUrl
         ? link(set.sourceUrl, escapeHtml(set.title))
         : escapeHtml(set.title),
-      escapeHtml(metres(set.body, set.baseLevel, set.matrix)),
+      escapeHtml(
+        metres(set.body, set.baseLevel, set.matrix) +
+          (set.reliefBoxes
+            ? ` · ${L({
+                en: `${set.reliefBoxes.count} high-relief boxes: `,
+                fr: `${set.reliefBoxes.count} boîtes de grand relief : `,
+                es: `${set.reliefBoxes.count} cajas de gran relieve: `,
+                'pt-BR': `${set.reliefBoxes.count} caixas de grande relevo: `,
+              })}${metres(set.body, set.reliefBoxes.level, set.matrix)}`
+            : '')
+      ),
       set.areas.length === 0
         ? L({ en: 'none', fr: 'aucune', es: 'ninguno', 'pt-BR': 'nenhum' })
         : escapeHtml(
