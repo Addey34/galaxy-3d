@@ -1,4 +1,4 @@
-/* global console, fetch, process */
+/* global console, fetch, process, Buffer, setTimeout */
 /**
  * LE RELIEF À 30 M DES MONTAGNES DE LA TERRE, TIRÉ UNE FOIS ET RÉDUIT À 5″ (lot 53, pas 3).
  *
@@ -118,7 +118,8 @@ async function pullCell(name, south, west) {
       writeFileSync(path, Buffer.from(reduced.buffer));
       return 'pulled';
     } catch (error) {
-      if (attempt === 4) throw new Error(`${name} : ${String(error)}`);
+      if (attempt === 4)
+        throw new Error(`${name} : ${String(error)}`, { cause: error });
       await new Promise((r) => setTimeout(r, 2000 * 2 ** attempt));
     }
   }
