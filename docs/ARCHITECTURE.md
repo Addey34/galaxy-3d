@@ -5015,6 +5015,52 @@ le voit** : `/methodology` le dit dans ses « Limites connues », en nommant cha
 `UNREVIEWED_TRANSLATIONS` (`i18n/locales.ts`) dans la langue de la page ; une relecture nommée
 retire la langue de cette liste, et la phrase suit (`docPages.test.ts`).
 
+## La performance hors octets : mesurée en images, en blocages et en mémoire GPU (lot 54)
+
+Le budget du démarrage compte des OCTETS. Ce qu'un visiteur ressent aussi, et qu'aucun octet ne
+dit, c'est le fil principal figé pendant qu'une texture se prépare, une image qui dure trop, et la
+mémoire GPU qu'un téléphone n'a pas. Le lot 54 les MESURE avant d'y toucher.
+
+- **La sonde** `?debug-perf` (`src/ui/perfProbe.ts`, dans le morceau des sondes, jamais au
+  démarrage ordinaire) publie sur `window.perfProbe` : durées d'image, blocages du fil principal
+  (> 50 ms), mémoire GPU ESTIMÉE (ce que l'application téléverse, textures et géométries atteintes
+  par la scène, une fois chacune ; WebGL ne publie aucun compte d'octets), appels de dessin d'une
+  image entière (`renderer.info` se remet à zéro à chaque `render()`, et le compositeur en fait
+  plusieurs), et le chemin de chaque texture du cache.
+- **Le script** `scripts/measure-perf.mjs` joue sept scènes DATÉES en deux phases (approche puis
+  régime), sur le VRAI GPU (`--use-angle=d3d11` ; sans lui, Chromium piloté rend en logiciel),
+  avec un frein CPU (`--cpu`), un profil CPU (`--profile boot|approach|steady`) et un A/B sur le
+  MÊME build (`--extra`). Les blocages se comptent DEPUIS LA NAVIGATION, par un observateur
+  injecté avant l'application : comptés depuis la sonde, ceux du démarrage manquaient, et le
+  meilleur chemin de décodage passait pour une perte.
+- **Ce que ces nombres ne sont pas** : à 60 Hz sur une carte de bureau, les images saturent à
+  16,6 ms sans frein, et le GPU ne se freine pas. Un nombre d'ici est un plancher de coût, pas
+  une promesse pour un téléphone.
+
+**Les textures des corps sont décodées hors du fil principal.** `TextureSystem` chargeait une
+`<img>`, décodée au téléversement sur le fil principal ; il passe par `createImageBitmap`, comme
+le moteur de surface le faisait déjà pour ses carreaux. Les octets donnés au GPU sont les mêmes
+(retournée au décodage puis `flipY = false`, alpha non prémultiplié, conversion de couleur par
+défaut) ; Safari avant 17 et Firefox avant 98, qui ignorent ces options, gardent l'ancien chemin
+(la règle du chargeur glTF de Three.js). Mesuré sous frein CPU × 4 : la texture 8k de la Terre
+bloque 108 ms au lieu de 966, et l'approche de la Terre en Explo 3,4 s au lieu de 11,6. Le détail
+par scène est au journal du lot. `?debug-decode-img` force l'ancien chemin, pour un A/B. Garde :
+`e2e/textureDecode.spec.ts` rend la même texture par les deux chemins dans une cible hors écran,
+relit les pixels et exige le même résultat (falsifiée : une image non retournée donne un écart de
+225 sur 255).
+
+**Les positions du champ des petits corps se calculent avec la DATE, pas à chaque image.**
+Résoudre Kepler pour 6 965 orbites à chaque image coûtait 3,0 s sur 10 au fil principal près du
+sol de la Terre, sous frein × 4. Les positions sont mises en cache et recalculées quand la date a
+bougé de plus de `POSITION_REFRESH_MS` (10 s simulées) ; seule la projection suit la caméra.
+L'erreur bornée : 400 km pour un géocroiseur à 40 km/s, moins d'un pixel au-delà de 330 000 km de
+la caméra. Garde : `src/ui/smallBodyOverlay.test.ts`.
+
+**La couverture d'une imagerie régionale se teste par plages, ligne par ligne** (`coversBounds`,
+`touchesCoverage`), jamais boîte par boîte : appelée pour chaque nœud de la sélection à chaque
+image, la version boîte par boîte coûtait 3,4 s sur 10 près du sol de la Terre. Garde
+d'équivalence contre le parcours boîte par boîte sur la vraie couverture.
+
 ## Une visite guidée est une FICHE, pas du code (lot 21)
 
 Une visite guidée scénarisée (« Naissance d'une éclipse », « La danse des Galiléennes »…) est une

@@ -6,6 +6,7 @@
  * `getLODTexture` choisit la résolution selon la distance caméra (plafonnée sur mobile).
  */
 import * as THREE from 'three';
+import { hasDebugFlag } from '@/utils/debugFlags';
 import type { CelestialBodyConfig, TextureQuality } from '@/types';
 import type {
   PerformanceSettings,
@@ -91,8 +92,72 @@ export class TextureSystem {
   static #instance: TextureSystem | undefined;
 
   private readonly textureLoader = new THREE.TextureLoader();
+
+  /**
+   * DÉCODER HORS DU FIL PRINCIPAL (lot 54). Par `TextureLoader`, une `<img>` est décodée au
+   * téléversement, sur le fil principal : mesuré le 2026-10-17 sur une RTX 5070 Ti, la texture 8k
+   * de la Terre y bloquait 244 ms (966 ms sous frein CPU × 4), contre 38 ms (108 ms) par
+   * `createImageBitmap`, qui décode en parallèle. Les octets donnés au GPU sont les mêmes :
+   * retournée au décodage (`imageOrientation: 'flipY'`, puis `flipY = false`), sans prémultiplier
+   * l'alpha, avec la conversion de couleur par défaut du navigateur, exactement ce que faisait
+   * l'ancien chemin. Safari avant 17 et Firefox avant 98 ignorent ces options (image à l'envers) :
+   * ils gardent `TextureLoader`, la règle même du chargeur glTF de Three.js.
+   */
+  private readonly decodeOffThread = ((): boolean => {
+    if (
+      typeof createImageBitmap !== 'function' ||
+      typeof navigator === 'undefined'
+    )
+      return false;
+    // L'ancien chemin, à la demande : un A/B se mesure sur le MÊME build (`scripts/measure-perf.mjs`).
+    if (hasDebugFlag('debug-decode-img')) return false;
+    const ua = navigator.userAgent;
+    const safari = /^((?!chrome|android).)*safari/i.test(ua)
+      ? Number(/Version\/(\d+)/.exec(ua)?.[1] ?? 0)
+      : null;
+    const firefox = /Firefox\/(\d+)/.exec(ua);
+    if (safari !== null && safari < 17) return false;
+    if (firefox && Number(firefox[1]) < 98) return false;
+    return true;
+  })();
+
+  private _load(
+    path: string,
+    onLoad: (texture: THREE.Texture) => void,
+    onError: (error: unknown) => void
+  ): void {
+    if (!this.decodeOffThread) {
+      this.textureLoader.load(path, onLoad, undefined, onError);
+      return;
+    }
+    fetch(path)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.blob();
+      })
+      .then((blob) =>
+        createImageBitmap(blob, {
+          imageOrientation: 'flipY',
+          premultiplyAlpha: 'none',
+          colorSpaceConversion: 'default',
+        })
+      )
+      .then((bitmap) => {
+        const texture = new THREE.Texture(bitmap);
+        texture.flipY = false;
+        // Une ImageBitmap tient sa mémoire hors du tas JavaScript : elle se ferme avec la texture.
+        texture.addEventListener('dispose', () => bitmap.close());
+        onLoad(texture);
+      })
+      .catch(onError);
+  }
   private readonly config: TextureSystemConfig;
   private readonly cache = new Map<string, THREE.Texture>();
+
+  /** Les textures en cache et leur chemin : lu par la sonde de performance (`?debug-perf`). */
+  cachedEntries(): IterableIterator<[string, THREE.Texture]> {
+    return this.cache.entries();
+  }
   private readonly loadingPromises = new Map<string, Promise<THREE.Texture>>();
   private readonly _pendingListeners = new Set<(pending: number) => void>();
 
@@ -191,7 +256,7 @@ export class TextureSystem {
     Logger.debug(`[TextureSystem] Loading: ${fullPath}`);
 
     const promise = new Promise<THREE.Texture>((resolve, reject) => {
-      this.textureLoader.load(
+      this._load(
         fullPath,
         (texture) => {
           Logger.success(`[TextureSystem] Loaded: ${fullPath}`);
@@ -218,7 +283,6 @@ export class TextureSystem {
           this._notifyPending();
           resolve(texture);
         },
-        undefined,
         (err) => {
           Logger.warn(`[TextureSystem] Failed: ${fullPath}`, err);
           this.loadingPromises.delete(fullPath);

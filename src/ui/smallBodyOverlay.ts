@@ -21,6 +21,16 @@ import type { ParsedSmallBody, SmallBodyCategory } from '@/core/sbdb';
 /** Nombre maximal de marqueurs dessinés par frame (LOD : les plus proches d'abord). */
 const MAX_MARKERS = 1500;
 
+/**
+ * LES POSITIONS NE DÉPENDENT QUE DE LA DATE, et ne se recalculent que lorsqu'elle a bougé de plus
+ * que ceci (temps SIMULÉ) ; seule la projection suit la caméra à chaque image. Résoudre Kepler
+ * pour 6 965 corps à chaque image coûtait 3,0 s sur 10 au fil principal près du sol de la Terre,
+ * sous frein CPU × 4 (profil du lot 54, 2026-10-17). L'erreur bornée : 400 km pour un géocroiseur
+ * à 40 km/s, moins d'un pixel au-delà de 330 000 km de la caméra. Quand le temps défile vite, la
+ * date bouge de plus que cela à chaque image, et tout se recalcule comme avant.
+ */
+export const POSITION_REFRESH_MS = 10_000;
+
 /** Couleur des points du champ, reprise par la pastille des filtres (cf. `smallBodyFilters.ts`). */
 export const SMALL_BODY_MARKER_RGB = '180, 200, 235';
 
@@ -39,6 +49,9 @@ export class SmallBodyOverlay {
   private active = false;
   private readonly _p = new THREE.Vector3();
   private readonly _cam = new THREE.Vector3();
+  /** Positions en repère scène AVANT mise à l'échelle, à la date `_cacheDate`. */
+  private _cache = new Float64Array(0);
+  private _cacheDate: number | null = null;
 
   constructor() {
     this.canvas = document.createElement('canvas');
@@ -56,6 +69,31 @@ export class SmallBodyOverlay {
   /** Remplace le lot de corps affichés (appelé une fois le fetch SBDB résolu). */
   setBodies(bodies: ParsedSmallBody[]): void {
     this.bodies = bodies;
+    this._cacheDate = null;
+  }
+
+  /** Nombre de résolutions de Kepler depuis la création : lu par les tests. */
+  solves = 0;
+
+  private _refreshPositions(date: Date): void {
+    const t = date.getTime();
+    if (
+      this._cacheDate !== null &&
+      this._cache.length === this.bodies.length * 3 &&
+      Math.abs(t - this._cacheDate) <= POSITION_REFRESH_MS
+    )
+      return;
+    if (this._cache.length !== this.bodies.length * 3)
+      this._cache = new Float64Array(this.bodies.length * 3);
+    for (let b = 0; b < this.bodies.length; b++) {
+      const pos = keplerianPositionEcliptic(this.bodies[b]!.elements, date);
+      const scene = eclipticToScene(pos.x, pos.y, pos.z);
+      this._cache[b * 3] = scene.x;
+      this._cache[b * 3 + 1] = scene.y;
+      this._cache[b * 3 + 2] = scene.z;
+    }
+    this.solves += this.bodies.length;
+    this._cacheDate = t;
   }
 
   /** Catégories à dessiner (panneau de filtres) — un corps sans catégorie reste toujours dessiné. */
@@ -89,6 +127,7 @@ export class SmallBodyOverlay {
     // caméra. Le tri complet serait coûteux chaque frame ; on approxime avec un seuil de
     // distance adaptatif appliqué à la volée (voir _distanceCutoff).
     const cutoff = this._distanceCutoff();
+    this._refreshPositions(date);
 
     this.ctx.fillStyle = `rgba(${SMALL_BODY_MARKER_RGB}, 0.75)`;
     let drawn = 0;
@@ -96,9 +135,13 @@ export class SmallBodyOverlay {
     for (let b = 0; b < this.bodies.length && drawn < MAX_MARKERS; b++) {
       const body = this.bodies[b];
       if (body.category && !this.visibleCategories.has(body.category)) continue;
-      const pos = keplerianPositionEcliptic(body.elements, date);
-      const scene = eclipticToScene(pos.x, pos.y, pos.z);
-      scaleToScene(this._p, scene.x, scene.y, scene.z, morph);
+      scaleToScene(
+        this._p,
+        this._cache[b * 3]!,
+        this._cache[b * 3 + 1]!,
+        this._cache[b * 3 + 2]!,
+        morph
+      );
 
       if (cutoff > 0 && this._p.distanceToSquared(this._cam) > cutoff) continue;
       // Derrière une planète vue de près : ne pas se peindre sur son sol.
