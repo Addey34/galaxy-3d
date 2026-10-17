@@ -1,0 +1,31 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "ign-geoplateforme",
+  "role": "tile-source",
+  "publisher": "Institut national de l'information géographique et forestière (IGN)",
+  "title": "BD ORTHO®, Géoplateforme WMS (ORTHOIMAGERY.ORTHOPHOTOS)",
+  "url": "https://cartes.gouv.fr/rechercher-une-donnee/dataset/IGNF_BD-ORTHO",
+  "kind": "measurement",
+  "host": "data.geopf.fr",
+  "license": "etalab-2.0",
+  "licenseUrl": "https://www.data.gouv.fr/pages/legal/licences/etalab-2.0",
+  "attribution": "IGN, BD ORTHO®",
+  "accessed": "2026-10-16",
+  "extent": {
+    "temporal": {
+      "interval": [["2021-01-01T00:00:00Z", "2026-12-31T23:59:59Z"]]
+    }
+  },
+  "use": {
+    "en": "Aerial photographs of France, mainland and overseas departments, streamed on approach in place of the base imagery, only on tiles centred in France that touch no neighbouring country and only beyond the base's finest level: the BD ORTHO® mosaic at 20 cm, served by the national geoplatform down to about 0.30 m per pixel.",
+    "fr": "Photographies aériennes de la France, métropole et départements d’outre-mer, streamées à l’approche à la place de l’imagerie de base, seulement sur les tuiles centrées en France qui ne touchent aucun pays voisin et seulement au-delà du niveau le plus fin de la base : la mosaïque BD ORTHO® à 20 cm, servie par la Géoplateforme jusqu’à environ 0,30 m par pixel.",
+    "es": "Fotografías aéreas de Francia, metrópoli y departamentos de ultramar, transmitidas al acercarse en lugar de las imágenes de base, solo en las teselas centradas en Francia que no tocan ningún país vecino y solo más allá del nivel más fino de la base: el mosaico BD ORTHO® a 20 cm, servido por la geoplataforma nacional hasta unos 0,30 m por píxel.",
+    "pt-BR": "Fotografias aéreas da França, metrópole e departamentos ultramarinos, transmitidas na aproximação no lugar das imagens de base, somente nos blocos centrados na França que não tocam nenhum país vizinho e somente além do nível mais fino da base: o mosaico BD ORTHO® a 20 cm, servido pela geoplataforma nacional até cerca de 0,30 m por pixel."
+  },
+  "terms": {
+    "en": "The Géoplateforme's terms send the reader to each dataset's metadata for its licence; BD ORTHO® declares the Licence Ouverte / Open Licence (Etalab 2.0, compatible with CC BY 2.0), which allows reuse provided the source and the date of its last update are credited (read at the source on 2026-10-16). Photographs taken from 2021 to 2026 depending on the department, at 20 cm (IGN table updated on 2026-09-21).",
+    "fr": "Les conditions de la Géoplateforme renvoient aux métadonnées de chaque donnée pour sa licence ; la BD ORTHO® y déclare la Licence Ouverte / Open Licence (Etalab 2.0, compatible CC BY 2.0), qui permet la réutilisation à condition de mentionner la source et la date de sa dernière mise à jour (lu à la source le 2026-10-16). Prises de vue de 2021 à 2026 selon le département, à 20 cm (tableau de l’IGN mis à jour le 2026-09-21).",
+    "es": "Las condiciones de la Géoplateforme remiten a los metadatos de cada dato para su licencia; la BD ORTHO® declara allí la Licence Ouverte / Open Licence (Etalab 2.0, compatible con CC BY 2.0), que permite la reutilización a condición de citar la fuente y la fecha de su última actualización (leído en la fuente el 2026-10-16). Tomas de 2021 a 2026 según el departamento, a 20 cm (tabla del IGN actualizada el 2026-09-21).",
+    "pt-BR": "As condições da Géoplateforme remetem aos metadados de cada dado para a sua licença; a BD ORTHO® declara ali a Licence Ouverte / Open Licence (Etalab 2.0, compatível com CC BY 2.0), que permite a reutilização com a condição de citar a fonte e a data da sua última atualização (lido na fonte em 2026-10-16). Tomadas de 2021 a 2026 conforme o departamento, a 20 cm (tabela do IGN atualizada em 2026-09-21)."
+  }
+}

@@ -255,6 +255,14 @@ const imageryTileset = z
      * scène (`config/surfaceTilesets.ts::editionFor`). Écrites par `pnpm surface:editions`.
      */
     edition: z.number().int().min(1900).max(2100).optional(),
+    /**
+     * IMAGERIE RÉGIONALE (lot 53, pas 4) : plus fine que la base, servie par un WMS sur la grille
+     * de la base, et seulement dans sa couverture, écrite par `pnpm surface:regions`
+     * (`src/config/regionalCoverage.json`, clé = l'identifiant de la fiche). Jamais une base :
+     * `config/surfaceTilesets.ts` l'écarte des mosaïques, et ses niveaux sont ceux qu'elle
+     * prendrait sur sa propre matrice, confrontés à sa finesse publiée par la garde.
+     */
+    regional: z.literal(true).optional(),
     mission: z.string().min(1),
     instrument: z.string().min(1),
     service: z

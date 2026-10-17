@@ -141,7 +141,15 @@ export function setupSurfaceProbe(api: PublicAPI): () => void {
       );
     // Le near est-il DEVANT la surface la plus proche ? Sinon le corps est coupé en entier,
     // et rien à l'écran ne dit pourquoi : c'est la première chose à voir en descendant.
-    const clipped = nearKm >= altitudeKm;
+    // Depuis le SOL : le relief mesuré s'il est posé, sinon l'ellipsoïde sous la caméra. Compté
+    // depuis la sphère moyenne, une caméra à 5 km au-dessus de Paris passait pour être SOUS le
+    // sol (l'ellipsoïde y est 4,9 km plus bas, lot 53).
+    const groundAltitudeKm =
+      groundM !== undefined
+        ? altitudeKm - Number(groundM) / 1000
+        : distanceKm -
+          radiusKm * (body?.figureRatioToward(camera.position) ?? 1);
+    const clipped = nearKm >= groundAltitudeKm;
 
     lines.push(
       `cible           ${name}`,
@@ -150,7 +158,7 @@ export function setupSurfaceProbe(api: PublicAPI): () => void {
       `altitude        ${round(altitudeKm, 3)} km  (${round(distanceKm / (radiusKm || 1), 6)} R)`,
       `near / far      ${nearKm.toExponential(3)} km / ${farKm.toExponential(3)} km`,
       `far/near        ${round(camera.far / camera.near, 0)}`,
-      `near vs sol     ${clipped ? 'COUPE LE CORPS' : 'ok'} (${round(nearKm / (altitudeKm || 1), 3)} × altitude)`,
+      `near vs sol     ${clipped ? 'COUPE LE CORPS' : 'ok'} (${round(nearKm / (groundAltitudeKm || 1), 3)} × altitude)`,
       `profondeur sol  ${depthAt(altitudeKm)} m`,
       `profondeur      ${depthAt(distanceKm)} m à la cible`,
       `segments        ${segments} (${vertexCount} sommets)`,

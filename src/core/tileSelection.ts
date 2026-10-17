@@ -46,6 +46,12 @@ export interface TileSelectionOptions {
   firstDrawableLevel: number;
   /** Carreaux peints au plus (profil de qualité). */
   maxTiles: number;
+  /**
+   * Niveau le plus fin PAR CARREAU, quand il dépend du lieu (lot 53, pas 4 : une imagerie
+   * régionale plus fine que la base, dans sa seule couverture, `core/regionalImagery.ts`).
+   * Absent : `maxLevel` partout, comme avant.
+   */
+  maxLevelAt?: (index: TileIndex) => number;
 }
 
 interface Node {
@@ -76,6 +82,7 @@ export function selectTiles(
   options: TileSelectionOptions
 ): TileIndex[] {
   const { shape, maxLevel, firstDrawableLevel, maxTiles } = options;
+  const limit = options.maxLevelAt ?? ((): number => maxLevel);
   if (maxTiles <= 0 || firstDrawableLevel > maxLevel) return [];
   const root = tileMatrix(shape.referenceLevel ?? 0, shape);
   const visit = (index: TileIndex): Node | null =>
@@ -101,7 +108,7 @@ export function selectTiles(
     let best = -1;
     for (let i = 0; i < nodes.length; i += 1) {
       const node = nodes[i]!;
-      if (node.index.level >= maxLevel) continue;
+      if (node.index.level >= limit(node.index)) continue;
       // Un carreau non peignable se subdivise toujours ; un carreau peint, s'il est grossi.
       if (drawable(node) && node.pixelsPerTexel <= 1) continue;
       if (best < 0 || node.pixelsPerTexel > nodes[best]!.pixelsPerTexel)

@@ -374,6 +374,8 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       heightsFor?.(heights.get(name) ?? [], tileset.matrix) ?? null,
       compareFor?.(name, choice, compareYear, tileset) ?? null
     );
+    // L'imagerie régionale du corps, plus fine que sa base dans sa couverture (lot 53, pas 4).
+    engine.setRegional(regionalFor?.(name) ?? null);
     curtain?.sync();
     engine.update(
       api.cameraSystem.camera,
@@ -389,6 +391,18 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   /** Édition comparée et rideau (lot 50, pas 2), chargés avec le moteur. */
   let compareFor:
     typeof import('@/config/surfaceTilesets').compareEdition | null = null;
+  let regionalFor:
+    | ((
+        name: string
+      ) =>
+        | (typeof import('@/config/surfaceTilesets').REGIONAL_TILESETS extends ReadonlyMap<
+            string,
+            infer R
+          >
+            ? R
+            : never)
+        | null)
+    | null = null;
   let curtain:
     import('@/components/surface/compareCurtain').CompareCurtain | null = null;
 
@@ -424,7 +438,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   async function loadEngine(): Promise<void> {
     const [
       { PlanetarySurfaceEngine },
-      { createDatedChooser, compareEdition },
+      { createDatedChooser, compareEdition, REGIONAL_TILESETS },
       { loadBodyHeights, heightsForGrid },
       { createCompareCurtain },
     ] = await Promise.all([
@@ -439,6 +453,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       date: () => api.orbitalMechanics.simulationDate,
     });
     compareFor = compareEdition;
+    regionalFor = (name) => REGIONAL_TILESETS.get(name) ?? null;
     curtain = createCompareCurtain(api.sceneSystem.renderer.domElement);
     loadHeights = loadBodyHeights;
     heightsFor = heightsForGrid;

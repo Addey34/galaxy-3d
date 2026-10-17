@@ -20,6 +20,8 @@ import type { DatedProduct, TimeInterval } from '@/core/temporal';
 
 import { parseDayDomain, publishedDay, type DayRange } from '@/core/timeDomain';
 import Logger from '@/utils/Logger';
+import regionalCoverage from './regionalCoverage.json';
+import type { RegionalCoverage, RegionalSource } from '@/core/regionalImagery';
 
 /**
  * TypeScript ÉLARGIT les chaînes d'un import JSON (`"type": "tileset"` arrive typé `string`).
@@ -105,9 +107,9 @@ function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
 
 /** Les MOSAÏQUES déclarées, indexées par nom de corps du catalogue : la surface par défaut. */
 export const SURFACE_TILESETS: ReadonlyMap<string, SurfaceTileset> = new Map(
-  FICHES.filter((fiche) => !fiche.service.time && !fiche.variant).map(
-    (fiche) => [fiche.body, toTileset(fiche)]
-  )
+  FICHES.filter(
+    (fiche) => !fiche.service.time && !fiche.variant && !fiche.regional
+  ).map((fiche) => [fiche.body, toTileset(fiche)])
 );
 
 /**
@@ -143,7 +145,7 @@ export const SURFACE_VARIANTS: ReadonlyMap<
 > = (() => {
   const byBody = new Map<string, Map<SurfaceVariant, SurfaceTileset[]>>();
   for (const fiche of FICHES) {
-    if (!fiche.variant) continue;
+    if (!fiche.variant || fiche.regional) continue;
     const variants = byBody.get(fiche.body) ?? new Map();
     variants.set(fiche.variant, [
       ...(variants.get(fiche.variant) ?? []),
@@ -339,3 +341,37 @@ export function createDatedChooser(options: {
     return tileset;
   };
 }
+
+/**
+ * Les IMAGERIES RÉGIONALES (lot 53, pas 4), par corps : plus fines que la base, servies sur sa
+ * grille et seulement dans leur couverture, lue dans `config/regionalCoverage.json` (écrit par
+ * `pnpm surface:regions`). La règle de choix vit dans `core/regionalImagery.ts`.
+ */
+export const REGIONAL_TILESETS: ReadonlyMap<
+  string,
+  { tileset: SurfaceTileset; source: RegionalSource }
+> = new Map(
+  FICHES.filter((fiche) => fiche.regional).map((fiche) => {
+    // TypeScript élargit les tableaux d'un import JSON : la forme est celle du générateur.
+    const region = (
+      regionalCoverage.regions as unknown as Record<
+        string,
+        { rows: RegionalCoverage['rows'] }
+      >
+    )[fiche.id];
+    if (!region)
+      throw new Error(
+        `imagerie régionale ${fiche.id} sans couverture : relancer pnpm surface:regions`
+      );
+    return [
+      fiche.body,
+      {
+        tileset: toTileset(fiche),
+        source: {
+          coverage: { boxDeg: regionalCoverage.boxDeg, rows: region.rows },
+          publishedPixelsPerDegree: fiche.publishedPixelsPerDegree,
+        },
+      },
+    ] as const;
+  })
+);

@@ -160,6 +160,20 @@ const MARKERS = [
     what: 'capabilities WMTS',
   },
   {
+    // L'orthophoto de l'IGN (lot 53, pas 4) : capacités WMS de la Géoplateforme lues le
+    // 2026-10-16 (948 422 o, racine `<WMS_Capabilities`).
+    prefix: 'https://data.geopf.fr/wms-r',
+    marker: () => '<WMS_Capabilities',
+    what: 'capacités WMS',
+  },
+  {
+    // La fiche ISO 19115 de la BD ORTHO®, qui porte sa licence : lue le 2026-10-16 (165 948 o,
+    // un `<mdb:MD_Metadata` dans la réponse CSW). Un identifiant inconnu rend une réponse vide.
+    prefix: 'https://data.geopf.fr/csw',
+    marker: () => '<mdb:MD_Metadata',
+    what: 'métadonnées ISO 19115 (CSW)',
+  },
+  {
     prefix: 'https://oderest.rsl.wustl.edu/',
     /**
      * Lu le 2026-09-30 sur une réponse RÉELLE : l'ODE rend ses erreurs en HTTP 200, avec

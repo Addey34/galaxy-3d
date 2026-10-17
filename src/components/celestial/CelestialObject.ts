@@ -557,6 +557,11 @@ export default class CelestialObject {
     this._meshGroup.add(object);
   }
 
+  /** Orientation mondiale du repère qui tourne avec le corps (cf. `CameraTarget`). */
+  getSpinQuaternion(out: THREE.Quaternion): THREE.Quaternion {
+    return this._meshGroup.getWorldQuaternion(out);
+  }
+
   /**
    * Met la sphère de SURFACE à une fraction de son rayon, ou la rétablit (facteur 1).
    *
@@ -1290,7 +1295,11 @@ export default class CelestialObject {
       this._measuredGroundKm !== null && radiusKm
         ? this._measuredGroundKm / radiusKm
         : 0;
-    return this.getFrameRadius(mode) * Math.max(extent, onFigure, ground);
+    // L'étendue d'un MODÈLE de forme seulement : sans modèle elle vaut 1, la sphère moyenne, et
+    // la prendre pour plancher arrêtait la caméra sur la sphère là où l'ellipsoïde passe DESSOUS,
+    // c'est-à-dire au-delà de ~35° de latitude : 4,9 km au-dessus du sol de Paris (lot 53).
+    const shape = this.config.model ? extent : 0;
+    return this.getFrameRadius(mode) * Math.max(shape, onFigure, ground);
   }
 
   /**

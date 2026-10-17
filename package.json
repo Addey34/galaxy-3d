@@ -42,6 +42,7 @@
     "atmosphere:generate": "node scripts/generate-atmosphere-profiles.mjs",
     "gazetteer:generate": "node scripts/generate-gazetteer.mjs",
     "earthnames:generate": "node scripts/generate-earth-names.mjs",
+    "surface:regions": "node scripts/generate-regional-coverage.mjs",
     "places:pull": "node scripts/pull-ode-footprints.mjs",
     "places:generate": "node scripts/generate-place-observations.mjs",
     "missions:generate": "node scripts/generate-mission-index.mjs",

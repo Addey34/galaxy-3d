@@ -1,0 +1,12 @@
+{
+  "$comment": "Lot 53, pas 4 : les imageries RÉGIONALES plus fines que Sentinel-2, et le pays dont la frontière borne chacune. Une imagerie régionale n'est employée que sur les boîtes dont le centre est dans son pays et qui ne touchent aucun autre pays, marge comprise, parce qu'à fort grossissement l'IGN rend une image blanche opaque hors de France (mesuré à Berne et Genève le 2026-10-16). La frontière vient de Natural Earth admin-0 1:10m (domaine public, version épinglée). Ajouter un pays : sa fiche de jeu de tuiles, puis une ligne ici, après lecture de SA licence.",
+  "naturalEarth": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_0_countries.geojson",
+  "boxLevel": 12,
+  "marginKm": 1,
+  "regions": [
+    {
+      "tileset": "earth-ign-orthophotos",
+      "countries": ["FRA"]
+    }
+  ]
+}

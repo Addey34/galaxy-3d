@@ -48,6 +48,13 @@ import {
 import { selectTiles, type TileView } from '@/core/tileSelection';
 import { geographicToLocalDirection } from '@/core/frames';
 import { tileUrl } from '@/core/tileUrl';
+import {
+  maxLevelFor,
+  regionalMaxLevel,
+  baseCrop,
+  servedByRegion,
+  type RegionalSource,
+} from '@/core/regionalImagery';
 import { screenPixelsPerKm } from '@/core/surfaceApproach';
 import {
   heightTileFor,
@@ -258,6 +265,15 @@ const defaultHeightFetcher: HeightFetcher = async (url, signal) => {
 export class PlanetarySurfaceEngine {
   private _host: SurfaceHost | null = null;
   private _tileset: SurfaceTileset | null = null;
+  /**
+   * L'imagerie RÉGIONALE du corps (lot 53, pas 4), plus fine que la base dans sa seule
+   * couverture : elle sert les niveaux au-delà de la base (`core/regionalImagery.ts`). Ignorée
+   * pendant une comparaison, dont les deux images doivent rester de la même source.
+   */
+  private _regional: {
+    tileset: SurfaceTileset;
+    source: RegionalSource;
+  } | null = null;
   private _radiusKm = 0;
   /**
    * GÉNÉRATION des carreaux d'imagerie (lot 48). Elle change quand le jeu attaché change sur le
@@ -335,6 +351,21 @@ export class PlanetarySurfaceEngine {
 
   get state(): SurfaceImageryState | null {
     return this._state;
+  }
+
+  /** Branche l'imagerie régionale du corps attaché, ou la retire (`null`). */
+  setRegional(
+    regional: { tileset: SurfaceTileset; source: RegionalSource } | null
+  ): void {
+    this._regional = regional;
+  }
+
+  /** La source régionale active : aucune pendant une comparaison. */
+  private _activeRegional(): {
+    tileset: SurfaceTileset;
+    source: RegionalSource;
+  } | null {
+    return this._compare ? null : this._regional;
   }
 
   /** Corps couvert aujourd'hui, ou `null`. */
@@ -451,7 +482,10 @@ export class PlanetarySurfaceEngine {
    * Le verrou ne se relâche qu'au détachement, ce qui le rend MONOTONE : une tuile qui
    * disparaît du champ ne referme pas le plancher sous la caméra.
    */
-  private _declareImageryWidth(): void {
+  private _declareImageryWidth(
+    centre: { latitudeDeg: number; longitudeDeg: number },
+    servedLevel: number
+  ): void {
     const host = this._host;
     const tileset = this._tileset;
     if (!host || !tileset) return;
@@ -459,11 +493,35 @@ export class PlanetarySurfaceEngine {
     // service qu'on vient de choisir, qui peut être en panne.
     const current = this._prefix();
     if (![...this._tiles.keys()].some((key) => key.startsWith(current))) return;
-    if (
-      host.setStreamedImageryWidth(
-        pyramidWidthPx(tileset.maxLevel, tileset.matrix)
-      )
+    // Si la VISÉE est dans une tuile que la source régionale SERT au niveau le plus fin, le
+    // plancher suit la source régionale, UN NIVEAU au-delà de celui déjà servi sous la caméra :
+    // il se relâche à mesure que la descente fait subdiviser, et s'arrête de lui-même là où le
+    // budget de carreaux ne subdivise plus. Deux échecs mesurés l'ont décidé (lot 53) : calculé
+    // pour la base, il arrêtait la caméra à 46,9 km au-dessus de Paris, où l'IGN n'était jamais
+    // demandée (run 38985771615) ; calculé pour la finesse MAXIMALE de l'IGN, il la laissait
+    // descendre à 23 m du sol, où 64 carreaux n'atteignent que le niveau 12 sous elle : une
+    // bouillie verte à l'écran.
+    const regional = this._activeRegional();
+    const regionalMax = regional
+      ? regionalMaxLevel(
+          tileset.matrix,
+          regional.source.publishedPixelsPerDegree
+        )
+      : tileset.maxLevel;
+    const finest = servedByRegion(
+      tileIndexAt(
+        regionalMax,
+        centre.latitudeDeg,
+        centre.longitudeDeg,
+        tileset.matrix
+      ),
+      tileset.matrix,
+      tileset.maxLevel,
+      regional?.source ?? null
     )
+      ? Math.min(regionalMax, Math.max(tileset.maxLevel, servedLevel) + 1)
+      : tileset.maxLevel;
+    if (host.setStreamedImageryWidth(pyramidWidthPx(finest, tileset.matrix)))
       this._onImageryWidthChanged();
   }
 
@@ -518,8 +576,18 @@ export class PlanetarySurfaceEngine {
     const radii = distanceUnits / renderedRadius;
     // Trop loin, ou caméra sous la surface : dans les deux cas il n'y a pas de sol à recouvrir.
     // Le second cas arrive à la toute première image, avant que le vol d'approche n'ait placé
-    // la caméra, et demandait sinon une couverture entière au niveau maximal.
-    if (radii > TILE_ENGINE_ENTER_RADII || radii <= 1) {
+    // la caméra, et demandait sinon une couverture entière au niveau maximal. « Sous la surface »
+    // se compte depuis le plus petit demi-axe de l'ellipsoïde, et le sol mesuré s'il est plus
+    // bas : à Paris l'ellipsoïde passe 4,9 km SOUS la sphère moyenne, et compter depuis la
+    // sphère détachait tout dès que la caméra y descendait (lot 53).
+    const figure = host.figure;
+    const lowest = Math.min(
+      figure ? Math.min(figure.a, figure.b, figure.c) : 1,
+      this._measuredGroundKm !== null
+        ? this._measuredGroundKm / this._radiusKm
+        : 1
+    );
+    if (radii > TILE_ENGINE_ENTER_RADII || radii <= lowest) {
       this._clear();
       return;
     }
@@ -544,13 +612,31 @@ export class PlanetarySurfaceEngine {
     // UN QUADTREE, plus une fenêtre d'un seul niveau (lot 48, pas 5) : la caméra regarde
     // l'horizon près du sol, et le sol visible va de quelques kilomètres à quelques centaines.
     // La règle de subdivision et ce qui l'a décidée vivent dans `core/tileSelection.ts`.
+    const regional = this._activeRegional();
+    const regionalMax = regional
+      ? regionalMaxLevel(
+          tileset.matrix,
+          regional.source.publishedPixelsPerDegree
+        )
+      : tileset.maxLevel;
     const tiles = selectTiles(
       this._tileView(camera, viewportHeightPx, centre, kmPerUnit),
       {
         shape: tileset.matrix,
-        maxLevel: tileset.maxLevel,
+        maxLevel: Math.max(tileset.maxLevel, regionalMax),
         firstDrawableLevel,
         maxTiles: this._budget.maxTiles,
+        ...(regional
+          ? {
+              maxLevelAt: (index: TileIndex) =>
+                maxLevelFor(
+                  index,
+                  tileset.matrix,
+                  tileset.maxLevel,
+                  regional.source
+                ),
+            }
+          : {}),
       }
     );
     if (tiles.length === 0) {
@@ -613,7 +699,7 @@ export class PlanetarySurfaceEngine {
     }
     this._pump();
 
-    this._declareImageryWidth();
+    this._declareImageryWidth(centre, level);
     this._publishState(tileset, level, tiles.length, centre);
   }
 
@@ -647,6 +733,26 @@ export class PlanetarySurfaceEngine {
         if (!key.startsWith(this._prefix())) painted += 1;
     }
 
+    // Le bandeau nomme la source qui sert le carreau sous la caméra : au-delà de la base, la
+    // source régionale (lot 53, pas 4), avec sa grille de base pour la finesse affichée ; un
+    // carreau au-delà de la base qu'elle ne sert pas montre l'image de la base à son niveau
+    // maximal, et c'est ce niveau que le bandeau annonce.
+    const regional = this._activeRegional();
+    if (
+      servedByRegion(
+        tileIndexAt(
+          level,
+          centre.latitudeDeg,
+          centre.longitudeDeg,
+          tileset.matrix
+        ),
+        tileset.matrix,
+        tileset.maxLevel,
+        regional?.source ?? null
+      )
+    )
+      tileset = { ...regional!.tileset, matrix: tileset.matrix };
+    else level = Math.min(level, tileset.maxLevel);
     const next: SurfaceImageryState = {
       body: tileset.body,
       tilesetId: tileset.id,
@@ -1172,9 +1278,27 @@ export class PlanetarySurfaceEngine {
     try {
       // Avec un rideau, les DEUX images de la tuile : le carreau ne se montre qu'avec les deux,
       // sans quoi un côté de la ligne afficherait l'autre année sans le dire.
+      // Au-delà de la base, la source régionale sert la tuile, demandée sur la grille de la base.
+      // Un carreau au-delà de la base que la région ne sert pas (à cheval sur sa frontière) montre
+      // son morceau de l'image de son ancêtre au niveau maximal de la base (`baseCrop`).
+      const regional = this._activeRegional();
+      const byRegion = servedByRegion(
+        index,
+        tileset.matrix,
+        tileset.maxLevel,
+        regional?.source ?? null
+      );
+      const primary = byRegion
+        ? {
+            ...regional!.tileset,
+            service: { ...regional!.tileset.service, matrix: tileset.matrix },
+          }
+        : tileset;
+      const crop = byRegion ? null : baseCrop(index, tileset.maxLevel);
+      const asked = crop?.ancestor ?? index;
       const [bitmap, compareBitmap] = await Promise.all(
-        [tileset, ...(compareSet ? [compareSet] : [])].map((set) =>
-          this._fetchTile(tileUrl(set.service, index), controller.signal).then(
+        [primary, ...(compareSet ? [compareSet] : [])].map((set) =>
+          this._fetchTile(tileUrl(set.service, asked), controller.signal).then(
             (image) => {
               bitmaps.push(image);
               return image;
@@ -1206,6 +1330,10 @@ export class PlanetarySurfaceEngine {
         return texture;
       };
       const texture = textureOf(bitmap!);
+      if (crop) {
+        texture.offset.set(crop.offset[0], crop.offset[1]);
+        texture.repeat.set(crop.repeat, crop.repeat);
+      }
       const tile = new SurfaceTile({
         index,
         radius: host.layerRadius,
