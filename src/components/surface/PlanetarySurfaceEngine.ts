@@ -273,8 +273,6 @@ export class PlanetarySurfaceEngine {
     tileset: SurfaceTileset;
     source: RegionalSource;
   } | null = null;
-  /** Niveau du carreau sous la caméra à la dernière passe : il dit quelle source y sert. */
-  private _servedLevel = 0;
   private _radiusKm = 0;
   /**
    * GÉNÉRATION des carreaux d'imagerie (lot 48). Elle change quand le jeu attaché change sur le
@@ -483,7 +481,10 @@ export class PlanetarySurfaceEngine {
    * Le verrou ne se relâche qu'au détachement, ce qui le rend MONOTONE : une tuile qui
    * disparaît du champ ne referme pas le plancher sous la caméra.
    */
-  private _declareImageryWidth(): void {
+  private _declareImageryWidth(centre: {
+    latitudeDeg: number;
+    longitudeDeg: number;
+  }): void {
     const host = this._host;
     const tileset = this._tileset;
     if (!host || !tileset) return;
@@ -491,15 +492,25 @@ export class PlanetarySurfaceEngine {
     // service qu'on vient de choisir, qui peut être en panne.
     const current = this._prefix();
     if (![...this._tiles.keys()].some((key) => key.startsWith(current))) return;
-    // Sous la caméra, une tuile au-delà de la base est régionale : la finesse déclarée au corps
-    // (donc le plancher d'approche) est alors celle de la source régionale.
+    // Si la VISÉE est dans la couverture régionale, la finesse déclarée au corps (donc le
+    // plancher d'approche) est celle de la source régionale. Lue sur la tuile du niveau suivant
+    // la base qui contient la visée, et NON sur la tuile déjà servie : le plancher calculé pour la
+    // base arrêtait la caméra là où la tuile du centre restait au niveau de la base, et la source
+    // régionale n'y était jamais demandée (46,9 km au-dessus de Paris, run 38985771615).
     const regional = this._activeRegional();
     const finest =
       regional &&
-      servedByRegion(
-        { level: this._servedLevel, row: 0, column: 0 },
-        tileset.maxLevel
-      )
+      maxLevelFor(
+        tileIndexAt(
+          tileset.maxLevel + 1,
+          centre.latitudeDeg,
+          centre.longitudeDeg,
+          tileset.matrix
+        ),
+        tileset.matrix,
+        tileset.maxLevel,
+        regional.source
+      ) > tileset.maxLevel
         ? regionalMaxLevel(
             tileset.matrix,
             regional.source.publishedPixelsPerDegree
@@ -624,7 +635,6 @@ export class PlanetarySurfaceEngine {
       boundsContain(tileBounds(index, tileset.matrix), centre)
     );
     const level = (under ?? tiles[0]!).level;
-    this._servedLevel = level;
 
     const wanted = new Set(tiles.map((index) => this._key(index)));
     this._wanted = wanted;
@@ -674,7 +684,7 @@ export class PlanetarySurfaceEngine {
     }
     this._pump();
 
-    this._declareImageryWidth();
+    this._declareImageryWidth(centre);
     this._publishState(tileset, level, tiles.length, centre);
   }
 

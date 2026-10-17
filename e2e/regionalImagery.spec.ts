@@ -77,6 +77,20 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
     throw error;
   }
   expect(ign.length).toBeGreaterThan(0);
+  // LE PLANCHER SUIT LA SOURCE RÉGIONALE : calculé pour la base (Blue Marble), il arrêtait la
+  // caméra à 46,9 km au-dessus de Paris, où la tuile du centre restait celle de la base, et
+  // l'IGN n'était jamais servie sous la visée (run 38985771615, sur trois tentatives).
+  await expect
+    .poll(
+      async () => {
+        await page.mouse.wheel(0, -12_000);
+        const text = (await page.locator('#surface-probe').textContent()) ?? '';
+        const match = /altitude\s+(-?[\d.]+) km/.exec(text);
+        return match ? Number(match[1]) : Infinity;
+      },
+      { timeout: 90_000, intervals: [2000] }
+    )
+    .toBeLessThan(30);
 
   for (const url of ign) {
     expect(url).toContain('SERVICE=WMS');

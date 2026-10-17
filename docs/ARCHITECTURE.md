@@ -2105,8 +2105,11 @@ de `core/tileUrl.ts`), sans Web Mercator, et le relief, aligné sur cette grille
 - **La règle** (`core/regionalImagery.ts`) : un niveau AU-DELÀ du maximum de la base n'existe que
   dans la couverture régionale, et c'est la source régionale qui le sert ; en deçà, la base. Le
   niveau maximal régional se DÉRIVE de la finesse publiée et de la grille (`pixelsPerDegree`), la
-  sélection des tuiles reçoit un maximum PAR TUILE (`maxLevelAt`), et le bandeau comme le plancher
-  d'approche suivent la source de la tuile sous la caméra. Une comparaison avant/après n'emploie
+  sélection des tuiles reçoit un maximum PAR TUILE (`maxLevelAt`), et le bandeau suit la source de
+  la tuile sous la caméra. Le plancher d'approche, lui, suit la COUVERTURE à la visée et non la
+  tuile déjà servie : calculé pour la base, il arrêtait la caméra à 46,9 km au-dessus de Paris,
+  où la tuile du centre restait celle de la base et où l'IGN n'était donc jamais demandée sous
+  la visée (vu en CI seulement, sur trois tentatives ; le poste local passait de justesse). Une comparaison avant/après n'emploie
   pas la source régionale : ses deux images doivent rester de la même source.
 - **La couverture**, mesurée avant d'être écrite : hors de France, à fort grossissement, l'IGN rend
   une image BLANCHE opaque (Berne, Genève), mais sur la côte il couvre aussi la mer proche (le
