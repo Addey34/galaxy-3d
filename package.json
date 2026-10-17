@@ -35,6 +35,7 @@
     "smallbodies:age": "node scripts/check-small-body-snapshot-age.mjs",
     "spacecraft:phases": "node scripts/derive-spacecraft-phases.mjs",
     "surface:tiles": "node --max-old-space-size=4096 scripts/bake-surface-height-tiles.mjs",
+    "surface:glo30": "node scripts/pull-glo30.mjs",
     "surface:capabilities": "node scripts/read-wmts-capabilities.mjs",
     "surface:editions": "node scripts/generate-eox-editions.mjs",
     "gibs:colormap": "node scripts/import-gibs-colormap.mjs",

@@ -2968,6 +2968,36 @@ molles : ETOPO 2022 à 60″ met un échantillon tous les 1,8 km. ETOPO publie a
   2 120,4 Mo pour la grille de Sentinel-2, 1 481,2 Mo pour celle de GIBS au seuil de 2 000 m ; 1,5 Go
   et 733 Mo au seuil de 4 000 m, SUPERSEDED le 2026-10-14), téléversé AVANT le manifeste.
 
+### GLO-30 à 5″ sur les mêmes reliefs : les montagnes à 150 m (lot 53, pas 3)
+
+Sous l'imagerie de Sentinel-2 (10 m par pixel), le relief d'ETOPO 15″ (~460 m) rendait les Alpes
+en collines molles. Le **Copernicus DEM GLO-30** (1″, ~30 m, altitudes EGM2008 comme ETOPO) le
+remplace aux deux niveaux les plus fins de la grille de Sentinel-2 (8 et 9), sur les MÊMES boîtes
+de montagne que l'étage ETOPO 15″ (relief des terres > 2 000 m), ETOPO restant en dessous.
+
+- **Pas de CORS chez la source** : GLO-30 se cuit hors ligne, comme ETOPO. Son tirage est SÉPARÉ
+  de la cuisson et REPRENABLE (`pnpm surface:glo30`, `scripts/pull-glo30.mjs`), parce qu'il pèse
+  30 à 45 Mo par degré carré en montagne : chaque degré est lu (lecteur de COG flottant sans
+  dépendance, `scripts/cog-reader.mjs`), réduit à **5″ par moyenne de surface**, rangé en entiers
+  16 bits, puis l'original est jeté. La liste des degrés se DÉRIVE du manifeste livré ; un degré
+  tout en mer n'existe pas dans GLO-30 et il est noté (`absent.json`), pas réessayé.
+- **5″ et non 1″, mesuré** sur trois degrés témoins : 10 à 13 m RMS de perte contre 1″ (47 à 62 m
+  pour les ~20″ d'ETOPO 15″ ainsi rééchantillonné), pour ~12 Go de tuiles au lieu de ~196, quand la
+  VM avait 115 Go libres. Le moteur n'emploie une tuile de hauteurs que jusqu'au niveau de
+  l'imagerie : la grille de GIBS (imagerie jusqu'au niveau 8, 500 m) n'en tirerait rien, d'où
+  Sentinel-2 seulement.
+- **Ce qui a été cuit** (2026-10-17) : 12 412 degrés tirés, 2 405 absents ; 3,99 milliards
+  d'échantillons de terre lus dans GLO-30, 4,05 % retombés sur ETOPO ; 132 208 tuiles, 17,5 Go,
+  envoyées au service de données AVANT la fusion du manifeste qui les nomme. Le niveau 9 donne
+  153 m par échantillon.
+- **Licence lue à la source** (page COP-DEM du Copernicus Data Space, 2026-10-16) : libre pour le
+  grand public, sous réserve de la mention de la donnée modifiée. La fiche du relief la porte
+  (`rights: "notice"`, fournisseur Copernicus), le schéma l'exige (`provider` nommant « all rights
+  reserved » quand `rights` vaut `notice`), et le bandeau du relief l'affiche.
+
+Gardes : `src/config/glo30Pull.test.ts` (lecteur de COG sur un fichier synthétique compressé avec
+prédicteur flottant, réduction par moyenne de surface, plan dérivé du manifeste).
+
 ## L'échelle de résolutions d'une texture : jusqu'où on livre, et pourquoi (lot 16)
 
 « Chaque corps a tout ce qu'ont les autres » (règle de parité de l'utilisateur) ne veut **pas**
