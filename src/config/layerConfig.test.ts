@@ -45,9 +45,13 @@ describe('MODIS cloud-fraction shader', () => {
 
     material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
 
-    expect(shader.fragmentShader).toContain('return (12.0 + g) / 100.0;');
-    expect(shader.fragmentShader).toContain('return (95.0 + b) / 100.0;');
-    expect(shader.fragmentShader).not.toContain('return 12.0 + g / 100.0;');
+    // La palette est une TABLE depuis le 2026-10-18 (`CLOUD_FRACTION_PALETTE`) : la division par
+    // 100 porte sur la somme entière, jamais sur le seul canal libre (« 12 + g / 100 »).
+    expect(shader.fragmentShader).toContain('vec2( 12.0, 0.0 )');
+    expect(shader.fragmentShader).toContain('vec2( 95.0, 0.0 )');
+    expect(shader.fragmentShader).toContain(
+      '( affine.x + ( free - affine.y ) ) / 100.0'
+    );
     expect(shader.fragmentShader).toContain(
       'float dayGapAlpha = dayAlpha * ( 1.0 - nightCoverage )'
     );

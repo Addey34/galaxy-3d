@@ -4,6 +4,7 @@
  * atmosphère, lumières), finesse des sphères/anneaux et matériaux standard réutilisés.
  */
 import { MAGNIFICATION_FADE_GLSL } from '@/core/dataMagnification';
+import { isSoftwareRenderer } from '@/components/systems/rendererKind';
 import { srgbByteToLinear } from '@/core/srgb';
 import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
@@ -267,30 +268,133 @@ export function getRealCloudsUniforms(
     RealCloudsUniforms | undefined;
 }
 
-const CLOUD_FRACTION_DECODE_GLSL = `
-        float decodeCloudFraction( vec3 c ) {
-          vec3 p = floor( c * 255.0 + 0.5 );
-          float r = p.r;
-          float g = p.g;
-          float b = p.b;
-          if ( abs(r-102.0)<1.5 && abs(b-119.0)<1.5 ) return g / 100.0;
-          if ( abs(r-183.0)<1.5 && abs(b-141.0)<1.5 ) return (6.0 + (g-15.0)) / 100.0;
-          if ( abs(r-0.0)<1.5 && abs(b-100.0)<1.5 ) return (12.0 + g) / 100.0;
-          if ( abs(r-0.0)<1.5 && abs(b-170.0)<1.5 ) return (19.0 + g) / 100.0;
-          if ( abs(r-0.0)<1.5 && abs(b-255.0)<1.5 ) return (25.0 + g) / 100.0;
-          if ( abs(g-136.0)<1.5 && abs(b-238.0)<1.5 ) return (31.0 + r) / 100.0;
-          if ( abs(g-80.0)<1.5 && abs(b-0.0)<1.5 ) return (38.0 + r) / 100.0;
-          if ( abs(g-136.0)<1.5 && abs(b-0.0)<1.5 ) return (44.0 + r) / 100.0;
-          if ( abs(g-220.0)<1.5 && abs(b-0.0)<1.5 ) return (50.0 + r) / 100.0;
-          if ( abs(r-255.0)<1.5 && abs(g-255.0)<1.5 ) return (57.0 + b) / 100.0;
-          if ( abs(r-240.0)<1.5 && abs(g-190.0)<1.5 ) return (63.0 + (b-64.0)) / 100.0;
-          if ( abs(r-187.0)<1.5 && abs(g-136.0)<1.5 ) return (69.0 + b) / 100.0;
-          if ( abs(r-122.0)<1.5 && abs(g-90.0)<1.5 ) return (76.0 + (b-3.0)) / 100.0;
-          if ( abs(r-110.0)<1.5 && abs(g-0.0)<1.5 ) return (82.0 + b) / 100.0;
-          if ( abs(r-170.0)<1.5 && abs(g-0.0)<1.5 ) return (88.0 + b) / 100.0;
-          if ( abs(r-255.0)<1.5 && abs(g-0.0)<1.5 ) return (95.0 + b) / 100.0;
+/**
+ * LA PALETTE DES FRACTIONS NUAGEUSES MODIS, EN TABLE (lot 54, 2026-10-18). Chaque couleur est
+ * reconnue sur DEUX canaux (`null` : le canal libre), et la fraction en pour cent est
+ * `base + (canal libre - offset)`. La PREMIÈRE ligne qui reconnaît une couleur l'emporte, comme
+ * dans la cascade de seize `if` qu'elle remplace, valeurs inchangées.
+ *
+ * Pourquoi une table : sous Direct3D, ANGLE passe par le compilateur HLSL, qui dépliait la cascade
+ * dans chacun de ses HUIT appels (quatre texels, jour et nuit). Mesuré sur la source de production,
+ * RTX 5070 Ti : 400 ms d'édition de liens pour le programme des nuages, deux fois (faces avant et
+ * arrière), payées sur le fil principal à l'approche de la Terre en Explo ; 57 ms la cascade
+ * retirée. Table parcourue une fois pour quatre texels (`vec4`), bornée par un UNIFORME pour que
+ * le compilateur garde une boucle : ~90 ms en isolé, 114 à 127 ms dans l'application.
+ *
+ * DEUX FORMES DE CODE, UNE SEULE DONNÉE. En rendu LOGICIEL (SwiftShader, celui de la CI), l'édition
+ * de liens ne coûte rien (8 ms dans les deux formes) mais le processeur EXÉCUTE le shader, et la
+ * table, qui évalue ses seize lignes, y coûte le double de la cascade, qui s'arrête à la première
+ * (112 contre 211 ms pour 4,2 M de pixels décodés huit fois). La cascade est donc GÉNÉRÉE depuis
+ * cette même table pour le rendu logiciel (`isSoftwareRenderer`, la règle partagée du lot 54).
+ * Équivalence prouvée sur les 16 777 216 couleurs par `src/config/cloudFractionPalette.test.ts`,
+ * qui garde la cascade d'origine pour oracle, et sur le GPU (0 écart sur 67 108 864 évaluations,
+ * journal du lot 54).
+ */
+export const CLOUD_FRACTION_PALETTE: readonly {
+  readonly key: readonly [number | null, number | null, number | null];
+  readonly base: number;
+  readonly offset: number;
+}[] = [
+  { key: [102, null, 119], base: 0, offset: 0 },
+  { key: [183, null, 141], base: 6, offset: 15 },
+  { key: [0, null, 100], base: 12, offset: 0 },
+  { key: [0, null, 170], base: 19, offset: 0 },
+  { key: [0, null, 255], base: 25, offset: 0 },
+  { key: [null, 136, 238], base: 31, offset: 0 },
+  { key: [null, 80, 0], base: 38, offset: 0 },
+  { key: [null, 136, 0], base: 44, offset: 0 },
+  { key: [null, 220, 0], base: 50, offset: 0 },
+  { key: [255, 255, null], base: 57, offset: 0 },
+  { key: [240, 190, null], base: 63, offset: 64 },
+  { key: [187, 136, null], base: 69, offset: 0 },
+  { key: [122, 90, null], base: 76, offset: 3 },
+  { key: [110, 0, null], base: 82, offset: 0 },
+  { key: [170, 0, null], base: 88, offset: 0 },
+  { key: [255, 0, null], base: 95, offset: 0 },
+];
+
+/**
+ * Le rendu de cette compilation est-il logiciel ? Un renderer sans contexte (celui des tests
+ * unitaires, `{}`) compte pour matériel, la forme servie aux visiteurs.
+ */
+function compilesForSoftware(renderer: THREE.WebGLRenderer): boolean {
+  return (
+    typeof renderer?.getContext === 'function' && isSoftwareRenderer(renderer)
+  );
+}
+
+const glslFloat = (v: number) => (Number.isInteger(v) ? `${v}.0` : `${v}`);
+const PALETTE_SIZE = CLOUD_FRACTION_PALETTE.length;
+
+const CLOUD_FRACTION_TABLE_GLSL = `
+        // Canal libre : -1 dans la clé (valeur de canal impossible, de 0 à 255).
+        const vec3 CLOUD_PALETTE_KEY[${PALETTE_SIZE}] = vec3[${PALETTE_SIZE}](
+          ${CLOUD_FRACTION_PALETTE.map((e) => `vec3( ${e.key.map((k) => glslFloat(k ?? -1)).join(', ')} )`).join(',\n          ')}
+        );
+        const vec2 CLOUD_PALETTE_AFFINE[${PALETTE_SIZE}] = vec2[${PALETTE_SIZE}](
+          ${CLOUD_FRACTION_PALETTE.map((e) => `vec2( ${glslFloat(e.base)}, ${glslFloat(e.offset)} )`).join(',\n          ')}
+        );
+        // La longueur de la table, en UNIFORME : bornée par une constante, la boucle serait
+        // dépliée par le compilateur HLSL, ce qu'on cherche justement à éviter.
+        uniform int uCloudPaletteSize;
+        // Quatre couleurs à la fois (r, g et b de quatre texels). Parcours de la DERNIÈRE ligne
+        // à la première : la première qui reconnaît la couleur écrit en dernier, donc l'emporte.
+        // mix( a, b, bvec4 ) CHOISIT composante par composante, il n'interpole pas.
+        vec4 decodeCloudFraction4( vec4 r, vec4 g, vec4 b ) {
+          r = floor( r * 255.0 + 0.5 );
+          g = floor( g * 255.0 + 0.5 );
+          b = floor( b * 255.0 + 0.5 );
+          vec4 fraction = vec4( 0.0 );
+          for ( int k = uCloudPaletteSize - 1; k >= 0; k-- ) {
+            vec3 key = CLOUD_PALETTE_KEY[k];
+            vec3 keyed = step( 0.0, key );
+            vec4 distance = max(
+              max( abs( r - key.x ) * keyed.x, abs( g - key.y ) * keyed.y ),
+              abs( b - key.z ) * keyed.z
+            );
+            vec4 free = r * ( 1.0 - keyed.x ) + g * ( 1.0 - keyed.y ) + b * ( 1.0 - keyed.z );
+            vec2 affine = CLOUD_PALETTE_AFFINE[k];
+            fraction = mix(
+              fraction,
+              ( affine.x + ( free - affine.y ) ) / 100.0,
+              lessThan( distance, vec4( 1.5 ) )
+            );
+          }
+          return fraction;
+        }
+`;
+
+/** La même table en CASCADE (rendu logiciel) : la première ligne qui reconnaît la couleur rend. */
+const CLOUD_FRACTION_CASCADE_GLSL = `
+        float decodeCloudFraction( vec3 p ) {
+          ${CLOUD_FRACTION_PALETTE.map(({ key, base, offset }) => {
+            const free = 'rgb'[key.indexOf(null)];
+            const test = key
+              .map((k, c) =>
+                k === null
+                  ? null
+                  : `abs( p.${'rgb'[c]} - ${glslFloat(k)} ) < 1.5`
+              )
+              .filter((t) => t !== null)
+              .join(' && ');
+            return `if ( ${test} ) return ( ${glslFloat(base)} + ( p.${free} - ${glslFloat(offset)} ) ) / 100.0;`;
+          }).join('\n          ')}
           return 0.0;
         }
+        vec4 decodeCloudFraction4( vec4 r, vec4 g, vec4 b ) {
+          r = floor( r * 255.0 + 0.5 );
+          g = floor( g * 255.0 + 0.5 );
+          b = floor( b * 255.0 + 0.5 );
+          return vec4(
+            decodeCloudFraction( vec3( r.x, g.x, b.x ) ),
+            decodeCloudFraction( vec3( r.y, g.y, b.y ) ),
+            decodeCloudFraction( vec3( r.z, g.z, b.z ) ),
+            decodeCloudFraction( vec3( r.w, g.w, b.w ) )
+          );
+        }
+`;
+
+const CLOUD_FRACTION_BILINEAR_GLSL = `
         // FRACTION NUAGEUSE INTERPOLÉE (2026-10-13). Les cartes MODIS codent la fraction dans une
         // PALETTE : interpoler deux couleurs en fabriquerait une troisième, d'où le filtrage au
         // plus proche de ces textures. Lue telle quelle, chaque texel (~20 km) devenait un carré
@@ -309,9 +413,14 @@ const CLOUD_FRACTION_DECODE_GLSL = `
           vec4 c01 = texture2D( map, vec2( uv00.x, v1 ) );
           vec4 c11 = texture2D( map, vec2( uv00.x + texel.x, v1 ) );
           float w = mix( mix( c00.a, c10.a, f.x ), mix( c01.a, c11.a, f.x ), f.y );
+          vec4 fractions = decodeCloudFraction4(
+            vec4( c00.r, c10.r, c01.r, c11.r ),
+            vec4( c00.g, c10.g, c01.g, c11.g ),
+            vec4( c00.b, c10.b, c01.b, c11.b )
+          );
           float n = mix(
-            mix( decodeCloudFraction( c00.rgb ) * c00.a, decodeCloudFraction( c10.rgb ) * c10.a, f.x ),
-            mix( decodeCloudFraction( c01.rgb ) * c01.a, decodeCloudFraction( c11.rgb ) * c11.a, f.x ),
+            mix( fractions.x * c00.a, fractions.y * c10.a, f.x ),
+            mix( fractions.z * c01.a, fractions.w * c11.a, f.x ),
             f.y
           );
           return vec2( n / max( w, 0.001 ), w );
@@ -567,7 +676,7 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
   };
   material.userData[REAL_CLOUDS_UNIFORM_KEY] = realClouds;
   installMagnificationFade(material);
-  chainOnBeforeCompile(material, (shader) => {
+  chainOnBeforeCompile(material, (shader, renderer) => {
     shader.uniforms['uRealClouds'] = realClouds.enabled;
     shader.uniforms['uCloudLumLow'] = realClouds.lumLow;
     shader.uniforms['uCloudLumHigh'] = realClouds.lumHigh;
@@ -583,6 +692,7 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
       realClouds.opticalAvailabilityHigh;
     shader.uniforms['uCloudOpticalBlendRadiusTexels'] =
       realClouds.opticalBlendRadiusTexels;
+    shader.uniforms['uCloudPaletteSize'] = { value: PALETTE_SIZE };
     shader.uniforms['uCloudCoverageBlendRadiusTexels'] =
       realClouds.coverageBlendRadiusTexels;
     shader.uniforms['uCloudDayMap'] = realClouds.dayMap;
@@ -603,7 +713,10 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
       .replace(
         '#include <common>',
         '#include <common>\nuniform float uRealClouds;\nuniform float uCloudLumLow;\nuniform float uCloudLumHigh;\nuniform float uCloudSatMax;\nuniform float uCloudLumLowLand;\nuniform sampler2D uCloudOceanMask;\nuniform float uHasOceanMask;\nuniform float uCloudEdgeSoft;\nuniform float uCloudSatOceanBoost;\nuniform float uCloudOpticalAvailabilityLow;\nuniform float uCloudOpticalAvailabilityHigh;\nuniform float uCloudOpticalBlendRadiusTexels;\nuniform float uCloudCoverageBlendRadiusTexels;\nuniform sampler2D uCloudDayMap;\nuniform float uHasCloudDayMap;\nuniform float uCloudDayStrength;\nuniform vec2 uCloudDayTexelSize;\nuniform sampler2D uCloudModelMap;\nuniform float uHasCloudModelMap;\nuniform float uCloudModelStrength;\nuniform sampler2D uCloudNightMap;\nuniform float uHasCloudNightMap;\nuniform float uCloudNightStrength;\nuniform vec2 uCloudNightTexelSize;\nuniform sampler2D uCloudStaticMap;\nuniform float uHasCloudStaticMap;\nuniform float uCloudStaticStrength;' +
-          CLOUD_FRACTION_DECODE_GLSL
+          (compilesForSoftware(renderer)
+            ? CLOUD_FRACTION_CASCADE_GLSL
+            : CLOUD_FRACTION_TABLE_GLSL) +
+          CLOUD_FRACTION_BILINEAR_GLSL
       )
       .replace(
         '#include <map_pars_fragment>',
