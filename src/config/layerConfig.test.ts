@@ -103,7 +103,7 @@ describe('Earth ocean PBR shader', () => {
       'boundedSpecular *= terminatorDay( specGraze - 0.125, 0.125 );'
     );
     expect(shader.fragmentShader).toContain(
-      'roughnessFactor = mix( 0.92, earthOceanRoughness( vMapUv ), texelRoughness.g );'
+      'roughnessFactor = mix( 0.92, earthOceanRoughness( vMapUv ), texelRoughness.r );'
     );
     expect(shader.fragmentShader).toContain(
       'uniform float uEarthOceanRoughnessVariation;'

@@ -455,7 +455,7 @@ export default class CelestialObject {
         uniforms.hasModelMap.value = 0;
         uniforms.staticStrength.value = 0;
       }
-      // Carte océan = canal g de la spec map (roughnessMap) de la surface : lève
+      // Carte océan = canal r de la spec map (roughnessMap, R8) de la surface : lève
       // l'ambiguïté sable-clair/nuage (voir REAL_CLOUDS_GLSL). Peut être absente si la
       // spec map n'est pas encore chargée → extraction « terre stricte » partout jusque-là.
       const surface = this.layers.get('surface');
