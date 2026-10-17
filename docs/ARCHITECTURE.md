@@ -5072,6 +5072,15 @@ la clé de la texture (`core/textureColorSpace.ts`), et un changement après cou
 téléversement. Gardes : `src/components/systems/TextureSystem.test.ts` (espace au moment du
 téléversement ; nouveau téléversement sur changement), toutes deux falsifiées.
 
+**Une carte en niveaux de gris se téléverse sur un seul canal** (R8, un octet par texel au lieu de
+quatre) : le masque spéculaire et la carte de déplacement de la Terre, mesurés EXACTEMENT gris
+(R = V = B partout). Le masque 8k passe de 171 à 43 Mio, la Terre en Explo de 864 à 728 Mio de
+textures, à pixels égaux (la sonde relit la composante rouge stockée : écart 0). Leurs lecteurs
+lisent le ROUGE (rugosité, masque océanique des nuages), le seul canal d'un R8. Les clés vivent dans
+`core/textureColorSpace.ts` (`SINGLE_CHANNEL_KEYS`) ; garde `src/config/singleChannelTextures.test.ts` :
+tout fichier livré sous ces clés, pour tout corps et à tout palier, doit rester gris (falsifiée :
+déclarer la couleur à un canal fait rougir 85 fichiers).
+
 **La couverture d'une imagerie régionale se teste par plages, ligne par ligne** (`coversBounds`,
 `touchesCoverage`), jamais boîte par boîte : appelée pour chaque nœud de la sélection à chaque
 image, la version boîte par boîte coûtait 3,4 s sur 10 près du sol de la Terre. Garde

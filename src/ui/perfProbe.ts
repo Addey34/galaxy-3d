@@ -383,8 +383,10 @@ export function setupPerfProbe(api: PublicAPI): () => void {
     };
     const fromGpu = read(stored, false);
     const fresh = read(await new THREE.TextureLoader().loadAsync(url), true);
+    // Une texture R8 ne porte que le rouge : c'est la seule composante à comparer.
+    const step = stored.format === THREE.RedFormat ? 4 : 1;
     let maxDiff = 0;
-    for (let i = 0; i < fromGpu.length; i += 1)
+    for (let i = 0; i < fromGpu.length; i += step)
       maxDiff = Math.max(maxDiff, Math.abs(fromGpu[i]! - fresh[i]!));
     return { maxDiff, colorSpace: stored.colorSpace };
   };

@@ -323,14 +323,14 @@ const REAL_CLOUDS_PARS_GLSL = `
         #ifdef USE_MAP
         // L'ALPHA D'UN TEXEL True Color : blanc lumineux et désaturé = nuage, sol coloré rejeté.
         // Deux seuils bas, sur l'océan (fond sombre) et sur la terre (sable clair ≈ nuage), la
-        // distinction venant du canal g de la carte océan.
+        // distinction venant du canal r de la carte océan (téléversée en R8).
         float extractCloudAlpha( vec2 uv, vec2 gx, vec2 gy ) {
           vec3 rc = textureGrad( map, uv, gx, gy ).rgb;
           float rcMax = max( rc.r, max( rc.g, rc.b ) );
           float rcMin = min( rc.r, min( rc.g, rc.b ) );
           float rcSat = rcMax > 0.0001 ? ( rcMax - rcMin ) / rcMax : 0.0;
           float rcOcean = uHasOceanMask > 0.5
-            ? textureGrad( uCloudOceanMask, uv, gx, gy ).g
+            ? textureGrad( uCloudOceanMask, uv, gx, gy ).r
             : 0.0;
           float rcLumLow = mix( uCloudLumLowLand, uCloudLumLow, rcOcean );
           float rcBright = smoothstep( rcLumLow, uCloudLumHigh, rcMin );
@@ -1583,11 +1583,13 @@ export function createShadowAwareStandardMaterial(
     if (invertRoughness) {
       // La carte Terre suit la convention « blanc = océan lisse ». Three.js attend
       // l'inverse pour roughnessMap : terre rugueuse (~0.92), eau peu rugueuse (~0.08).
+      // Le canal ROUGE, et non le vert de Three.js : la carte est téléversée sur un seul canal
+      // (R8, `core/textureColorSpace.ts`), et R = V = B dans le fichier livré.
       shader.fragmentShader = shader.fragmentShader.replace(
         'roughnessFactor *= texelRoughness.g;',
         varyOceanRoughness
-          ? `roughnessFactor = mix( ${EARTH_OCEAN_ROUGHNESS_SETTINGS.land.toFixed(2)}, earthOceanRoughness( vMapUv ), texelRoughness.g );`
-          : `roughnessFactor = mix( ${EARTH_OCEAN_ROUGHNESS_SETTINGS.land.toFixed(2)}, ${EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanBase.toFixed(2)}, texelRoughness.g );`
+          ? `roughnessFactor = mix( ${EARTH_OCEAN_ROUGHNESS_SETTINGS.land.toFixed(2)}, earthOceanRoughness( vMapUv ), texelRoughness.r );`
+          : `roughnessFactor = mix( ${EARTH_OCEAN_ROUGHNESS_SETTINGS.land.toFixed(2)}, ${EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanBase.toFixed(2)}, texelRoughness.r );`
       );
     }
 
