@@ -46,23 +46,27 @@ const EPSILON = 1e-9;
 
 type Bounds = { west: number; south: number; east: number; north: number };
 
-/** Combien des boîtes que touche cette emprise sont couvertes, sur combien. */
-function countCovered(
+/**
+ * Parcourt les boîtes que touche cette emprise et s'arrête dès que `stop` répond vrai : appelé
+ * pour chaque nœud de la sélection, à chaque image, sur des tuiles qui touchent jusqu'à 2 600
+ * boîtes (2,25° au niveau maximal de GIBS), il ne doit jamais tout parcourir pour rien.
+ */
+function scanBoxes(
   bounds: Bounds,
-  coverage: RegionalCoverage
-): { covered: number; total: number } {
+  coverage: RegionalCoverage,
+  stop: (covered: boolean) => boolean
+): boolean {
   const step = coverage.boxDeg;
   const r0 = Math.floor((90 - bounds.north + EPSILON) / step);
   const r1 = Math.floor((90 - bounds.south - EPSILON) / step);
   const c0 = Math.floor((bounds.west + 180 + EPSILON) / step);
   const c1 = Math.floor((bounds.east + 180 - EPSILON) / step);
-  let covered = 0;
   for (let r = r0; r <= r1; r += 1) {
     const ranges = coverage.rows[String(r)] ?? [];
     for (let c = c0; c <= c1; c += 1)
-      if (ranges.some(([from, to]) => c >= from && c <= to)) covered += 1;
+      if (stop(ranges.some(([from, to]) => c >= from && c <= to))) return true;
   }
-  return { covered, total: (r1 - r0 + 1) * (c1 - c0 + 1) };
+  return false;
 }
 
 /** Toutes les boîtes que touche cette emprise sont-elles couvertes ? */
@@ -70,8 +74,7 @@ export function coversBounds(
   bounds: Bounds,
   coverage: RegionalCoverage
 ): boolean {
-  const { covered, total } = countCovered(bounds, coverage);
-  return covered === total;
+  return !scanBoxes(bounds, coverage, (covered) => !covered);
 }
 
 /** Au moins une des boîtes que touche cette emprise est-elle couverte ? */
@@ -79,7 +82,7 @@ export function touchesCoverage(
   bounds: Bounds,
   coverage: RegionalCoverage
 ): boolean {
-  return countCovered(bounds, coverage).covered > 0;
+  return scanBoxes(bounds, coverage, (covered) => covered);
 }
 
 /**
