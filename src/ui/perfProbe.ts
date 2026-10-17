@@ -344,8 +344,54 @@ export function setupPerfProbe(api: PublicAPI): () => void {
     }));
   };
 
+  /**
+   * LA TEXTURE TELLE QUE LE GPU LA TIENT : une texture du cache, rendue SANS la marquer à
+   * téléverser, comparée à la même image lue fraîchement en données brutes. Un écart dit que son
+   * stockage ne correspond pas à son espace de couleur déclaré (lot 54).
+   */
+  const storedVersusRaw = async (
+    file: string,
+    /** Témoin : retéléverser d'abord la texture, telle qu'elle est déclarée maintenant. */
+    reupload = false
+  ): Promise<{ maxDiff: number; colorSpace: string } | null> => {
+    const entry = [...api.textureSystem.cachedEntries()].find(([path]) =>
+      path.endsWith(file)
+    );
+    if (!entry) return null;
+    const [url, stored] = entry;
+    if (reupload) stored.needsUpdate = true;
+    const read = (texture: THREE.Texture, upload: boolean): Uint8Array => {
+      const width = 64;
+      const height = 32;
+      if (upload) {
+        texture.colorSpace = THREE.NoColorSpace;
+        texture.needsUpdate = true;
+      }
+      const target = new THREE.WebGLRenderTarget(width, height);
+      const scene = new THREE.Scene();
+      const material = new THREE.MeshBasicMaterial({ map: texture });
+      scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+      const previous = renderer.getRenderTarget();
+      renderer.setRenderTarget(target);
+      renderer.render(scene, new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1));
+      const pixels = new Uint8Array(width * height * 4);
+      renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
+      renderer.setRenderTarget(previous);
+      target.dispose();
+      material.dispose();
+      return pixels;
+    };
+    const fromGpu = read(stored, false);
+    const fresh = read(await new THREE.TextureLoader().loadAsync(url), true);
+    let maxDiff = 0;
+    for (let i = 0; i < fromGpu.length; i += 1)
+      maxDiff = Math.max(maxDiff, Math.abs(fromGpu[i]! - fresh[i]!));
+    return { maxDiff, colorSpace: stored.colorSpace };
+  };
+
   const probe = {
     snapshot,
+    storedVersusRaw,
     shaderLinks,
     uploadTest,
     decodeEquivalence,

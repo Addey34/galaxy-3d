@@ -2,6 +2,7 @@
  * Applies a loaded texture to the correct layer/material of a celestial body.
  * Texture ownership remains with TextureSystem; this module only attaches maps.
  */
+import { isDataTexture } from '@/core/textureColorSpace';
 import * as THREE from 'three';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 
@@ -21,21 +22,18 @@ export const EARTH_DISPLACEMENT_SCALE = 0.0014;
 /** Keep only small-scale shading after large-scale DEM geometry is displaced. */
 export const EARTH_NORMAL_SCALE_WITH_DISPLACEMENT = 0.4;
 
-const DATA_TEXTURE_TYPES = new Set([
-  'normalMap',
-  'bump',
-  'displacement',
-  'spec',
-  'specularMap',
-]);
-
 export function configureTextureColorSpace(
   textureKey: string,
   texture: THREE.Texture
 ): void {
-  texture.colorSpace = DATA_TEXTURE_TYPES.has(textureKey)
+  const colorSpace = isDataTexture(textureKey)
     ? THREE.NoColorSpace
     : THREE.SRGBColorSpace;
+  if (texture.colorSpace === colorSpace) return;
+  texture.colorSpace = colorSpace;
+  // L'espace de couleur fixe le FORMAT de stockage au téléversement : changé après coup, il ne
+  // compte qu'au prochain (cf. `core/textureColorSpace.ts`, où le défaut est mesuré).
+  texture.needsUpdate = true;
 }
 
 export function applyTexture(

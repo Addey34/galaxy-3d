@@ -5061,6 +5061,17 @@ bougé de plus de `POSITION_REFRESH_MS` (10 s simulées) ; seule la projection s
 L'erreur bornée : 400 km pour un géocroiseur à 40 km/s, moins d'un pixel au-delà de 330 000 km de
 la caméra. Garde : `src/ui/smallBodyOverlay.test.ts`.
 
+**Une carte de données arrive au GPU en données, pas en couleur.** L'espace de couleur fixe le
+FORMAT de stockage au téléversement (sRGB : le GPU « linéarise » à la lecture). Un palier chargé
+après le branchement du moteur de rendu (4k, 8k) était téléversé aussitôt en sRGB, puis déclaré
+brut sans être retéléversé : les normales 8k et la carte de déplacement de la Terre étaient lues
+comme des couleurs. Mesuré par la sonde (`storedVersusRaw`, la texture telle que le GPU la tient
+contre une lecture brute) : écart de 73 sur 255, 0 une fois retéléversées comme déclarées, la
+couleur gardant son écart sRGB attendu (témoin). L'espace se fixe donc AVANT le téléversement, par
+la clé de la texture (`core/textureColorSpace.ts`), et un changement après coup redemande un
+téléversement. Gardes : `src/components/systems/TextureSystem.test.ts` (espace au moment du
+téléversement ; nouveau téléversement sur changement), toutes deux falsifiées.
+
 **La couverture d'une imagerie régionale se teste par plages, ligne par ligne** (`coversBounds`,
 `touchesCoverage`), jamais boîte par boîte : appelée pour chaque nœud de la sélection à chaque
 image, la version boîte par boîte coûtait 3,4 s sur 10 près du sol de la Terre. Garde

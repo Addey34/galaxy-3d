@@ -7,6 +7,7 @@
  */
 import * as THREE from 'three';
 import { hasDebugFlag } from '@/utils/debugFlags';
+import { isDataTexture } from '@/core/textureColorSpace';
 import type { CelestialBodyConfig, TextureQuality } from '@/types';
 import type {
   PerformanceSettings,
@@ -260,7 +261,9 @@ export class TextureSystem {
    */
   async loadTexture(
     relativePath: string,
-    quality: TextureQuality | string
+    quality: TextureQuality | string,
+    /** L'espace de couleur à téléverser : `NoColorSpace` pour une carte de données. */
+    colorSpace: THREE.ColorSpace = THREE.SRGBColorSpace
   ): Promise<THREE.Texture> {
     assertSafeTexturePath(relativePath, 'TextureSystem asset path');
     assertSafeTextureQuality(String(quality), 'TextureSystem quality');
@@ -294,6 +297,8 @@ export class TextureSystem {
                 settings[key];
             }
           );
+          // AVANT le téléversement : il fixe le format de stockage (cf. `core/textureColorSpace.ts`).
+          texture.colorSpace = colorSpace;
           texture.needsUpdate = true;
           // Upload GPU immédiat, hors boucle de rendu : sans ça, le premier render()
           // après un changement de LOD paie l'upload synchrone (pic de frame-time =
@@ -430,7 +435,11 @@ export class TextureSystem {
     Logger.debug(
       `[TextureSystem] LOD ${bodyName}:${textureKey} -> ${chosenQuality} (dist: ${distance.toFixed(1)})`
     );
-    return this.loadTexture(textureBasePath, chosenQuality);
+    return this.loadTexture(
+      textureBasePath,
+      chosenQuality,
+      isDataTexture(textureKey) ? THREE.NoColorSpace : THREE.SRGBColorSpace
+    );
   }
 
   private _resolveBodyConfig(
