@@ -55,15 +55,27 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
   if (!box) throw new Error('canvas absent');
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   const credit = page.locator('#surface-imagery .si-credit');
-  await expect
-    .poll(
-      async () => {
-        await page.mouse.wheel(0, -12_000);
-        return (await credit.textContent()) ?? '';
-      },
-      { timeout: 180_000, intervals: [2000] }
-    )
-    .toContain('IGN, BD ORTHO®');
+  try {
+    await expect
+      .poll(
+        async () => {
+          await page.mouse.wheel(0, -12_000);
+          return (await credit.textContent()) ?? '';
+        },
+        { timeout: 180_000, intervals: [2000] }
+      )
+      .toContain('IGN, BD ORTHO®');
+  } catch (error) {
+    // Ce qu'il faut pour comprendre un échec du coureur sans le rejouer : où est la caméra,
+    // quel niveau est servi sous elle, combien de requêtes sont parties vers l'IGN.
+    const probe = (await page.locator('#surface-probe').textContent()) ?? '';
+    const badge = page.locator('#surface-imagery');
+    console.log(
+      `[regional] ${ign.length} requêtes IGN ; niveau du bandeau ${await badge.getAttribute('data-level')} ; ` +
+        probe.replace(/\s+/g, ' ').slice(0, 900)
+    );
+    throw error;
+  }
   expect(ign.length).toBeGreaterThan(0);
 
   for (const url of ign) {
