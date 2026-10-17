@@ -1,3 +1,4 @@
+import { splitLocalePath } from '@/core/localePath';
 import {
   parsePermalink,
   pathnameForBody,
@@ -87,7 +88,10 @@ export function setupPermalinks(
       // L'état décrit encore l'éclipse : son adresse indexable reste la bonne. Ni `?date=` ni
       // `?body=` — le chemin les porte, et deux URL pour un même contenu est précisément ce
       // que le canonique existe pour éviter. Le mode, lui, n'est pas porté par le chemin.
-      const eclipseUrl = `${eclipsePathname(eclipse)}${serializePermalink(
+      const eclipseUrl = `${eclipsePathname(
+        eclipse,
+        splitLocalePath(window.location.pathname).prefix
+      )}${serializePermalink(
         { mode: modeSwitcher.getMode() },
         window.location.search
       )}${window.location.hash}`;
@@ -104,7 +108,11 @@ export function setupPermalinks(
     // Le CHEMIN suit la sélection, il n'est plus seulement lu. Chaque corps a déjà son adresse
     // indexable ; la parcourir sans recharger, c'est la lui rendre. `serializePermalink` voit
     // ce chemin et omet alors `?body=`, devenu redondant. Cf. `pathnameForBody`.
-    const nextPathname = pathnameForBody(selectedBody, validBodies);
+    const nextPathname = pathnameForBody(
+      selectedBody,
+      validBodies,
+      window.location.pathname
+    );
     const nextSearch = serializePermalink(
       {
         mode: modeSwitcher.getMode(),

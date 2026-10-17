@@ -35,3 +35,21 @@ test('a place address opens the body facing the named formation', async ({
   expect(Number(offset)).toBeLessThan(0.05);
   await expect(page).not.toHaveURL(/place=/);
 });
+
+/**
+ * La même adresse depuis une page de lieu FRANÇAISE (`/fr/moon/?place=…`). Jusqu'au 2026-10-17 le
+ * chemin localisé ne nommait aucun corps pour l'application : elle démarrait sur la vue
+ * d'ensemble, et l'adresse n'était jamais réécrite (mesuré en production).
+ */
+test('a localized place address keeps its language and faces the formation', async ({
+  page,
+}) => {
+  await page.goto(`/fr/moon/?place=Mare%20Imbrium&date=${MOON_SCENE_DATE}`);
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  const canvas = page.locator('canvas').first();
+  await expect(canvas).toHaveAttribute('data-search-focus', /^Mare Imbrium\|/, {
+    timeout: 60_000,
+  });
+  await expect(page).toHaveURL(/\/fr\/moon\/\?/);
+  await expect(page).not.toHaveURL(/place=/);
+});
