@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   baseCrop,
   coversBounds,
+  touchesCoverage,
   maxLevelFor,
   regionalMaxLevel,
   servedByRegion,
@@ -142,5 +143,64 @@ describe('imagerie régionale (lot 53, pas 4)', () => {
     expect(url).toBe(
       `https://example.test/wms?SERVICE=WMS&CRS=EPSG:4326&BBOX=${b.south},${b.west},${b.north},${b.east}`
     );
+  });
+});
+
+describe('couverture par plages (lot 54)', () => {
+  it('rend exactement ce que rend le parcours boîte par boîte, sur la vraie couverture', async () => {
+    const { default: real } =
+      (await import('@/config/regionalCoverage.json')) as unknown as {
+        default: {
+          boxDeg: number;
+          regions: Record<string, { rows: Record<string, [number, number][]> }>;
+        };
+      };
+    const coverage = {
+      boxDeg: real.boxDeg,
+      rows: Object.values(real.regions)[0]!.rows,
+    };
+    const step = coverage.boxDeg;
+    const brute = (b: {
+      west: number;
+      south: number;
+      east: number;
+      north: number;
+    }) => {
+      const e = 1e-9;
+      const cells: boolean[] = [];
+      for (
+        let r = Math.floor((90 - b.north + e) / step);
+        r <= Math.floor((90 - b.south - e) / step);
+        r += 1
+      )
+        for (
+          let c = Math.floor((b.west + 180 + e) / step);
+          c <= Math.floor((b.east + 180 - e) / step);
+          c += 1
+        )
+          cells.push(
+            (coverage.rows[String(r)] ?? []).some(([f, t]) => c >= f && c <= t)
+          );
+      return { all: cells.every(Boolean), any: cells.some(Boolean) };
+    };
+    // Générateur pseudo-aléatoire déterministe : un échec se rejoue à l'identique.
+    let seed = 54;
+    const rand = () =>
+      (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    let mixed = 0;
+    for (let i = 0; i < 4000; i += 1) {
+      const size = [0.01, 0.05, 0.3, 1.2, 2.25][i % 5]!;
+      const west = -6 + rand() * 16;
+      const south = 41 + rand() * 11;
+      const b = { west, south, east: west + size, north: south + size };
+      const expected = brute(b);
+      expect(coversBounds(b, coverage), JSON.stringify(b)).toBe(expected.all);
+      expect(touchesCoverage(b, coverage), JSON.stringify(b)).toBe(
+        expected.any
+      );
+      if (expected.any && !expected.all) mixed += 1;
+    }
+    // Le tirage doit contenir des emprises À CHEVAL, sans quoi il ne prouverait rien.
+    expect(mixed).toBeGreaterThan(100);
   });
 });
