@@ -22,6 +22,7 @@ import { classifyTemporal, temporalCategoryLabelKey } from '@/core/temporal';
 import { formatIsoDay } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import { loadDeferredMessages } from '@/i18n/deferredMessages';
+import { isSoftwareRenderer } from '@/components/systems/rendererKind';
 import Logger from '@/utils/Logger';
 import { NOTICE_CHANGED } from './ephemerisNotice';
 import { SURFACE_CHOICES, type SurfaceChoiceId } from './surfaceChoices';
@@ -49,6 +50,45 @@ function writeStored(enabled: boolean): void {
   } catch {
     // Stockage plein/refusé (mode privé) : le réglage reste actif pour la session.
   }
+}
+
+/**
+ * LE BUDGET DE CARREAUX, BORNÉ EN RENDU LOGICIEL (lot 54). C'est lui qui borne la finesse montrée
+ * près du sol : mesuré le 2026-10-17 sur une RTX 5070 Ti, la descente vers Paris s'arrêtait à
+ * 733 m avec 64 carreaux (15 m par texel sous la caméra) et descend à 183 m avec 256 (4 m par
+ * texel), pour +64 Mio de textures et 151 appels de dessin au lieu de 79, à 60 i/s. En rendu
+ * logiciel, où le processeur rastérise, le budget reste celui d'avant.
+ */
+export const SOFTWARE_MAX_TILES = 64;
+
+export function surfaceTileBudget(
+  profile: { maxTiles: number; maxConcurrentLoads: number },
+  software: boolean
+): { maxTiles: number; maxConcurrentLoads: number } {
+  return software
+    ? { ...profile, maxTiles: Math.min(profile.maxTiles, SOFTWARE_MAX_TILES) }
+    : profile;
+}
+
+/**
+ * `?debug-tiles=N` : force le budget de carreaux du moteur de surface, pour un A/B sur le MÊME
+ * build (lot 54 : le budget borne la finesse montrée près du sol). Jamais actif sans le drapeau.
+ */
+function debugTileBudget(): {
+  maxTiles: number;
+  maxConcurrentLoads: number;
+} | null {
+  if (typeof window === 'undefined') return null;
+  const value = Number(
+    new URLSearchParams(window.location.search).get('debug-tiles')
+  );
+  return Number.isFinite(value) && value > 0
+    ? {
+        maxTiles: value,
+        maxConcurrentLoads:
+          BOOT_QUALITY_PROFILE.surfaceTiles.maxConcurrentLoads,
+      }
+    : null;
 }
 
 export function setupSurfacePanel(api: PublicAPI): () => void {
@@ -458,7 +498,12 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     loadHeights = loadBodyHeights;
     heightsFor = heightsForGrid;
     engine = new PlanetarySurfaceEngine({
-      budget: BOOT_QUALITY_PROFILE.surfaceTiles,
+      budget:
+        debugTileBudget() ??
+        surfaceTileBudget(
+          BOOT_QUALITY_PROFILE.surfaceTiles,
+          isSoftwareRenderer(api.sceneSystem.renderer)
+        ),
       onState,
       // La finesse servie a changé : `CameraSystem` ne repose ses bornes d'approche qu'à la
       // sélection, il faut donc le lui dire, sinon la descente reste plafonnée par la

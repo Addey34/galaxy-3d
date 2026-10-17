@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { hasDebugFlag } from '@/utils/debugFlags';
 import { isDataTexture, isSingleChannel } from '@/core/textureColorSpace';
+import { isSoftwareRenderer } from './rendererKind';
 import type { CelestialBodyConfig, TextureQuality } from '@/types';
 import type {
   PerformanceSettings,
@@ -155,16 +156,8 @@ export class TextureSystem {
 
   private _decodesOffThread(): boolean {
     if (!this.decodeOffThread || !this.renderer) return false;
-    if (this._hardware === null) {
-      const gl = this.renderer.getContext();
-      const info = gl.getExtension('WEBGL_debug_renderer_info');
-      const name = info
-        ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL))
-        : '';
-      this._hardware = !/swiftshader|llvmpipe|software|basic render/i.test(
-        name
-      );
-    }
+    if (this._hardware === null)
+      this._hardware = !isSoftwareRenderer(this.renderer);
     return this._hardware;
   }
 

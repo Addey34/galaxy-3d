@@ -107,7 +107,9 @@ export const QUALITY_PROFILES: Record<QualityTier, QualityProfile> = {
     hiResSegments: 256,
     maxTextureQuality: '8k',
     maxModelQuality: '4k',
-    surfaceTiles: { maxTiles: 64, maxConcurrentLoads: 6 },
+    // 256 en rendu matériel (lot 54 : plancher de 733 à 183 m au-dessus de Paris) ; borné à 64
+    // en rendu logiciel par `ui/surfacePanel.ts` (`SOFTWARE_MAX_TILES`).
+    surfaceTiles: { maxTiles: 256, maxConcurrentLoads: 6 },
   },
 };
 

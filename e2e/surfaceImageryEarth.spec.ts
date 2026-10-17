@@ -370,9 +370,14 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
         },
         { timeout: 150_000, intervals: [1500] }
       )
-      // 12 et non 13 : à 0,9 km au-dessus d'un sol à 5 000 m, le niveau servi est le 12 ; sous le
-      // sol, la caméra fautive atteignait le 13 (mesuré des deux côtés).
-      .toBeGreaterThanOrEqual(12);
+      // 11 et non 12 : à 0,9 km au-dessus d'un sol à 5 000 m, le niveau servi est le 12 quand le
+      // budget de carreaux le permet, et le 11 quand la caméra, tournée vers l'horizon, l'épuise :
+      // 61 à 62 carreaux posés sur 64, grossissement de 4,46 px/texel, visée au-dessus de
+      // l'Atlantique (sonde imprimée au run 39066233363, Xeon 8370C). En rendu logiciel le budget
+      // reste 64 (`ui/surfacePanel.ts`). Ce que protège ce scénario, le plancher compté depuis le
+      // SOL, se vérifie juste après (« au-dessus du sol » positif) ; sous le sol, la caméra fautive
+      // atteignait le 13.
+      .toBeGreaterThanOrEqual(11);
   } catch (error) {
     // Bloqué au niveau 11 sur certains coureurs, quel que soit le temps donné (2026-10-17) : ce
     // que la caméra et le moteur disaient à ce moment, pour diagnostiquer sans rejouer.
