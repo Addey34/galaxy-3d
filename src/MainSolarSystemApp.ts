@@ -267,7 +267,7 @@ function wireChrome(): {
       (cb) => animationSystem.onFrame(cb)
     );
     // Sondes de débogage (`?debug-solar`, `-geo`, `-earth`, `-terminator`, `-surface`,
-    // `-meteo`) : un seul morceau, chargé seulement si un drapeau `debug-…` est présent.
+    // `-meteo`, `-perf`) : un seul morceau, chargé seulement si un drapeau `debug-…` est présent.
     const debugProbes = hasAnyDebugFlag() ? import('./ui/debugProbes') : null;
     void debugProbes?.then((m) => {
       m.setupSolarDebug(api);
@@ -275,6 +275,7 @@ function wireChrome(): {
       m.setupEarthDebug(api);
       m.setupTerminatorProbe(api);
       m.setupSurfaceProbe(api);
+      m.setupPerfProbe(api);
     });
     // Sonde d'éclipse (ligne 45.2) : chargée À LA DEMANDE, seulement sous `?debug-eclipse`, pour
     // ne rien ajouter au démarrage ordinaire.

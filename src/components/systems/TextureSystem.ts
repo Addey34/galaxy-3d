@@ -6,6 +6,7 @@
  * `getLODTexture` choisit la résolution selon la distance caméra (plafonnée sur mobile).
  */
 import * as THREE from 'three';
+import { hasDebugFlag } from '@/utils/debugFlags';
 import type { CelestialBodyConfig, TextureQuality } from '@/types';
 import type {
   PerformanceSettings,
@@ -87,12 +88,103 @@ export interface TextureSystemConfig {
 // tout le catalogue en zoom max) contre une croissance mémoire sans borne du cache.
 const MAX_CACHE_ENTRIES = 64;
 
+/**
+ * Une texture décodée HORS du fil principal (`createImageBitmap`), retournée au décodage pour
+ * donner au GPU les mêmes octets que `TextureLoader` (cf. `TextureSystem.decodeOffThread`).
+ * Exportée pour que la sonde `?debug-perf` compare CE chemin à l'ancien, même là où le rendu
+ * logiciel le laisse inactif (`e2e/textureDecode.spec.ts`).
+ */
+export async function decodeTextureOffThread(
+  path: string
+): Promise<THREE.Texture> {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const bitmap = await createImageBitmap(await response.blob(), {
+    imageOrientation: 'flipY',
+    premultiplyAlpha: 'none',
+    colorSpaceConversion: 'default',
+  });
+  const texture = new THREE.Texture(bitmap);
+  texture.flipY = false;
+  // Une ImageBitmap tient sa mémoire hors du tas JavaScript : elle se ferme avec la texture.
+  texture.addEventListener('dispose', () => bitmap.close());
+  return texture;
+}
+
 export class TextureSystem {
   static #instance: TextureSystem | undefined;
 
   private readonly textureLoader = new THREE.TextureLoader();
+
+  /**
+   * DÉCODER HORS DU FIL PRINCIPAL (lot 54). Par `TextureLoader`, une `<img>` est décodée au
+   * téléversement, sur le fil principal : mesuré le 2026-10-17 sur une RTX 5070 Ti, la texture 8k
+   * de la Terre y bloquait 244 ms (966 ms sous frein CPU × 4), contre 38 ms (108 ms) par
+   * `createImageBitmap`, qui décode en parallèle. Les octets donnés au GPU sont les mêmes :
+   * retournée au décodage (`imageOrientation: 'flipY'`, puis `flipY = false`), sans prémultiplier
+   * l'alpha, avec la conversion de couleur par défaut du navigateur, exactement ce que faisait
+   * l'ancien chemin. Safari avant 17 et Firefox avant 98 ignorent ces options (image à l'envers) :
+   * ils gardent `TextureLoader`, la règle même du chargeur glTF de Three.js.
+   *
+   * EN RENDU MATÉRIEL SEULEMENT (`_decodesOffThread`). En rendu LOGICIEL (SwiftShader, celui de
+   * la CI et des machines sans GPU), les fils de décodage concurrencent ceux qui rastérisent :
+   * deux runs de CI SIMULTANÉS, à un détail près, ont rendu l'ancien chemin SAIN et le nouveau
+   * NON SAIN (un shard rouge, des dizaines de réessais ; runs 39012234411 et 39012235825).
+   */
+  private readonly decodeOffThread = ((): boolean => {
+    if (
+      typeof createImageBitmap !== 'function' ||
+      typeof navigator === 'undefined'
+    )
+      return false;
+    // L'ancien chemin, à la demande : un A/B se mesure sur le MÊME build (`scripts/measure-perf.mjs`).
+    if (hasDebugFlag('debug-decode-img')) return false;
+    const ua = navigator.userAgent;
+    const safari = /^((?!chrome|android).)*safari/i.test(ua)
+      ? Number(/Version\/(\d+)/.exec(ua)?.[1] ?? 0)
+      : null;
+    const firefox = /Firefox\/(\d+)/.exec(ua);
+    if (safari !== null && safari < 17) return false;
+    if (firefox && Number(firefox[1]) < 98) return false;
+    return true;
+  })();
+
+  /** Rendu matériel ? Lu une fois, au premier chargement après le branchement du moteur. */
+  private _hardware: boolean | null = null;
+
+  private _decodesOffThread(): boolean {
+    if (!this.decodeOffThread || !this.renderer) return false;
+    if (this._hardware === null) {
+      const gl = this.renderer.getContext();
+      const info = gl.getExtension('WEBGL_debug_renderer_info');
+      const name = info
+        ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL))
+        : '';
+      this._hardware = !/swiftshader|llvmpipe|software|basic render/i.test(
+        name
+      );
+    }
+    return this._hardware;
+  }
+
+  private _load(
+    path: string,
+    onLoad: (texture: THREE.Texture) => void,
+    onError: (error: unknown) => void
+  ): void {
+    if (!this._decodesOffThread()) {
+      this.textureLoader.load(path, onLoad, undefined, onError);
+      return;
+    }
+    decodeTextureOffThread(path).then(onLoad, onError);
+  }
   private readonly config: TextureSystemConfig;
   private readonly cache = new Map<string, THREE.Texture>();
+
+  /** Les textures en cache et leur chemin : lu par la sonde de performance (`?debug-perf`). */
+  cachedEntries(): IterableIterator<[string, THREE.Texture]> {
+    return this.cache.entries();
+  }
   private readonly loadingPromises = new Map<string, Promise<THREE.Texture>>();
   private readonly _pendingListeners = new Set<(pending: number) => void>();
 
@@ -191,7 +283,7 @@ export class TextureSystem {
     Logger.debug(`[TextureSystem] Loading: ${fullPath}`);
 
     const promise = new Promise<THREE.Texture>((resolve, reject) => {
-      this.textureLoader.load(
+      this._load(
         fullPath,
         (texture) => {
           Logger.success(`[TextureSystem] Loaded: ${fullPath}`);
@@ -218,7 +310,6 @@ export class TextureSystem {
           this._notifyPending();
           resolve(texture);
         },
-        undefined,
         (err) => {
           Logger.warn(`[TextureSystem] Failed: ${fullPath}`, err);
           this.loadingPromises.delete(fullPath);
