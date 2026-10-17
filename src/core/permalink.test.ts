@@ -11,6 +11,25 @@ import {
 const validBodies = new Set(['earth', 'mars']);
 
 describe('permalink state', () => {
+  it('reads a named formation, decoded, and refuses an empty or oversized one (lot 55)', () => {
+    expect(
+      parsePermalink('?place=Olympus%20Mons', validBodies, '/mars/').place
+    ).toBe('Olympus Mons');
+    expect(parsePermalink('?place=%20', validBodies).place).toBeUndefined();
+    expect(
+      parsePermalink(`?place=${'x'.repeat(101)}`, validBodies).place
+    ).toBeUndefined();
+    // Une ouverture, pas un état : l'adresse réécrite ne la garde pas, même présente dans la
+    // recherche courante (c'est de là qu'elle survivrait).
+    const rewritten = serializePermalink(
+      { body: 'mars' },
+      '?place=Olympus%20Mons&debug-surface',
+      '/mars/'
+    );
+    expect(rewritten).not.toContain('place');
+    expect(rewritten).toContain('debug-surface');
+  });
+
   it('parses valid mode, body and UTC date', () => {
     const state = parsePermalink(
       '?mode=explo&body=Mars&date=2026-11-20T18%3A00%3A00Z',

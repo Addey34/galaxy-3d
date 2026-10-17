@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { defineConfig } from 'vitest/config';
@@ -298,7 +298,9 @@ function bodyLandingPages() {
     apply: 'build' as const,
     async closeBundle(): Promise<void> {
       const { createServer } = await import('vite');
-      const { mkdir, readFile, stat, writeFile } = await import('fs/promises');
+      const { mkdir, readdir, readFile, stat, writeFile } = await import(
+        'fs/promises'
+      );
       const sharp = (await import('sharp')).default;
       const loader = await createServer({
         configFile: false,
@@ -1124,6 +1126,116 @@ function bodyLandingPages() {
             `pages des contacts : ${contactDocPages.length} au lieu de ${(contactRecord.contacts.length + 1) * DOC_LOCALE_COUNT}`
           );
         docPages.push(...contactDocPages);
+        /**
+         * LES GRANDS LIEUX NOMMÉS (lot 55) : l'index plus une page par grande formation, dans chaque
+         * langue. Le gazetteer, les termes de l'UAI et les observations de l'ODE sont lus ici, sur
+         * disque ; le module (`src/seo/placePages.ts`) reste pur.
+         */
+        const placeSeo = (await loader.ssrLoadModule(
+          '/src/seo/placePages.ts'
+        )) as typeof import('./src/seo/placePages');
+        const gazetteerDir = resolve(__dirname, 'public/assets/gazetteer');
+        const gazetteer = new Map<
+          string,
+          import('./src/core/gazetteer').NamedFeature[]
+        >();
+        for (const file of await readdir(gazetteerDir))
+          if (file.endsWith('.json'))
+            gazetteer.set(
+              file.slice(0, -5),
+              JSON.parse(await readFile(resolve(gazetteerDir, file), 'utf-8'))
+            );
+        const gazetteerIndex = JSON.parse(
+          await readFile(
+            resolve(__dirname, 'src/config/gazetteerIndex.json'),
+            'utf-8'
+          )
+        ) as {
+          provider: {
+            publisher: string;
+            title: string;
+            url: string;
+            accessed: string;
+          };
+        };
+        const placeIndex = JSON.parse(
+          await readFile(
+            resolve(__dirname, 'src/config/placeObservationIndex.json'),
+            'utf-8'
+          )
+        ) as {
+          provider: { url: string };
+          frozenAt: string;
+          bodies: Record<string, { shards: number }>;
+        };
+        // Les noms de l'ODE arrivent avec leurs entités HTML (« Chang&apos;e ») : décodées ICI,
+        // sans quoi la page les échapperait une seconde fois.
+        const unescapeOde = placeSeo.decodeEntities;
+        const shardCache = new Map<string, unknown>();
+        const readShard = (body: string, k: number) => {
+          const key = `${body}/${k}`;
+          if (!shardCache.has(key))
+            shardCache.set(
+              key,
+              JSON.parse(
+                readFileSync(
+                  resolve(
+                    __dirname,
+                    `public/assets/place-observations/${body}/${k}.json`
+                  ),
+                  'utf-8'
+                )
+              )
+            );
+          return shardCache.get(key) as {
+            instruments: { mission: string; instrument: string }[];
+            observed: Record<
+              string,
+              [number, number, string, string, string][]
+            >;
+          };
+        };
+        const placeInputs = {
+          config: catalogue.CELESTIAL_CONFIG,
+          gazetteer,
+          gazetteerProvider: gazetteerIndex.provider,
+          terms: JSON.parse(
+            await readFile(
+              resolve(__dirname, 'src/seo/descriptorTerms.json'),
+              'utf-8'
+            )
+          ),
+          observations: (body: string, iauId: number) => {
+            const cover = placeIndex.bodies[body];
+            if (!cover) return null;
+            const shard = readShard(body, iauId % cover.shards);
+            return (shard.observed[String(iauId)] ?? []).map(
+              ([inst, count, first, last, label]) => ({
+                mission: unescapeOde(shard.instruments[inst]!.mission),
+                instrument: unescapeOde(shard.instruments[inst]!.instrument),
+                count,
+                first,
+                last,
+                label,
+              })
+            );
+          },
+          observationProvider: {
+            url: placeIndex.provider.url,
+            frozenAt: placeIndex.frozenAt,
+          },
+          missionsByBody: missionSeo.missionsByBody(missionCatalogue),
+          origin: SITE_ORIGIN,
+        };
+        const greatPlaceCount = placeSeo.allGreatPlaces(placeInputs).length;
+        const placeDocPages = [undefined, ...OTHER_LOCALES].flatMap((locale) =>
+          placeSeo.placePages(placeInputs, locale ?? 'en')
+        );
+        if (placeDocPages.length !== (greatPlaceCount + 1) * DOC_LOCALE_COUNT)
+          throw new Error(
+            `pages des grands lieux : ${placeDocPages.length} au lieu de ${(greatPlaceCount + 1) * DOC_LOCALE_COUNT}`
+          );
+        docPages.push(...placeDocPages);
         for (const page of docPages) {
           const dir = resolve(dist, new URL(page.canonical).pathname.slice(1));
           await mkdir(dir, { recursive: true });

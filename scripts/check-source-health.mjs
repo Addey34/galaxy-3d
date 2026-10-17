@@ -160,6 +160,21 @@ const MARKERS = [
     what: 'capabilities WMTS',
   },
   {
+    // Les termes descripteurs de l'UAI (lot 55), lus le 2026-10-17 : la table porte cette colonne,
+    // qu'une page d'erreur servie en 200 n'aurait pas. Avant la page d'accueil du gazetteer, dont
+    // le préfixe la contient.
+    prefix: 'https://planetarynames.wr.usgs.gov/DescriptorTerms',
+    marker: () => 'Feature (Designation)',
+    what: 'termes descripteurs',
+  },
+  {
+    // Le gazetteer de l'UAI lui-même (lot 37), qui n'était surveillé par rien jusqu'au lot 55 :
+    // sa page d'accueil porte ce titre (lu le 2026-10-17).
+    prefix: 'https://planetarynames.wr.usgs.gov/',
+    marker: () => '<title>Planetary Names</title>',
+    what: 'page du gazetteer',
+  },
+  {
     // L'orthophoto de l'IGN (lot 53, pas 4) : capacités WMS de la Géoplateforme lues le
     // 2026-10-16 (948 422 o, racine `<WMS_Capabilities`).
     prefix: 'https://data.geopf.fr/wms-r',
@@ -337,6 +352,20 @@ export function derivedSources() {
   );
   if (typeof missions.provider?.api === 'string')
     urls.add(missions.provider.api);
+
+  /**
+   * Le gazetteer de l'UAI (lot 37) et ses termes descripteurs (lot 55), DÉRIVÉS de ce que leurs
+   * générateurs ont écrit : la page d'accueil citée par l'index, la page des termes par leur relevé.
+   */
+  const gazetteer = JSON.parse(
+    readFileSync(join(ROOT, 'src/config/gazetteerIndex.json'), 'utf8')
+  );
+  if (typeof gazetteer.provider?.url === 'string')
+    urls.add(gazetteer.provider.url);
+  const terms = JSON.parse(
+    readFileSync(join(ROOT, 'src/seo/descriptorTerms.json'), 'utf8')
+  );
+  if (typeof terms.source === 'string') urls.add(terms.source);
 
   /** Idem pour l'Orbital Data Explorer, DÉRIVÉ de l'index des formations observées (ligne 40.3). */
   const places = JSON.parse(

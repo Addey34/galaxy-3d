@@ -60,6 +60,7 @@ function generatedDocuments(): string[] {
       'flybys',
       'orbit-insertions',
       'contacts',
+      'places',
     ])
       if (existsSync(join(DIST, prefix, name, 'index.html')))
         docs.push(prefix ? `${prefix}/${name}` : name);
@@ -106,6 +107,14 @@ const ORBIT_PAGES = DOCUMENTS.filter((d) => d.endsWith('orbit-insertions')).map(
  */
 const CONTACT_PAGES = DOCUMENTS.filter((d) => d.endsWith('contacts')).map(
   (index) => `${index}/cassini-saturn-2017-09-15`
+);
+
+/**
+ * Une page de grand lieu (lot 55), la neuvième famille : l'océan des Tempêtes, dont le tableau des
+ * instruments de l'ODE est le plus long de la Lune, donc le pire cas à 390 px.
+ */
+const PLACE_PAGES = DOCUMENTS.filter((d) => d.endsWith('places')).map(
+  (index) => `${index}/moon/oceanus-procellarum`
 );
 
 async function settleAnimations(page: Page): Promise<void> {
@@ -173,9 +182,11 @@ async function expectSeparatedLanguages(page: Page, path: string) {
 test.describe('pages générées, à 390 px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('la dérivation trouve les six documents dans les quatre langues', () => {
+  test('la dérivation trouve les sept documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(24);
+    expect(DOCUMENTS.length).toBe(28);
+    expect(PLACE_PAGES.length).toBe(4);
+    expect(DOCUMENTS).toContain('fr/places');
     expect(MISSION_PAGES.length).toBe(4);
     expect(FLYBY_PAGES.length).toBe(4);
     expect(ORBIT_PAGES.length).toBe(4);
@@ -214,6 +225,7 @@ test.describe('pages générées, à 390 px', () => {
     ...FLYBY_PAGES,
     ...ORBIT_PAGES,
     ...CONTACT_PAGES,
+    ...PLACE_PAGES,
   ]) {
     test(`/${path} se charge, passe axe et ne déborde pas`, async ({
       page,
@@ -259,6 +271,7 @@ test.describe('pages générées, à 390 px', () => {
       ...FLYBY_PAGES,
       ...ORBIT_PAGES,
       ...CONTACT_PAGES,
+      ...PLACE_PAGES,
     ])
       expect(
         builtHeading(path),

@@ -402,6 +402,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le client du service de données de Galaxy (lot 46) n'est importé qu'au premier chargement d'une couche météo de modèle, toutes éteintes au démarrage. Il y entrait avec le service et faisait dépasser le plafond de 1 039 octets (mesuré le 2026-10-12).",
   },
   {
+    chunk: 'lookAtFormation',
+    reason:
+      "tourne la caméra vers une formation nommée (lot 55) : importé par la recherche au choix d'un lieu, ou à l'ouverture d'une adresse `?place=` (les liens des pages /places/), jamais au démarrage ordinaire.",
+  },
+  {
     chunk: 'paletteSearch',
     reason:
       "la recherche typée de la palette (lot 47 : lieux, missions, instruments, survols) n'est importée qu'à la première frappe d'au moins deux caractères ; son index (77 ko gzip) est un fichier servi, demandé au même moment.",
