@@ -46,43 +46,50 @@ const EPSILON = 1e-9;
 
 type Bounds = { west: number; south: number; east: number; north: number };
 
-/**
- * Parcourt les boîtes que touche cette emprise et s'arrête dès que `stop` répond vrai : appelé
- * pour chaque nœud de la sélection, à chaque image, sur des tuiles qui touchent jusqu'à 2 600
- * boîtes (2,25° au niveau maximal de GIBS), il ne doit jamais tout parcourir pour rien.
- */
-function scanBoxes(
-  bounds: Bounds,
-  coverage: RegionalCoverage,
-  stop: (covered: boolean) => boolean
-): boolean {
-  const step = coverage.boxDeg;
-  const r0 = Math.floor((90 - bounds.north + EPSILON) / step);
-  const r1 = Math.floor((90 - bounds.south - EPSILON) / step);
-  const c0 = Math.floor((bounds.west + 180 + EPSILON) / step);
-  const c1 = Math.floor((bounds.east + 180 - EPSILON) / step);
-  for (let r = r0; r <= r1; r += 1) {
-    const ranges = coverage.rows[String(r)] ?? [];
-    for (let c = c0; c <= c1; c += 1)
-      if (stop(ranges.some(([from, to]) => c >= from && c <= to))) return true;
-  }
-  return false;
+/** Lignes et colonnes de boîtes que touche cette emprise. */
+function boxSpan(bounds: Bounds, step: number) {
+  return {
+    r0: Math.floor((90 - bounds.north + EPSILON) / step),
+    r1: Math.floor((90 - bounds.south - EPSILON) / step),
+    c0: Math.floor((bounds.west + 180 + EPSILON) / step),
+    c1: Math.floor((bounds.east + 180 - EPSILON) / step),
+  };
 }
 
-/** Toutes les boîtes que touche cette emprise sont-elles couvertes ? */
+/**
+ * Toutes les boîtes que touche cette emprise sont-elles couvertes ? Calculé PAR PLAGES, ligne par
+ * ligne, jamais boîte par boîte : appelé pour chaque nœud de la sélection à chaque image, le
+ * parcours boîte par boîte coûtait 3,4 s sur 10 au fil principal près du sol de la Terre, sous
+ * frein CPU × 4 (une tuile de 2,25° touche ~2 600 boîtes ; mesuré le 2026-10-17, lot 54).
+ */
 export function coversBounds(
   bounds: Bounds,
   coverage: RegionalCoverage
 ): boolean {
-  return !scanBoxes(bounds, coverage, (covered) => !covered);
+  const { r0, r1, c0, c1 } = boxSpan(bounds, coverage.boxDeg);
+  for (let r = r0; r <= r1; r += 1) {
+    // Les plages d'une ligne sont triées ; deux plages contiguës se recollent.
+    let reached = c0 - 1;
+    for (const [from, to] of coverage.rows[String(r)] ?? []) {
+      if (from > reached + 1) break;
+      if (to > reached) reached = to;
+      if (reached >= c1) break;
+    }
+    if (reached < c1) return false;
+  }
+  return true;
 }
 
-/** Au moins une des boîtes que touche cette emprise est-elle couverte ? */
+/** Au moins une des boîtes que touche cette emprise est-elle couverte ? Par plages, idem. */
 export function touchesCoverage(
   bounds: Bounds,
   coverage: RegionalCoverage
 ): boolean {
-  return scanBoxes(bounds, coverage, (covered) => covered);
+  const { r0, r1, c0, c1 } = boxSpan(bounds, coverage.boxDeg);
+  for (let r = r0; r <= r1; r += 1)
+    for (const [from, to] of coverage.rows[String(r)] ?? [])
+      if (from <= c1 && to >= c0) return true;
+  return false;
 }
 
 /**
