@@ -23,6 +23,7 @@ import {
   type AstronomicalEvent,
 } from './astronomicalEvents';
 import { formatDateText, LONG_DAY } from './dateText';
+import { splitLocalePath, withLocalePrefix } from './localePath';
 import type { Locale } from '@/i18n/locales';
 import type { MessageKey } from '@/i18n/dict-en';
 
@@ -73,8 +74,15 @@ export function eclipseSlug(event: AstronomicalEvent): string {
 }
 
 /** Chemin de la page d'une éclipse, slash final compris (forme servie, cf. `pathnameForBody`). */
-export function eclipsePathname(event: AstronomicalEvent): string {
-  return `/${ECLIPSE_PATH_SEGMENT}/${eclipseSlug(event)}/`;
+export function eclipsePathname(
+  event: AstronomicalEvent,
+  /** Segment de langue à garder (`fr`), `''` pour l'anglais. Cf. `core/localePath.ts`. */
+  localePrefix = ''
+): string {
+  return withLocalePrefix(
+    localePrefix,
+    `/${ECLIPSE_PATH_SEGMENT}/${eclipseSlug(event)}/`
+  );
 }
 
 /**
@@ -104,7 +112,8 @@ export function eclipseForSlug(slug: string): EclipseEvent | undefined {
 export function eclipseFromPathname(
   pathname: string
 ): EclipseEvent | undefined {
-  const segments = pathname.split('/').filter((part) => part.length > 0);
+  // `/fr/eclipse/2026-08-12/` est la même éclipse que `/eclipse/2026-08-12/`, en français.
+  const { segments } = splitLocalePath(pathname);
   if (segments.length !== 2) return undefined;
   if (segments[0]?.toLowerCase() !== ECLIPSE_PATH_SEGMENT) return undefined;
   return eclipseForSlug(segments[1] ?? '');

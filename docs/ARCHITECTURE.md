@@ -4124,6 +4124,17 @@ le runner rend le texte en DejaVu Sans, un poste Windows en Segoe UI. La mise en
 chiffres suscrits tiennent dans les deux cas (vérifié à l'écran sur l'artefact déployé), mais ne
 pas s'attendre à une comparaison d'empreinte entre local et production.
 
+
+**Le segment de langue d'un chemin (2026-10-17).** `/fr/moon/` est la page française de la Lune,
+et `/fr/eclipse/2026-08-12/` celle de l'éclipse : `core/localePath.ts` ôte le segment de langue
+(dérivé de `LOCALE_PATH`) avant que `bodyFromPathname` et `eclipseFromPathname` lisent le reste,
+et l'écriture le garde (choisir Titan depuis `/fr/moon/` écrit `/fr/titan/` ; la vue d'ensemble
+reste `/`, aucune page `/fr/` n'étant générée). Avant, depuis le lot 20, ces pages démarraient sur
+la vue d'ensemble et à la date du jour, sans rien d'anormal à l'écran ; mesuré en production, et
+trouvé par le lien « Le voir dans Galaxy » des pages des grands lieux. Gardes :
+`src/core/localePath.test.ts` (quatre langues, corps et éclipse ; falsifiée),
+`e2e/placeAddress.spec.ts` (`/fr/moon/?place=…`, falsifiée).
+
 ## Pages d'éclipse
 
 Une page par éclipse solaire ou lunaire de la fenêtre **fixe** 2024-2035 : 53 pages,

@@ -1,4 +1,5 @@
 import { eclipseFromPathname } from './eclipsePages';
+import { splitLocalePath, withLocalePrefix } from './localePath';
 
 /** Etat partageable de l'application, encode dans la query string. */
 export type PermalinkMode = 'educ' | 'explo';
@@ -93,13 +94,15 @@ function parseView(params: URLSearchParams): PermalinkViewAngles | undefined {
  * entière, lue ici plutôt que dans un cas particulier côté interface.
  *
  * Un seul segment, insensible à la casse, et validé contre le catalogue : tout le reste
- * (`/privacy.html`, `/`, une faute de frappe) ne nomme aucun corps et ne change rien.
+ * (`/privacy.html`, `/`, une faute de frappe) ne nomme aucun corps et ne change rien. Un segment
+ * de langue en tête ne compte pas : `/fr/moon/` est la page française de la Lune
+ * (`core/localePath.ts`).
  */
 export function bodyFromPathname(
   pathname: string,
   validBodies: ReadonlySet<string>
 ): string | undefined {
-  const segments = pathname.split('/').filter((part) => part.length > 0);
+  const { segments } = splitLocalePath(pathname);
   if (segments.length !== 1) return undefined;
   const candidate = segments[0]?.trim().toLowerCase();
   return candidate !== undefined && validBodies.has(candidate)
@@ -130,11 +133,21 @@ export function bodyFromPathname(
  */
 export function pathnameForBody(
   body: string | null | undefined,
-  validBodies: ReadonlySet<string>
+  validBodies: ReadonlySet<string>,
+  /**
+   * Le chemin courant, dont la LANGUE se garde : depuis `/fr/moon/`, choisir Titan écrit
+   * `/fr/titan/`, qui existe. La vue d'ensemble reste `/` : aucune page `/fr/` n'est générée.
+   */
+  currentPathname = ''
 ): string {
   if (!body) return '/';
   const candidate = body.trim().toLowerCase();
-  return validBodies.has(candidate) ? `/${candidate}/` : '/';
+  return validBodies.has(candidate)
+    ? withLocalePrefix(
+        splitLocalePath(currentPathname).prefix,
+        `/${candidate}/`
+      )
+    : '/';
 }
 
 export function parsePermalink(
