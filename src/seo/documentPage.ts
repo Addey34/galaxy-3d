@@ -53,12 +53,15 @@ export const FLYBYS_SLUG = 'flybys';
 export const ORBIT_INSERTIONS_SLUG = 'orbit-insertions';
 /** Les contacts avec un corps (lot 49, pas 3), même forme : `/contacts/rosetta-churyumov-gerasimenko-2016-09-30/`. */
 export const CONTACTS_SLUG = 'contacts';
+/** Les grands lieux nommés (lot 55), même forme : `/places/` et `/places/moon/tycho/`. */
+export const PLACES_SLUG = 'places';
 const NAV_SLUGS: readonly string[] = [
   ...DOC_SLUGS,
   MISSIONS_SLUG,
   FLYBYS_SLUG,
   ORBIT_INSERTIONS_SLUG,
   CONTACTS_SLUG,
+  PLACES_SLUG,
 ];
 
 /**
@@ -133,6 +136,12 @@ const NAV: Record<string, DocText> = {
     fr: 'Contacts',
     es: 'Contactos',
     'pt-BR': 'Contatos',
+  },
+  places: {
+    en: 'Great places',
+    fr: 'Grands lieux',
+    es: 'Grandes lugares',
+    'pt-BR': 'Grandes lugares',
   },
 };
 

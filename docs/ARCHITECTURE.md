@@ -6088,6 +6088,47 @@ Falsifiées : la manœuvre de Juno retirée, puis l'exclusion de Hayabusa2, roug
 `pnpm orbits:generate --check` sort en code 1 sur une dérive ; à rejouer après tout
 `pnpm ephemeris:flybys --write`.
 
+## Pages des grands lieux nommés (lot 55)
+
+L'index `/places/` et une page par grande formation nommée par l'UAI, `/places/moon/mare-imbrium/`,
+dans les quatre langues (`src/seo/placePages.ts`, module pur ; le greffon des pages lit les
+fichiers).
+
+- **Qu'est-ce qu'un grand lieu : une règle RELATIVE** (`GREAT_PLACE_RATIO` = 0,2) : un diamètre
+  publié d'au moins un cinquième du rayon de son corps. Un seuil absolu en kilomètres aurait servi
+  les grands corps et laissé les petits à zéro, contre la règle de parité. Mesuré le 2026-10-17 :
+  1 720 formations à 0,1 rayon, 854 à 0,2, 583 à 0,3 ; à 0,2, quarante corps ont au moins une page,
+  de Deimos à Mars. Un corps dont l'UAI ne publie aucun diamètre assez grand n'a pas de page, et
+  l'index le dit avec ses comptes ; aucune taille n'est inventée. Le rayon est celui des fiches
+  (`radiusKm`, ou `{"$diameterKm"}` divisé par deux pour un petit corps irrégulier).
+- **Ce que la page affirme** : nom, type, diamètre, centre, date d'adoption et raison du nom,
+  depuis le gazetteer (`pnpm gazetteer:generate`) ; la définition du type et la raison du nom sont
+  CITÉES en anglais (`lang="en"`), mot pour mot, comme les descriptions du PDS sur les pages des
+  missions. Les définitions viennent de la page « Descriptor Terms » de l'UAI, lue par
+  `pnpm places:terms` (`src/seo/descriptorTerms.json`, date de lecture portée par la réponse) ;
+  les 59 termes couvrent tous les types du gazetteer, une garde l'exige.
+- **Ce qui l'a observée** : pour les quatre corps de l'Orbital Data Explorer, les instruments dont
+  une empreinte TOUCHE la formation (ligne 40.3), y compris des instruments au sol (Arecibo) : la
+  page ne dit donc pas « orbiteurs ». 6 016 lignes n'ont aucune date publiée, et la page le dit au
+  lieu de la deviner. Ailleurs, les missions qui ont visé le CORPS, dites comme telles.
+- **Le lien vers l'application** ouvre la page du corps avec `?place=Mare%20Imbrium` : la caméra
+  se tourne vers la formation une fois le vol fini (`ui/lookAtFormation.ts`, partagé avec la
+  recherche et chargé à la demande, hors démarrage). C'est une ouverture, pas un état : `place`
+  est EFFACÉ à la réécriture de l'adresse (`core/permalink.ts`, il figure dans `PERMALINK_KEYS`
+  pour cette raison).
+- **Deux défauts vus au rendu, corrigés à la source** : les sources publient des entités HTML
+  (« &quot;Sea of Showers.&quot; », « Chang&apos;e »), décodées par le module avant tout
+  échappement (`decodeEntities`) ; et le nom affiché d'un corps n'a pas d'article (« Lune »), donc
+  aucune phrase ne l'insère en cours de texte (« une formation nommée de Lune » se lisait).
+
+Gardes : `src/seo/placePages.test.ts` (règle au seuil, aucune taille inventée, adresses sans
+collision, chaque type défini, une page par lieu et par langue sans gabarit vide, tiret long ni
+entité doublement échappée ; falsifiées), `src/core/permalink.test.ts` (`place` lu, borné, effacé à
+la réécriture ; falsifiée), `e2e/placeAddress.spec.ts` (l'adresse tourne la caméra vers Mare
+Imbrium ; falsifiée), `e2e/built-pages.spec.ts` (l'index et l'océan des Tempêtes, le plus long
+tableau d'instruments de la Lune, passent axe et 390 px dans les quatre langues). Le guetteur des
+sources surveille désormais le gazetteer de l'UAI et sa page des termes.
+
 ## Pages des contacts (`/contacts/`, lot 49, pas 3, 2026-10-15)
 
 L'index `/contacts/` et une page par contact d'une sonde avec un corps
