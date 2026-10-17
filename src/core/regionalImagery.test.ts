@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  baseCrop,
   coversBounds,
   maxLevelFor,
   regionalMaxLevel,
@@ -66,8 +67,63 @@ describe('imagerie régionale (lot 53, pas 4)', () => {
       maxLevelFor({ level: 9, row: 0, column: 0 }, shape, 13, source)
     ).toBe(13);
     expect(maxLevelFor(inside, shape, 13, null)).toBe(13);
-    expect(servedByRegion({ level: 14, row: 0, column: 0 }, 13)).toBe(true);
-    expect(servedByRegion({ level: 13, row: 0, column: 0 }, 13)).toBe(false);
+    const deeper = {
+      level: 14,
+      row: inside.row * 2,
+      column: inside.column * 2,
+    };
+    expect(servedByRegion(deeper, shape, 13, source)).toBe(true);
+    expect(servedByRegion(inside, shape, 13, source)).toBe(false);
+    expect(servedByRegion(deeper, shape, 13, null)).toBe(false);
+  });
+
+  it('une tuile À CHEVAL se subdivise, et seuls ses enfants entièrement couverts sont régionaux', () => {
+    // Niveau 8 de cette grille : 0,703° de côté. La tuile qui contient (49,5°N ; 3,9°E) va de
+    // 3,52° à 4,22° est : elle touche la boîte couverte (3°-4°) ET la boîte voisine, non couverte.
+    // Exiger qu'elle soit entièrement couverte pour la subdiviser laissait Paris à 500 m par
+    // pixel sous une tuile qui touchait la baie de Seine (run 38990592821).
+    const step = 360 / (2 * 2 ** 8);
+    const straddling = {
+      level: 8,
+      row: Math.floor((90 - 49.5) / step),
+      column: Math.floor((3.9 + 180) / step),
+    };
+    const b = tileBounds(straddling, shape);
+    expect(b.west).toBeLessThan(4);
+    expect(b.east).toBeGreaterThan(4);
+    expect(maxLevelFor(straddling, shape, 8, source)).toBe(18);
+    const [west, east] = [0, 1].map((dc) => ({
+      level: 9,
+      row: straddling.row * 2,
+      column: straddling.column * 2 + dc,
+    }));
+    expect(servedByRegion(west!, shape, 8, source)).toBe(true);
+    expect(servedByRegion(east!, shape, 8, source)).toBe(false);
+    // L'enfant non couvert ne se subdivise plus : il garde le morceau de l'image de la base.
+    expect(
+      maxLevelFor(
+        { level: 9, row: east!.row, column: east!.column + 2 },
+        shape,
+        8,
+        source
+      )
+    ).toBe(8);
+  });
+
+  it('le morceau de l’ancêtre se lit nord en haut, comme les coordonnées de `tilePatch`', () => {
+    expect(baseCrop({ level: 8, row: 3, column: 4 }, 8)).toBeNull();
+    // Deux niveaux sous la base : un seizième de l'image, quatrième colonne, deuxième ligne
+    // depuis le NORD, donc troisième depuis le sud (v croît vers le nord).
+    expect(baseCrop({ level: 10, row: 5, column: 7 }, 8)).toEqual({
+      ancestor: { level: 8, row: 1, column: 1 },
+      offset: [0.75, 0.5],
+      repeat: 0.25,
+    });
+    expect(baseCrop({ level: 10, row: 4, column: 4 }, 8)).toEqual({
+      ancestor: { level: 8, row: 1, column: 1 },
+      offset: [0, 0.75],
+      repeat: 0.25,
+    });
   });
 
   it('le gabarit WMS reçoit l’emprise de la tuile, latitude d’abord', () => {

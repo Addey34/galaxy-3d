@@ -92,6 +92,17 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
     )
     .toBeLessThan(30);
 
+  // PRÈS DU SOL, LA CAMÉRA TOURNE AVEC LA TERRE : sans cela la visée glissait vers l'ouest
+  // (1,95° puis 0,49° de longitude en sept minutes au-dessus de Paris, mesuré le 2026-10-17), et
+  // les tuiles fines changeaient sans cesse. À vitesse réelle la Terre tourne de 0,083° en 20 s.
+  const aim = async () => {
+    const text = (await page.locator('#surface-probe').textContent()) ?? '';
+    return Number(/visée\s+-?[\d.]+°,\s*(-?[\d.]+)°/.exec(text)?.[1] ?? NaN);
+  };
+  const before = await aim();
+  await page.waitForTimeout(20_000);
+  expect(Math.abs((await aim()) - before)).toBeLessThan(0.01);
+
   for (const url of ign) {
     expect(url).toContain('SERVICE=WMS');
     expect(url).toContain('CRS=EPSG:4326');
@@ -102,10 +113,11 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
     // Autour de Paris, et STRICTEMENT plus fine que la base : la mosaïque Blue Marble de GIBS,
     // base par défaut, s'arrête au niveau 7 de sa grille, dont les tuiles mesurent 2,25° ; l'IGN
     // prend la main au niveau 8 (1,125°), puis 0,5625°, 0,28125°… (mesuré le 2026-10-17).
-    expect(south, url).toBeGreaterThan(47.5);
-    expect(north, url).toBeLessThan(50.5);
-    expect(west, url).toBeGreaterThan(0.5);
-    expect(east, url).toBeLessThan(4.5);
+    // Le cadre : les tuiles de 2,25° de la base qui entourent Paris, bornes comprises.
+    expect(south, url).toBeGreaterThanOrEqual(45);
+    expect(north, url).toBeLessThanOrEqual(51.75);
+    expect(west, url).toBeGreaterThanOrEqual(0);
+    expect(east, url).toBeLessThanOrEqual(4.5);
     expect(east - west, url).toBeLessThanOrEqual(1.125);
   }
 });

@@ -35,7 +35,21 @@ export interface CameraTarget {
    * Sans réponse, `targetMinRadiusFactor` s'applique.
    */
   getApproachFloorFactor?(): number | undefined;
+  /**
+   * Orientation MONDIALE du repère qui tourne avec le corps (son spin compris), pour que la
+   * caméra tourne avec lui près du sol. Sans réponse, la caméra ne co-tourne jamais.
+   */
+  getSpinQuaternion?(out: THREE.Quaternion): THREE.Quaternion;
 }
+
+/**
+ * Sous cette distance au centre, en multiples du rayon du sol, la caméra TOURNE AVEC le corps
+ * suivi (lot 53) : un observateur posé au-dessus d'un lieu y reste. Sans cela, à vitesse réelle,
+ * le sol de Paris défilait sous la caméra à ~300 m/s, la visée glissait de 1,5° de longitude en
+ * sept minutes, et les tuiles fines changeaient sans cesse sans jamais se poser. Au-dessus, rien
+ * ne change : on voit la planète tourner, comme avant.
+ */
+const CO_ROTATION_RADII = 1.1;
 
 // Bornes de durée du vol caméra (ms). La durée réelle est proportionnelle à la distance
 // parcourue, resserrée entre ces bornes : un court saut reste vif, un long voyage posé.
@@ -58,6 +72,12 @@ export class CameraSystem {
    * exactement ce que décrit `CameraTarget`.
    */
   private externalTargets: Record<string, CameraTarget> = {};
+  /** Orientation du spin à l'image précédente, et la cible à laquelle elle appartient. */
+  private readonly _lastSpin = new THREE.Quaternion();
+  private _lastSpinOf: string | null = null;
+  private readonly _spinNow = new THREE.Quaternion();
+  private readonly _spinDelta = new THREE.Quaternion();
+  private readonly _coOffset = new THREE.Vector3();
   private isAnimating = false;
   /** Actions différées jusqu'à la fin du vol en cours (cf. `whenSettled`). */
   private _whenSettled: (() => void)[] = [];
@@ -413,11 +433,9 @@ export class CameraSystem {
 
       this.currentTarget.group.getWorldPosition(this.targetWorldPosition);
       this.controls.target.copy(this.targetWorldPosition);
-      this.camera.position.set(
-        this.targetWorldPosition.x + offsetX,
-        this.targetWorldPosition.y + offsetY,
-        this.targetWorldPosition.z + offsetZ
-      );
+      this._coOffset.set(offsetX, offsetY, offsetZ);
+      this._coRotate(this._coOffset);
+      this.camera.position.copy(this.targetWorldPosition).add(this._coOffset);
       this._recordSunSide();
       // Le dégagement dépend de la DIRECTION (ellipsoïde, sol mesuré sous la visée) : on le
       // repose à chaque image, sinon un pan vers l'équateur ferait passer la caméra sous le sol.
@@ -427,6 +445,36 @@ export class CameraSystem {
     this._updateClipPlanes();
     this.controls.update();
     this._tiltTowardsHorizon();
+  }
+
+  /**
+   * Fait tourner le décalage caméra→cible avec le spin du corps depuis l'image précédente, près
+   * du sol seulement (`CO_ROTATION_RADII`). La référence est reprise à chaque image, même loin :
+   * en franchissant le seuil, la caméra ne rattrape donc pas d'un coup la rotation accumulée.
+   */
+  private _coRotate(offset: THREE.Vector3): void {
+    const name = this.currentTarget?.name ?? null;
+    const target = name ? this._target(name) : undefined;
+    if (!name || !target?.getSpinQuaternion) {
+      this._lastSpinOf = null;
+      return;
+    }
+    target.getSpinQuaternion(this._spinNow);
+    if (this._lastSpinOf === name) {
+      const ground =
+        target.getClearanceRadius?.(this._scaleMode, this.camera.position) ??
+        (this.currentTarget?.group.userData['radius'] as number | undefined) ??
+        0;
+      if (ground > 0 && offset.length() < CO_ROTATION_RADII * ground) {
+        this._spinDelta
+          .copy(this._lastSpin)
+          .invert()
+          .premultiply(this._spinNow);
+        offset.applyQuaternion(this._spinDelta);
+      }
+    }
+    this._lastSpin.copy(this._spinNow);
+    this._lastSpinOf = name;
   }
 
   /**
