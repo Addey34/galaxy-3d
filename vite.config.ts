@@ -303,7 +303,11 @@ function bodyLandingPages() {
       const loader = await createServer({
         configFile: false,
         logLevel: 'error',
-        server: { middlewareMode: true },
+        // Aucun observateur de fichiers : ce chargeur ne fait que `ssrLoadModule`. Par défaut il
+        // parcourait toute la racine, `.cache` compris ; à 140 000 fichiers (tuiles GLO-30 et
+        // cellules du lot 53), le parcours saturait la machine et le build échouait sur « transport
+        // invoke timed out after 60000ms » (mesuré le 2026-10-17).
+        server: { middlewareMode: true, watch: null },
         resolve: { alias: { '@': resolve(__dirname, 'src') } },
         // Ce chargeur ne sert JAMAIS un navigateur : il ne fait que `ssrLoadModule`. Sans ces
         // deux lignes, son explorateur de dépendances cherche à résoudre
@@ -1198,6 +1202,9 @@ function bodyLandingPages() {
 
 export default defineConfig({
   json: { stringify: true },
+  // L'observateur du serveur de dev ignore les données de travail : `.cache` porte plus de
+  // 140 000 fichiers depuis le lot 53 (tuiles GLO-30, cellules), `reports` les relevés.
+  server: { watch: { ignored: ['**/.cache/**', '**/reports/**'] } },
   plugins: [
     stripGlslComments(),
     stripRegistryNotes(),
