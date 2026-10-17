@@ -22,9 +22,32 @@ export interface PermalinkState {
    * permalien retombe sur le cadrage par défaut du corps sélectionné.
    */
   view?: PermalinkViewAngles;
+  /**
+   * Une formation NOMMÉE du corps (lot 55) : la caméra se tourne vers elle une fois le corps
+   * atteint. Lue à l'ouverture seulement, jamais réécrite : c'est l'adresse qu'ouvrent les pages
+   * des grands lieux.
+   */
+  place?: string;
 }
 
-const PERMALINK_KEYS = ['mode', 'body', 'date', 'az', 'pol', 'dist'] as const;
+// `place` y figure pour être EFFACÉ à la réécriture : c'est une ouverture (lot 55), et l'adresse qui
+// suit ne doit plus la porter, sans quoi elle survivrait à un changement de corps.
+const PERMALINK_KEYS = [
+  'mode',
+  'body',
+  'date',
+  'az',
+  'pol',
+  'dist',
+  'place',
+] as const;
+
+/**
+ * Longueur maximale d'un nom de formation lu dans l'adresse. Le plus long des noms livrés en a 51
+ * (« Mers intérieures de la côte occidentale de l'Écosse », un nom de la Terre, mesuré le
+ * 2026-10-17) ; au-delà de 100, l'adresse est ignorée plutôt que crue.
+ */
+const MAX_PLACE_LENGTH = 100;
 
 function parseDate(value: string | null): Date | undefined {
   if (!value) return undefined;
@@ -37,6 +60,11 @@ function parseFiniteNumber(value: string | null): number | undefined {
   if (!value) return undefined;
   const n = Number(value);
   return Number.isFinite(n) ? n : undefined;
+}
+
+function parsePlace(value: string | null): string | undefined {
+  const place = value?.trim();
+  return place && place.length <= MAX_PLACE_LENGTH ? place : undefined;
 }
 
 function parseView(params: URLSearchParams): PermalinkViewAngles | undefined {
@@ -131,6 +159,7 @@ export function parsePermalink(
         : pathBody,
     date: parseDate(params.get('date')),
     view: parseView(params),
+    place: parsePlace(params.get('place')),
   };
 }
 

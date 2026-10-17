@@ -44,6 +44,8 @@ export interface PermalinkEclipseHooks {
   playback?: Pick<PlaybackControls, 'pause'>;
   /** Éclipse que l'adresse nomme après chaque écriture (`null` dès qu'elle ne la nomme plus). */
   onEclipseAddress?: (event: EclipseEvent | null) => void;
+  /** Tourne la caméra vers une formation nommée du corps (`?place=`, lot 55). */
+  lookAtPlace?: (body: string, place: string) => void;
 }
 
 export function setupPermalinks(
@@ -165,6 +167,11 @@ export function setupPermalinks(
         camera.applyViewAngles(view.azimuthDeg, view.polarDeg, view.distance);
         sync(view);
       });
+    } else if (state.place && state.body && eclipseHooks.lookAtPlace) {
+      // La formation n'est cadrée qu'après le vol, par le module qui le fait déjà pour la
+      // recherche ; l'adresse réécrite ne la garde pas, c'est une ouverture, pas un état.
+      eclipseHooks.lookAtPlace(state.body, state.place);
+      sync();
     } else if (pathEclipse && state.body) {
       // Aucun angle demandé : on impose celui qui MONTRE l'éclipse (cf. eclipseViewFrom),
       // une fois le vol terminé, sinon le tween écraserait la pose.

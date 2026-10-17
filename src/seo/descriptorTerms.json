@@ -1,0 +1,302 @@
+{
+  "generatedBy": "scripts/generate-descriptor-terms.mjs",
+  "source": "https://planetarynames.wr.usgs.gov/DescriptorTerms",
+  "retrieved": "2026-10-17",
+  "terms": [
+    {
+      "label": "Albedo Feature",
+      "code": "AL",
+      "definition": "Geographic area distinguished by amount of reflected light"
+    },
+    {
+      "label": "Arcus, arcūs",
+      "code": "AR",
+      "definition": "Arc-shaped feature"
+    },
+    {
+      "label": "Astronaut-named features",
+      "code": "LF",
+      "definition": "Lunar features at or near Apollo landing sites"
+    },
+    {
+      "label": "Astrum, astra",
+      "code": "AS",
+      "definition": "Radial-patterned features on Venus"
+    },
+    {
+      "label": "Catena, catenae",
+      "code": "CA",
+      "definition": "Chain of craters"
+    },
+    {
+      "label": "Cavus, cavi",
+      "code": "CB",
+      "definition": "Hollows, irregular steep-sided depressions usually in arrays or clusters"
+    },
+    {
+      "label": "Chaos, chaoses",
+      "code": "CH",
+      "definition": "Distinctive area of broken terrain"
+    },
+    {
+      "label": "Chasma, chasmata",
+      "code": "CM",
+      "definition": "A deep, elongated, steep-sided depression"
+    },
+    {
+      "label": "Collis, colles",
+      "code": "CO",
+      "definition": "Small hills or knobs"
+    },
+    {
+      "label": "Collum, colli",
+      "code": "CL",
+      "definition": "\"Neck\"; the region connecting two lobes of a bilobed asteroid"
+    },
+    {
+      "label": "Corona, coronae",
+      "code": "CR",
+      "definition": "Ovoid-shaped feature"
+    },
+    {
+      "label": "Crater, craters",
+      "code": "AA",
+      "definition": "A circular depression"
+    },
+    {
+      "label": "Dorsum, dorsa",
+      "code": "DO",
+      "definition": "Ridge"
+    },
+    {
+      "label": "Eruptive center",
+      "code": "ER",
+      "definition": "Active volcanic centers on Io"
+    },
+    {
+      "label": "Facula, faculae",
+      "code": "FA",
+      "definition": "Bright spot"
+    },
+    {
+      "label": "Farrum, farra",
+      "code": "FR",
+      "definition": "Pancake-like structure, or a row of such structures"
+    },
+    {
+      "label": "Flexus, flexūs",
+      "code": "FE",
+      "definition": "A very low curvilinear ridge with a scalloped pattern"
+    },
+    {
+      "label": "Fluctus, fluctūs",
+      "code": "FL",
+      "definition": "Flow terrain"
+    },
+    {
+      "label": "Flumen, flumina",
+      "code": "FM",
+      "definition": "Channel on Titan that might carry liquid"
+    },
+    {
+      "label": "Fossa, fossae",
+      "code": "FO",
+      "definition": "Long, narrow depression"
+    },
+    {
+      "label": "Fretum, freta",
+      "code": "FT",
+      "definition": "Strait, a narrow passage of liquid connecting two larger areas of liquid"
+    },
+    {
+      "label": "Insula, insulae",
+      "code": "IN",
+      "definition": "Island (islands), an isolated land area (or group of such areas) surrounded by, or nearly surrounded by, a liquid area (sea or lake)"
+    },
+    {
+      "label": "Labes, labēs",
+      "code": "LA",
+      "definition": "Landslide"
+    },
+    {
+      "label": "Labyrinthus, labyrinthi",
+      "code": "LB",
+      "definition": "Complex of intersecting valleys or ridges."
+    },
+    {
+      "label": "Lacuna, lacunae",
+      "code": "LU",
+      "definition": "Irregularly shaped depression on Titan having the appearance of a dry lake bed"
+    },
+    {
+      "label": "Lacus, lacūs",
+      "code": "LC",
+      "definition": "\"Lake\" or small plain; on Titan, a \"lake\" or small, dark plain with discrete, sharp boundaries"
+    },
+    {
+      "label": "Large ringed feature",
+      "code": "LG",
+      "definition": "Cryptic ringed features"
+    },
+    {
+      "label": "Linea, lineae",
+      "code": "LI",
+      "definition": "A dark or bright elongate marking, may be curved or straight"
+    },
+    {
+      "label": "Lingula, lingulae",
+      "code": "LN",
+      "definition": "Extension of plateau having rounded lobate or tongue-like boundaries"
+    },
+    {
+      "label": "Lobus, lobi",
+      "code": "LO",
+      "definition": "One of two lobes of a contact binary asteroid"
+    },
+    {
+      "label": "Macula, maculae",
+      "code": "MA",
+      "definition": "Dark spot, may be irregular"
+    },
+    {
+      "label": "Mare, maria",
+      "code": "ME",
+      "definition": "“Sea”; on the Moon, low albedo, relatively smooth plain, generally of large extent; on Mars, dark albedo areas of no known geological significance; on Titan, large expanses of dark materials thought to be liquid hydrocarbons"
+    },
+    {
+      "label": "Mensa, mensae",
+      "code": "MN",
+      "definition": "A flat-topped prominence with cliff-like edges"
+    },
+    {
+      "label": "Mons, montes",
+      "code": "MO",
+      "definition": "Mountain"
+    },
+    {
+      "label": "Oceanus, oceani",
+      "code": "OC",
+      "definition": "A very large dark area on the moon"
+    },
+    {
+      "label": "Palus, paludes",
+      "code": "PA",
+      "definition": "\"Swamp\"; small plain"
+    },
+    {
+      "label": "Patera, paterae",
+      "code": "PE",
+      "definition": "An irregular crater, or a complex one with scalloped edges"
+    },
+    {
+      "label": "Planitia, planitiae",
+      "code": "PL",
+      "definition": "Low plain"
+    },
+    {
+      "label": "Planum, plana",
+      "code": "PM",
+      "definition": "Plateau or high plain"
+    },
+    {
+      "label": "Plume, plumes",
+      "code": "PU",
+      "definition": "Cryo-volcanic features on Triton"
+    },
+    {
+      "label": "Promontorium, promontoria",
+      "code": "PR",
+      "definition": "\"Cape\"; headland promontoria"
+    },
+    {
+      "label": "Regio, regiones",
+      "code": "RE",
+      "definition": "A large area marked by reflectivity or color distinctions from adjacent areas, or a broad geographic region"
+    },
+    {
+      "label": "Reticulum, reticula",
+      "code": "RT",
+      "definition": "reticular (netlike) pattern on Venus"
+    },
+    {
+      "label": "Rima, rimae",
+      "code": "RI",
+      "definition": "Fissure"
+    },
+    {
+      "label": "Rupes, rupēs",
+      "code": "RU",
+      "definition": "Scarp"
+    },
+    {
+      "label": "Satellite Feature",
+      "code": "SF",
+      "definition": "A feature that shares the name of an associated feature. For example, on the Moon the craters referred to as \"Lettered Craters\" are classified in the gazetteer as \"Satellite Features.\""
+    },
+    {
+      "label": "Saxum, saxa",
+      "code": "SA",
+      "definition": "Boulder or rock"
+    },
+    {
+      "label": "Scopulus, scopuli",
+      "code": "SC",
+      "definition": "Lobate or irregular scarp"
+    },
+    {
+      "label": "Serpens, serpentes",
+      "code": "SE",
+      "definition": "Sinuous feature with segments of positive and negative relief along its length"
+    },
+    {
+      "label": "Sinus, sinūs",
+      "code": "SI",
+      "definition": "\"Bay\"; small plain; on Titan, bays within seas or lakes of liquid hydrocarbons"
+    },
+    {
+      "label": "Statio",
+      "code": "ST",
+      "definition": "Spacecraft landing site"
+    },
+    {
+      "label": "Sulcus, sulci",
+      "code": "SU",
+      "definition": "Subparallel furrows and ridges"
+    },
+    {
+      "label": "Terra, terrae",
+      "code": "TA",
+      "definition": "Extensive land mass"
+    },
+    {
+      "label": "Tessera, tesserae",
+      "code": "TE",
+      "definition": "Tile-like, polygonal terrain"
+    },
+    {
+      "label": "Tholus, tholi",
+      "code": "TH",
+      "definition": "Small domical mountain or hill"
+    },
+    {
+      "label": "Unda, undae",
+      "code": "UN",
+      "definition": "Dunes"
+    },
+    {
+      "label": "Vallis, valles",
+      "code": "VA",
+      "definition": "Valley"
+    },
+    {
+      "label": "Vastitas, vastitates",
+      "code": "VS",
+      "definition": "Extensive plain"
+    },
+    {
+      "label": "Virga, virgae",
+      "code": "VI",
+      "definition": "A streak or stripe of color"
+    }
+  ]
+}

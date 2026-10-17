@@ -732,6 +732,10 @@ function wireChrome(): {
       {
         playback,
         onEclipseAddress: (event) => documentTitle.setEclipse(event),
+        lookAtPlace: (body, place) =>
+          void import('./ui/lookAtFormation').then((m) =>
+            m.lookAtFormation(api, body, place, () => permalink.sync())
+          ),
       },
       LANDING_PAGE_BODIES
     );

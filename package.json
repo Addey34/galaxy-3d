@@ -46,6 +46,7 @@
     "surface:regions": "node scripts/generate-regional-coverage.mjs",
     "places:pull": "node scripts/pull-ode-footprints.mjs",
     "places:generate": "node scripts/generate-place-observations.mjs",
+    "places:terms": "node scripts/generate-descriptor-terms.mjs",
     "missions:generate": "node scripts/generate-mission-index.mjs",
     "search:generate": "node scripts/generate-search-index.mjs",
     "discovery:generate": "node scripts/generate-discovery-index.mjs",
