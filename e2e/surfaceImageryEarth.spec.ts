@@ -286,7 +286,10 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
   // 2,1 min en échec sur un EPYC 9V74 (run 38716131843) : la caméra était DÉJÀ au plancher
   // (0,917 km au-dessus du sol), le niveau 11 servi, le 12 encore en vol à 0,7 image par
   // seconde. Le sondage de 60 s ci-dessous était trop court ; il passe à 90 s, et le test à 4 min.
-  test.setTimeout(240_000);
+  // Puis, le 2026-10-17, trois échecs au niveau 11 sur les processeurs les plus lents (EPYC 7763
+  // du run 39015554287, Xeon 8370C du run 39060671525, 2,9 min chacun), quand les EPYC 9V74
+  // passent en 1,4 min : le même code, une enveloppe pleine. Sondage à 150 s, test à 5 min.
+  test.setTimeout(300_000);
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
   const trek = JSON.parse(
@@ -364,7 +367,7 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
         await zoomIn(page);
         return Number((await badge.getAttribute('data-level')) ?? 0);
       },
-      { timeout: 90_000, intervals: [1500] }
+      { timeout: 150_000, intervals: [1500] }
     )
     // 12 et non 13 : à 0,9 km au-dessus d'un sol à 5 000 m, le niveau servi est le 12 ; sous le
     // sol, la caméra fautive atteignait le 13 (mesuré des deux côtés).
