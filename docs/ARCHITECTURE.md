@@ -5072,6 +5072,19 @@ mémoire GPU qu'un téléphone n'a pas. Le lot 54 les MESURE avant d'y toucher.
   par la scène, une fois chacune ; WebGL ne publie aucun compte d'octets), appels de dessin d'une
   image entière (`renderer.info` se remet à zéro à chaque `render()`, et le compositeur en fait
   plusieurs), et le chemin de chaque texture du cache.
+- **Le registre du pilote** (lot 56, 2026-10-18) : l'estimation ci-dessus ne voit que les
+  textures des matériaux, et la cubemap du ciel (~512 Mio, fabriquée par Three.js) lui a échappé.
+  Sous `?debug-perf`, `MainSolarSystemApp` attend le morceau des sondes AVANT de construire
+  l'application et accroche `ui/gpuLedgerHook.ts` au prototype de `WebGL2RenderingContext` : chaque
+  allocation (`texImage2D/3D`, `texStorage2D/3D`, `compressedTexImage2D`, `copyTexImage2D`,
+  `generateMipmap`, `renderbufferStorage*`, `bufferData`) et chaque libération (`delete*`) entre
+  dans `core/gpuLedger.ts`, pur et testé. La sonde rend ce total en `driver`, attribué texture par
+  texture, et le rapproche de l'estimation : sur la Terre en Explo, 36 textures téléversées et
+  aucun écart entre les deux comptes, le pilote voyant en plus les cibles de rendu. Ce qu'il ne
+  compte pas : le tampon de dessin du canevas et les marges d'alignement du pilote. Garde :
+  `e2e/gpuMemory.spec.ts`, un plafond par scène lu dans `core/gpuBudget.ts` (mesuré réseau bloqué,
+  en rendu logiciel) et aucune cubemap au-delà de la cubemap vide 1 × 1 de Three.js (24 octets).
+  Falsifiée : `scene.background` remis sur les étoiles, la Terre passe de 1 001 à 1 893 Mio.
 - **Le script** `scripts/measure-perf.mjs` joue sept scènes DATÉES en deux phases (approche puis
   régime), sur le VRAI GPU (`--use-angle=d3d11` ; sans lui, Chromium piloté rend en logiciel),
   avec un frein CPU (`--cpu`), un profil CPU (`--profile boot|approach|steady`) et un A/B sur le

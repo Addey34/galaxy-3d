@@ -12,11 +12,19 @@
  * quand elles en ont ; pour une texture compressée, les octets de ses niveaux tels quels. Ce
  * n'est pas ce que le pilote alloue (alignement, copies), c'est ce que l'application lui DONNE,
  * et c'est la grandeur que KTX2 ferait baisser.
+ *
+ * CETTE ESTIMATION NE VOIT QUE LES MATÉRIAUX, et la cubemap du ciel (~512 Mio, fabriquée par
+ * Three.js et nommée par aucun matériau) lui a échappé jusqu'au 2026-10-18. Depuis le lot 56 la
+ * sonde rend aussi `driver` : le registre des allocations du PILOTE (`core/gpuLedger.ts`, accroché
+ * avant le premier appel WebGL), qui compte tout ce qui est demandé, attribué ensuite texture par
+ * texture. C'est `driver.total` qui fait foi ; `textures` reste pour NOMMER ce qui pèse.
  */
 import * as THREE from 'three';
 import type { PublicAPI } from '@/SolarSystemApp';
 import { hasDebugFlag } from '@/utils/debugFlags';
 import { decodeTextureOffThread } from '@/components/systems/TextureSystem';
+import { GL } from '@/core/gpuLedger';
+import { isGpuLedgerInstalled, ledgerFor } from './gpuLedgerHook';
 
 /** Ce que la sonde rend à chaque lecture. */
 export interface PerfSnapshot {
@@ -33,6 +41,33 @@ export interface PerfSnapshot {
   drawCalls: number;
   triangles: number;
   programs: number;
+  /**
+   * Le registre du pilote (`null` si le registre n'a pas été accroché avant l'application).
+   * `materialBytes` : la part des textures que les matériaux de la scène atteignent ; le reste
+   * (cibles de rendu, cubemaps, textures orphelines) est nommé dans `largest`.
+   */
+  driver: {
+    total: number;
+    textures: {
+      live: number;
+      bytes: number;
+      cubeBytes: number;
+      cubeFaces: number;
+    };
+    renderbuffers: { live: number; bytes: number };
+    buffers: { live: number; bytes: number };
+    materialBytes: number;
+    /**
+     * Textures des matériaux que le pilote tient, et celles dont l'estimation s'écarte de plus de
+     * 1 % de ce que le pilote a reçu. Une texture atteinte mais jamais téléversée (hors champ)
+     * n'est ni l'une ni l'autre : elle est comptée dans `notUploaded`.
+     */
+    materialUploaded: number;
+    notUploaded: number;
+    mismatches: string[];
+    unknownFormats: number[];
+    largest: string[];
+  } | null;
 }
 
 /** Octets par texel d'une texture non compressée, selon son format et son type. */
@@ -136,6 +171,68 @@ export function setupPerfProbe(api: PublicAPI): () => void {
     return sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))]!;
   };
 
+  // Le registre du pilote, attribué : chaque objet du pilote est rapproché de la texture Three.js
+  // qui le possède (propriétés internes du moteur de rendu), sinon décrit par sa cible et sa taille.
+  const ledger = isGpuLedgerInstalled()
+    ? ledgerFor(gl as WebGL2RenderingContext)
+    : null;
+  const driverSnapshot = (
+    materialTextures: Map<THREE.Texture, number>,
+    known: Map<THREE.Texture, string>
+  ): PerfSnapshot['driver'] => {
+    if (!ledger) return null;
+    const owner = new Map<object, string>();
+    const handle = (t: THREE.Texture): object | undefined =>
+      (renderer.properties.get(t) as { __webglTexture?: object })
+        .__webglTexture;
+    for (const [texture, name] of known) {
+      const h = handle(texture);
+      if (h) owner.set(h, name);
+    }
+    let materialBytes = 0;
+    let materialUploaded = 0;
+    let notUploaded = 0;
+    const mismatches: string[] = [];
+    for (const [texture, estimate] of materialTextures) {
+      const h = handle(texture);
+      const bytes = h ? ledger.textureBytes(h) : null;
+      if (!h || bytes === null) {
+        notUploaded += 1;
+        continue;
+      }
+      if (!owner.has(h)) owner.set(h, texture.name || '(matériau)');
+      materialBytes += bytes;
+      materialUploaded += 1;
+      if (Math.abs(bytes - estimate) > 0.01 * Math.max(bytes, estimate))
+        mismatches.push(
+          `${owner.get(h)} estimé ${estimate} o, pilote ${bytes} o`
+        );
+    }
+    const totals = ledger.totals();
+    const largest = ledger
+      .entries()
+      .sort((a, b) => b.bytes - a.bytes)
+      .slice(0, 10)
+      .map((e) => {
+        const kind =
+          e.kind !== 'texture'
+            ? e.kind
+            : e.target === GL.TEXTURE_CUBE_MAP
+              ? 'cubemap'
+              : 'texture';
+        const name = owner.get(e.key) ?? `(${kind} hors cache)`;
+        return `${name} ${kind} ${e.width}×${e.height} ${Math.round(e.bytes / 1048576)} Mio`;
+      });
+    return {
+      ...totals,
+      materialBytes,
+      materialUploaded,
+      notUploaded,
+      mismatches,
+      largest,
+    };
+  };
+
   const snapshot = (): PerfSnapshot => {
     const textures = new Map<THREE.Texture, number>();
     const geometries = new Set<THREE.BufferGeometry>();
@@ -170,6 +267,7 @@ export function setupPerfProbe(api: PublicAPI): () => void {
         return `${known.get(t) ?? (t.name || '(hors cache)')} ${image?.width ?? '?'}×${image?.height ?? '?'} ${Math.round(bytes / 1048576)} Mio`;
       });
     return {
+      driver: driverSnapshot(textures, known),
       renderer: rendererName,
       frames: {
         count: frames.length,

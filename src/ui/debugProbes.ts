@@ -14,3 +14,4 @@ export { setupTerminatorProbe } from './terminatorProbe';
 export { setupSurfaceProbe } from './surfaceProbe';
 export { setupMeteoDebug } from './meteoDebug';
 export { setupPerfProbe } from './perfProbe';
+export { installGpuLedger } from './gpuLedgerHook';

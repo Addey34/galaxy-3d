@@ -237,6 +237,14 @@ function wireChrome(): {
 
     updateProgress(0, t('loader.init'));
 
+    // Sondes de débogage (`?debug-solar`, `-geo`, `-earth`, `-terminator`, `-surface`,
+    // `-meteo`, `-perf`) : un seul morceau, chargé seulement si un drapeau `debug-…` est présent.
+    // Sous `?debug-perf`, le registre des allocations du pilote doit précéder le PREMIER appel
+    // WebGL (lot 56) : on attend alors le morceau avant de construire l'application.
+    const debugProbes = hasAnyDebugFlag() ? import('./ui/debugProbes') : null;
+    if (debugProbes && hasDebugFlag('debug-perf'))
+      (await debugProbes).installGpuLedger();
+
     const app = new SolarSystemApp();
     // La date que l'adresse demande est connue AVANT le démarrage, et elle décide quelle
     // fenêtre d'éphéméride charger (lot 17C). Démarrer à aujourd'hui pour sauter ensuite en
@@ -266,9 +274,6 @@ function wireChrome(): {
         ) > 0.001,
       (cb) => animationSystem.onFrame(cb)
     );
-    // Sondes de débogage (`?debug-solar`, `-geo`, `-earth`, `-terminator`, `-surface`,
-    // `-meteo`, `-perf`) : un seul morceau, chargé seulement si un drapeau `debug-…` est présent.
-    const debugProbes = hasAnyDebugFlag() ? import('./ui/debugProbes') : null;
     void debugProbes?.then((m) => {
       m.setupSolarDebug(api);
       m.setupGeoDebug(api);
