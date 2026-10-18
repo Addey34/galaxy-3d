@@ -84,3 +84,40 @@ describe('carreau posé sur une sphère : même ombre que la sphère', () => {
     expect(attenuationOf(tile)).toBeCloseTo(0.7, 12);
   });
 });
+
+/**
+ * LES NUAGES DE LA TERRE SONT DANS L'OMBRE DE LA LUNE (lot 57, 2026-10-18).
+ *
+ * Seul le sol la recevait : vue depuis la Lune, l'éclipse annulaire du 2027-02-06 rendait le même
+ * disque qu'un jour sidéral plus tard (rapport de luminance 0,90 à 1,14 partout), parce que la zone
+ * où le Soleil est le plus caché est couverte de nuages, restés en plein jour. Corrigés, les nuages
+ * de cette zone tombent à 0,82-0,89, et rien d'autre ne bouge.
+ */
+describe('couche de nuages : même ombre que le sol', () => {
+  const earthConfig = CELESTIAL_CONFIG.bodies['earth']!;
+  const makeEarth = () =>
+    new CelestialObject(textureSystem, earthConfig, 'earth', animationSystem);
+  const cloudsOf = (earth: CelestialObject) =>
+    (earth as unknown as { layers: Map<string, THREE.Mesh> }).layers.get(
+      'clouds'
+    )!.material as THREE.Material;
+
+  it('les nuages portent une ombre d’éclipse par fragment', () => {
+    expect(getEclipseShadowUniforms(cloudsOf(makeEarth()))).toBeDefined();
+  });
+
+  it('ils suivent la source de l’ombre que reçoit le sol', () => {
+    const earth = makeEarth();
+    earth.setEclipseShadowSource(
+      new THREE.Vector3(1, 2, 3),
+      5,
+      new THREE.Vector3(4, 5, 6),
+      0.5
+    );
+    const u = getEclipseShadowUniforms(cloudsOf(earth))!;
+    expect(u.sunPosition.value.toArray()).toEqual([1, 2, 3]);
+    expect(u.sunRadius.value).toBe(5);
+    expect(u.occluderPosition.value.toArray()).toEqual([4, 5, 6]);
+    expect(u.occluderRadius.value).toBe(0.5);
+  });
+});

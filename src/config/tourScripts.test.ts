@@ -35,10 +35,11 @@ describe('TOUR_SCRIPTS', () => {
     for (const script of TOUR_SCRIPTS)
       for (const step of script.steps)
         if (step.kind === 'flyTo')
-          expect(
-            catalogNames.has(step.body) || isNavigableTarget(step.body),
-            `${script.id} : « ${step.body} » n’est ni un corps du catalogue ni une cible navigable`
-          ).toBe(true);
+          for (const name of [step.body, step.from ?? step.body])
+            expect(
+              catalogNames.has(name) || isNavigableTarget(name),
+              `${script.id} : « ${name} » n’est ni un corps du catalogue ni une cible navigable`
+            ).toBe(true);
   });
 
   it('nomme un corps réel sur chaque événement qui en dépend', () => {
@@ -75,17 +76,27 @@ describe('les trois visites d’origine, étape par étape', () => {
     TOUR_SCRIPTS.find((script) => script.id === id)!.steps;
   const kinds = (id: string): string[] => steps(id).map((step) => step.kind);
 
-  it('éclipse : saut de temps, Terre, légende, Lune, légende', () => {
+  it('éclipse : saut de temps, Terre, légende, vraie échelle, Terre vue de la Lune, légende', () => {
     expect(kinds('eclipse')).toEqual([
       'jumpToEvent',
       'flyTo',
       'caption',
+      'setMode',
       'flyTo',
       'caption',
     ]);
     expect(steps('eclipse')[0]).toEqual({
       kind: 'jumpToEvent',
       event: 'solar-eclipse',
+    });
+    // L'ombre de la Lune ne se dessine sur le sol qu'en Explo (en Éduc, un assombrissement du
+    // globe entier), et seulement si la caméra n'est pas du côté Soleil de la Lune, qui la
+    // cacherait elle-même : c'est ce que la visite montrait avant le lot 57.
+    expect(steps('eclipse')[3]).toEqual({ kind: 'setMode', mode: 'explo' });
+    expect(steps('eclipse')[4]).toEqual({
+      kind: 'flyTo',
+      body: 'earth',
+      from: 'moon',
     });
   });
 
