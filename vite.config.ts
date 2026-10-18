@@ -1571,5 +1571,14 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    // Délais élargis (2026-10-18, mesuré) : au PREMIER passage à froid de
+    // `pnpm verify`, l'import des tests double (113 s cumulées contre 50 à 57)
+    // et ce sont les tests qui LISENT les artefacts livrés (binaires
+    // d'éphémérides, modèles de forme, balayage du texte publié) qui passent
+    // les 5 s par défaut, jamais les mêmes d'un jour à l'autre. Seuls, ils
+    // prennent quelques centaines de ms, et les passages suivants sont verts.
+    // Un blocage véritable reste borné.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
   },
 });
