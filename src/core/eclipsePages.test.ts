@@ -14,6 +14,7 @@ import {
   formatEclipseDate,
 } from './eclipsePages';
 import { messages } from '@/i18n/allDictionaries';
+import { LOCALES } from '@/i18n/locales';
 
 const eclipses = eclipsesInPageWindow();
 const bySlug = (slug: string) => {
@@ -162,11 +163,13 @@ describe('eclipse titles', () => {
     );
   });
 
-  it('has a title in both languages for every eclipse of the window', () => {
+  it('has a title in every language for every eclipse of the window', () => {
     for (const event of eclipses) {
       const key = eclipseTitleKey(event);
-      expect(messages.en[key], `${key} (en)`).toContain('{date}');
-      expect(messages.fr[key], `${key} (fr)`).toContain('{date}');
+      // Les QUATRE langues, dérivées de `LOCALES` : la clé y est exigée par le compilateur
+      // (`MessageKey`), mais rien d'autre ne vérifiait qu'elle porte la date (2026-10-18).
+      for (const locale of LOCALES)
+        expect(messages[locale][key], `${key} (${locale})`).toContain('{date}');
     }
   });
 });
