@@ -5293,7 +5293,7 @@ donnée de décrire un comportement sans devenir du code.
 
 | Forme | Effet |
 |---|---|
-| `flyTo` | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` |
+| `flyTo` | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` ; avec `from`, la regarde ensuite DEPUIS un autre corps (lot 57) |
 | `jumpToDate` | saute à une date déclarée, `{"$date": "…Z"}` |
 | `jumpToEvent` | saute à la prochaine occurrence RÉELLE d'un événement, depuis la date courante |
 | `setTimeScale` | accélère (ou renverse) le temps, plafonné à ce que le curseur sait représenter |
@@ -5310,6 +5310,25 @@ DÉPART, comme il remettait déjà la vitesse, et jamais « éduc » en dur — 
 Explo ne doit pas en être sorti par une visite. La preuve qu'une forme n'est pas spéculative est
 qu'une fiche s'en serve : « Voyage aux confins » passe en Explo juste avant Sedna, là où la
 ceinture cesse d'être une file de points bien rangés.
+
+**L'angle d'une visite est un CORPS, pas trois nombres (lot 57, 2026-10-18).** `flyTo` accepte un
+`from` facultatif : une fois le vol fini, et pas avant (l'arrivée du vol écraserait la pose), le
+moteur demande à l'hôte de regarder la cible depuis ce corps, par le même
+`CameraSystem.viewFromBody` que les pages d'éclipse de Lune. Des angles fixes, lus dans le permalien
+de `#share-btn`, ne vaudraient que pour la date où on les a lus ; un corps nommé se recalcule sur les
+positions de la scène, donc d'une éclipse à la suivante. Le schéma refuse une cible regardée depuis
+elle-même. La fiche qui s'en sert est « Naissance d'une éclipse », et ce qu'elle montrait avant est
+la raison de la forme : sa dernière légende annonçait l'ombre de la Lune sur la Terre alors que la
+scène restait en Éduc (où l'ombre n'est qu'un assombrissement du globe entier) et que la caméra
+était du côté Soleil de la Lune, qui cachait ainsi sa propre ombre. Elle passe désormais en Explo et
+regarde la Terre depuis la Lune. **En la vérifiant à l'image, un défaut de rendu est apparu** : les
+nuages n'étaient pas dans l'ombre de la Lune (leur matériau n'était pas compilé avec l'ombre par
+fragment, et rien ne leur envoyait sa source), et la zone d'ombre de l'éclipse du 2027-02-06 en est
+couverte. Mesuré contre un témoin pris un jour sidéral plus tard, même cadrage : rapport de
+luminance de 0,90 à 1,14 partout avant, 0,82 à 0,89 dans la zone d'ombre après, rien d'autre ne
+bouge (`overlayEclipse.test.ts`, falsifié). L'ombre reste discrète sur une éclipse annulaire, et
+c'est une conséquence de `SHADOW_GAMMA` (3,2, un resserrement perceptif pensé pour un observateur au
+sol), non d'un défaut : le changer est une décision de rendu, pas un correctif.
 
 **`jumpToEvent` est la forme qui a fait disparaître une exception de code.** Jusqu'au lot 21,
 `ui/tourPlayer.ts` préfixait un saut de date à la visite dont l'identifiant valait `eclipse` : une
