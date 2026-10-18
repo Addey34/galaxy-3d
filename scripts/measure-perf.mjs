@@ -242,6 +242,21 @@ for (const scene of SCENES) {
       ` | approche : ${approach.longTasks.count} blocages, ${Math.round(approach.longTasks.totalMs)} ms, max ${Math.round(approach.longTasks.maxMs)} ms` +
       ` | textures ${steady.textures.count} (${mib(steady.textures.bytes)} Mio), géométries ${mib(steady.geometries.bytes)} Mio, ${steady.drawCalls} appels`
   );
+  // Le registre du PILOTE (lot 56) : tout ce qui a été demandé à WebGL, cubemaps et cibles de
+  // rendu comprises, et non les seules textures des matériaux.
+  const d = steady.driver;
+  if (d) {
+    console.log(
+      `${''.padEnd(14)} pilote ${mib(d.total)} Mio : textures ${d.textures.live} (${mib(d.textures.bytes)} Mio, dont matériaux ${mib(d.materialBytes)}, cubemaps ${mib(d.textures.cubeBytes)}), rendu ${mib(d.renderbuffers.bytes)} Mio, tampons ${mib(d.buffers.bytes)} Mio`
+    );
+    for (const line of d.largest.slice(0, 6))
+      console.log(`${''.padEnd(16)}${line}`);
+    console.log(
+      `${''.padEnd(16)}matériaux : ${d.materialUploaded} téléversées, ${d.notUploaded} jamais, ${d.mismatches.length} écarts d'estimation`
+    );
+    for (const line of d.mismatches.slice(0, 6))
+      console.log(`${''.padEnd(18)}${line}`);
+  }
   await context.close();
 }
 await browser.close();
