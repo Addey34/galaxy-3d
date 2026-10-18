@@ -623,9 +623,14 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
     // terminatorWrap atmosphérique : une couche nuageuse n'existe QUE sur un corps qui a
     // une atmosphère, et elle doit s'éteindre au même terminateur que la surface en dessous
     // — sinon les nuages restent éclairés dans une bande où le sol est déjà noir.
+    // eclipseShadow : l'ombre de la Lune assombrit les nuages comme le sol (lot 57). Sans elle,
+    // une éclipse vue de l'espace ne montrait rien : la zone d'ombre de celle du 2027-02-06 est
+    // couverte de nuages, restés en plein jour. La source vient de la surface
+    // (`CelestialObject._syncLayerEclipse`).
     {
       noSpecular: true,
       moonlight: true,
+      eclipseShadow: true,
       terminatorWrap: LAYER_TERMINATOR_WRAP['clouds'],
     }
   );

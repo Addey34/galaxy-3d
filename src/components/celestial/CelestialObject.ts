@@ -609,13 +609,31 @@ export default class CelestialObject {
   private _syncOverlayEclipse(material: THREE.Material): void {
     const from = this._eclipseShadow;
     const to = getEclipseShadowUniforms(material);
-    if (!from || !to) return;
+    if (!from || !to || to === from) return;
     to.sunPosition.value.copy(from.sunPosition.value);
     to.sunRadius.value = from.sunRadius.value;
     to.occluderPosition.value.copy(from.occluderPosition.value);
     to.occluderRadius.value = from.occluderRadius.value;
     to.occluderRefracts.value = from.occluderRefracts.value;
     to.umbraTint.value.copy(from.umbraTint.value);
+  }
+
+  /**
+   * Recopie l'ombre d'éclipse dans les COUCHES du corps qui la calculent aussi (lot 57,
+   * 2026-10-18) : les nuages portent le même code d'ombre que la surface, mais rien ne leur
+   * envoyait la source, si bien qu'ils restaient en plein jour dans l'ombre de la Lune. Mesuré
+   * sur l'éclipse annulaire du 2027-02-06 vue depuis la Lune : la zone que le Soleil ne
+   * déborde plus est couverte de nuages, et le disque gardait la même luminance qu'un jour
+   * sidéral plus tard. Le matériau est relu à chaque passe, parce qu'une couche météo peut
+   * remplacer celui des nuages.
+   */
+  private _syncLayerEclipse(): void {
+    this.layers.forEach((mesh) => {
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      materials.forEach((material) => this._syncOverlayEclipse(material));
+    });
   }
 
   /** Oublie un matériau de recouvrement (l'appelant reste responsable de son `dispose`). */
@@ -1193,6 +1211,7 @@ export default class CelestialObject {
     if (tint) target.setRGB(tint[0], tint[1], tint[2]);
     else target.setRGB(1, 1, 1);
     this._overlayMaterials.forEach((m) => this._syncOverlayEclipse(m));
+    this._syncLayerEclipse();
   }
 
   setEclipseShadowSource(
@@ -1213,6 +1232,7 @@ export default class CelestialObject {
       this._eclipseShadow.occluderRadius.value = 0;
     }
     this._overlayMaterials.forEach((m) => this._syncOverlayEclipse(m));
+    this._syncLayerEclipse();
   }
 
   /**
