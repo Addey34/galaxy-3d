@@ -68,14 +68,20 @@ jobs:
 
       - name: Build base and head
         run: |
-          base="${{ github.event.inputs.base || github.sha }}"
+          # Une revision se resout en COMMIT, branche locale ou distante : lance depuis une autre
+          # branche, `main` n'existe que sous `origin/main` (« invalid reference », run 39132105459),
+          # et lance depuis `main`, il est deja extrait (d'ou --detach, run 39130818450).
+          rev() { git rev-parse --verify -q "$1^{commit}" || git rev-parse --verify "origin/$1^{commit}"; }
+          base="$(rev "${{ github.event.inputs.base || github.sha }}")"
           head="${{ github.event.inputs.head }}"
-          # --detach : la base est souvent `main`, deja extraite par le checkout (« already used by
-          # worktree », run 39130818450).
+          echo "base $base"
           git worktree add --detach ../base "$base"
           (cd ../base && pnpm install --frozen-lockfile && pnpm exec vite build --logLevel warn)
           if [ -n "$head" ]; then
-            git checkout "$head"
+            head="$(rev "$head")"
+            echo "head $head"
+            git checkout --detach "$head"
+            pnpm install --frozen-lockfile
             pnpm exec vite build --logLevel warn
           else
             cp -r ../base/dist dist
