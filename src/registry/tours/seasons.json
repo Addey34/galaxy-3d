@@ -10,20 +10,26 @@
   "steps": [
     {
       "kind": "flyTo",
-      "body": "earth"
+      "body": "earth",
+      "side": "sun"
     },
     {
       "kind": "caption",
       "text": {
-        "en": "The Earth’s seasons come from the tilt of its axis, about 23.4° from the plane of its orbit, not from its distance to the Sun. Watch the lit half as we jump to the four turning points of one year.",
-        "fr": "Les saisons de la Terre viennent de l’inclinaison de son axe, d’environ 23,4° par rapport au plan de son orbite, et non de sa distance au Soleil. Observez la moitié éclairée pendant que nous sautons aux quatre tournants d’une même année.",
-        "es": "Las estaciones de la Tierra provienen de la inclinación de su eje, unos 23,4° respecto al plano de su órbita, y no de su distancia al Sol. Observa la mitad iluminada mientras saltamos a los cuatro momentos clave de un mismo año.",
-        "pt-BR": "As estações da Terra vêm da inclinação do seu eixo, cerca de 23,4° em relação ao plano da sua órbita, e não da sua distância ao Sol. Observe a metade iluminada enquanto saltamos para os quatro momentos decisivos de um mesmo ano."
+        "en": "The Earth’s seasons come from the tilt of its axis, about 23.4° from the plane of its orbit, not from its distance to the Sun. We look at the Earth side-on, with the Sun to the right, so the line between day and night runs down the middle of the globe. Watch the lit half as we jump to the four turning points of one year.",
+        "fr": "Les saisons de la Terre viennent de l’inclinaison de son axe, d’environ 23,4° par rapport au plan de son orbite, et non de sa distance au Soleil. Nous regardons la Terre de profil, le Soleil à droite : la limite du jour et de la nuit coupe le globe en son milieu. Observez la moitié éclairée pendant que nous sautons aux quatre tournants d’une même année.",
+        "es": "Las estaciones de la Tierra provienen de la inclinación de su eje, unos 23,4° respecto al plano de su órbita, y no de su distancia al Sol. Miramos la Tierra de perfil, con el Sol a la derecha: el límite entre el día y la noche corta el globo por la mitad. Observa la mitad iluminada mientras saltamos a los cuatro momentos clave de un mismo año.",
+        "pt-BR": "As estações da Terra vêm da inclinação do seu eixo, cerca de 23,4° em relação ao plano da sua órbita, e não da sua distância ao Sol. Olhamos a Terra de perfil, com o Sol à direita: o limite entre o dia e a noite corta o globo ao meio. Observe a metade iluminada enquanto saltamos para os quatro momentos decisivos de um mesmo ano."
       }
     },
     {
       "kind": "jumpToEvent",
       "event": "march-equinox"
+    },
+    {
+      "kind": "flyTo",
+      "body": "earth",
+      "side": "sun"
     },
     {
       "kind": "caption",
@@ -39,6 +45,11 @@
       "event": "june-solstice"
     },
     {
+      "kind": "flyTo",
+      "body": "earth",
+      "side": "sun"
+    },
+    {
       "kind": "caption",
       "text": {
         "en": "June solstice: the north pole leans towards the Sun and stays lit all day, while the south pole stays in the dark. This is the northern summer.",
@@ -52,6 +63,11 @@
       "event": "september-equinox"
     },
     {
+      "kind": "flyTo",
+      "body": "earth",
+      "side": "sun"
+    },
+    {
       "kind": "caption",
       "text": {
         "en": "September equinox: the Sun crosses the equator again, the other way. Autumn begins in the north, spring in the south.",
@@ -63,6 +79,11 @@
     {
       "kind": "jumpToEvent",
       "event": "december-solstice"
+    },
+    {
+      "kind": "flyTo",
+      "body": "earth",
+      "side": "sun"
     },
     {
       "kind": "caption",

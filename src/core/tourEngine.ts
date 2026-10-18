@@ -12,8 +12,12 @@ import type { AstronomicalEventKind } from './astronomicalEvents';
 import type { ScaleMode } from './ScaleService';
 
 export type TourStep =
-  /** `from` : une fois arrivé, regarder la cible depuis ce corps (cf. `TourRuntimeHost.viewFrom`). */
-  | { kind: 'flyTo'; body: string; from?: string }
+  /**
+   * `from` : une fois arrivé, regarder la cible depuis ce corps (cf. `TourRuntimeHost.viewFrom`).
+   * `side` : la regarder de profil par rapport à ce corps (`TourRuntimeHost.viewBeside`, lot 58).
+   * Les deux s'excluent, et le schéma le refuse.
+   */
+  | { kind: 'flyTo'; body: string; from?: string; side?: string }
   | { kind: 'jumpToDate'; date: Date }
   /**
    * La prochaine occurrence RÉELLE d'un événement, depuis la date courante de la scène. Le moteur
@@ -52,6 +56,8 @@ export interface TourRuntimeHost {
    * APRÈS le vol : plus tôt, l'arrivée du vol écraserait la pose.
    */
   viewFrom(body: string): void;
+  /** Même moment que `viewFrom`, mais de profil : la cible à angle droit de la direction de `body`. */
+  viewBeside(body: string): void;
   jumpToDate(date: Date): void;
   /** Résout l'événement à cet instant, puis saute : cf. l'étape `jumpToEvent`. */
   jumpToEvent(event: AstronomicalEventKind, body?: string): void;
@@ -122,8 +128,9 @@ export async function runTour(
       case 'flyTo':
         host.flyTo(step.body);
         await waitUntil(() => !host.isFlying(), signal);
-        if (step.from !== undefined && !signal.cancelled)
-          host.viewFrom(step.from);
+        if (signal.cancelled) break;
+        if (step.from !== undefined) host.viewFrom(step.from);
+        else if (step.side !== undefined) host.viewBeside(step.side);
         break;
       case 'jumpToDate':
         host.jumpToDate(step.date);

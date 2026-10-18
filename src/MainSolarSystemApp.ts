@@ -47,7 +47,7 @@ import { setupModeSwitcher } from './ui/modeSwitcher';
 import { setupExploTourNudge } from './ui/exploTourNudge';
 import { setupExploScaleBadge } from './ui/exploScaleBadge';
 import { setupPermalinks } from './ui/permalink';
-import { requestedSceneDate } from './core/permalink';
+import { parsePermalink, requestedSceneDate } from './core/permalink';
 import { LANDING_PAGE_BODIES } from './config/navigable';
 import { setupAstronomicalEvents } from './ui/astronomicalEvents';
 import { setupOpticalZoom } from './ui/opticalZoom';
@@ -726,6 +726,12 @@ function wireChrome(): {
       }
     );
 
+    // `?tour=` (lot 58) : l'adresse qu'imprime une fiche d'activité. Lue AVANT
+    // `applyInitialState`, qui réécrit l'adresse et l'efface (c'est une ouverture, pas un état).
+    const requestedTour = parsePermalink(
+      window.location.search,
+      LANDING_PAGE_BODIES
+    ).tour;
     const permalink = setupPermalinks(
       orbitalMechanics,
       planetNav,
@@ -771,7 +777,7 @@ function wireChrome(): {
       navigation: planetNav,
       playback,
     });
-    setupTourPlayer(
+    const tourPlayer = setupTourPlayer(
       cameraSystem,
       orbitalMechanics,
       planetNav,
@@ -780,7 +786,12 @@ function wireChrome(): {
       modeSwitcher
     );
     hideLoader();
-    guidedTour.startIfFirstVisit();
+    // La visite demandée remplace la découverte de premier passage, qui se superposerait à elle.
+    // L'adresse est réécrite AVANT : la visite suspend le permalien, et `tour` y resterait pour
+    // toute sa durée, si bien qu'un rechargement la relancerait.
+    if (requestedTour !== undefined) permalink.sync();
+    if (!(requestedTour !== undefined && tourPlayer.start(requestedTour)))
+      guidedTour.startIfFirstVisit();
   } catch (err) {
     showError(err instanceof Error ? err : new Error(String(err)));
   }

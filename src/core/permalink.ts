@@ -29,6 +29,13 @@ export interface PermalinkState {
    * des grands lieux.
    */
   place?: string;
+  /**
+   * Une visite guidée à LANCER à l'ouverture (lot 58) : c'est l'adresse qu'imprime une fiche
+   * d'activité, pour qu'une classe ouvre la scène d'un lien. Même statut que `place` : lue une
+   * fois, jamais réécrite. Seule la FORME est validée ici (kebab-case, comme les identifiants du
+   * registre) ; une visite inconnue ne lance rien (`TourPlayer.start`).
+   */
+  tour?: string;
 }
 
 // `place` y figure pour être EFFACÉ à la réécriture : c'est une ouverture (lot 55), et l'adresse qui
@@ -41,6 +48,7 @@ const PERMALINK_KEYS = [
   'pol',
   'dist',
   'place',
+  'tour',
 ] as const;
 
 /**
@@ -66,6 +74,13 @@ function parseFiniteNumber(value: string | null): number | undefined {
 function parsePlace(value: string | null): string | undefined {
   const place = value?.trim();
   return place && place.length <= MAX_PLACE_LENGTH ? place : undefined;
+}
+
+function parseTour(value: string | null): string | undefined {
+  const tour = value?.trim();
+  return tour && tour.length <= 64 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(tour)
+    ? tour
+    : undefined;
 }
 
 function parseView(params: URLSearchParams): PermalinkViewAngles | undefined {
@@ -173,6 +188,7 @@ export function parsePermalink(
     date: parseDate(params.get('date')),
     view: parseView(params),
     place: parsePlace(params.get('place')),
+    tour: parseTour(params.get('tour')),
   };
 }
 
