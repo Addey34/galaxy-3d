@@ -5146,10 +5146,16 @@ du rendu, donc une seconde texture GPU) et faisait six rendus 4096² au démarra
 désormais un triangle couvrant l'écran qui lit l'image directement (`equirectangularSky.ts`, la
 même formule `equirectUv` que la conversion) : il ne reste que la source, comptée par la sonde.
 Comparé à la production sur quatre visées dont les deux pôles de l'image : écart moyen 0,3/255,
-contre 0,13/255 entre deux chargements de la production elle-même (le scintillement). Son
-anisotropie maximale est posée AVANT le téléversement, par `TextureSystem` pour un corps `skybox` :
-posée après, elle retéléversait toute l'image (100 ms). Gardes : `equirectangularSky.test.ts`
-(aucun module ne pose une image en `scene.background`, intensité suivie ; falsifiées).
+contre 0,13/255 entre deux chargements de la production elle-même (le scintillement). **Un seul
+niveau de mipmap pour toute l'image**, calculé du champ de vision et de la hauteur de l'écran
+(`skyLod`, `textureLod`) : une première version le laissait déduire des dérivées avec une
+anisotropie de 16, et en rendu LOGICIEL chaque image passait de 102 à 293 ms sur la Lune ; deux
+descentes de surface ne finissaient plus en CI (runs SIMULTANÉS : `main` sain, la branche non). Avec
+le niveau unique : 101 ms (102 en production), et le pire blocage au démarrage en rendu logiciel
+tombe de 5,5 s à 1,1 à 1,3 s, la conversion n'ayant plus lieu. Aucun réglage d'échantillonnage n'est
+plus changé après le téléversement (filtre et anisotropie posés après retéléversaient toute
+l'image, 100 ms). Gardes : `equirectangularSky.test.ts` (aucun module ne pose une image en
+`scene.background`, intensité suivie, niveau de mipmap ; falsifiées).
 
 **Les segments d'éphémérides, indexés (2026-10-18).** `_segmentAt` parcourait TOUS les fichiers
 chargés pour chaque position demandée, donc pour chaque point de chaque orbite : 162 ms de temps

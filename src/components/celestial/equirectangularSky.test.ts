@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { createEquirectangularSky } from './equirectangularSky';
+import { createEquirectangularSky, skyLod } from './equirectangularSky';
 
 /**
  * LE CIEL SANS CUBEMAP (lot 54). Une image posée en `scene.background` est convertie par Three.js en
@@ -29,7 +29,9 @@ describe('le fond de ciel équirectangulaire', () => {
     const scene = new THREE.Scene();
     scene.backgroundIntensity = 0.25;
     sky.onBeforeRender(
-      {} as THREE.WebGLRenderer,
+      {
+        getDrawingBufferSize: (target: THREE.Vector2) => target.set(1280, 800),
+      } as unknown as THREE.WebGLRenderer,
       scene,
       new THREE.PerspectiveCamera(),
       sky.geometry,
@@ -37,6 +39,18 @@ describe('le fond de ciel équirectangulaire', () => {
       new THREE.Group()
     );
     expect(material.uniforms['intensity']!.value).toBe(0.25);
+  });
+
+  it('choisit le niveau de mipmap où un texel couvre un pixel', () => {
+    // Champ vertical de 90° : la matrice de projection porte 1 / tan(45°) = 1.
+    const fov = Math.PI / 2;
+    // L'écran juste aussi fin que l'image : niveau 0.
+    const height = ((8192 / (2 * Math.PI)) * fov) / 1;
+    expect(skyLod(8192, 1, height)).toBeCloseTo(0, 6);
+    // Moitié moins de pixels : un niveau plus haut ; plus fin que l'image : jamais négatif.
+    expect(skyLod(8192, 1, height / 2)).toBeCloseTo(1, 6);
+    expect(skyLod(8192, 1, height * 4)).toBe(0);
+    expect(skyLod(0, 1, 800)).toBe(0);
   });
 
   it('aucun module ne pose une image en scene.background (seule la restauration de GlowPass y écrit)', () => {

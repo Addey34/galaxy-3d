@@ -258,13 +258,7 @@ export class TextureSystem {
     /** L'espace de couleur à téléverser : `NoColorSpace` pour une carte de données. */
     colorSpace: THREE.ColorSpace = THREE.SRGBColorSpace,
     /** Un seul canal (R8) : cf. `core/textureColorSpace.ts`. */
-    singleChannel = false,
-    /**
-     * Anisotropie à poser AVANT le téléversement. Three.js range ses textures GPU par image ET
-     * paramètres d'échantillonnage : changée après coup, elle crée une seconde texture et
-     * retéléverse toute l'image (mesuré pour le ciel 8k : 100 ms de plus, lot 54).
-     */
-    anisotropy?: number
+    singleChannel = false
   ): Promise<THREE.Texture> {
     assertSafeTexturePath(relativePath, 'TextureSystem asset path');
     assertSafeTextureQuality(String(quality), 'TextureSystem quality');
@@ -301,7 +295,6 @@ export class TextureSystem {
           // AVANT le téléversement : il fixe le format de stockage (cf. `core/textureColorSpace.ts`).
           texture.colorSpace = colorSpace;
           if (singleChannel) texture.format = THREE.RedFormat;
-          if (anisotropy !== undefined) texture.anisotropy = anisotropy;
           texture.needsUpdate = true;
           // Upload GPU immédiat, hors boucle de rendu : sans ça, le premier render()
           // après un changement de LOD paie l'upload synchrone (pic de frame-time =
@@ -442,12 +435,7 @@ export class TextureSystem {
       textureBasePath,
       chosenQuality,
       isDataTexture(textureKey) ? THREE.NoColorSpace : THREE.SRGBColorSpace,
-      isSingleChannel(textureKey),
-      // Le fond de ciel : l'anisotropie maximale du GPU, qui arrondit les étoiles d'un pixel au
-      // ras des pôles de l'image (cf. `SceneSystem.setupStarfield`).
-      bodyConfig.kind === 'skybox'
-        ? this.renderer?.capabilities.getMaxAnisotropy()
-        : undefined
+      isSingleChannel(textureKey)
     );
   }
 

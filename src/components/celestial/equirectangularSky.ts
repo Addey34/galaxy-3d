@@ -12,6 +12,13 @@
  * Ici, un triangle couvrant l'écran calcule la direction de visée de chaque pixel et lit l'image
  * par `equirectUv`, la même formule que la conversion de Three.js : il ne reste que la source.
  * Dessiné en premier, sans test ni écriture de profondeur, comme l'était le fond.
+ *
+ * UN SEUL NIVEAU DE DÉTAIL POUR TOUTE L'IMAGE, calculé du champ de vision et de la hauteur de
+ * l'écran (`textureLod`). Une première version laissait le GPU le déduire des dérivées
+ * (`textureGrad`, anisotropie 16) : en rendu LOGICIEL, celui de la CI, chaque image passait de
+ * 102 à 293 ms sur la Lune, et deux descentes de surface ne finissaient plus (runs simultanés
+ * 39112230855 et 39112232461). La cubemap ne faisait pas mieux aux pôles de l'image : sa
+ * conversion lisait la source sans mipmaps.
  */
 import * as THREE from 'three';
 
@@ -30,25 +37,36 @@ const vertexShader = /* glsl */ `
 const fragmentShader = /* glsl */ `
   uniform sampler2D map;
   uniform float intensity;
+  uniform float lod;
   varying vec3 vDirection;
   #include <common>
   void main() {
     vec2 uv = equirectUv( normalize( vDirection ) );
-    // La couture : u saute de 1 à 0 au méridien de l'image, et sa dérivée avec lui, ce qui
-    // ferait choisir le niveau de mipmap le plus grossier le long d'une ligne. La dérivée de
-    // u décalé d'un demi-tour n'a pas ce saut au même endroit : on garde la plus petite.
-    vec2 dx = dFdx( uv );
-    vec2 dy = dFdy( uv );
-    float shifted = fract( uv.x + 0.5 );
-    float dxShifted = dFdx( shifted );
-    float dyShifted = dFdy( shifted );
-    if ( abs( dxShifted ) < abs( dx.x ) ) dx.x = dxShifted;
-    if ( abs( dyShifted ) < abs( dy.x ) ) dy.x = dyShifted;
-    gl_FragColor = vec4( textureGrad( map, uv, dx, dy ).rgb * intensity, 1.0 );
+    gl_FragColor = vec4( textureLod( map, uv, lod ).rgb * intensity, 1.0 );
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
 `;
+
+const bufferSize = new THREE.Vector2();
+
+/**
+ * Le niveau de mipmap où un texel de l'image couvre un pixel de l'écran, à l'équateur de
+ * l'image : texels par radian (largeur / 2π) fois l'angle d'un pixel (champ vertical / hauteur).
+ * Lu sur la matrice de projection, il vaut aussi pour les caméras d'un casque.
+ */
+export function skyLod(
+  imageWidth: number,
+  projectionYScale: number,
+  bufferHeight: number
+): number {
+  if (!(imageWidth > 0 && projectionYScale > 0 && bufferHeight > 0)) return 0;
+  const fov = 2 * Math.atan(1 / projectionYScale);
+  return Math.max(
+    0,
+    Math.log2(((imageWidth / (2 * Math.PI)) * fov) / bufferHeight)
+  );
+}
 
 /** Le ciel : un maillage sans volume, ignoré du lancer de rayons et jamais écarté par le frustum. */
 export function createEquirectangularSky(texture: THREE.Texture): THREE.Mesh {
@@ -59,7 +77,11 @@ export function createEquirectangularSky(texture: THREE.Texture): THREE.Mesh {
   );
   const material = new THREE.ShaderMaterial({
     name: 'EquirectangularSky',
-    uniforms: { map: { value: texture }, intensity: { value: 1 } },
+    uniforms: {
+      map: { value: texture },
+      intensity: { value: 1 },
+      lod: { value: 0 },
+    },
     vertexShader,
     fragmentShader,
     depthTest: false,
@@ -71,8 +93,14 @@ export function createEquirectangularSky(texture: THREE.Texture): THREE.Mesh {
   mesh.renderOrder = -Infinity;
   mesh.raycast = () => {};
   // L'intensité reste celle de la scène : `AnimationSystem` l'efface sous un ciel de jour.
-  mesh.onBeforeRender = (_renderer, scene) => {
+  mesh.onBeforeRender = (renderer, scene, camera) => {
     material.uniforms['intensity']!.value = scene.backgroundIntensity;
+    const image = texture.image as { width?: number } | undefined;
+    material.uniforms['lod']!.value = skyLod(
+      image?.width ?? 0,
+      camera.projectionMatrix.elements[5]!,
+      renderer.getDrawingBufferSize(bufferSize).y
+    );
   };
   return mesh;
 }

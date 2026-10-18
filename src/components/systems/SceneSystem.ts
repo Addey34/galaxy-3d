@@ -183,10 +183,10 @@ export class SceneSystem {
         // directement dans l'image et non posé en `scene.background`, que Three.js convertit
         // en une cubemap de ~512 Mio pour le 8k (cf. `equirectangularSky.ts`).
         tex.colorSpace = THREE.SRGBColorSpace;
-        // Les étoiles « en blocs » s'adoucissent par le filtrage trilinéaire (les réglages
-        // par défaut de `TextureSystem`) et l'anisotropie maximale du GPU, posée par
-        // `TextureSystem` AVANT le téléversement pour un corps `skybox` : la poser ici
-        // retéléversait toute l'image 8k une seconde fois.
+        // Aucun réglage d'échantillonnage n'est changé ici : Three.js range ses textures GPU
+        // par image ET paramètres, donc un filtre ou une anisotropie posés après le
+        // téléversement retéléversaient toute l'image 8k (100 ms). Le ciel choisit son niveau
+        // de mipmap lui-même (`equirectangularSky.ts`).
         this.scene.add(createEquirectangularSky(tex));
         // Rehausse la bande galactique (texture source très sombre) ; le cœur le
         // plus brillant nourrit le bloom pour un ciel vivant.
