@@ -8,7 +8,9 @@ name: Perf A/B
 # deux machines mesureraient surtout la loterie du processeur.
 #
 # Le seuil se CALIBRE en mesurant la base contre elle-meme (`head` vide), sur plusieurs machines a
-# la fois (`copies`), et se lit dans `src/core/perfAb.ts`. Informatif : il ne conditionne rien.
+# la fois (`copies`), et se lit dans `src/config/perfAbThresholds.json` (run 39125750342 :
+# image au regime 0,8 %, blocages d'approche 2,8 %, memoire du pilote 0). Informatif : il ne
+# conditionne rien, mais le job rougit sur une regression au-dela du seuil.
 
 on:
   workflow_dispatch:
@@ -22,9 +24,6 @@ on:
       copies:
         description: 'Nombre de machines (1 pour une PR, 4 pour calibrer)'
         default: '1'
-  push:
-    # Calibration du lot 56 : une poussee sur cette branche mesure la base contre elle-meme.
-    branches: [lot56-perf-ab]
 
 permissions:
   contents: read
@@ -37,7 +36,7 @@ jobs:
     steps:
       - id: c
         run: |
-          n="${{ github.event.inputs.copies || '4' }}"
+          n="${{ github.event.inputs.copies || '1' }}"
           echo "copies=$(seq -s, 1 "$n" | sed 's/^/[/; s/$/]/')" >> "$GITHUB_OUTPUT"
 
   ab:

@@ -15,7 +15,9 @@
  *   - `driverMiB` : mémoire du pilote au régime (Mio, registre du lot 56).
  *
  * Le SEUIL ne se choisit pas : il se calibre en faisant tourner la base contre ELLE-MÊME
- * (`--origin-b` = `--origin-a`), sur plusieurs machines, et se lit dans `src/core/perfAb.ts`.
+ * (`--origin-b` = `--origin-a`), sur plusieurs machines, et se lit dans
+ * `src/config/perfAbThresholds.json` (écart mesuré et seuil, par grandeur). Code 1 sur une
+ * régression au-delà du seuil.
  *
  * Usage :
  *   node scripts/perf-ab.mjs --origin-a http://localhost:4301 --origin-b http://localhost:4302 \
@@ -42,6 +44,23 @@ export function median(values) {
   return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
 }
 
+/** Les seuils calibrés (`src/config/perfAbThresholds.json`). */
+export const THRESHOLDS = JSON.parse(
+  readFileSync(resolve(HERE, '../src/config/perfAbThresholds.json'), 'utf8')
+).thresholds;
+
+/**
+ * Le verdict d'un rapport : `regression` au-dessus de 1 + seuil, `gain` au-dessous de 1 - seuil,
+ * `noise` entre les deux ; `unmeasured` quand la grandeur manque d'un côté.
+ */
+export function verdict(name, ratio) {
+  if (!Number.isFinite(ratio)) return 'unmeasured';
+  const t = THRESHOLDS[name];
+  if (ratio > 1 + t) return 'regression';
+  if (ratio < 1 - t) return 'gain';
+  return 'noise';
+}
+
 /** Les rapports branche / base des médianes, par scène et par grandeur. */
 export function compare(samples) {
   const out = {};
@@ -50,7 +69,12 @@ export function compare(samples) {
     for (const [name, read] of Object.entries(METRICS)) {
       const ma = median(a.map(read));
       const mb = median(b.map(read));
-      out[scene][name] = { a: ma, b: mb, ratio: mb / ma };
+      out[scene][name] = {
+        a: ma,
+        b: mb,
+        ratio: mb / ma,
+        verdict: verdict(name, mb / ma),
+      };
     }
   }
   return out;
@@ -103,9 +127,9 @@ if (
     }
   const ratios = compare(samples);
   for (const [scene, metrics] of Object.entries(ratios))
-    for (const [name, { a, b, ratio }] of Object.entries(metrics))
+    for (const [name, { a, b, ratio, verdict: v }] of Object.entries(metrics))
       console.log(
-        `${scene.padEnd(14)} ${name.padEnd(18)} base ${a.toFixed(1)}  branche ${b.toFixed(1)}  rapport ${ratio.toFixed(3)}`
+        `${scene.padEnd(14)} ${name.padEnd(18)} base ${a.toFixed(1)}  branche ${b.toFixed(1)}  rapport ${ratio.toFixed(3)}  ${v === 'regression' ? 'RÉGRESSION' : v === 'gain' ? 'gain' : v === 'noise' ? 'dans le bruit' : 'non mesuré'} (seuil ${(THRESHOLDS[name] * 100).toFixed(1)} %)`
       );
   if (json) {
     mkdirSync(dirname(resolve(json)), { recursive: true });

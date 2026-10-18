@@ -1,0 +1,13 @@
+{
+  "$comment": "Seuils de l'A/B de performance (scripts/perf-ab.mjs, lot 56), CALIBRÉS et non choisis : la base contre elle-même, alternée sur une même machine, run 39125750342 du 2026-10-18 (4 machines, scènes overview et earth-explo, 3 tours chacune). Rapport le plus éloigné de 1 observé : image au régime 0,8 %, blocages d'approche 2,8 %, mémoire du pilote 0 (déterministe). Seuil : environ deux fois l'écart mesuré. Une régression est un rapport branche/base AU-DESSUS de 1 + seuil.",
+  "measuredSpread": {
+    "steadyP50": 0.008,
+    "approachBlockedMs": 0.028,
+    "driverMiB": 0
+  },
+  "thresholds": {
+    "steadyP50": 0.02,
+    "approachBlockedMs": 0.06,
+    "driverMiB": 0.005
+  }
+}
