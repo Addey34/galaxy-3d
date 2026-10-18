@@ -67,6 +67,27 @@ export const LOCALE_PATH: Record<Locale, string> = {
 };
 
 /**
+ * La langue que DÉCLARE un chemin par son premier segment (`/fr/moon/` → `fr`), ou `null`.
+ *
+ * Une page `/fr/…` est un texte français : le visiteur qui suit son lien attend l'application en
+ * français, quelle que soit la langue de son navigateur. Jusqu'au 2026-10-18, seuls la préférence
+ * enregistrée et le navigateur décidaient, et `/fr/moon/` démarrait en anglais pour un navigateur
+ * anglais (trouvé par le premier passage du guetteur de la production, lot 56). La racine ne
+ * déclare rien : l'anglais y est servi à tous, et `/moon/` n'impose donc pas l'anglais.
+ */
+export function localeOfPathname(pathname: string): Locale | null {
+  const first = pathname.split('/').find((part) => part.length > 0);
+  if (!first) return null;
+  const segment = first.trim().toLowerCase();
+  for (const [locale, prefix] of Object.entries(LOCALE_PATH) as [
+    Locale,
+    string,
+  ][])
+    if (prefix !== '' && prefix === segment) return locale;
+  return null;
+}
+
+/**
  * `lang` HTML par langue.
  *
  * `en-GB` conserve l'horloge 24 h des `input type="time"` — c'est la raison historique, et elle

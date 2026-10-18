@@ -291,3 +291,42 @@ test.describe('le texte du catalogue suit la langue', () => {
     await expect(panel).toContainText('The only known planet to harbour life');
   });
 });
+
+/**
+ * UNE PAGE `/fr/…` DÉMARRE EN FRANÇAIS, MÊME POUR UN NAVIGATEUR ANGLAIS (lot 56). Trouvé par le
+ * premier passage du guetteur de la production (issue #247) : le coureur Linux, en `en-GB`,
+ * ouvrait `/fr/moon/` en anglais, car seuls la préférence enregistrée et le navigateur décidaient.
+ * Et l'inverse doit tenir : choisir l'anglais sur cette page écrit `/moon/`, sans quoi un
+ * rechargement relirait `/fr/` et annulerait le choix du visiteur.
+ */
+test.describe('the path declares the language', () => {
+  test.use({ locale: 'en-GB' });
+
+  test('/fr/moon/ boots in French for an English browser, and choosing English rewrites the path', async ({
+    page,
+  }) => {
+    await blockExternalNetwork(page);
+    await page.addInitScript(() => {
+      localStorage.setItem('ssv-guided-tour-v1', '1');
+      localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
+    });
+    await page.goto('/fr/moon/?date=2024-07-01T12:00:00Z');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
+    // La langue tirée du chemin n'est pas enregistrée : la préférence reste au visiteur.
+    expect(
+      await page.evaluate(() => localStorage.getItem('ssv-locale'))
+    ).toBeNull();
+
+    await waitForCalmMainThread(page);
+    await clickWhenCalm(page, page.locator('#help-btn'));
+    await page.locator('#lang-switch .lang-btn[data-locale="en"]').click();
+    await expect(page.locator('html')).toHaveAttribute('lang', /^en/);
+    await expect(page).toHaveURL(/^[^?]*\/moon\/(\?|$)/);
+    await expect(page).not.toHaveURL(/\/fr\//);
+
+    await page.reload();
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+    await expect(page.locator('html')).toHaveAttribute('lang', /^en/);
+  });
+});

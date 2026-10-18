@@ -70,7 +70,9 @@ jobs:
         run: |
           base="${{ github.event.inputs.base || github.sha }}"
           head="${{ github.event.inputs.head }}"
-          git worktree add ../base "$base"
+          # --detach : la base est souvent `main`, deja extraite par le checkout (« already used by
+          # worktree », run 39130818450).
+          git worktree add --detach ../base "$base"
           (cd ../base && pnpm install --frozen-lockfile && pnpm exec vite build --logLevel warn)
           if [ -n "$head" ]; then
             git checkout "$head"

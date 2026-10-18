@@ -27,6 +27,7 @@ import {
   HTML_LANG,
   INTL_LOCALE,
   type Dict,
+  localeOfPathname,
   type Locale,
 } from './locales';
 import { STORAGE_KEYS } from '@/config/storageKeys';
@@ -40,12 +41,19 @@ export {
   HTML_LANG,
   INTL_LOCALE,
   isLocale,
+  localeOfPathname,
   negotiateLocale,
 } from './locales';
 
 const STORAGE_KEY = STORAGE_KEYS.locale;
 
 function detect(): Locale {
+  // Le chemin d'abord : `/fr/moon/` est une page française (`localeOfPathname`). Cette langue
+  // n'est PAS enregistrée : la préférence reste celle que le visiteur a choisie lui-même.
+  if (typeof window !== 'undefined') {
+    const fromPath = localeOfPathname(window.location.pathname);
+    if (fromPath) return fromPath;
+  }
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (isLocale(stored)) return stored;

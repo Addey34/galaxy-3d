@@ -5043,6 +5043,16 @@ Enfin, les **noms de mois** d'une page sont écrits en toutes lettres plutôt qu
 page statique doit rendre le même octet sur n'importe quelle machine, et les données ICU bougent avec
 la version du moteur.
 
+**Le chemin décide de la langue de l'application** (lot 56, 2026-10-18). Au démarrage, un segment
+de langue (`/fr/moon/`) l'emporte sur la préférence enregistrée et sur le navigateur
+(`i18n/locales.localeOfPathname`, lu par `detect()`), sans être enregistré : la préférence reste
+celle que le visiteur a choisie. La racine ne déclare rien, l'anglais y étant servi à tous. Et
+l'inverse : choisir une langue réécrit le préfixe du chemin (`ui/permalink.ts`, sur
+`onLocaleChange`), sans quoi un rechargement relirait l'ancien segment et annulerait ce choix. Avant
+ce jour, `/fr/moon/` démarrait en anglais pour un navigateur anglais : trouvé par le premier passage
+du guetteur de la production (issue #247). Garde : `e2e/i18n-locales.spec.ts` (« the path declares
+the language »), dont les deux moitiés sont falsifiées.
+
 ### Ce que ces règles ne couvrent pas
 
 `public/privacy.html` est une page statique du dossier `public/`, hors du générateur, et reste en
