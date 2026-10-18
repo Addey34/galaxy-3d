@@ -78,5 +78,13 @@ describe.skipIf(!hasClaude)(
       );
       expect(absent).toEqual([]);
     });
+
+    // Chargé à chaque conversation : la règle de tenue (fin du fichier) le borne à 150 000
+    // CARACTÈRES. `wc -c` compte des OCTETS, et l'accentuation française les gonfle d'environ
+    // 2 % : le 2026-10-18, 151 993 octets pour 149 140 caractères. Le hook de fin de tour
+    // (`.claude/hooks/private-notes-check.mjs`) tient la même borne. Falsifiée : 150 000 « é ».
+    it('reste sous 150 000 caractères', () => {
+      expect([...readFileSync(CLAUDE, 'utf-8')].length).toBeLessThan(150_000);
+    });
   }
 );

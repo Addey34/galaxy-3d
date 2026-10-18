@@ -1,0 +1,98 @@
+name: Production health
+
+# LE GUETTEUR DE LA PRODUCTION (lot 56).
+#
+# `source-health.yml` regarde ce dont le depot depend, `main-ci-watch.yml` ce qu'il construit ;
+# personne ne regardait ce que les visiteurs RECOIVENT. Ce guetteur lit
+# `galaxy.adrianguichard.dev` une fois par jour (`scripts/check-production.mjs`) : un temoin d'un
+# chemin jamais existe (la coquille, que Firebase sert en HTTP 200), la premiere et la derniere
+# page de chaque famille du sitemap SERVI, les en-tetes de `firebase.json` valeur pour valeur, et
+# dans un vrai navigateur une adresse localisee de grand lieu et la console du demarrage.
+#
+# Il ne conditionne RIEN. Meme forme que `source-health.yml` : une issue qui RESTE, refermee par
+# un passage sain. Le code 2 (« je n'ai pas pu mesurer ») ouvre l'issue comme un echec.
+
+on:
+  schedule:
+    - cron: '41 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: production-health
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Does production serve what the repo built
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4, resolved 2026-09-19
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0, resolved 2026-09-19
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+
+      # Code de sortie capture SANS pipe (un pipe rend celui du dernier maillon).
+      - name: Read what production serves
+        id: verdict
+        run: |
+          code=0
+          node scripts/check-production.mjs --markdown > production.md 2> production.err || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" = "0" ]; then
+            echo "healthy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "healthy=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ ! -s production.md ]; then
+            {
+              echo "## La production n'a PAS pu etre lue (code $code)"
+              echo
+              echo '```'
+              cat production.err
+              echo '```'
+            } > production.md
+          fi
+          cat production.md
+
+      - name: Open or update the tracking issue
+        if: steps.verdict.outputs.healthy != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          body="$(cat production.md)"
+          existing="$(gh issue list --repo "$REPO" --label production-health --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            gh label create production-health --repo "$REPO" \
+              --description "La production ne sert pas ce que le depot a construit" --color B60205 || true
+            gh issue create --repo "$REPO" --label production-health \
+              --title "La production ne sert pas ce que le depot a construit" --body "$body"
+          fi
+
+      - name: Close the tracking issue when production is healthy again
+        if: steps.verdict.outputs.healthy == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          existing="$(gh issue list --repo "$REPO" --label production-health --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$REPO" --comment "$(cat production.md)"
+          fi
