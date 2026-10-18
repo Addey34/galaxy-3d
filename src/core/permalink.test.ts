@@ -30,6 +30,18 @@ describe('permalink state', () => {
     expect(rewritten).toContain('debug-surface');
   });
 
+  it('reads a tour to launch, refuses a malformed one, and never writes it back (lot 58)', () => {
+    expect(parsePermalink('?tour=seasons', validBodies).tour).toBe('seasons');
+    expect(parsePermalink('?tour=Seasons', validBodies).tour).toBeUndefined();
+    expect(parsePermalink('?tour=a%20b', validBodies).tour).toBeUndefined();
+    expect(
+      parsePermalink(`?tour=${'a'.repeat(65)}`, validBodies).tour
+    ).toBeUndefined();
+    expect(
+      serializePermalink({ body: 'earth' }, '?tour=seasons', '/earth/')
+    ).not.toContain('tour');
+  });
+
   it('parses valid mode, body and UTC date', () => {
     const state = parsePermalink(
       '?mode=explo&body=Mars&date=2026-11-20T18%3A00%3A00Z',

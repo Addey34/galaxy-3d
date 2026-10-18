@@ -353,3 +353,40 @@ test.describe('une visite qui change d’échelle', () => {
     ).toHaveAttribute('aria-pressed', 'true');
   });
 });
+
+/**
+ * UNE FICHE D'ACTIVITÉ OUVRE SA VISITE D'UN LIEN (lot 58) : `?tour=<id>`.
+ *
+ * Trois choses, dont la troisième a été vue cassée à l'image : la visite part sans geste ; la
+ * découverte de premier passage ne se superpose PAS à elle (on retire donc ici le témoin que le
+ * `beforeEach` pose) ; et l'adresse ne garde pas `tour`, sinon un rechargement la relancerait.
+ * Le paramètre était d'abord lu APRÈS `applyInitialState`, qui l'avait déjà effacé : la visite ne
+ * partait jamais.
+ */
+test.describe('une visite ouverte par son adresse', () => {
+  test('?tour=seasons lance la visite, seule, et l’adresse ne la garde pas', async ({
+    page,
+  }) => {
+    await page.addInitScript(() =>
+      localStorage.removeItem('ssv-guided-tour-v1')
+    );
+    await page.goto('/?tour=seasons');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+    await expect(page.locator('.stour-card')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('.stour-caption')).toContainText(
+      FICHES[ORDER.indexOf('seasons')]!.steps.find(
+        (step) => step.kind === 'caption'
+      )!.text!.en.slice(0, 40),
+      { timeout: 60_000 }
+    );
+    await expect(page.locator('.tour-dialog')).toBeHidden();
+    expect(new URL(page.url()).searchParams.has('tour')).toBe(false);
+  });
+
+  test('une visite inconnue ne lance rien', async ({ page }) => {
+    await page.goto('/?tour=nope');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+    await waitForCalmMainThread(page);
+    await expect(page.locator('.stour-card')).toBeHidden();
+  });
+});

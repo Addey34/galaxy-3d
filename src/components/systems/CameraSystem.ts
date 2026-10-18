@@ -10,7 +10,11 @@
 import { horizonTiltRad } from '@/core/horizonTilt';
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
-import { viewAnglesFromDirection, viewFromDistance } from '@/core/viewAngles';
+import {
+  profileDirection,
+  viewAnglesFromDirection,
+  viewFromDistance,
+} from '@/core/viewAngles';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CAMERA_CONTROLS_SETTINGS, CAMERA_SETTINGS } from '@/config/engine';
 import { followNearPlane } from '@/core/surfaceApproach';
@@ -953,6 +957,28 @@ export class CameraSystem {
         direction.length(),
         (reference.userData['radius'] as number | undefined) ?? 0
       )
+    );
+  }
+
+  /**
+   * Replace la caméra, sans l'animer, de PROFIL par rapport à `referenceBody` : à angle droit de
+   * sa direction, un peu au-dessus de l'écliptique, ce corps à droite (cf. `core/viewAngles.ts`,
+   * `profileDirection`). La distance est gardée. Sert à la visite des saisons, qui montre la
+   * limite du jour et de la nuit (lot 58). Sans effet si le corps est inconnu ou confondu avec
+   * la cible.
+   */
+  viewBesideBody(referenceBody: string): void {
+    const reference = this.celestialBodies[referenceBody]?.group;
+    if (!reference || !this.controls) return;
+    const side = profileDirection(
+      reference.getWorldPosition(new THREE.Vector3()).sub(this.controls.target)
+    );
+    const angles = side && viewAnglesFromDirection(side);
+    if (!angles) return;
+    this.applyViewAngles(
+      angles.azimuthDeg,
+      angles.polarDeg,
+      this.controls.getDistance()
     );
   }
 

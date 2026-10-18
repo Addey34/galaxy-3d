@@ -126,6 +126,8 @@ describe('le schéma des visites refuse', () => {
     ['un nom de corps en majuscules', { ...valid, steps: [{ kind: 'flyTo', body: 'Earth' }, valid.steps[1]] }], // prettier-ignore
     ['une cible regardée depuis elle-même', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'earth' }] }], // prettier-ignore
     ['un point de vue en majuscules', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'Moon' }] }], // prettier-ignore
+    ['un profil par rapport à la cible elle-même', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', side: 'earth' }] }], // prettier-ignore
+    ['deux cadrages à la fois', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'moon', side: 'sun' }] }], // prettier-ignore
   ])('%s', (_label, record) => {
     expect(tourSchema.safeParse(record).success).toBe(false);
   });

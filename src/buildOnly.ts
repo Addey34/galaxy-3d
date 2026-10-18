@@ -1,7 +1,7 @@
 /**
  * LES DOSSIERS QUI NE DOIVENT JAMAIS ATTEINDRE LE BUNDLE DU VISITEUR, déclarés UNE FOIS.
  *
- * Quatre dossiers de `src/` ne tournent qu'au build (`build/` depuis le 2026-10-11), en CI ou dans les tests, et chacun a sa
+ * Ces dossiers de `src/` ne tournent qu'au build (`build/` depuis le 2026-10-11), en CI ou dans les tests, et chacun a sa
  * raison mesurée :
  *
  *   - `seo/` : rastériseurs de sphère et de maillage, gabarits SVG. Personne n'exécute ça dans
@@ -27,6 +27,9 @@ export const BUILD_ONLY_DIRS: readonly string[] = [
   // `devDependency`, pour lire les gabarits des shaders). Ajouté le 2026-10-11.
   'build',
   'inventory',
+  // Les activités pédagogiques (lot 58) : des FICHES IMPRIMABLES, lues par `seo/activityPages.ts`
+  // seulement. L'élève joue dans la scène la visite qu'une activité nomme, jamais l'activité.
+  'registry/activities',
   'registry/schema',
   'seo',
 ];

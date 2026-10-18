@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TEXT_ROOTS } from './catalogueText';
+import { BUILD_ONLY_DIRS } from '@/buildOnly';
 import { FACT_SOURCE_PROVIDERS } from '@/registry/providers';
 import {
   CARD_TEXT_LOCALES,
@@ -68,10 +69,16 @@ const DEFERRING_DIRS = ['entities', 'spacecraft', 'interstellar'];
 
 const REGISTRY = resolve(import.meta.dirname, '../registry');
 
-/** Les dossiers de fiches, découverts et non listés : `schema/` porte du code, pas des fiches. */
+/**
+ * Les dossiers de fiches, découverts et non listés : `schema/` porte du code, pas des fiches, et
+ * un dossier que le build seul lit (`registry/activities`, lot 58, déclaré dans `buildOnly.ts`)
+ * n'a aucun texte à livrer au visiteur.
+ */
 function registryDirs(): string[] {
   return readdirSync(REGISTRY).filter(
-    (name) => name !== 'schema' && statSync(join(REGISTRY, name)).isDirectory()
+    (name) =>
+      !BUILD_ONLY_DIRS.includes(`registry/${name}`) &&
+      statSync(join(REGISTRY, name)).isDirectory()
   );
 }
 

@@ -61,6 +61,7 @@ function generatedDocuments(): string[] {
       'orbit-insertions',
       'contacts',
       'places',
+      'activities',
     ])
       if (existsSync(join(DIST, prefix, name, 'index.html')))
         docs.push(prefix ? `${prefix}/${name}` : name);
@@ -117,6 +118,14 @@ const PLACE_PAGES = DOCUMENTS.filter((d) => d.endsWith('places')).map(
   (index) => `${index}/moon/oceanus-procellarum`
 );
 
+/**
+ * Une fiche d'activité (lot 58), la dixième famille, dans les quatre langues : la seule dont la
+ * fiche élève imprime une adresse EN CLAIR, sans espace, donc le pire cas de coupure à 390 px.
+ */
+const ACTIVITY_PAGES = DOCUMENTS.filter((d) => d.endsWith('activities')).map(
+  (index) => `${index}/seasons`
+);
+
 async function settleAnimations(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const finite = document
@@ -163,11 +172,13 @@ async function checkDocument(page: Page, path: string): Promise<void> {
  * corps) n'a rien à vérifier.
  */
 async function expectSeparatedLanguages(page: Page, path: string) {
+  // Seuls les liens RENDUS : imprimée, une fiche d'activité masque l'en-tête (lot 58), et des
+  // boîtes de taille nulle se lisaient alors « collées » sans que rien ne soit affiché.
   const boxes = await page.locator('.doc-lang').evaluateAll((links) =>
-    links.map((link) => {
-      const r = link.getBoundingClientRect();
-      return { left: r.left, right: r.right, top: r.top };
-    })
+    links
+      .map((link) => link.getBoundingClientRect())
+      .filter((r) => r.width > 0)
+      .map((r) => ({ left: r.left, right: r.right, top: r.top }))
   );
   for (let i = 1; i < boxes.length; i++) {
     const [a, b] = [boxes[i - 1]!, boxes[i]!];
@@ -184,8 +195,10 @@ test.describe('pages générées, à 390 px', () => {
 
   test('la dérivation trouve les sept documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(28);
+    expect(DOCUMENTS.length).toBe(32);
     expect(PLACE_PAGES.length).toBe(4);
+    expect(ACTIVITY_PAGES.length).toBe(4);
+    expect(DOCUMENTS).toContain('pt-br/activities');
     expect(DOCUMENTS).toContain('fr/places');
     expect(MISSION_PAGES.length).toBe(4);
     expect(FLYBY_PAGES.length).toBe(4);
@@ -226,6 +239,7 @@ test.describe('pages générées, à 390 px', () => {
     ...ORBIT_PAGES,
     ...CONTACT_PAGES,
     ...PLACE_PAGES,
+    ...ACTIVITY_PAGES,
   ]) {
     test(`/${path} se charge, passe axe et ne déborde pas`, async ({
       page,
@@ -247,6 +261,29 @@ test.describe('pages générées, à 390 px', () => {
     await expect(page.locator('.doc-lang')).toHaveCount(3);
     await expectSeparatedLanguages(page, 'fr/missions (1280 px)');
   });
+
+  /**
+   * LA FICHE IMPRIMÉE (lot 58) : une fiche d'activité est faite pour le papier. Imprimée, elle
+   * perd l'en-tête et le pied de page du site, passe axe, ne déborde pas à 390 px, et la fiche
+   * élève commence sur une nouvelle feuille. L'adresse de la scène y est écrite en clair.
+   */
+  for (const path of ACTIVITY_PAGES)
+    test(`/${path} imprimée : sans habillage du site, fiche élève sur sa feuille`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({ media: 'print' });
+      await checkDocument(page, path);
+      await expect(page.locator('.page-header')).toBeHidden();
+      await expect(page.locator('footer')).toBeHidden();
+      expect(
+        await page
+          .locator('h2.activity-pupil')
+          .evaluate((h) => getComputedStyle(h).breakBefore)
+      ).toBe('page');
+      await expect(page.locator('.activity-url')).toContainText(
+        '?tour=seasons'
+      );
+    });
 
   /**
    * LE TÉMOIN, ISOLÉ. Sans lui, les scénarios ci-dessus pourraient passer sur une coquille servie
@@ -272,6 +309,7 @@ test.describe('pages générées, à 390 px', () => {
       ...ORBIT_PAGES,
       ...CONTACT_PAGES,
       ...PLACE_PAGES,
+      ...ACTIVITY_PAGES,
     ])
       expect(
         builtHeading(path),

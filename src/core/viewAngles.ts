@@ -54,3 +54,46 @@ export function viewFromDistance(
   if (!(room > 0)) return current;
   return Math.min(current, room);
 }
+
+/**
+ * Élévation du profil au-dessus de l'écliptique, côté nord, en degrés (lot 58).
+ *
+ * MESURÉE à l'image sur la visite des saisons (vrai GPU, 2026-10-18) : à 0°, dans le plan même
+ * de l'écliptique, les deux pôles tombent sur le bord du disque, et la légende « le pôle nord
+ * reste éclairé tout le jour » ne se voit pas. En s'élevant dans le plan perpendiculaire au
+ * Soleil, la limite du jour et de la nuit reste une droite verticale (ce plan contient la
+ * direction de la caméra), et la calotte nord entre dans le disque.
+ */
+export const PROFILE_ELEVATION_DEG = 25;
+
+/**
+ * La direction d'où regarder une cible de PROFIL par rapport à un corps de référence (lot 58) :
+ * à angle droit de la direction de ce corps, élevée de `PROFILE_ELEVATION_DEG` au-dessus du plan
+ * horizontal de la scène, qui est l'écliptique (`core/frames.ts`). `toReference` va de la cible
+ * vers ce corps.
+ *
+ * C'est la figure 3 de la fiche « Une année sur la Terre » de l'ESA (PR45) : la Terre vue de
+ * côté, le Soleil d'un côté, la limite du jour et de la nuit VERTICALE au milieu du disque, et
+ * l'axe penché vers le Soleil ou à l'opposé selon la saison. Vue depuis le Soleil, la même Terre
+ * est un disque plein éclairé dont le terminateur se perd au bord.
+ *
+ * Le sens est fixé par `toReference × (0, 1, 0)`. La caméra regardant la cible avec +Y pour
+ * haut, sa droite est alors la composante horizontale de `toReference` : le corps de référence
+ * est TOUJOURS à droite, et une visite qui saute de saison en saison garde le même cadrage.
+ * `null` si le corps est à la verticale de la cible (aucun profil défini).
+ */
+export function profileDirection(
+  toReference: THREE.Vector3
+): THREE.Vector3 | null {
+  const side = new THREE.Vector3().crossVectors(
+    toReference,
+    new THREE.Vector3(0, 1, 0)
+  );
+  if (side.lengthSq() < 1e-12 * Math.max(toReference.lengthSq(), 1e-300))
+    return null;
+  const elevation = THREE.MathUtils.degToRad(PROFILE_ELEVATION_DEG);
+  return side
+    .normalize()
+    .multiplyScalar(Math.cos(elevation))
+    .add(new THREE.Vector3(0, Math.sin(elevation), 0));
+}

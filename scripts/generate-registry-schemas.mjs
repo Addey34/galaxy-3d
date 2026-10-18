@@ -14,7 +14,13 @@
  * `ssrLoadModule` de Vite, exactement comme `vite.config.ts` charge `src/seo`, plutôt que de
  * dépendre du dépouillement de types de Node.
  *
- * Usage : pnpm schema:generate
+ * Usage : pnpm schema:generate [--only tour]
+ *
+ * `--only <nom>` n'écrit que `<nom>.schema.json` (lot 58). Mesuré le 2026-10-19 : trois lancements
+ * complets de suite ont échoué à froid sur « transport invoke timed out after 60000ms » en
+ * chargeant `entity.ts` et ses fournisseurs, un fichier JSON différent à chaque fois, alors que
+ * seul le schéma des visites avait changé. Ce délai est celui du transport SSR de Vite, pas un
+ * réglage de ce script.
  */
 import { writeFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
@@ -28,9 +34,20 @@ const SCHEMAS = [
   ['spacecraft.ts', 'spacecraftJsonSchemaText', 'spacecraft.schema.json'],
   ['interstellar.ts', 'interstellarJsonSchemaText', 'interstellar.schema.json'],
   ['tour.ts', 'tourJsonSchemaText', 'tour.schema.json'],
+  ['activity.ts', 'activityJsonSchemaText', 'activity.schema.json'],
 ];
 
 const DIR = resolve(process.cwd(), 'src/registry/schema');
+
+const onlyIndex = process.argv.indexOf('--only');
+const only = onlyIndex === -1 ? null : process.argv[onlyIndex + 1];
+const selected = only
+  ? SCHEMAS.filter(([, , out]) => out === `${only}.schema.json`)
+  : SCHEMAS;
+if (selected.length === 0) {
+  console.error(`--only ${only} : aucun schéma de ce nom`);
+  process.exit(1);
+}
 
 const server = await createServer({
   configFile: false,
@@ -42,7 +59,7 @@ const server = await createServer({
   optimizeDeps: { noDiscovery: true },
 });
 try {
-  for (const [source, serialise, out] of SCHEMAS) {
+  for (const [source, serialise, out] of selected) {
     const module = await server.ssrLoadModule(`/src/registry/schema/${source}`);
     const target = resolve(DIR, out);
     await writeFile(target, module[serialise](), 'utf-8');

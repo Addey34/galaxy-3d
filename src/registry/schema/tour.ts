@@ -69,6 +69,13 @@ const step = z.discriminatedUnion('kind', [
        * alors que celui-ci se recalcule sur les positions de la scène.
        */
       from: targetName.optional(),
+      /**
+       * La regarder de PROFIL par rapport à ce corps (lot 58) : à angle droit de sa direction,
+       * élevée de 25° au-dessus de l'écliptique, ce corps à droite (`CameraSystem.viewBesideBody`). Ajouté AVEC
+       * l'activité des saisons, qui demande de voir la limite du jour et de la nuit : la
+       * caméra arrive côté Soleil et ne la montrait pas. Exclusif de `from`.
+       */
+      side: targetName.optional(),
     })
     .strict(),
   z
@@ -133,6 +140,18 @@ export const tourSchema = z
         message: 'une visite sans aucune légende n’explique rien',
       });
     record.steps.forEach((s, index) => {
+      if (s.kind === 'flyTo' && s.from !== undefined && s.side !== undefined)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['steps', index, 'side'],
+          message: '`from` et `side` posent deux cadrages : en choisir un',
+        });
+      if (s.kind === 'flyTo' && s.side === s.body)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['steps', index, 'side'],
+          message: `regarder « ${s.body} » de profil par rapport à lui-même n’a pas de sens`,
+        });
       if (s.kind === 'flyTo' && s.from === s.body)
         ctx.addIssue({
           code: 'custom',

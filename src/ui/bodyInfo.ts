@@ -27,6 +27,7 @@ import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
 import { NAVIGABLE_BODIES } from '@/config/navigable';
 import type { CelestialBodyConfig, FactField, FactProvenance } from '@/types';
 import {
+  AXIAL_TILT_DISPLAY_DECIMALS,
   bodyFact,
   citationOrder,
   displayedAbsoluteUncertainty,
@@ -429,7 +430,7 @@ function formatNumericFact(
     case 'moonCount':
       return num(value);
     case 'axialTilt':
-      return `${num(value * RAD2DEG, 1)}°`;
+      return `${num(value * RAD2DEG, AXIAL_TILT_DISPLAY_DECIMALS)}°`;
     case 'eccentricity':
       // Sans unité, et ce sont les décimales qui portent l'information : 1,2011 pour
       // ʻOumuamua dit « à peine hyperbolique », 6,141 pour 3I/ATLAS dit tout autre chose.

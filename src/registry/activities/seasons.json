@@ -1,0 +1,322 @@
+{
+  "$schema": "../schema/activity.schema.json",
+  "id": "seasons",
+  "title": {
+    "en": "Why are there seasons?",
+    "fr": "Pourquoi y a-t-il des saisons ?",
+    "es": "¿Por qué hay estaciones?",
+    "pt-BR": "Por que existem estações do ano?"
+  },
+  "summary": {
+    "en": "Pupils test a widespread idea, “it is hot in summer because the Earth is closer to the Sun”, by watching the real Earth side-on at the four turning points of the year, then at the date when it passes closest to the Sun.",
+    "fr": "Les élèves mettent à l’épreuve une idée répandue, « il fait chaud en été parce que la Terre est plus près du Soleil », en regardant la vraie Terre de profil aux quatre tournants de l’année, puis à la date où elle passe au plus près du Soleil.",
+    "es": "Los alumnos ponen a prueba una idea muy extendida, «hace calor en verano porque la Tierra está más cerca del Sol», observando la Tierra real de perfil en los cuatro momentos clave del año y luego en la fecha en que pasa más cerca del Sol.",
+    "pt-BR": "Os alunos põem à prova uma ideia muito difundida, “faz calor no verão porque a Terra está mais perto do Sol”, observando a Terra real de perfil nos quatro momentos decisivos do ano e depois na data em que ela passa mais perto do Sol."
+  },
+  "tour": "seasons",
+  "ages": { "from": 10, "to": 14 },
+  "durationMinutes": 45,
+  "difficulty": "medium",
+  "subjects": ["physics", "geography", "astronomy"],
+  "objectives": [
+    {
+      "en": "Explain that the seasons come from the tilt of the Earth’s axis, not from its distance to the Sun.",
+      "fr": "Expliquer que les saisons viennent de l’inclinaison de l’axe de la Terre, et non de sa distance au Soleil.",
+      "es": "Explicar que las estaciones provienen de la inclinación del eje de la Tierra, y no de su distancia al Sol.",
+      "pt-BR": "Explicar que as estações vêm da inclinação do eixo da Terra, e não da sua distância ao Sol."
+    },
+    {
+      "en": "Link the latitude where the Sun stands overhead to the equinoxes and solstices.",
+      "fr": "Relier la latitude où le Soleil est à la verticale aux équinoxes et aux solstices.",
+      "es": "Relacionar la latitud donde el Sol está en la vertical con los equinoccios y los solsticios.",
+      "pt-BR": "Relacionar a latitude onde o Sol está a pino com os equinócios e os solstícios."
+    },
+    {
+      "en": "Read information from a dated 3D scene and use it to test a prediction.",
+      "fr": "Lire une information dans une scène 3D datée et s’en servir pour tester une prédiction.",
+      "es": "Leer información en una escena 3D fechada y usarla para comprobar una predicción.",
+      "pt-BR": "Ler uma informação em uma cena 3D datada e usá-la para testar uma previsão."
+    }
+  ],
+  "material": [
+    {
+      "en": "A computer or tablet per group, with a recent web browser (the scene uses WebGL).",
+      "fr": "Un ordinateur ou une tablette par groupe, avec un navigateur récent (la scène utilise WebGL).",
+      "es": "Un ordenador o una tableta por grupo, con un navegador reciente (la escena usa WebGL).",
+      "pt-BR": "Um computador ou tablet por grupo, com um navegador recente (a cena usa WebGL)."
+    },
+    {
+      "en": "The printed pupil sheet below.",
+      "fr": "La fiche élève ci-dessous, imprimée.",
+      "es": "La ficha del alumno de abajo, impresa.",
+      "pt-BR": "A ficha do aluno abaixo, impressa."
+    }
+  ],
+  "years": { "from": 2026, "to": 2035 },
+  "values": {
+    "tilt": { "kind": "fact", "body": "earth", "fact": "axialTilt", "decimals": 2 },
+    "tiltCard": { "kind": "fact", "body": "earth", "fact": "axialTilt", "decimals": 1 },
+    "polarCircle": {
+      "kind": "fact",
+      "body": "earth",
+      "fact": "axialTilt",
+      "form": "complement90",
+      "decimals": 2
+    },
+    "polarDayJune": {
+      "kind": "polarDayLatitude",
+      "event": "june-solstice",
+      "decimals": 1,
+      "agrees": { "value": "polarCircle", "tolerance": 0.05 }
+    },
+    "sunMarch": { "kind": "subsolarLatitude", "event": "march-equinox", "absolute": true, "decimals": 1 },
+    "sunSeptember": {
+      "kind": "subsolarLatitude",
+      "event": "september-equinox",
+      "absolute": true,
+      "decimals": 1
+    },
+    "sunJune": {
+      "kind": "subsolarLatitude",
+      "event": "june-solstice",
+      "decimals": 1,
+      "agrees": { "value": "tilt", "tolerance": 0.05 }
+    },
+    "sunDecember": {
+      "kind": "subsolarLatitude",
+      "event": "december-solstice",
+      "absolute": true,
+      "decimals": 1,
+      "agrees": { "value": "tilt", "tolerance": 0.05 }
+    },
+    "parisJune": { "kind": "dayLength", "event": "june-solstice", "latitude": 48.8566, "longitude": 2.3522 },
+    "parisDecember": {
+      "kind": "dayLength",
+      "event": "december-solstice",
+      "latitude": 48.8566,
+      "longitude": 2.3522
+    },
+    "periEarliest": { "kind": "apsisDate", "event": "perihelion", "bound": "earliest" },
+    "periLatest": { "kind": "apsisDate", "event": "perihelion", "bound": "latest" },
+    "aphEarliest": { "kind": "apsisDate", "event": "aphelion", "bound": "earliest" },
+    "aphLatest": { "kind": "apsisDate", "event": "aphelion", "bound": "latest" },
+    "apsisGap": { "kind": "apsisGapPercent", "decimals": 0 },
+    "fluxGain": { "kind": "apsisFluxGainPercent", "decimals": 0 }
+  },
+  "parts": [
+    {
+      "title": {
+        "en": "An idea to test",
+        "fr": "Une idée à mettre à l’épreuve",
+        "es": "Una idea que poner a prueba",
+        "pt-BR": "Uma ideia para pôr à prova"
+      },
+      "teacher": {
+        "en": "Ask the class why it is hotter in summer. Many pupils answer that the Earth is then closer to the Sun: this is the idea the activity tests. Have them write their prediction down before the tour. ESA’s sheet “One year on Earth” (PR45) builds the same reasoning with a torch and a polystyrene ball; Galaxy shows it on the real Earth, at the real dates.",
+        "fr": "Demandez à la classe pourquoi il fait plus chaud en été. Beaucoup d’élèves répondent que la Terre est alors plus près du Soleil : c’est l’idée que l’activité met à l’épreuve. Faites noter les prédictions avant la visite. La fiche « Une année sur la Terre » de l’ESA (PR45) construit le même raisonnement avec une lampe torche et une boule de polystyrène ; Galaxy le montre sur la vraie Terre, aux vraies dates.",
+        "es": "Pregunte a la clase por qué hace más calor en verano. Muchos alumnos responden que la Tierra está entonces más cerca del Sol: es la idea que la actividad pone a prueba. Pídales que anoten su predicción antes de la visita. La ficha «Un año en la Tierra» de la ESA (PR45) construye el mismo razonamiento con una linterna y una bola de poliestireno; Galaxy lo muestra en la Tierra real, en las fechas reales.",
+        "pt-BR": "Pergunte à turma por que faz mais calor no verão. Muitos alunos respondem que a Terra está então mais perto do Sol: é a ideia que a atividade põe à prova. Peça que anotem a previsão antes da visita. A ficha “Um ano na Terra” da ESA (PR45) constrói o mesmo raciocínio com uma lanterna e uma bola de isopor; o Galaxy mostra isso na Terra real, nas datas reais."
+      },
+      "steps": [
+        {
+          "en": "Before the tour, write down your prediction.",
+          "fr": "Avant la visite, notez votre prédiction.",
+          "es": "Antes de la visita, anota tu predicción.",
+          "pt-BR": "Antes da visita, anote a sua previsão."
+        }
+      ],
+      "questions": [
+        {
+          "id": "distance",
+          "prompt": {
+            "en": "In the northern hemisphere, is the Earth closer to the Sun in summer or in winter?",
+            "fr": "Dans l’hémisphère nord, la Terre est-elle plus près du Soleil en été ou en hiver ?",
+            "es": "En el hemisferio norte, ¿está la Tierra más cerca del Sol en verano o en invierno?",
+            "pt-BR": "No hemisfério norte, a Terra está mais perto do Sol no verão ou no inverno?"
+          },
+          "answer": {
+            "en": "In winter. The Earth passes closest to the Sun in early January, between {periEarliest} and {periLatest}, and farthest in early July, between {aphEarliest} and {aphLatest}. The difference is only about {apsisGap}% of the distance, and the closest point falls in the middle of the northern winter.",
+            "fr": "En hiver. La Terre passe au plus près du Soleil début janvier, entre le {periEarliest} et le {periLatest}, et au plus loin début juillet, entre le {aphEarliest} et le {aphLatest}. L’écart n’est que d’environ {apsisGap} % de la distance, et le point le plus proche tombe en plein hiver de l’hémisphère nord.",
+            "es": "En invierno. La Tierra pasa más cerca del Sol a principios de enero, entre el {periEarliest} y el {periLatest}, y más lejos a principios de julio, entre el {aphEarliest} y el {aphLatest}. La diferencia es solo de un {apsisGap} % de la distancia, y el punto más cercano cae en pleno invierno del hemisferio norte.",
+            "pt-BR": "No inverno. A Terra passa mais perto do Sol no início de janeiro, entre {periEarliest} e {periLatest}, e mais longe no início de julho, entre {aphEarliest} e {aphLatest}. A diferença é de apenas cerca de {apsisGap}% da distância, e o ponto mais próximo cai em pleno inverno do hemisfério norte."
+          },
+          "evidence": ["periEarliest", "periLatest", "aphEarliest", "aphLatest", "apsisGap"]
+        },
+        {
+          "id": "solar-flux",
+          "level": "advanced",
+          "prompt": {
+            "en": "The Earth is about {apsisGap}% closer to the Sun in January than in July. By how much does the sunlight it receives increase, and why does that not make summer?",
+            "fr": "La Terre est environ {apsisGap} % plus près du Soleil en janvier qu’en juillet. De combien la lumière qu’elle reçoit du Soleil augmente-t-elle, et pourquoi cela ne fait-il pas l’été ?",
+            "es": "La Tierra está un {apsisGap} % más cerca del Sol en enero que en julio. ¿Cuánto aumenta la luz que recibe del Sol y por qué eso no trae el verano?",
+            "pt-BR": "A Terra está cerca de {apsisGap}% mais perto do Sol em janeiro do que em julho. Quanto aumenta a luz que ela recebe do Sol, e por que isso não traz o verão?"
+          },
+          "answer": {
+            "en": "The flux varies as the inverse square of the distance: about {fluxGain}% more at perihelion. The gain is real, but the northern hemisphere receives it in the middle of its winter: the height of the Sun and the length of the day, set by the tilt, outweigh it (in Paris, {parisJune} of daylight in June against {parisDecember} in December).",
+            "fr": "Le flux varie comme l’inverse du carré de la distance : environ {fluxGain} % de plus au périhélie. Le gain est réel, mais l’hémisphère nord le reçoit en plein hiver : la hauteur du Soleil et la durée du jour, que fixe l’inclinaison, l’emportent (à Paris, {parisJune} de jour en juin contre {parisDecember} en décembre).",
+            "es": "El flujo varía como el inverso del cuadrado de la distancia: alrededor de un {fluxGain} % más en el perihelio. La ganancia es real, pero el hemisferio norte la recibe en pleno invierno: la altura del Sol y la duración del día, que fija la inclinación, pesan más (en París, {parisJune} de día en junio frente a {parisDecember} en diciembre).",
+            "pt-BR": "O fluxo varia como o inverso do quadrado da distância: cerca de {fluxGain}% a mais no periélio. O ganho é real, mas o hemisfério norte o recebe em pleno inverno: a altura do Sol e a duração do dia, fixadas pela inclinação, pesam mais (em Paris, {parisJune} de luz em junho contra {parisDecember} em dezembro)."
+          },
+          "evidence": ["fluxGain", "apsisGap", "parisJune", "parisDecember"]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "The Earth side-on",
+        "fr": "La Terre de profil",
+        "es": "La Tierra de perfil",
+        "pt-BR": "A Terra de perfil"
+      },
+      "teacher": {
+        "en": "Play the tour “Earth’s seasons” with the link below, on a projector or on each group’s screen. Galaxy shows the Earth side-on, the Sun to the right, at the four real turning points of the coming year, then at perihelion. Point out that the axis keeps the same direction while the Earth goes round the Sun, like the stick through the ball in ESA’s model.",
+        "fr": "Jouez la visite « Les saisons de la Terre » avec le lien ci-dessous, au vidéoprojecteur ou sur l’écran de chaque groupe. Galaxy montre la Terre de profil, le Soleil à droite, aux quatre vrais tournants de l’année qui vient, puis au périhélie. Faites remarquer que l’axe garde la même direction pendant que la Terre tourne autour du Soleil, comme le bâtonnet planté dans la boule du modèle de l’ESA.",
+        "es": "Reproduzca la visita «Las estaciones de la Tierra» con el enlace de abajo, en un proyector o en la pantalla de cada grupo. Galaxy muestra la Tierra de perfil, con el Sol a la derecha, en los cuatro momentos clave reales del año que viene y luego en el perihelio. Haga notar que el eje mantiene la misma dirección mientras la Tierra gira alrededor del Sol, como el palito clavado en la bola del modelo de la ESA.",
+        "pt-BR": "Reproduza a visita “As estações da Terra” com o link abaixo, no projetor ou na tela de cada grupo. O Galaxy mostra a Terra de perfil, com o Sol à direita, nos quatro momentos decisivos reais do próximo ano e depois no periélio. Mostre que o eixo mantém a mesma direção enquanto a Terra gira em torno do Sol, como o palito espetado na bola do modelo da ESA."
+      },
+      "steps": [
+        {
+          "en": "Open the tour with the link on this sheet.",
+          "fr": "Ouvrez la visite avec le lien de cette fiche.",
+          "es": "Abre la visita con el enlace de esta ficha.",
+          "pt-BR": "Abra a visita com o link desta ficha."
+        },
+        {
+          "en": "At each step, look at the north polar cap: is it on the day side (right) or on the night side (left)?",
+          "fr": "À chaque étape, regardez la calotte du pôle nord : est-elle du côté du jour (à droite) ou de la nuit (à gauche) ?",
+          "es": "En cada paso, mira el casquete del polo norte: ¿está del lado del día (a la derecha) o de la noche (a la izquierda)?",
+          "pt-BR": "Em cada etapa, olhe a calota do polo norte: ela está do lado do dia (à direita) ou da noite (à esquerda)?"
+        },
+        {
+          "en": "Open the Earth’s card (the panel that appears on the right) and find its axial tilt.",
+          "fr": "Ouvrez la fiche de la Terre (le panneau qui apparaît à droite) et trouvez son inclinaison axiale.",
+          "es": "Abre la ficha de la Tierra (el panel que aparece a la derecha) y busca su inclinación axial.",
+          "pt-BR": "Abra a ficha da Terra (o painel que aparece à direita) e encontre a sua inclinação axial."
+        }
+      ],
+      "questions": [
+        {
+          "id": "tilt",
+          "prompt": {
+            "en": "By how much is the Earth’s axis tilted from the perpendicular to the plane of its orbit?",
+            "fr": "De combien l’axe de la Terre est-il incliné par rapport à la perpendiculaire au plan de son orbite ?",
+            "es": "¿Cuánto está inclinado el eje de la Tierra respecto a la perpendicular al plano de su órbita?",
+            "pt-BR": "Quanto o eixo da Terra está inclinado em relação à perpendicular ao plano da sua órbita?"
+          },
+          "answer": {
+            "en": "By {tilt}° according to the cited source; the Earth’s card shows it rounded to one decimal place, {tiltCard}°.",
+            "fr": "De {tilt}° selon la source citée ; la fiche de la Terre l’affiche arrondie au dixième, {tiltCard}°.",
+            "es": "{tilt}° según la fuente citada; la ficha de la Tierra la muestra redondeada a una décima, {tiltCard}°.",
+            "pt-BR": "{tilt}° segundo a fonte citada; a ficha da Terra a mostra arredondada a um décimo, {tiltCard}°."
+          },
+          "evidence": ["tilt", "tiltCard"]
+        },
+        {
+          "id": "polar-day",
+          "prompt": {
+            "en": "At the June solstice, is the north pole in daylight or in darkness? And at the December solstice?",
+            "fr": "Au solstice de juin, le pôle nord est-il dans le jour ou dans la nuit ? Et au solstice de décembre ?",
+            "es": "En el solsticio de junio, ¿el polo norte está en el día o en la noche? ¿Y en el solsticio de diciembre?",
+            "pt-BR": "No solstício de junho, o polo norte está no dia ou na noite? E no solstício de dezembro?"
+          },
+          "answer": {
+            "en": "At the June solstice it stays in daylight for a whole turn of the Earth: everything north of the Arctic Circle, at {polarCircle}° N, sees the Sun around the clock. At the December solstice it is the polar night.",
+            "fr": "Au solstice de juin, il reste dans le jour pendant tout un tour de la Terre sur elle-même : tout ce qui est au nord du cercle polaire, à {polarCircle}° N, voit le Soleil jour et nuit. Au solstice de décembre, c’est la nuit polaire.",
+            "es": "En el solsticio de junio permanece en el día durante una vuelta completa de la Tierra sobre sí misma: todo lo que está al norte del círculo polar, a {polarCircle}° N, ve el Sol día y noche. En el solsticio de diciembre es la noche polar.",
+            "pt-BR": "No solstício de junho, ele fica no dia durante uma volta inteira da Terra sobre si mesma: tudo o que está ao norte do círculo polar, a {polarCircle}° N, vê o Sol dia e noite. No solstício de dezembro, é a noite polar."
+          },
+          "evidence": ["polarCircle", "polarDayJune"]
+        },
+        {
+          "id": "overhead-sun",
+          "prompt": {
+            "en": "Above which latitude is the Sun overhead at noon, at the equinoxes and at the solstices?",
+            "fr": "Au-dessus de quelle latitude le Soleil est-il à la verticale à midi, aux équinoxes et aux solstices ?",
+            "es": "¿Sobre qué latitud está el Sol en la vertical a mediodía, en los equinoccios y en los solsticios?",
+            "pt-BR": "Sobre qual latitude o Sol está a pino ao meio-dia, nos equinócios e nos solstícios?"
+          },
+          "answer": {
+            "en": "At the equinoxes, above the equator ({sunMarch}° in March, {sunSeptember}° in September). At the June solstice, above the Tropic of Cancer, at {sunJune}° N. At the December solstice, above the Tropic of Capricorn, at {sunDecember}° S. These latitudes equal the tilt of the axis, {tilt}°: the tilt makes the seasons.",
+            "fr": "Aux équinoxes, au-dessus de l’équateur ({sunMarch}° en mars, {sunSeptember}° en septembre). Au solstice de juin, au-dessus du tropique du Cancer, à {sunJune}° N. Au solstice de décembre, au-dessus du tropique du Capricorne, à {sunDecember}° S. Ces latitudes valent l’inclinaison de l’axe, {tilt}° : c’est elle qui fait les saisons.",
+            "es": "En los equinoccios, sobre el ecuador ({sunMarch}° en marzo, {sunSeptember}° en septiembre). En el solsticio de junio, sobre el trópico de Cáncer, a {sunJune}° N. En el solsticio de diciembre, sobre el trópico de Capricornio, a {sunDecember}° S. Estas latitudes valen la inclinación del eje, {tilt}°: es ella la que produce las estaciones.",
+            "pt-BR": "Nos equinócios, sobre o equador ({sunMarch}° em março, {sunSeptember}° em setembro). No solstício de junho, sobre o trópico de Câncer, a {sunJune}° N. No solstício de dezembro, sobre o trópico de Capricórnio, a {sunDecember}° S. Essas latitudes valem a inclinação do eixo, {tilt}°: é ela que faz as estações."
+          },
+          "evidence": ["sunMarch", "sunSeptember", "sunJune", "sunDecember", "tilt"]
+        },
+        {
+          "id": "polar-circle",
+          "level": "high",
+          "prompt": {
+            "en": "Why is the Arctic Circle at {polarCircle}° N? Relate it to the tilt of the axis.",
+            "fr": "Pourquoi le cercle polaire arctique est-il à {polarCircle}° N ? Reliez-le à l’inclinaison de l’axe.",
+            "es": "¿Por qué el círculo polar ártico está a {polarCircle}° N? Relaciónalo con la inclinación del eje.",
+            "pt-BR": "Por que o círculo polar ártico fica a {polarCircle}° N? Relacione com a inclinação do eixo."
+          },
+          "answer": {
+            "en": "The Sun lights every point less than 90° away from the point where it stands overhead. At the June solstice that point is at {sunJune}° N, so the lit half reaches 90° beyond it, over the pole: everything north of 90° minus the tilt, 90° − {tilt}° = {polarCircle}°, stays in daylight for a whole turn.",
+            "fr": "Le Soleil éclaire tout point situé à moins de 90° du point où il est à la verticale. Au solstice de juin, ce point est à {sunJune}° N, donc la moitié éclairée s’étend 90° plus loin, au-delà du pôle : tout ce qui est au nord de 90° moins l’inclinaison, 90° − {tilt}° = {polarCircle}°, reste dans le jour pendant tout un tour.",
+            "es": "El Sol ilumina todo punto situado a menos de 90° del punto donde está en la vertical. En el solsticio de junio ese punto está a {sunJune}° N, así que la mitad iluminada se extiende 90° más allá, por encima del polo: todo lo que está al norte de 90° menos la inclinación, 90° − {tilt}° = {polarCircle}°, permanece en el día durante toda una vuelta.",
+            "pt-BR": "O Sol ilumina todo ponto a menos de 90° do ponto onde ele está a pino. No solstício de junho esse ponto fica a {sunJune}° N, então a metade iluminada se estende 90° além, passando do polo: tudo o que está ao norte de 90° menos a inclinação, 90° − {tilt}° = {polarCircle}°, fica no dia durante uma volta inteira."
+          },
+          "evidence": ["tilt", "polarCircle", "sunJune", "polarDayJune"]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "Discussion",
+        "fr": "Discussion",
+        "es": "Debate",
+        "pt-BR": "Discussão"
+      },
+      "teacher": {
+        "en": "Have the groups answer using what they saw. These two questions are those of ESA’s sheet; the answer key gives the figures Galaxy computes for Paris.",
+        "fr": "Faites répondre les groupes à partir de ce qu’ils ont vu. Ces deux questions sont celles de la fiche de l’ESA ; le corrigé donne les valeurs que Galaxy calcule pour Paris.",
+        "es": "Pida a los grupos que respondan a partir de lo que han visto. Estas dos preguntas son las de la ficha de la ESA; las respuestas dan los valores que Galaxy calcula para París.",
+        "pt-BR": "Peça aos grupos que respondam a partir do que viram. Estas duas perguntas são as da ficha da ESA; as respostas trazem os valores que o Galaxy calcula para Paris."
+      },
+      "steps": [
+        {
+          "en": "Discuss in your group, then answer.",
+          "fr": "Discutez en groupe, puis répondez.",
+          "es": "Debatid en grupo y luego responded.",
+          "pt-BR": "Discutam em grupo e depois respondam."
+        }
+      ],
+      "questions": [
+        {
+          "id": "two-reasons",
+          "prompt": {
+            "en": "Why is it warmer in Paris in summer than in winter? Give two reasons.",
+            "fr": "Pourquoi fait-il plus chaud à Paris en été qu’en hiver ? Donnez deux raisons.",
+            "es": "¿Por qué hace más calor en París en verano que en invierno? Da dos razones.",
+            "pt-BR": "Por que faz mais calor em Paris no verão do que no inverno? Dê duas razões."
+          },
+          "answer": {
+            "en": "The Sun climbs higher in the sky, so its rays arrive more steeply and heat each square metre more; it is overhead at {sunJune}° N at the June solstice. And the days are longer: in Paris, {parisJune} of daylight at the June solstice against {parisDecember} at the December solstice.",
+            "fr": "Le Soleil monte plus haut dans le ciel, donc ses rayons arrivent plus droit et chauffent davantage chaque mètre carré ; il est à la verticale à {sunJune}° N au solstice de juin. Et les jours sont plus longs : à Paris, {parisJune} de jour au solstice de juin contre {parisDecember} au solstice de décembre.",
+            "es": "El Sol sube más alto en el cielo, así que sus rayos llegan más rectos y calientan más cada metro cuadrado; está en la vertical a {sunJune}° N en el solsticio de junio. Y los días son más largos: en París, {parisJune} de día en el solsticio de junio frente a {parisDecember} en el solsticio de diciembre.",
+            "pt-BR": "O Sol sobe mais alto no céu, então os seus raios chegam mais retos e aquecem mais cada metro quadrado; ele está a pino a {sunJune}° N no solstício de junho. E os dias são mais longos: em Paris, {parisJune} de luz no solstício de junho contra {parisDecember} no solstício de dezembro."
+          },
+          "evidence": ["sunJune", "parisJune", "parisDecember"]
+        },
+        {
+          "id": "warm-beach",
+          "prompt": {
+            "en": "It is winter in France and you want a warm beach. Where would you go, and why?",
+            "fr": "C’est l’hiver en France et vous cherchez une plage où il fait chaud. Où iriez-vous, et pourquoi ?",
+            "es": "Es invierno en Francia y buscas una playa donde haga calor. ¿Adónde irías y por qué?",
+            "pt-BR": "É inverno na França e você procura uma praia onde faça calor. Para onde iria, e por quê?"
+          },
+          "answer": {
+            "en": "To the southern hemisphere: at the December solstice the Sun is overhead at {sunDecember}° S, and it is southern summer.",
+            "fr": "Dans l’hémisphère sud : au solstice de décembre, le Soleil est à la verticale à {sunDecember}° S, et c’est l’été de l’hémisphère sud.",
+            "es": "Al hemisferio sur: en el solsticio de diciembre el Sol está en la vertical a {sunDecember}° S, y es el verano del hemisferio sur.",
+            "pt-BR": "Para o hemisfério sul: no solstício de dezembro o Sol está a pino a {sunDecember}° S, e é o verão do hemisfério sul."
+          },
+          "evidence": ["sunDecember"]
+        }
+      ]
+    }
+  ]
+}

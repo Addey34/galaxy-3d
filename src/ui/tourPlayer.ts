@@ -28,6 +28,8 @@ import { resolveEventDate } from '@/config/tourScripts';
 import { trapFocus } from './surfaceFocus';
 
 export interface TourPlayer {
+  /** Lance une visite par son identifiant ; `false` si aucune ne le porte (`?tour=`, lot 58). */
+  start(id: string): boolean;
   dispose(): void;
 }
 
@@ -55,7 +57,7 @@ export function setupTourPlayer(
   modeSwitcher: ModeSwitcher
 ): TourPlayer {
   const helpPopover = document.getElementById('help-popover');
-  if (!helpPopover) return { dispose: () => {} };
+  if (!helpPopover) return { start: () => false, dispose: () => {} };
 
   const startButton = document.createElement('button');
   startButton.type = 'button';
@@ -252,9 +254,9 @@ export function setupTourPlayer(
     permalink.sync();
   };
 
-  const start = (id: string): void => {
+  const start = (id: string): boolean => {
     const script = scripts.find((s) => s.id === id);
-    if (!script) return;
+    if (!script) return false;
     closePicker();
 
     currentScript = script;
@@ -275,6 +277,7 @@ export function setupTourPlayer(
       flyTo: (body) => navigation.selectBody(body),
       isFlying: () => camera.isFlying,
       viewFrom: (body) => camera.viewFromBody(body),
+      viewBeside: (body) => camera.viewBesideBody(body),
       jumpToDate: (date) => om.jumpToDate(date),
       // La date est résolue ICI, au moment où l'étape s'exécute, depuis la date courante de la
       // scène : c'est ce qui remplace l'exception `id === 'eclipse'` que ce module portait.
@@ -309,6 +312,7 @@ export function setupTourPlayer(
       },
       signal
     ).then(finish);
+    return true;
   };
 
   const close = (): void => {
@@ -321,7 +325,7 @@ export function setupTourPlayer(
     picker.hidden = !picker.hidden;
   });
   for (const { script, btn } of pickerButtons) {
-    btn.addEventListener('click', () => start(script.id));
+    btn.addEventListener('click', () => void start(script.id));
   }
   pauseButton.addEventListener('click', () => {
     if (!active) return;
@@ -347,6 +351,7 @@ export function setupTourPlayer(
   localize();
 
   return {
+    start,
     dispose: () => {
       close();
       startButton.remove();

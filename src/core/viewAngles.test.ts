@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import {
+  PROFILE_ELEVATION_DEG,
   VIEW_FROM_CLEARANCE,
+  profileDirection,
   viewAnglesFromDirection,
   viewFromDistance,
 } from './viewAngles';
@@ -52,5 +54,35 @@ describe('viewFromDistance (ligne 45.2)', () => {
   it('garde la distance courante quand la cible touche presque le corps', () => {
     expect(viewFromDistance(2, 1, 1)).toBe(2);
     expect(viewFromDistance(2, Number.NaN, 1)).toBe(2);
+  });
+});
+
+describe('profileDirection (lot 58)', () => {
+  it.each([
+    ['Soleil sur -X', new THREE.Vector3(-35, 0, 0)],
+    ['Soleil sur +Z', new THREE.Vector3(0, 0, 12)],
+    ['Soleil oblique', new THREE.Vector3(3, 0, -4)],
+  ] as const)(
+    'regarde à angle droit du corps, élevé côté nord, le corps à DROITE (%s)',
+    (_label, toReference) => {
+      const side = profileDirection(toReference)!;
+      expect(side.length()).toBeCloseTo(1, 9);
+      expect(side.y).toBeCloseTo(
+        Math.sin(THREE.MathUtils.degToRad(PROFILE_ELEVATION_DEG)),
+        9
+      );
+      // Perpendiculaire au corps : la limite du jour et de la nuit est alors une droite.
+      expect(side.dot(toReference)).toBeCloseTo(0, 9);
+      // La caméra est en `side` et regarde la cible : avant = -side, haut ≈ +Y.
+      const right = new THREE.Vector3()
+        .crossVectors(side.clone().negate(), new THREE.Vector3(0, 1, 0))
+        .normalize();
+      expect(right.dot(toReference.clone().normalize())).toBeCloseTo(1, 9);
+    }
+  );
+
+  it('refuse un corps à la verticale de la cible, où aucun profil n’est défini', () => {
+    expect(profileDirection(new THREE.Vector3(0, 5, 0))).toBeNull();
+    expect(profileDirection(new THREE.Vector3())).toBeNull();
   });
 });
