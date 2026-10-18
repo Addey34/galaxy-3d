@@ -1,0 +1,20 @@
+{
+  "$schema": "../schema/preset.schema.json",
+  "id": "missions",
+  "title": {
+    "en": "Missions",
+    "fr": "Missions",
+    "es": "Misiones",
+    "pt-BR": "Missões"
+  },
+  "description": {
+    "en": "Spacecraft and interstellar visitors shown, named and with their trajectories, over the planets.",
+    "fr": "Les sondes et les visiteurs interstellaires affichés, nommés et avec leurs trajectoires, par-dessus les planètes.",
+    "es": "Las sondas y los visitantes interestelares mostrados, con su nombre y sus trayectorias, sobre los planetas.",
+    "pt-BR": "As sondas e os visitantes interestelares exibidos, com nome e trajetórias, sobre os planetas."
+  },
+  "kinds": {
+    "spacecraft": { "label": true, "object": true, "orbit": true },
+    "interstellar": { "label": true, "object": true, "orbit": true }
+  }
+}

@@ -1561,6 +1561,31 @@ button {
   line-height: 1.35;
   color: var(--ink-faint);
 }
+.oo-preset {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+  margin: 0 0 var(--sp-2);
+}
+.oo-preset-label {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.oo-preset-select {
+  min-width: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink);
+  background: var(--surface-raised, transparent);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  padding: 0.3rem 0.4rem;
+}
+.oo-preset-desc {
+  grid-column: 1 / -1;
+  margin: 0;
+}
 /* Le tableau n'a plus son propre défilement : c'est le corps de la surface qui défile, seul.
    Deux défileurs imbriqués (la boîte du tableau dans le panneau) laissaient huit lignes
    visibles sur un téléphone et une molette qui ne savait pas lequel faire bouger. Les groupes

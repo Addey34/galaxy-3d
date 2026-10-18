@@ -327,6 +327,9 @@ export const es: Record<MessageKey, string> = {
   'settings.orbitsToggle': 'Mostrar todas las órbitas y trayectorias',
   'settings.tableHint':
     'La cabecera ajusta toda la columna, una fila de grupo todo su grupo, una fila un solo objeto. Las sondas y los objetos interestelares empiezan ocultos.',
+  'settings.preset.label': 'Preajuste',
+  'settings.preset.default': 'Predeterminado',
+  'settings.preset.custom': 'Personalizado',
   'settings.tableCaption': 'Lo que muestra la escena, objeto por objeto',
   'settings.col.bodyName': 'Objeto',
   'settings.col.names': 'Etiqueta',

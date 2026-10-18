@@ -36,6 +36,12 @@ export interface PermalinkState {
    * registre) ; une visite inconnue ne lance rien (`TourPlayer.start`).
    */
   tour?: string;
+  /**
+   * Un préréglage d'affichage à APPLIQUER à l'ouverture (lot 59). Même statut que `tour` : lu une
+   * fois, jamais réécrit, puisque le tableau des Réglages ne persiste rien. Seule la forme est
+   * validée ; un préréglage inconnu ne change rien (`ui/orbitOptions.ts`).
+   */
+  preset?: string;
 }
 
 // `place` y figure pour être EFFACÉ à la réécriture : c'est une ouverture (lot 55), et l'adresse qui
@@ -49,6 +55,7 @@ const PERMALINK_KEYS = [
   'dist',
   'place',
   'tour',
+  'preset',
 ] as const;
 
 /**
@@ -189,6 +196,7 @@ export function parsePermalink(
     view: parseView(params),
     place: parsePlace(params.get('place')),
     tour: parseTour(params.get('tour')),
+    preset: parseTour(params.get('preset')),
   };
 }
 

@@ -579,13 +579,19 @@ function wireChrome(): {
       ]
     );
 
+    const requestedPreset = parsePermalink(
+      window.location.search,
+      LANDING_PAGE_BODIES
+    ).preset;
     // Réglages : appelé ICI, après les couches instrument, parce que son tableau pilote
     // désormais leurs marqueurs et leurs noms autant que les corps de la scène.
     setupOrbitOptions(
       sceneSystem,
       exploHud,
       [spacecraftOverlay, interstellarOverlay],
-      overlayCoordinator
+      overlayCoordinator,
+      // `?preset=` (lot 59) : lu ici, avant que `setupPermalinks` réécrive l'adresse et l'efface.
+      requestedPreset
     );
 
     // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
@@ -790,6 +796,8 @@ function wireChrome(): {
     // L'adresse est réécrite AVANT : la visite suspend le permalien, et `tour` y resterait pour
     // toute sa durée, si bien qu'un rechargement la relancerait.
     if (requestedTour !== undefined) permalink.sync();
+    // Le préréglage est une ouverture lui aussi : l'adresse qui suit ne doit plus le porter.
+    else if (requestedPreset !== undefined) permalink.sync();
     if (!(requestedTour !== undefined && tourPlayer.start(requestedTour)))
       guidedTour.startIfFirstVisit();
   } catch (err) {

@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "../schema/preset.schema.json"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "title": {
+      "type": "object",
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fr": {
+          "type": "string",
+          "minLength": 1
+        },
+        "es": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pt-BR": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "en",
+        "fr",
+        "es",
+        "pt-BR"
+      ],
+      "additionalProperties": false
+    },
+    "description": {
+      "type": "object",
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fr": {
+          "type": "string",
+          "minLength": 1
+        },
+        "es": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pt-BR": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "en",
+        "fr",
+        "es",
+        "pt-BR"
+      ],
+      "additionalProperties": false
+    },
+    "kinds": {
+      "type": "object",
+      "properties": {
+        "planet": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "boolean"
+            },
+            "object": {
+              "type": "boolean"
+            },
+            "orbit": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "moon": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "boolean"
+            },
+            "object": {
+              "type": "boolean"
+            },
+            "orbit": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "dwarf": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "boolean"
+            },
+            "object": {
+              "type": "boolean"
+            },
+            "orbit": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "asteroid": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "boolean"
+            },
+            "object": {
+              "type": "boolean"
+            },
+            "orbit": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "comet": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "boolean"
+            },
+            "object": {
+              "type": "boolean"
+            },
+            "orbit": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "spacecraft": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "boolean"
+            },
+            "object": {
+              "type": "boolean"
+            },
+            "orbit": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "interstellar": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "boolean"
+            },
+            "object": {
+              "type": "boolean"
+            },
+            "orbit": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "bodies": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "boolean"
+          },
+          "orbit": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "title",
+    "description"
+  ],
+  "additionalProperties": false
+}

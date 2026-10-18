@@ -15,6 +15,7 @@ import { NAVIGABLE_BODIES, NAVIGABLE_TARGETS } from './navigable';
 import { FACT_SOURCE_PROVIDERS } from '@/registry/providers';
 import { SMALL_BODY_ELEMENTS } from './smallBodies';
 import { TOUR_SCRIPTS } from './tourScripts';
+import { PRESETS } from '@/registry/presets';
 import {
   DERIVED_TEXT_LOCALES,
   hydrateLocalized,
@@ -37,6 +38,7 @@ export const TEXT_ROOTS: readonly unknown[] = [
   FACT_SOURCE_PROVIDERS,
   SMALL_BODY_ELEMENTS,
   TOUR_SCRIPTS,
+  PRESETS,
 ];
 
 /**
