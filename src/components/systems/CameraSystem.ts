@@ -533,7 +533,7 @@ export class CameraSystem {
     if (this.currentTarget) {
       // Suivi rapproché : near serré juste devant la surface proche (rétablit la précision de
       // profondeur → supprime le scintillement des coques transparentes au limbe). far adaptatif
-      // couvrant le système intérieur, borné à exploFar. Les étoiles (scene.background) sont
+      // couvrant le système intérieur, borné à exploFar. Les étoiles (`equirectangularSky.ts`) sont
       // indépendantes du far, donc resserrer ne noircit plus le ciel.
       const d = this._tgtDelta
         .subVectors(this.camera.position, this.controls.target)
