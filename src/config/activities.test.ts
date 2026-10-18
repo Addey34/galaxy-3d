@@ -68,6 +68,7 @@ describe('saisons : ce que le corrigé affirme', () => {
     expect(fr('sunJune')).toBe('23,4');
     expect(fr('sunMarch')).toBe('0,0');
     expect(fr('apsisGap')).toBe('3');
+    expect(fr('fluxGain')).toBe('7');
     expect(fr('periEarliest')).toMatch(/^[2-5] janvier$/);
     expect(fr('aphLatest')).toMatch(/^[3-7] juillet$/);
     expect(fr('parisJune')).toMatch(/^16 h 1\d min$/);

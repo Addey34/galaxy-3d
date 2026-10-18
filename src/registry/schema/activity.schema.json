@@ -368,7 +368,10 @@
             "properties": {
               "kind": {
                 "type": "string",
-                "const": "apsisGapPercent"
+                "enum": [
+                  "apsisGapPercent",
+                  "apsisFluxGainPercent"
+                ]
               },
               "decimals": {
                 "type": "integer",
@@ -552,6 +555,13 @@
                     "type": "string",
                     "pattern": "^[a-z][a-zA-Z0-9]*$"
                   }
+                },
+                "level": {
+                  "type": "string",
+                  "enum": [
+                    "high",
+                    "advanced"
+                  ]
                 }
               },
               "required": [

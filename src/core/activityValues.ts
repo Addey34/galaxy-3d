@@ -17,6 +17,7 @@
 import { INTL_LOCALE, type Locale } from '@/i18n/locales';
 import type { ActivityRecord, ActivityValue } from '@/registry/schema/activity';
 import {
+  apsisFluxGainPercent,
   apsisGapPercent,
   dayLengthHours,
   eventInYear,
@@ -79,6 +80,8 @@ function perYearMeasure(value: ActivityValue, year: number): number {
       );
     case 'apsisGapPercent':
       return apsisGapPercent(year);
+    case 'apsisFluxGainPercent':
+      return apsisFluxGainPercent(year);
     default:
       throw new Error(`mesure annuelle inattendue : ${value.kind}`);
   }
@@ -137,7 +140,11 @@ export function evaluateActivityValues(
           };
         else
           out[name] = {
-            kind: value.kind === 'apsisGapPercent' ? 'percent' : 'degrees',
+            kind:
+              value.kind === 'apsisGapPercent' ||
+              value.kind === 'apsisFluxGainPercent'
+                ? 'percent'
+                : 'degrees',
             value: constant(name, measured, fixed(value.decimals)),
             decimals: value.decimals,
           };

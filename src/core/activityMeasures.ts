@@ -88,6 +88,16 @@ export function apsisGapPercent(year: number): number {
 }
 
 /**
+ * De combien, en pour cent, le flux solaire reçu par la Terre est plus fort à son périhélie de
+ * `year` qu'à l'aphélie qui le suit : il varie comme l'inverse du carré de la distance.
+ */
+export function apsisFluxGainPercent(year: number): number {
+  const near = HelioDistance(Body.Earth, eventInYear('perihelion', year));
+  const far = HelioDistance(Body.Earth, eventInYear('aphelion', year));
+  return ((far / near) ** 2 - 1) * 100;
+}
+
+/**
  * La durée du jour, en heures, au lieu donné et le jour civil LOCAL qui contient `date` : du
  * lever au coucher du bord supérieur du Soleil, réfraction comprise (`SearchRiseSet`). Le jour
  * local commence à minuit solaire moyen, `longitude / 15` heures avant minuit UTC.

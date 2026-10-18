@@ -89,7 +89,7 @@ const value = z.discriminatedUnion('kind', [
     .strict(),
   z
     .object({
-      kind: z.literal('apsisGapPercent'),
+      kind: z.enum(['apsisGapPercent', 'apsisFluxGainPercent']),
       decimals,
     })
     .strict(),
@@ -103,6 +103,13 @@ const question = z
     answer: localized,
     /** Les valeurs qui PROUVENT la réponse ; au moins une, et toutes déclarées. */
     evidence: z.array(slotName).min(1),
+    /**
+     * Les NIVEAUX DE LECTURE (lot 58, pas 3), choisis par l'utilisateur le 2026-10-19 : un
+     * prolongement gradué dans la même fiche, sur les mêmes valeurs, comme la fiche PR45 de l'ESA
+     * (« Les élèves plus âgés peuvent également… »). Absent : la question du niveau de la fiche
+     * (`ages`). Un niveau ne duplique aucun fait, il pose une autre question sur les mêmes.
+     */
+    level: z.enum(['high', 'advanced']).optional(),
   })
   .strict();
 

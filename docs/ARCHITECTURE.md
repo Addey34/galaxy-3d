@@ -6348,6 +6348,13 @@ joue dans la scène est la VISITE que l'activité nomme, ouverte par `?tour=<id>
   réécrit l'adresse) et effacé tout de suite, sans quoi un rechargement relancerait la visite.
   L'adresse est aussi imprimée en clair dans la fiche élève.
 
+- **Les niveaux de lecture sont des prolongements gradués** (pas 3, choix de l'utilisateur le
+  2026-10-19), comme dans la fiche PR45 elle-même (« Les élèves plus âgés peuvent également… ») :
+  une question peut porter `level` (`high`, `advanced`), et la fiche l'imprime en tête de la
+  question, au corrigé comme sur la fiche élève, par un libellé et non une couleur. Un niveau ne
+  duplique aucun fait : il pose une autre question sur les MÊMES valeurs (le prolongement avancé
+  des saisons ajoute une seule mesure, le gain de flux au périhélie, `apsisFluxGainPercent`).
+
 Gardes : `src/config/activities.test.ts` (chaque valeur évaluée sur tout le domaine, chaque
 emplacement rempli dans chaque langue, valeurs du jour figées, et quatre falsifications gardées
 comme tests : 23,5°, fait absent, précision non tenue, visite inconnue),

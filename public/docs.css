@@ -228,6 +228,12 @@
   margin-top: 1rem;
   font-weight: 600;
 }
+/* Le niveau d'un prolongement (lot 58, pas 3) : un libellé en tête de la question, pas une
+   couleur seule, pour qu'il survive à l'impression en noir et blanc. */
+.activity-level {
+  font-style: italic;
+  font-weight: 600;
+}
 .activity-lines {
   height: 4.5rem;
   background-image: repeating-linear-gradient(

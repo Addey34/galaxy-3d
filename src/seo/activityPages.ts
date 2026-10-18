@@ -216,6 +216,26 @@ const DIFFICULTY: Record<ActivityRecord['difficulty'], DocText> = {
   hard: { en: 'hard', fr: 'difficile', es: 'difícil', 'pt-BR': 'difícil' },
 };
 
+type Level = NonNullable<
+  ActivityRecord['parts'][number]['questions'][number]['level']
+>;
+
+/** Les niveaux de lecture, tels que la fiche les nomme (pas 3, choix de l'utilisateur). */
+const LEVEL: Record<Level, DocText> = {
+  high: {
+    en: 'To go further, upper secondary:',
+    fr: 'Pour aller plus loin, lycée :',
+    es: 'Para ir más lejos, bachillerato:',
+    'pt-BR': 'Para ir além, ensino médio:',
+  },
+  advanced: {
+    en: 'To go further, advanced:',
+    fr: 'Pour aller plus loin, niveau avancé :',
+    es: 'Para ir más lejos, nivel avanzado:',
+    'pt-BR': 'Para ir além, nível avançado:',
+  },
+};
+
 const fill = (template: string, values: Record<string, string>): string =>
   template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? `{${key}}`);
 
@@ -291,6 +311,12 @@ function activityPage(
     escapeHtml(t[locale]);
   const slotted = (t: Record<Locale, string>): string =>
     escapeHtml(fillSlots(t[locale], values, locale));
+  // Un prolongement gradué (pas 3) porte son niveau EN TÊTE de la question, dans le corrigé comme
+  // sur la fiche élève : c'est la même question, pour un autre lecteur.
+  const levelTag = (level: Level | undefined): string =>
+    level === undefined
+      ? ''
+      : `<span class="activity-level">${escapeHtml(LEVEL[level][locale])}</span> `;
   const tour = inputs.tours.find((t) => t.id === activity.tour);
   if (!tour) throw new Error(`activité ${activity.id} : visite inconnue`);
   const sceneHref = activitySceneHref(activity, locale);
@@ -330,7 +356,7 @@ function activityPage(
         `<h4>${text(TEXT.answerKey)}</h4><dl class="activity-answers">${part.questions
           .map(
             (q) =>
-              `<div><dt>${slotted(q.prompt)}</dt><dd>${slotted(q.answer)}</dd></div>`
+              `<div><dt>${levelTag(q.level)}${slotted(q.prompt)}</dt><dd>${slotted(q.answer)}</dd></div>`
           )
           .join('')}</dl>`
     )
@@ -354,7 +380,7 @@ function activityPage(
           part.questions
             .map(
               (q) =>
-                `<p class="activity-question">${slotted(q.prompt)}</p><div class="activity-lines" aria-hidden="true"></div>`
+                `<p class="activity-question">${levelTag(q.level)}${slotted(q.prompt)}</p><div class="activity-lines" aria-hidden="true"></div>`
             )
             .join('')
       )

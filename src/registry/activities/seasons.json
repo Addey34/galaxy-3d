@@ -100,7 +100,8 @@
     "periLatest": { "kind": "apsisDate", "event": "perihelion", "bound": "latest" },
     "aphEarliest": { "kind": "apsisDate", "event": "aphelion", "bound": "earliest" },
     "aphLatest": { "kind": "apsisDate", "event": "aphelion", "bound": "latest" },
-    "apsisGap": { "kind": "apsisGapPercent", "decimals": 0 }
+    "apsisGap": { "kind": "apsisGapPercent", "decimals": 0 },
+    "fluxGain": { "kind": "apsisFluxGainPercent", "decimals": 0 }
   },
   "parts": [
     {
@@ -140,6 +141,23 @@
             "pt-BR": "No inverno. A Terra passa mais perto do Sol no início de janeiro, entre {periEarliest} e {periLatest}, e mais longe no início de julho, entre {aphEarliest} e {aphLatest}. A diferença é de apenas cerca de {apsisGap}% da distância, e o ponto mais próximo cai em pleno inverno do hemisfério norte."
           },
           "evidence": ["periEarliest", "periLatest", "aphEarliest", "aphLatest", "apsisGap"]
+        },
+        {
+          "id": "solar-flux",
+          "level": "advanced",
+          "prompt": {
+            "en": "The Earth is about {apsisGap}% closer to the Sun in January than in July. By how much does the sunlight it receives increase, and why does that not make summer?",
+            "fr": "La Terre est environ {apsisGap} % plus près du Soleil en janvier qu’en juillet. De combien la lumière qu’elle reçoit du Soleil augmente-t-elle, et pourquoi cela ne fait-il pas l’été ?",
+            "es": "La Tierra está un {apsisGap} % más cerca del Sol en enero que en julio. ¿Cuánto aumenta la luz que recibe del Sol y por qué eso no trae el verano?",
+            "pt-BR": "A Terra está cerca de {apsisGap}% mais perto do Sol em janeiro do que em julho. Quanto aumenta a luz que ela recebe do Sol, e por que isso não traz o verão?"
+          },
+          "answer": {
+            "en": "The flux varies as the inverse square of the distance: about {fluxGain}% more at perihelion. The gain is real, but the northern hemisphere receives it in the middle of its winter: the height of the Sun and the length of the day, set by the tilt, outweigh it (in Paris, {parisJune} of daylight in June against {parisDecember} in December).",
+            "fr": "Le flux varie comme l’inverse du carré de la distance : environ {fluxGain} % de plus au périhélie. Le gain est réel, mais l’hémisphère nord le reçoit en plein hiver : la hauteur du Soleil et la durée du jour, que fixe l’inclinaison, l’emportent (à Paris, {parisJune} de jour en juin contre {parisDecember} en décembre).",
+            "es": "El flujo varía como el inverso del cuadrado de la distancia: alrededor de un {fluxGain} % más en el perihelio. La ganancia es real, pero el hemisferio norte la recibe en pleno invierno: la altura del Sol y la duración del día, que fija la inclinación, pesan más (en París, {parisJune} de día en junio frente a {parisDecember} en diciembre).",
+            "pt-BR": "O fluxo varia como o inverso do quadrado da distância: cerca de {fluxGain}% a mais no periélio. O ganho é real, mas o hemisfério norte o recebe em pleno inverno: a altura do Sol e a duração do dia, fixadas pela inclinação, pesam mais (em Paris, {parisJune} de luz em junho contra {parisDecember} em dezembro)."
+          },
+          "evidence": ["fluxGain", "apsisGap", "parisJune", "parisDecember"]
         }
       ]
     },
@@ -224,6 +242,23 @@
             "pt-BR": "Nos equinócios, sobre o equador ({sunMarch}° em março, {sunSeptember}° em setembro). No solstício de junho, sobre o trópico de Câncer, a {sunJune}° N. No solstício de dezembro, sobre o trópico de Capricórnio, a {sunDecember}° S. Essas latitudes valem a inclinação do eixo, {tilt}°: é ela que faz as estações."
           },
           "evidence": ["sunMarch", "sunSeptember", "sunJune", "sunDecember", "tilt"]
+        },
+        {
+          "id": "polar-circle",
+          "level": "high",
+          "prompt": {
+            "en": "Why is the Arctic Circle at {polarCircle}° N? Relate it to the tilt of the axis.",
+            "fr": "Pourquoi le cercle polaire arctique est-il à {polarCircle}° N ? Reliez-le à l’inclinaison de l’axe.",
+            "es": "¿Por qué el círculo polar ártico está a {polarCircle}° N? Relaciónalo con la inclinación del eje.",
+            "pt-BR": "Por que o círculo polar ártico fica a {polarCircle}° N? Relacione com a inclinação do eixo."
+          },
+          "answer": {
+            "en": "The Sun lights every point less than 90° away from the point where it stands overhead. At the June solstice that point is at {sunJune}° N, so the lit half reaches 90° beyond it, over the pole: everything north of 90° minus the tilt, 90° − {tilt}° = {polarCircle}°, stays in daylight for a whole turn.",
+            "fr": "Le Soleil éclaire tout point situé à moins de 90° du point où il est à la verticale. Au solstice de juin, ce point est à {sunJune}° N, donc la moitié éclairée s’étend 90° plus loin, au-delà du pôle : tout ce qui est au nord de 90° moins l’inclinaison, 90° − {tilt}° = {polarCircle}°, reste dans le jour pendant tout un tour.",
+            "es": "El Sol ilumina todo punto situado a menos de 90° del punto donde está en la vertical. En el solsticio de junio ese punto está a {sunJune}° N, así que la mitad iluminada se extiende 90° más allá, por encima del polo: todo lo que está al norte de 90° menos la inclinación, 90° − {tilt}° = {polarCircle}°, permanece en el día durante toda una vuelta.",
+            "pt-BR": "O Sol ilumina todo ponto a menos de 90° do ponto onde ele está a pino. No solstício de junho esse ponto fica a {sunJune}° N, então a metade iluminada se estende 90° além, passando do polo: tudo o que está ao norte de 90° menos a inclinação, 90° − {tilt}° = {polarCircle}°, fica no dia durante uma volta inteira."
+          },
+          "evidence": ["tilt", "polarCircle", "sunJune", "polarDayJune"]
         }
       ]
     },

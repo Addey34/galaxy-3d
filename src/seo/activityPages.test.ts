@@ -65,6 +65,14 @@ describe.each(LOCALES)('pages des activités en %s', (locale) => {
     expect(seasons.body.match(/class="activity-lines"/g)).toHaveLength(
       questions
     );
+    // Chaque prolongement gradué (pas 3) porte son niveau, au corrigé ET sur la fiche élève.
+    const graded = activity.parts
+      .flatMap((p) => p.questions)
+      .filter((q) => q.level !== undefined).length;
+    expect(graded).toBeGreaterThan(0);
+    expect(seasons.body.match(/class="activity-level"/g)).toHaveLength(
+      2 * graded
+    );
     // Le corrigé n'est PAS dans la fiche élève.
     const pupil = seasons.body.slice(seasons.body.indexOf('id="pupil"'));
     expect(pupil).not.toContain('activity-answers');
