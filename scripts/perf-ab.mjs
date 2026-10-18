@@ -61,6 +61,15 @@ export function verdict(name, ratio) {
   return 'noise';
 }
 
+/** Les grandeurs en régression (`scène grandeur`), d'où le code de sortie. */
+export function regressions(ratios) {
+  const out = [];
+  for (const [scene, metrics] of Object.entries(ratios))
+    for (const [name, r] of Object.entries(metrics))
+      if (r.verdict === 'regression') out.push(`${scene} ${name}`);
+  return out;
+}
+
 /** Les rapports branche / base des médianes, par scène et par grandeur. */
 export function compare(samples) {
   const out = {};
@@ -138,4 +147,10 @@ if (
       `${JSON.stringify({ originA, originB, rounds, ratios, samples }, null, 2)}\n`
     );
   }
+  // Code 1 sur une régression au-delà du bruit calibré : le job le dit en rouge, sans rien
+  // conditionner. Absent du premier envoi (#246), et c'est la falsification par une régression
+  // injectée qui l'a montré : RÉGRESSION imprimée, job vert (run 39133235567).
+  const found = regressions(ratios);
+  if (found.length > 0) console.log(`régressions : ${found.join(', ')}`);
+  process.exit(found.length > 0 ? 1 : 0);
 }

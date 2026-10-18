@@ -71,26 +71,30 @@ jobs:
           # Une revision se resout en COMMIT, branche locale ou distante : lance depuis une autre
           # branche, `main` n'existe que sous `origin/main` (« invalid reference », run 39132105459),
           # et lance depuis `main`, il est deja extrait (d'ou --detach, run 39130818450).
+          # Base ET branche sont construites dans leur PROPRE worktree : l'outil de mesure
+          # (`scripts/perf-ab.mjs`, `measure-perf.mjs`, les seuils) vient toujours de la revision
+          # du workflow, jamais de ce qu'il mesure (run 39133235567 : la branche mesuree portait
+          # un script sans code de sortie, et le job est reste vert sur une regression).
           rev() { git rev-parse --verify -q "$1^{commit}" || git rev-parse --verify "origin/$1^{commit}"; }
           base="$(rev "${{ github.event.inputs.base || github.sha }}")"
-          head="${{ github.event.inputs.head }}"
           echo "base $base"
           git worktree add --detach ../base "$base"
           (cd ../base && pnpm install --frozen-lockfile && pnpm exec vite build --logLevel warn)
-          if [ -n "$head" ]; then
-            head="$(rev "$head")"
+          if [ -n "${{ github.event.inputs.head }}" ]; then
+            head="$(rev "${{ github.event.inputs.head }}")"
             echo "head $head"
-            git checkout --detach "$head"
-            pnpm install --frozen-lockfile
-            pnpm exec vite build --logLevel warn
+            git worktree add --detach ../head "$head"
+            (cd ../head && pnpm install --frozen-lockfile && pnpm exec vite build --logLevel warn)
           else
-            cp -r ../base/dist dist
+            git worktree add --detach ../head "$base"
+            (cd ../head && pnpm install --frozen-lockfile)
+            cp -r ../base/dist ../head/dist
           fi
 
       - name: Serve both and measure in alternation
         run: |
           (cd ../base && pnpm exec vite preview --port 4301 --strictPort > ../preview-a.log 2>&1 &)
-          pnpm exec vite preview --port 4302 --strictPort > ../preview-b.log 2>&1 &
+          (cd ../head && pnpm exec vite preview --port 4302 --strictPort > ../preview-b.log 2>&1 &)
           for port in 4301 4302; do
             for i in $(seq 1 60); do curl -sf "http://localhost:$port/" > /dev/null && break; sleep 1; done
           done
