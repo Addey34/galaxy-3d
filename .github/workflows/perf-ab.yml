@@ -1,0 +1,96 @@
+name: Perf A/B
+
+# L'A/B DE PERFORMANCE D'UNE PR QUI TOUCHE AU RENDU (lot 56, piste 4).
+#
+# UNE machine construit la base et la branche, les sert sur deux ports et les mesure en
+# ALTERNANCE (`scripts/perf-ab.mjs`) : GitHub sert des processeurs differents, et en rendu
+# logiciel la meme scene coute du simple au double d'un processeur a l'autre, donc deux runs sur
+# deux machines mesureraient surtout la loterie du processeur.
+#
+# Le seuil se CALIBRE en mesurant la base contre elle-meme (`head` vide), sur plusieurs machines a
+# la fois (`copies`), et se lit dans `src/config/perfAbThresholds.json` (run 39125750342 :
+# image au regime 0,8 %, blocages d'approche 2,8 %, memoire du pilote 0). Informatif : il ne
+# conditionne rien, mais le job rougit sur une regression au-dela du seuil.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Revision de reference (defaut : main)'
+        default: 'main'
+      head:
+        description: 'Revision a comparer (vide : la base contre elle-meme, pour calibrer)'
+        default: ''
+      copies:
+        description: 'Nombre de machines (1 pour une PR, 4 pour calibrer)'
+        default: '1'
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      copies: ${{ steps.c.outputs.copies }}
+    steps:
+      - id: c
+        run: |
+          n="${{ github.event.inputs.copies || '1' }}"
+          echo "copies=$(seq -s, 1 "$n" | sed 's/^/[/; s/$/]/')" >> "$GITHUB_OUTPUT"
+
+  ab:
+    needs: plan
+    name: A/B copy ${{ matrix.copy }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        copy: ${{ fromJSON(needs.plan.outputs.copies) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4, resolved 2026-09-19
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0, resolved 2026-09-19
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: Runner CPU
+        run: grep -m1 'model name' /proc/cpuinfo
+
+      - name: Build base and head
+        run: |
+          base="${{ github.event.inputs.base || github.sha }}"
+          head="${{ github.event.inputs.head }}"
+          git worktree add ../base "$base"
+          (cd ../base && pnpm install --frozen-lockfile && pnpm exec vite build --logLevel warn)
+          if [ -n "$head" ]; then
+            git checkout "$head"
+            pnpm exec vite build --logLevel warn
+          else
+            cp -r ../base/dist dist
+          fi
+
+      - name: Serve both and measure in alternation
+        run: |
+          (cd ../base && pnpm exec vite preview --port 4301 --strictPort > ../preview-a.log 2>&1 &)
+          pnpm exec vite preview --port 4302 --strictPort > ../preview-b.log 2>&1 &
+          for port in 4301 4302; do
+            for i in $(seq 1 60); do curl -sf "http://localhost:$port/" > /dev/null && break; sleep 1; done
+          done
+          node scripts/perf-ab.mjs --origin-a http://localhost:4301 --origin-b http://localhost:4302 \
+            --scenes overview,earth-explo --rounds 3 --json perf-ab.json
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, resolved 2026-09-20
+        if: always()
+        with:
+          name: perf-ab-${{ matrix.copy }}
+          path: perf-ab.json
