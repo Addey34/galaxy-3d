@@ -1170,7 +1170,6 @@ function bodyLandingPages() {
         };
         // Les noms de l'ODE arrivent avec leurs entités HTML (« Chang&apos;e ») : décodées ICI,
         // sans quoi la page les échapperait une seconde fois.
-        const unescapeOde = placeSeo.decodeEntities;
         const shardCache = new Map<string, unknown>();
         const readShard = (body: string, k: number) => {
           const key = `${body}/${k}`;
@@ -1211,8 +1210,12 @@ function bodyLandingPages() {
             const shard = readShard(body, iauId % cover.shards);
             return (shard.observed[String(iauId)] ?? []).map(
               ([inst, count, first, last, label]) => ({
-                mission: unescapeOde(shard.instruments[inst]!.mission),
-                instrument: unescapeOde(shard.instruments[inst]!.instrument),
+                mission: placeSeo.decodeEntities(
+                  shard.instruments[inst]!.mission
+                ),
+                instrument: placeSeo.decodeEntities(
+                  shard.instruments[inst]!.instrument
+                ),
                 count,
                 first,
                 last,

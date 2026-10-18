@@ -197,8 +197,9 @@ describe('GlowPass : passe de sélection', () => {
       expect(sceneCalls[i + 1]!.override).toBeNull();
       expect(sceneCalls[i + 1]!.target).toBe(sceneCalls[0]!.target);
     });
-    // Le fond de ciel est ce qui dessinait les carrés : jamais dans la sélection.
-    for (const call of sceneCalls) expect(call.background).toBeNull();
+    // Le fond de ciel est ce qui dessinait les carrés : jamais dans la sélection. Il vit sur le
+    // calque 0 (`equirectangularSky.ts`), qu'aucun de ces rendus n'active.
+    for (const call of sceneCalls) expect(call.layers & 1).toBe(0);
   });
 
   /**

@@ -30,7 +30,6 @@ import { getLocale, t } from '@/i18n';
 import { LOCALE_PATH } from '@/i18n/locales';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { PublicAPI } from '@/SolarSystemApp';
-import * as THREE from 'three';
 import Logger from '@/utils/Logger';
 
 /** Ce que l'application prête à la recherche pour agir. */

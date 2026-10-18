@@ -53,7 +53,7 @@ describe('le fond de ciel équirectangulaire', () => {
     expect(skyLod(0, 1, 800)).toBe(0);
   });
 
-  it('aucun module ne pose une image en scene.background (seule la restauration de GlowPass y écrit)', () => {
+  it('aucun module n’écrit scene.background', () => {
     const root = resolve(__dirname, '../..');
     const writers: string[] = [];
     const walk = (dir: string) => {
@@ -68,9 +68,6 @@ describe('le fond de ciel équirectangulaire', () => {
       }
     };
     walk(root);
-    expect(writers.sort()).toEqual([
-      'GlowPass.ts: background',
-      'GlowPass.ts: null',
-    ]);
+    expect(writers).toEqual([]);
   });
 });

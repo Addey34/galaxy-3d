@@ -307,20 +307,19 @@ export class GlowPass extends Pass {
   }
 
   /**
-   * Image des SEULES sources de halo, masquées par les occulteurs. Le fond de ciel est retiré
-   * le temps de ces deux rendus : il n'est pas une source, et c'est lui qui dessinait les
-   * carrés. Tout l'état touché (fond, calques de la caméra, matériau de substitution, couleur
-   * de fond, effacement automatique) est restauré à l'identique.
+   * Image des SEULES sources de halo, masquées par les occulteurs. Le fond de ciel n'y entre
+   * pas : il n'est pas une source (c'est lui qui dessinait les carrés), et il vit sur le calque
+   * 0 (`equirectangularSky.ts`), que ces rendus n'activent jamais. Tout l'état touché (calques
+   * de la caméra, matériau de substitution, couleur de fond, effacement automatique) est
+   * restauré à l'identique.
    */
   private renderSelection(renderer: THREE.WebGLRenderer): void {
-    const background = this.scene.background;
     const override = this.scene.overrideMaterial;
     const mask = this.camera.layers.mask;
     const autoClear = renderer.autoClear;
     renderer.getClearColor(this.clearColor);
     const clearAlpha = renderer.getClearAlpha();
 
-    this.scene.background = null;
     renderer.setRenderTarget(this.selection);
     renderer.setClearColor(0x000000, 1);
     renderer.clear();
@@ -351,7 +350,6 @@ export class GlowPass extends Pass {
 
     this.camera.layers.mask = mask;
     this.scene.overrideMaterial = override;
-    this.scene.background = background;
     renderer.autoClear = autoClear;
     renderer.setClearColor(this.clearColor, clearAlpha);
   }
