@@ -148,7 +148,8 @@ que l'arbre (`order.json` + listes `satellites`) n'atteint pas.
 **Pages d'éclipse.** Le build émet aussi une page par éclipse de 2024 à 2035
 (`/eclipse/2026-08-12/`), calculée par `findUpcomingAstronomicalEvents` : il n'y a rien à saisir.
 Leur titre vient des clés `title.eclipse.*` de `src/i18n/locales.ts` — une nouvelle combinaison
-type × astre exige sa clé dans les deux langues, et `src/core/eclipsePages.test.ts` le vérifie.
+type × astre exige sa clé dans les quatre langues (le compilateur la réclame par `MessageKey`), et
+`src/core/eclipsePages.test.ts` vérifie qu'elle porte la date dans chacune.
 
 **Ce que l'entrée déclenche ailleurs.** Le build en dérive aussi une page d'atterrissage
 indexable (`dist/<nom>/index.html`), son entrée de sitemap et sa vignette de partage
@@ -361,9 +362,13 @@ projet autant qu'un calcul. Avant de la proposer :
   la page dérivée (`/methodology`, `/sources`) plutôt que de figer une liste.
 - **Lisez les licences à la source**, datez la lecture, et vérifiez que l'attribution exigée
   s'affiche réellement dans l'application.
-- **Relisez le rendu dans les deux langues**, sans tiret cadratin (« — ») ni demi-cadratin
+- **Relisez le rendu dans chacune des quatre langues**, sans tiret cadratin (« — ») ni demi-cadratin
   entouré d'espaces : deux-points, virgule, parenthèses ou point. `src/seo/publishedText.test.ts`
   le vérifie sur les chaînes de l'application, les pages HTML et les fichiers publics du dépôt.
+- **Un chemin cité doit exister** : `src/config/docReferences.test.ts` vérifie chaque chemin
+  complet (`src/…`, `scripts/…`, `e2e/…`) cité dans `docs/ARCHITECTURE.md`, `docs/TESTING.md`,
+  `README.md` et ce fichier. Un module retiré se cite sous sa forme courte (`core/x.ts`), comme
+  tel, avec sa date.
 - **Pour un changement visible**, lancez axe (`pnpm test:a11y`), regardez la page à 390 px de
   large, et lancez la suite e2e complète (`pnpm test:e2e`).
 

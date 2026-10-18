@@ -2312,7 +2312,8 @@ Le réglage « imagerie de surface » est actif par défaut et, éteint, n'émet
 **Un hôte de tuiles se déclare en quatre endroits**, et `img-src` en fait partie — c'est le mur
 exact sur lequel la légende GIBS s'est cassée au lot 8b : `firebase.json` (`connect-src` ET
 `img-src`), `LIVE_DATA_SERVICES`, une fiche `tile-source` dans `src/registry/providers/`, et
-`public/privacy.html` dans les deux langues. Le service worker sert ces tuiles en CACHE D'ABORD,
+`public/privacy.html` dans chacune de ses langues (dérivées de `LOCALES` par
+`privacyDisclosure.test.ts`). Le service worker sert ces tuiles en CACHE D'ABORD,
 contrairement aux données temps réel : une adresse de tuile désigne un niveau, une ligne et une
 colonne d'une version PUBLIÉE et figée de la mosaïque, dont les octets ne changent jamais.
 
@@ -4574,7 +4575,7 @@ forme même de l'API** (`fields` + `data` par catégorie) : `parseSbdbRows` la l
 de conversion, et le fichier commité reste comparable à sa source. Conséquences :
 
 - l'application ne contacte plus JPL du tout : l'hôte est retiré de la CSP, de
-  `LIVE_DATA_SERVICES` et de `public/privacy.html` dans les deux langues ;
+  `LIVE_DATA_SERVICES` et de `public/privacy.html` dans chacune de ses langues ;
 - la donnée est un **instantané daté**, et le panneau le dit (« 6965 objets, JPL Small-Body
   Database, relevé du … »). Une donnée figée qui se présenterait comme vivante serait le défaut,
   pas la correction ;
@@ -4790,7 +4791,7 @@ Le DOI y est écrit une fois, et tout le reste le LIT :
   date ;
 - le plugin de build (`vite.config.ts`) lit le fichier une fois et passe le résultat aux deux
   générateurs de pages, comme il lisait déjà `repository-code` ;
-- `/methodology` et `/sources`, dans les DEUX langues, affichent ce bloc. Le même module le rend
+- `/methodology` et `/sources`, dans CHACUNE des quatre langues, affichent ce bloc. Le même module le rend
   pour les quatre documents : deux copies d'un même texte divergent, et celle qu'on oublie est
   celle que le lecteur a sous les yeux ;
 - le README est la SEULE copie du dépôt, parce que c'est du Markdown que rien ne construit. Elle
@@ -5047,6 +5048,9 @@ la version du moteur.
 `public/privacy.html` est une page statique du dossier `public/`, hors du générateur, et reste en
 deux langues (français et anglais) : un visiteur hispanophone y lit de l'anglais. C'est un texte de
 nature juridique, dont la traduction demande une relecture que ce lot n'a pas eue.
+**SUPERSEDED (constaté le 2026-10-18)** : la page porte les quatre langues depuis le lot 35, et
+`privacyDisclosure.test.ts` en dérive la liste de `LOCALES`. La relecture par des locuteurs natifs
+reste due (ligne 22.9, nommée dans les limites de `/methodology`).
 
 Les traductions espagnole et portugaise ont été produites par Claude et **relues par aucun locuteur
 natif**. Ce qu'une machine peut vérifier l'est (nombres, unités, noms propres, gabarits, parité des
@@ -6638,7 +6642,7 @@ CC BY 4.0 n'apparaissait nulle part pendant des mois.
 
 **`public/privacy.html` énumère les services contactés**, et l'ajout de deux hôtes l'a trouvée
 incomplète : elle en citait trois quand la CSP en autorisait six. Les deux nouveaux y sont
-désormais dans les deux langues, avec la mention qu'ils ne sont interrogés que si la couche est
+désormais dans chacune de ses langues, avec la mention qu'ils ne sont interrogés que si la couche est
 allumée, et `config/privacyDisclosure.test.ts` croise chaque hôte `connect-src` avec la page.
 La comparaison se fait par SUFFIXE : citer « open-meteo.com » décrit honnêtement
 `api.open-meteo.com` et `archive-api.open-meteo.com`.
