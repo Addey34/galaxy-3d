@@ -67,6 +67,9 @@ const COMPONENTS_PER_SAMPLE = 6;
  */
 export const MIN_SAMPLES_PER_ORBIT_FOR_HERMITE = 100;
 
+/** Un corps sans segment inscrit (cf. `_segmentsOf`). */
+const NO_SEGMENTS: readonly string[] = [];
+
 // Vecteurs de travail : `_samplePosition` est appele par corps a chaque recalcul de
 // positions, on evite d'y allouer.
 const _stateR = new THREE.Vector3();
@@ -651,6 +654,10 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
    * passages fait seulement garder un plafond de vitesse une image de trop.
    */
   private _inventory: StoreInventory | null = null;
+
+  /** Cf. `_segmentsOf`. */
+  private _segmentIndex: Map<string, string[]> | null = null;
+  private _segmentIndexSize = -1;
 
   private constructor(
     private readonly bodies: Map<string, LoadedBody>,
@@ -1477,10 +1484,11 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
    */
   private _segmentAt(name: string, date: Date): LoadedBody | null {
     let found: LoadedBody | null = null;
-    for (const body of this.bodies.values()) {
+    for (const segment of this._segmentsOf(name)) {
+      const body = this.bodies.get(segment);
+      if (!body) continue;
       const m = body.manifest;
       if (
-        m.segmentOf === name &&
         m.center !== undefined &&
         covers(HorizonsEphemerisService._grid(m), date) &&
         (found === null || m.stepDays < found.manifest.stepDays)
@@ -1488,6 +1496,34 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
         found = body;
     }
     return found;
+  }
+
+  /**
+   * Les segments inscrits pour `name`, par un INDEX et non en parcourant tous les fichiers
+   * chargés (lot 54, 2026-10-18). `_segmentAt` est appelé pour CHAQUE position demandée, donc pour
+   * chaque point de chaque orbite : le parcours complet coûtait 162 ms de temps propre dans un
+   * seul recalcul des orbites à l'approche de la Terre (frein × 4), la plupart des corps n'ayant
+   * aucun segment. `segmentOf` est fixé par le manifeste et la table ne fait que grandir : l'index
+   * se reconstruit quand sa taille change, dans le même ordre d'itération (les ex aequo de pas se
+   * départagent comme avant).
+   */
+  private _segmentsOf(name: string): readonly string[] {
+    if (
+      this._segmentIndex === null ||
+      this._segmentIndexSize !== this.bodies.size
+    ) {
+      const index = new Map<string, string[]>();
+      for (const [key, body] of this.bodies) {
+        const of = body.manifest.segmentOf;
+        if (of === undefined) continue;
+        const list = index.get(of);
+        if (list) list.push(key);
+        else index.set(of, [key]);
+      }
+      this._segmentIndex = index;
+      this._segmentIndexSize = this.bodies.size;
+    }
+    return this._segmentIndex.get(name) ?? NO_SEGMENTS;
   }
   /** Returns a precise child-minus-parent vector when both Horizons states are covered. */
   getParentRelativeAU(

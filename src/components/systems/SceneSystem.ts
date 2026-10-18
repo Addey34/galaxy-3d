@@ -19,6 +19,7 @@ import { educRadius } from '@/core/ScaleService';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import Logger from '@/utils/Logger';
 import { Starfield } from '@/components/celestial/Starfield';
+import { createEquirectangularSky } from '@/components/celestial/equirectangularSky';
 import type { TextureSystem } from './TextureSystem';
 import type CelestialObject from '@/components/celestial/CelestialObject';
 import { flattenBodies } from '@/config/catalog';
@@ -177,23 +178,16 @@ export class SceneSystem {
     this.textureSystem
       .getLODTexture(starsName, 'surface', 0)
       .then((tex) => {
-        // Fond équirectangulaire posé en `scene.background` plutôt qu'une sphère mesh :
-        // un décor à l'infini, insensible aux plans near/far. L'ancienne sphère de rayon
-        // 10000 était entièrement au-delà du far Explo (3000) → ciel noir en Exploration.
-        tex.mapping = THREE.EquirectangularReflectionMapping;
+        // Un décor à l'infini, insensible aux plans near/far (l'ancienne sphère de rayon
+        // 10000 était entièrement au-delà du far Explo : ciel noir en Exploration). Lu
+        // directement dans l'image et non posé en `scene.background`, que Three.js convertit
+        // en une cubemap de ~512 Mio pour le 8k (cf. `equirectangularSky.ts`).
         tex.colorSpace = THREE.SRGBColorSpace;
-        // Adoucit les étoiles « en blocs » du fond équirectangulaire : sans
-        // filtrage trilinéaire + anisotropie, une étoile d'un pixel projetée sur
-        // la sphère céleste apparaît comme un carré dur. Filtrage linéaire (min +
-        // mag) + mipmaps + anisotropie maximale du GPU → les points deviennent
-        // ronds et flous plutôt que carrés, surtout au ras de l'horizon céleste
-        // où l'échantillonnage est le plus étiré.
-        tex.magFilter = THREE.LinearFilter;
-        tex.minFilter = THREE.LinearMipMapLinearFilter;
-        tex.generateMipmaps = true;
-        tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-        tex.needsUpdate = true;
-        this.scene.background = tex;
+        // Les étoiles « en blocs » s'adoucissent par le filtrage trilinéaire (les réglages
+        // par défaut de `TextureSystem`) et l'anisotropie maximale du GPU, posée par
+        // `TextureSystem` AVANT le téléversement pour un corps `skybox` : la poser ici
+        // retéléversait toute l'image 8k une seconde fois.
+        this.scene.add(createEquirectangularSky(tex));
         // Rehausse la bande galactique (texture source très sombre) ; le cœur le
         // plus brillant nourrit le bloom pour un ciel vivant.
         this.scene.backgroundIntensity = RENDER_SETTINGS.backgroundIntensity;

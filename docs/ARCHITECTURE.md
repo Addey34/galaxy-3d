@@ -5134,6 +5134,52 @@ un A/B sur le même build. Garde : `src/ui/surfaceTileBudget.test.ts` (falsifié
 image, la version boîte par boîte coûtait 3,4 s sur 10 près du sol de la Terre. Garde
 d'équivalence contre le parcours boîte par boîte sur la vraie couverture.
 
+
+**Le ciel n'est plus une cubemap (2026-10-18).** Posée en `scene.background`, l'image équirectangulaire
+des étoiles était convertie par Three.js en une cubemap dont chaque face mesure la HAUTEUR de
+l'image : au palier « high », six faces 4096 × 4096 en RGBA8 avec leurs mipmaps, soit environ
+512 Mio, en plus de la source 8k (171 Mio) restée référencée. Mesuré par les allocations du pilote
+(`texImage2D` sur les six faces), et INVISIBLE à la sonde `?debug-perf`, qui ne compte que les
+textures des matériaux : ses 528 Mio pour la Terre en Explo en omettaient plus de la moitié. La
+conversion re-téléversait aussi l'image 8k (elle passe la source en `minFilter = Linear` le temps
+du rendu, donc une seconde texture GPU) et faisait six rendus 4096² au démarrage. Le ciel est
+désormais un triangle couvrant l'écran qui lit l'image directement (`equirectangularSky.ts`, la
+même formule `equirectUv` que la conversion) : il ne reste que la source, comptée par la sonde.
+Comparé à la production sur quatre visées dont les deux pôles de l'image : écart moyen 0,3/255,
+contre 0,13/255 entre deux chargements de la production elle-même (le scintillement). Son
+anisotropie maximale est posée AVANT le téléversement, par `TextureSystem` pour un corps `skybox` :
+posée après, elle retéléversait toute l'image (100 ms). Gardes : `equirectangularSky.test.ts`
+(aucun module ne pose une image en `scene.background`, intensité suivie ; falsifiées).
+
+**Les segments d'éphémérides, indexés (2026-10-18).** `_segmentAt` parcourait TOUS les fichiers
+chargés pour chaque position demandée, donc pour chaque point de chaque orbite : 162 ms de temps
+propre dans un seul recalcul des orbites à l'approche de la Terre (frein × 4), sur un blocage de
+632 ms. Un index `segmentOf` → segments, reconstruit quand la table grandit, le remplace ; retiré,
+77 tests de `pnpm verify` rougissent (les survols de BepiColombo en tête). Après correction, le
+recalcul des orbites ne pèse plus que 93 ms dans le blocage où il apparaît encore.
+
+**KTX2 n'est PAS appliqué, et c'est une mesure (2026-10-18).** La Terre en Explo tient 528 Mio de
+textures en régime établi, dont **342 Mio pour deux cartes 8k** (couleur et normales, 171 Mio chacune
+en RGBA8 avec leurs mipmaps) ; toutes les autres pèsent 11 Mio ou moins. Ces deux cartes n'existent
+qu'au palier « high » : `low` et `medium` plafonnent à 2k (`core/qualityTier.ts`), donc un téléphone
+ne les charge jamais. Encodées par `ktx create` (KTX-Software 4.4.2) et relues par le transcodeur de
+three, contre la source :
+
+| Carte 8k | JPEG livré | UASTC + zstd | ETC1S |
+|---|---|---|---|
+| Couleur | 3,5 Mo, 171 Mio GPU | 15,2 Mo (× 4,3), 47,3 dB, ~43 Mio GPU | 2,8 Mo, 34,5 dB (écart jusqu'à 156/255) |
+| Normales | 10,7 Mo, 171 Mio GPU | 36,8 Mo (× 3,4), 34,4 dB | inutilisable |
+
+Sur le seul palier où le gain existe, il coûte quatre fois les octets d'une carte couleur ou une
+perte visible de près. **Ce qui rouvrirait la question** : un palier « high » servi à une machine
+dont la mémoire vidéo manque (mesurée, pas supposée), ou un encodage dont les octets restent proches
+du JPEG à qualité égale.
+
+**La carte de normales en deux canaux (RG8) est écartée aussi**, et pour une autre raison : z ne se
+reconstruit pas de x et y. Mesuré sur le 8k livré : 11 % des texels s'écartent de 5° ou plus de la
+normale reconstruite (au plus 152°), 29 554 pointent vers l'intérieur. La carte ne porte pas des
+normales unitaires.
+
 ## Une visite guidée est une FICHE, pas du code (lot 21)
 
 Une visite guidée scénarisée (« Naissance d'une éclipse », « La danse des Galiléennes »…) est une
