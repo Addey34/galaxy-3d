@@ -972,6 +972,9 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   /** Rend la place. L'utilisateur reprendra ses 38 Mo quand il le décidera. */
   async forgetOffline(): Promise<OfflineState> {
     const store = this._pending?.store;
+    // Les écritures en file d'abord : vidé AVANT elles, le magasin les recevait juste après, et
+    // l'appareil reprenait une partie de la place qu'on venait de lui rendre.
+    await this.whenStored();
     if (store) await store.clear();
     this._inventory = null;
     return this.offlineState();

@@ -338,9 +338,12 @@ export class EphemerisStore {
 
   /** Vide le magasin. L'utilisateur reprend ses 38 Mo quand il le décide. */
   async clear(): Promise<number> {
-    let removed = 0;
-    for (const request of await this.cache.keys())
-      if (await this.cache.delete(request.url)) removed++;
-    return removed;
+    // EN PARALLÈLE (lot 54, 2026-10-18) : une suppression attendue après l'autre, sur les ~230
+    // entrées d'un appareil préparé, rendait la place en 22 à 38 s sous frein CPU × 6, aussi
+    // longtemps que le téléchargement, et dépassait la minute sur le coureur de CI le plus lent.
+    const removed = await Promise.all(
+      (await this.cache.keys()).map((request) => this.cache.delete(request.url))
+    );
+    return removed.filter(Boolean).length;
   }
 }

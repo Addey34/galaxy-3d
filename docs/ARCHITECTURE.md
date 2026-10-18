@@ -5158,6 +5158,13 @@ propre dans un seul recalcul des orbites à l'approche de la Terre (frein × 4),
 77 tests de `pnpm verify` rougissent (les survols de BepiColombo en tête). Après correction, le
 recalcul des orbites ne pèse plus que 93 ms dans le blocage où il apparaît encore.
 
+**Rendre la place en une seconde, et toute (2026-10-18).** « Libérer » la section hors ligne
+supprimait les ~230 entrées du magasin une par une, chacune attendue : 22 à 38 s sous frein CPU
+× 6 en production, aussi longtemps que le téléchargement, et plus d'une minute sur le coureur de CI
+le plus lent (un réessai l'a révélé). Supprimées en parallèle : 1,5 à 1,6 s. Et le magasin se
+vidait AVANT les écritures encore en file, qui y retombaient aussitôt : il attend désormais
+qu'elles soient rangées (garde falsifiée dans `src/core/ephemerisOffline.test.ts`).
+
 **KTX2 n'est PAS appliqué, et c'est une mesure (2026-10-18).** La Terre en Explo tient 528 Mio de
 textures en régime établi, dont **342 Mio pour deux cartes 8k** (couleur et normales, 171 Mio chacune
 en RGBA8 avec leurs mipmaps) ; toutes les autres pèsent 11 Mio ou moins. Ces deux cartes n'existent

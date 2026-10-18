@@ -222,6 +222,31 @@ describe('préparer le hors-ligne', () => {
     expect((await service.offlineState()).completeFiles).toBe(0);
   });
 
+  it('rend TOUTE la place, même avec des écritures encore en file', async () => {
+    // Un cache dont chaque écriture prend du temps : les fenêtres du démarrage sont encore en
+    // file quand on demande de libérer. Vidé AVANT elles, le magasin les recevait juste après.
+    const inner = fakeCache();
+    const slow: EphemerisCacheLike = {
+      ...inner,
+      put: async (request, response) => {
+        await new Promise((r) => setTimeout(r, 5));
+        return inner.put(request, response);
+      },
+    };
+    const store = new EphemerisStore(slow);
+    stubBrowser(serveRealEphemerides([]));
+    const service = await HorizonsEphemerisService.load(
+      MANIFEST_URL,
+      bodyDynamics(CELESTIAL_CONFIG),
+      { scene: sceneRequest(SCENE_DATE), retryDelaysMs: [], store }
+    );
+    // Sans attendre `whenStored` : c'est le cas d'un visiteur qui libère pendant que l'appareil
+    // range encore.
+    const after = await service.forgetOffline();
+    expect(after.storedBytes).toBe(0);
+    expect((await store.inventory()).bytes).toBe(0);
+  });
+
   it('rend ensuite une visite entière SANS le moindre octet', async () => {
     const store = new EphemerisStore(fakeCache());
     const { service } = await visit(store);
