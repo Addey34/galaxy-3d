@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { compare, median, type PerfRun } from '../../scripts/perf-ab.mjs';
 
@@ -57,5 +59,29 @@ describe('perf-ab : le verdict contre les seuils calibrés', () => {
       expect(
         file.thresholds[name as keyof typeof file.thresholds]
       ).toBeGreaterThan(spread);
+  });
+});
+
+describe('perf-ab : le code de sortie', () => {
+  it('nomme chaque grandeur en régression, et seulement elles', async () => {
+    const { regressions } = await import('../../scripts/perf-ab.mjs');
+    expect(
+      regressions({
+        overview: {
+          steadyP50: { verdict: 'regression' },
+          driverMiB: { verdict: 'noise' },
+        },
+        'earth-explo': { steadyP50: { verdict: 'gain' } },
+      })
+    ).toEqual(['overview steadyP50']);
+    expect(regressions({ s: { m: { verdict: 'unmeasured' } } })).toEqual([]);
+  });
+
+  it('sort en code 1 quand une régression est trouvée (le premier envoi ne le faisait pas)', () => {
+    const source = readFileSync(
+      resolve(__dirname, '../../scripts/perf-ab.mjs'),
+      'utf8'
+    );
+    expect(source).toMatch(/process\.exit\(found\.length > 0 \? 1 : 0\)/);
   });
 });

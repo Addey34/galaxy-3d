@@ -16,3 +16,6 @@ export function verdict(
   name: string,
   ratio: number
 ): 'regression' | 'gain' | 'noise' | 'unmeasured';
+export function regressions(
+  ratios: Record<string, Record<string, { verdict: string }>>
+): string[];

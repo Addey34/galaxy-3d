@@ -1,4 +1,6 @@
-import { splitLocalePath } from '@/core/localePath';
+import { splitLocalePath, withLocalePrefix } from '@/core/localePath';
+import { getLocale, onLocaleChange } from '@/i18n';
+import { LOCALE_PATH } from '@/i18n/locales';
 import {
   parsePermalink,
   pathnameForBody,
@@ -194,6 +196,22 @@ export function setupPermalinks(
       sync();
     }
   };
+
+  // La LANGUE du chemin suit celle que le visiteur choisit (lot 56). Depuis `/fr/moon/`, choisir
+  // l'anglais écrit `/moon/` : sans cela, un rechargement relirait `/fr/` et rendrait le français
+  // contre son choix, puisque le chemin décide de la langue au démarrage (`localeOfPathname`). La
+  // vue d'ensemble reste `/`, qu'aucune langue ne préfixe.
+  onLocaleChange(() => {
+    const { prefix, segments } = splitLocalePath(window.location.pathname);
+    const wanted = LOCALE_PATH[getLocale()];
+    if (segments.length === 0 || prefix === wanted) return;
+    const next = withLocalePrefix(wanted, `/${segments.join('/')}/`);
+    window.history.replaceState(
+      null,
+      '',
+      `${next}${window.location.search}${window.location.hash}`
+    );
+  });
 
   window.addEventListener('popstate', applyInitialState);
   return {

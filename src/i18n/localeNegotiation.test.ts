@@ -7,6 +7,7 @@ import {
   LOCALE_PATH,
   HTML_LANG,
   INTL_LOCALE,
+  localeOfPathname,
   negotiateLocale,
 } from './locales';
 
@@ -119,5 +120,24 @@ describe('sélecteur de langue d’index.html', () => {
   it('ne fige aucun libellé accessible dans le HTML', () => {
     // L'endonyme est posé par `ui/langSwitch` depuis `LOCALE_ENDONYM`, propriétaire unique.
     for (const tag of segments) expect(tag).not.toContain('aria-label=');
+  });
+});
+
+/**
+ * La langue que déclare un chemin (lot 56) : `/fr/moon/` démarrait en anglais pour un navigateur
+ * anglais, trouvé par le premier passage du guetteur de la production. La racine ne déclare rien.
+ */
+describe('localeOfPathname', () => {
+  it('lit le premier segment de langue, pour chaque langue préfixée', () => {
+    expect(localeOfPathname('/fr/moon/')).toBe('fr');
+    expect(localeOfPathname('/es/eclipse/2026-08-12/')).toBe('es');
+    expect(localeOfPathname('/pt-br/titan/')).toBe('pt-BR');
+    expect(localeOfPathname('/PT-BR/titan/')).toBe('pt-BR');
+  });
+  it('ne déclare rien à la racine ni pour un chemin anglais', () => {
+    expect(localeOfPathname('/')).toBeNull();
+    expect(localeOfPathname('')).toBeNull();
+    expect(localeOfPathname('/moon/')).toBeNull();
+    expect(localeOfPathname('/france/')).toBeNull();
   });
 });
