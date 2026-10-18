@@ -26,7 +26,9 @@ export const TOUR_ORDER: readonly string[] = orderFile.order;
 function toStep(step: TourStepRecord, where: string): TourStep {
   switch (step.kind) {
     case 'flyTo':
-      return { kind: 'flyTo', body: step.body };
+      return step.from === undefined
+        ? { kind: 'flyTo', body: step.body }
+        : { kind: 'flyTo', body: step.body, from: step.from };
     case 'jumpToDate':
       // Même forme déclarée que partout dans le registre : `{"$date": "…Z"}`, décodée par le
       // chargeur commun plutôt que par un `new Date` recopié ici.

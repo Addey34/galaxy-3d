@@ -12,7 +12,8 @@ import type { AstronomicalEventKind } from './astronomicalEvents';
 import type { ScaleMode } from './ScaleService';
 
 export type TourStep =
-  | { kind: 'flyTo'; body: string }
+  /** `from` : une fois arrivé, regarder la cible depuis ce corps (cf. `TourRuntimeHost.viewFrom`). */
+  | { kind: 'flyTo'; body: string; from?: string }
   | { kind: 'jumpToDate'; date: Date }
   /**
    * La prochaine occurrence RÉELLE d'un événement, depuis la date courante de la scène. Le moteur
@@ -46,6 +47,11 @@ export interface TourScript {
 export interface TourRuntimeHost {
   flyTo(body: string): void;
   isFlying(): boolean;
+  /**
+   * Replace la caméra, sans l'animer, du côté de `body` en gardant la cible. Appelé seulement
+   * APRÈS le vol : plus tôt, l'arrivée du vol écraserait la pose.
+   */
+  viewFrom(body: string): void;
   jumpToDate(date: Date): void;
   /** Résout l'événement à cet instant, puis saute : cf. l'étape `jumpToEvent`. */
   jumpToEvent(event: AstronomicalEventKind, body?: string): void;
@@ -116,6 +122,8 @@ export async function runTour(
       case 'flyTo':
         host.flyTo(step.body);
         await waitUntil(() => !host.isFlying(), signal);
+        if (step.from !== undefined && !signal.cancelled)
+          host.viewFrom(step.from);
         break;
       case 'jumpToDate':
         host.jumpToDate(step.date);

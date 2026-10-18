@@ -26,16 +26,21 @@
       }
     },
     {
+      "kind": "setMode",
+      "mode": "explo"
+    },
+    {
       "kind": "flyTo",
-      "body": "moon"
+      "body": "earth",
+      "from": "moon"
     },
     {
       "kind": "caption",
       "text": {
-        "en": "From the Moon, you can see the shadow it casts on Earth, with the same eclipse shadow rendering used for the real-time view.",
-        "fr": "Depuis la Lune, on voit l’ombre qu’elle projette sur la Terre, avec le même rendu d’ombre d’éclipse qu’en vue temps réel.",
-        "es": "Desde la Luna se ve la sombra que proyecta sobre la Tierra, con el mismo dibujo de sombra de eclipse que en la vista en tiempo real.",
-        "pt-BR": "Da Lua, vê-se a sombra que ela projeta sobre a Terra, com o mesmo desenho de sombra de eclipse da vista em tempo real."
+        "en": "We are now at true scale, looking at the Earth from the Moon. The darker patch, on the ground and on the clouds alike, is the Moon’s shadow: that is where the Sun is most hidden.",
+        "fr": "Nous voici à la vraie échelle, et nous regardons la Terre depuis la Lune. La zone plus sombre, sur le sol comme sur les nuages, est l’ombre de la Lune : c’est là que le Soleil est le plus caché.",
+        "es": "Ahora estamos a escala real y miramos la Tierra desde la Luna. La zona más oscura, tanto en el suelo como en las nubes, es la sombra de la Luna: ahí es donde el Sol queda más oculto.",
+        "pt-BR": "Agora estamos na escala real e olhamos a Terra a partir da Lua. A área mais escura, tanto no solo quanto nas nuvens, é a sombra da Lua: é ali que o Sol fica mais encoberto."
       }
     }
   ]

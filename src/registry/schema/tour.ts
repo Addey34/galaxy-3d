@@ -58,7 +58,19 @@ const timeScale = z
  * dur dans une fiche deviendrait fausse avec le temps ; celle-ci ne peut pas.
  */
 const step = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('flyTo'), body: targetName }).strict(),
+  z
+    .object({
+      kind: z.literal('flyTo'),
+      body: targetName,
+      /**
+       * Regarder la cible DEPUIS ce corps, une fois le vol fini (lot 57) : la pose que les pages
+       * d'éclipse de Lune emploient déjà (`CameraSystem.viewFromBody`). Un corps nommé et non
+       * trois angles, parce qu'un cadrage écrit en angles fixes ne vaudrait que pour une date,
+       * alors que celui-ci se recalcule sur les positions de la scène.
+       */
+      from: targetName.optional(),
+    })
+    .strict(),
   z
     .object({
       kind: z.literal('jumpToDate'),
@@ -121,6 +133,12 @@ export const tourSchema = z
         message: 'une visite sans aucune légende n’explique rien',
       });
     record.steps.forEach((s, index) => {
+      if (s.kind === 'flyTo' && s.from === s.body)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['steps', index, 'from'],
+          message: `regarder « ${s.body} » depuis lui-même n’a pas de sens`,
+        });
       if (s.kind !== 'jumpToEvent') return;
       const needsBody = (EVENT_NEEDS_BODY as readonly string[]).includes(
         s.event

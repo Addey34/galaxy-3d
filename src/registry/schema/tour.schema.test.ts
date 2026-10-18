@@ -124,8 +124,19 @@ describe('le schéma des visites refuse', () => {
     ['une vitesse hors de portée du curseur', { ...valid, steps: [...valid.steps, { kind: 'setTimeScale', scale: MAX_SIMULATION_SCALE + 1 }] }], // prettier-ignore
     ['une attente négative', { ...valid, steps: [...valid.steps, { kind: 'wait', ms: -1 }] }], // prettier-ignore
     ['un nom de corps en majuscules', { ...valid, steps: [{ kind: 'flyTo', body: 'Earth' }, valid.steps[1]] }], // prettier-ignore
+    ['une cible regardée depuis elle-même', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'earth' }] }], // prettier-ignore
+    ['un point de vue en majuscules', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'Moon' }] }], // prettier-ignore
   ])('%s', (_label, record) => {
     expect(tourSchema.safeParse(record).success).toBe(false);
+  });
+
+  it('accepte une cible regardée depuis un autre corps', () => {
+    expect(
+      tourSchema.safeParse({
+        ...valid,
+        steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'moon' }],
+      }).success
+    ).toBe(true);
   });
 
   it('accepte les deux modes d’échelle, et eux seuls', () => {
