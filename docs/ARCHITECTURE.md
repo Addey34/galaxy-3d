@@ -5293,7 +5293,7 @@ donnée de décrire un comportement sans devenir du code.
 
 | Forme | Effet |
 |---|---|
-| `flyTo` | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` ; avec `from`, la regarde ensuite DEPUIS un autre corps (lot 57) |
+| `flyTo` | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` ; avec `from`, la regarde ensuite DEPUIS un autre corps (lot 57) ; avec `side`, de PROFIL par rapport à un corps (lot 58, § « Les activités pour la classe ») |
 | `jumpToDate` | saute à une date déclarée, `{"$date": "…Z"}` |
 | `jumpToEvent` | saute à la prochaine occurrence RÉELLE d'un événement, depuis la date courante |
 | `setTimeScale` | accélère (ou renverse) le temps, plafonné à ce que le curseur sait représenter |
@@ -6302,6 +6302,62 @@ s'ouvre dans une rencontre du plan ET dans le fichier livré ; les deux témoins
 sonde s'arrête avant le niveau de 1 bar ; liens retour exacts), `e2e/built-pages.spec.ts` (l'index
 et la page de Cassini, quatre langues). `pnpm contacts:generate --check` sort en code 1 sur une
 dérive ; à rejouer après tout `pnpm ephemeris:flybys --write`.
+
+## Les activités pour la classe (`/activities/`, lot 58, 2026-10-19)
+
+Une activité est une FICHE de registre (`src/registry/activities/{id}.json`, ordre dans
+`order.json`, schéma Zod `src/registry/schema/activity.ts` seul propriétaire, JSON Schema généré),
+publiée en fiche imprimable dans les quatre langues (`src/seo/activityPages.ts`, module pur).
+Seul le build la lit : `registry/activities` est déclaré dans `src/buildOnly.ts`. Ce que l'élève
+joue dans la scène est la VISITE que l'activité nomme, ouverte par `?tour=<id>`.
+
+- **Le format est celui de l'ESA, lu à la source** (fiche « teach with space » PR45, « Une année
+  sur la Terre », produite avec des bureaux ESERO, lue le 2026-10-18) : en bref (matières, âge,
+  difficulté, durée, matériel), objectifs, puis des parties portant chacune un déroulé pour
+  l'enseignant, des consignes et des questions pour l'élève. Comme dans le guide de l'ESA, le
+  corrigé est À CÔTÉ du déroulé ; la fiche élève n'en porte rien et commence sur une nouvelle
+  feuille à l'impression (`public/docs.css`, `@media print`). La page cite cette référence.
+- **Un corrigé ne se tape pas.** Ses nombres sont des emplacements (`{tilt}`) remplis par des
+  VALEURS déclarées : un fait sourcé d'une fiche de corps (lu dans le catalogue, `axialTilt` en
+  degrés, sa source affichée sous le corrigé), ou une mesure de la scène, nommée par la fonction de
+  `src/core/activityMeasures.ts` qui la calcule. Ces fonctions passent par le chemin de
+  l'application : les dates des équinoxes, solstices et apsides sont celles de
+  `findUpcomingAstronomicalEvents` (le panneau des événements, l'étape `jumpToEvent`), le Soleil
+  est celui d'astronomy-engine dans la convention de temps de la scène. Chaque réponse nomme au
+  moins une valeur comme PREUVE, et les emplacements doivent être les mêmes dans les quatre
+  langues : une traduction ne peut pas taire un nombre que les autres affirment.
+- **Deux refus, au build comme aux tests** (`src/core/activityValues.ts`) : une mesure est
+  calculée pour CHAQUE année du domaine que la fiche annonce (`years`), et une précision déclarée
+  qui ne tient pas sur tout le domaine lève (la latitude du cercle polaire mesurée dans la scène
+  passe de 66,56 à 66,57° entre 2026 et 2035 : deux décimales ne tenaient pas, c'est la garde qui
+  l'a dit à son premier passage) ; une mesure qui déclare `agrees` doit tomber, chaque année, à la
+  tolérance déclarée du fait qu'elle illustre. L'inclinaison arrondie de la fiche PR45 (23,5°)
+  est un test permanent : la scène la dément.
+- **Ce que l'activité demandait à la scène, et qui manquait** : voir la limite du jour et de la
+  nuit. La caméra aborde un corps côté Soleil, donc la visite « Les saisons de la Terre » montrait
+  une Terre éclairée de face pendant que sa légende demandait d'observer la moitié éclairée.
+  `flyTo` prend `side` (`CameraSystem.viewBesideBody`, `core/viewAngles.ts`) : la cible vue à angle
+  droit de la direction d'un corps, ce corps à droite, élevée de 25° au-dessus de l'écliptique.
+  Ce plan contient la direction de la caméra, donc le terminateur reste une droite verticale ;
+  l'élévation, MESURÉE à l'image sur vrai GPU, fait entrer la calotte nord dans le disque (dans le
+  plan, les pôles tombaient sur le bord). La visite repose ce profil après chaque saut de date,
+  qui fait tourner la direction du Soleil.
+- **Le lien vers la scène** est la page de la Terre dans la langue de la fiche, avec `?tour=` : la
+  scène démarre dans cette langue et lance la visite, qui remplace la découverte de premier
+  passage. `tour` est une ouverture, pas un état : il est lu AVANT `applyInitialState` (qui
+  réécrit l'adresse) et effacé tout de suite, sans quoi un rechargement relancerait la visite.
+  L'adresse est aussi imprimée en clair dans la fiche élève.
+
+Gardes : `src/config/activities.test.ts` (chaque valeur évaluée sur tout le domaine, chaque
+emplacement rempli dans chaque langue, valeurs du jour figées, et quatre falsifications gardées
+comme tests : 23,5°, fait absent, précision non tenue, visite inconnue),
+`src/registry/schema/activity.schema.test.ts` (copie du JSON Schema, et six refus : réponse sans
+preuve, preuve ou emplacement non déclarés, traduction qui tait un nombre, valeur orpheline, accord
+avec une valeur absente), `src/seo/activityPages.test.ts`, `src/core/viewAngles.test.ts`,
+`src/core/permalink.test.ts`, `e2e/tourPlayer.spec.ts` (`?tour=` lance la visite seule et
+l'adresse ne la garde pas ; falsifiée en rappelant la découverte), `e2e/built-pages.spec.ts` (index
+et fiche des saisons dans les quatre langues, à l'écran ET imprimées : axe, 390 px, sans habillage
+du site, fiche élève sur sa feuille).
 
 ## Les cibles des missions entrées au catalogue (2026-10-04, vague 1)
 

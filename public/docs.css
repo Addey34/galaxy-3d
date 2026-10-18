@@ -177,3 +177,127 @@
   outline: 2px solid rgb(var(--accent));
   outline-offset: 2px;
 }
+
+/* LES FICHES D'ACTIVITÉ (lot 58). « En bref » et le corrigé sont des listes de définitions ; la
+   fiche élève laisse des lignes pour écrire, et commence sur une nouvelle feuille à l'impression,
+   comme dans les fiches « teach with space » de l'ESA qui ont servi de modèle. */
+.activity-glance,
+.activity-answers {
+  margin: 0.6rem 0;
+}
+.activity-glance > div,
+.activity-answers > div {
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--hairline);
+}
+.activity-glance > div:first-child,
+.activity-answers > div:first-child {
+  border-top: none;
+}
+.activity-glance dt,
+.activity-answers dt {
+  font-weight: 600;
+  color: var(--ink);
+}
+.activity-glance dd,
+.activity-answers dd {
+  margin: 0.2rem 0 0;
+  color: var(--ink-dim);
+}
+.doc h4 {
+  font-size: 0.9rem;
+  margin: 1rem 0 0.2rem;
+  color: var(--ink-dim);
+}
+.activity-note {
+  font-size: 0.86rem;
+  color: var(--ink-dim);
+}
+.activity-pupil-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+/* L'adresse de la scène est imprimée EN CLAIR : un lien ne se clique pas sur du papier. Elle
+   n'a aucun espace, donc elle doit pouvoir se couper n'importe où à 390 px. */
+.activity-url {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.86em;
+  overflow-wrap: anywhere;
+}
+.activity-question {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+.activity-lines {
+  height: 4.5rem;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(1.5rem - 1px),
+    var(--hairline-strong) calc(1.5rem - 1px),
+    var(--hairline-strong) 1.5rem
+  );
+}
+
+/* L'impression : du noir sur blanc, sans la navigation ni le pied de page du site, et la fiche
+   élève sur sa propre feuille. Les lignes d'écriture restent visibles en gris. */
+@media print {
+  .doc {
+    --ink: #000;
+    --ink-dim: #222;
+    --ink-faint: #444;
+    --hairline: #bbb;
+    --hairline-strong: #888;
+    background: #fff !important;
+    color: #000;
+  }
+  .doc .page-header,
+  .doc footer,
+  .doc .updated {
+    display: none;
+  }
+  .doc main,
+  .doc section {
+    max-width: none;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    padding: 0;
+    color: #000;
+  }
+  /* Tout le texte en noir : les titres gardaient le bleu d'accent du site, 2,52:1 sur papier
+     blanc, et c'est la garde axe de la fiche imprimée qui l'a vu à son premier passage. */
+  .doc main,
+  .doc main * {
+    color: #000 !important;
+  }
+  /* `color-scheme: dark` (privacy.css) peint le CANEVAS en sombre, et c'est lui qui remplit les
+     marges de la feuille : imprimé avec ses arrière-plans, chaque page avait un cadre noir (vu sur
+     un PDF A4 le 2026-10-19 ; un fond blanc sur `html` seul ne suffisait pas). */
+  :root {
+    color-scheme: light;
+  }
+  html {
+    background: #fff !important;
+  }
+  .doc h2,
+  .doc h3,
+  .doc h4 {
+    break-after: avoid;
+  }
+  .doc h2.activity-pupil {
+    break-before: page;
+  }
+  .activity-screen-only {
+    display: none;
+  }
+  .activity-question,
+  .activity-lines {
+    break-inside: avoid;
+  }
+  .activity-lines {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

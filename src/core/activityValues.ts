@@ -14,7 +14,7 @@
  * Les faits arrivent par un lecteur passé en argument, en degrés : ce module ne connaît pas le
  * catalogue, et un test peut lui en donner un faux pour le falsifier.
  */
-import type { Locale } from '@/i18n/locales';
+import { INTL_LOCALE, type Locale } from '@/i18n/locales';
 import type { ActivityRecord, ActivityValue } from '@/registry/schema/activity';
 import {
   apsisGapPercent,
@@ -23,6 +23,7 @@ import {
   polarDayLatitudeDeg,
   subsolarLatitudeDeg,
 } from './activityMeasures';
+import { formatDateText } from './dateText';
 
 /** Lit un fait de la fiche d'un corps, en degrés ; `undefined` s'il n'est pas publié. */
 export type FactReader = (
@@ -185,11 +186,13 @@ export function formatActivityValue(
       return `${Math.floor(total / 60)} h ${String(total % 60).padStart(2, '0')} min`;
     }
     case 'date':
-      return new Intl.DateTimeFormat(locale, {
-        day: 'numeric',
-        month: 'long',
-        timeZone: 'UTC',
-      }).format(value.date);
+      // Par la règle de l'ordinal du dépôt : « 1er juillet » en français, jamais « 1 juillet ».
+      return formatDateText(
+        value.date,
+        { day: 'numeric', month: 'long', timeZone: 'UTC' },
+        locale,
+        INTL_LOCALE[locale]
+      );
   }
 }
 

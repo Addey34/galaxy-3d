@@ -1239,6 +1239,41 @@ function bodyLandingPages() {
             `pages des grands lieux : ${placeDocPages.length} au lieu de ${(greatPlaceCount + 1) * DOC_LOCALE_COUNT}`
           );
         docPages.push(...placeDocPages);
+        /**
+         * LES ACTIVITÉS POUR LA CLASSE (lot 58) : l'index plus une fiche imprimable par activité,
+         * dans chaque langue. Chaque nombre d'un corrigé est calculé ici, au build, par le code de
+         * la scène (`src/core/activityValues.ts`) ; une valeur qui ne tient pas fait échouer le build.
+         */
+        const activitySeo = (await loader.ssrLoadModule(
+          '/src/seo/activityPages.ts'
+        )) as typeof import('./src/seo/activityPages');
+        const activityRegistry = (await loader.ssrLoadModule(
+          '/src/registry/activities/index.ts'
+        )) as typeof import('./src/registry/activities/index');
+        const tourScripts = (await loader.ssrLoadModule(
+          '/src/config/tourScripts.ts'
+        )) as typeof import('./src/config/tourScripts');
+        const activityInputs = {
+          activities: activityRegistry.loadActivities(
+            activityRegistry.ACTIVITY_RECORDS,
+            activityRegistry.ACTIVITY_ORDER,
+            tourScripts.TOUR_SCRIPTS.map((tour) => tour.id)
+          ),
+          tours: tourScripts.TOUR_SCRIPTS,
+          config: catalogue.CELESTIAL_CONFIG,
+          origin: SITE_ORIGIN,
+        };
+        const activityDocPages = [undefined, ...OTHER_LOCALES].flatMap(
+          (locale) => activitySeo.activityPages(activityInputs, locale ?? 'en')
+        );
+        if (
+          activityDocPages.length !==
+          (activityInputs.activities.length + 1) * DOC_LOCALE_COUNT
+        )
+          throw new Error(
+            `pages des activités : ${activityDocPages.length} au lieu de ${(activityInputs.activities.length + 1) * DOC_LOCALE_COUNT}`
+          );
+        docPages.push(...activityDocPages);
         for (const page of docPages) {
           const dir = resolve(dist, new URL(page.canonical).pathname.slice(1));
           await mkdir(dir, { recursive: true });

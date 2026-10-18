@@ -188,6 +188,13 @@ export const SIMULATION_ONLY_FACTS: ReadonlySet<FactField> = new Set([
   'massKg',
 ]);
 
+/**
+ * Décimales de l'inclinaison axiale sur la fiche d'un corps, en degrés. Nommée (lot 58) parce
+ * qu'une activité pour la classe dit à l'élève ce qu'il y lira : `src/config/activities.test.ts`
+ * confronte la valeur arrondie de son corrigé à cette constante.
+ */
+export const AXIAL_TILT_DISPLAY_DECIMALS = 1;
+
 /** Faits qui évoluent avec les découvertes : leur provenance DOIT porter `asOf`. */
 export const TIME_VARYING_FACTS: ReadonlySet<FactField> = new Set([
   'moonCount',

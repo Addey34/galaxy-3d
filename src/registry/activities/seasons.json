@@ -55,6 +55,7 @@
   "years": { "from": 2026, "to": 2035 },
   "values": {
     "tilt": { "kind": "fact", "body": "earth", "fact": "axialTilt", "decimals": 2 },
+    "tiltCard": { "kind": "fact", "body": "earth", "fact": "axialTilt", "decimals": 1 },
     "polarCircle": {
       "kind": "fact",
       "body": "earth",
@@ -185,12 +186,12 @@
             "pt-BR": "Quanto o eixo da Terra está inclinado em relação à perpendicular ao plano da sua órbita?"
           },
           "answer": {
-            "en": "By {tilt}°.",
-            "fr": "De {tilt}°.",
-            "es": "{tilt}°.",
-            "pt-BR": "{tilt}°."
+            "en": "By {tilt}° according to the cited source; the Earth’s card shows it rounded to one decimal place, {tiltCard}°.",
+            "fr": "De {tilt}° selon la source citée ; la fiche de la Terre l’affiche arrondie au dixième, {tiltCard}°.",
+            "es": "{tilt}° según la fuente citada; la ficha de la Tierra la muestra redondeada a una décima, {tiltCard}°.",
+            "pt-BR": "{tilt}° segundo a fonte citada; a ficha da Terra a mostra arredondada a um décimo, {tiltCard}°."
           },
-          "evidence": ["tilt"]
+          "evidence": ["tilt", "tiltCard"]
         },
         {
           "id": "polar-day",

@@ -55,6 +55,8 @@ export const ORBIT_INSERTIONS_SLUG = 'orbit-insertions';
 export const CONTACTS_SLUG = 'contacts';
 /** Les grands lieux nommés (lot 55), même forme : `/places/` et `/places/moon/tycho/`. */
 export const PLACES_SLUG = 'places';
+/** Les activités pour la classe (lot 58), même forme : `/activities/` et `/activities/seasons/`. */
+export const ACTIVITIES_SLUG = 'activities';
 const NAV_SLUGS: readonly string[] = [
   ...DOC_SLUGS,
   MISSIONS_SLUG,
@@ -62,6 +64,7 @@ const NAV_SLUGS: readonly string[] = [
   ORBIT_INSERTIONS_SLUG,
   CONTACTS_SLUG,
   PLACES_SLUG,
+  ACTIVITIES_SLUG,
 ];
 
 /**
@@ -142,6 +145,12 @@ const NAV: Record<string, DocText> = {
     fr: 'Grands lieux',
     es: 'Grandes lugares',
     'pt-BR': 'Grandes lugares',
+  },
+  activities: {
+    en: 'Activities',
+    fr: 'Activités',
+    es: 'Actividades',
+    'pt-BR': 'Atividades',
   },
 };
 

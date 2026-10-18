@@ -14,6 +14,7 @@ import {
 } from '@/core/activityValues';
 import { LOCALES } from '@/i18n/locales';
 import type { ActivityRecord } from '@/registry/schema/activity';
+import { AXIAL_TILT_DISPLAY_DECIMALS } from '@/core/bodyFacts';
 
 /**
  * UN CORRIGÉ EST CONFRONTÉ AU CODE ET AUX FAITS (lot 58).
@@ -71,6 +72,16 @@ describe('saisons : ce que le corrigé affirme', () => {
     expect(fr('aphLatest')).toMatch(/^[3-7] juillet$/);
     expect(fr('parisJune')).toMatch(/^16 h 1\d min$/);
     expect(fr('parisDecember')).toMatch(/^8 h 1\d min$/);
+  });
+
+  it('arrondit `tiltCard` comme la fiche de la Terre que l’élève lit', () => {
+    // La réponse dit « la fiche l’affiche arrondie au dixième » : la précision de cette valeur
+    // est celle de la fiche, et pas une copie.
+    const card = seasons.values['tiltCard'];
+    expect(card?.kind === 'fact' && card.decimals).toBe(
+      AXIAL_TILT_DISPLAY_DECIMALS
+    );
+    expect(fr('tiltCard')).toBe('23,4');
   });
 
   it('refuse l’inclinaison arrondie de la fiche PR45 de l’ESA (23,5°) : la scène la dément', () => {
