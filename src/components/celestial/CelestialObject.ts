@@ -47,7 +47,6 @@ import {
 } from '@/config/layerConfig';
 import {
   BOOT_QUALITY_PROFILE,
-  LIGHTING_SETTINGS,
   PRECIP_SETTINGS,
   REALTIME_CLOUDS_SETTINGS,
 } from '@/config/engine';
