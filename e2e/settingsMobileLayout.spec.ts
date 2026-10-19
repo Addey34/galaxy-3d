@@ -35,14 +35,28 @@ for (const locale of ['en', 'fr', 'es', 'pt-BR']) {
     // La section du fond de la Terre n'existe qu'une fois `surfacePanel` monté.
     await expect(page.locator('#surface-earth-base-wrapper')).toBeAttached();
 
-    const over = await page.evaluate(() => {
-      const body = document.querySelector<HTMLElement>(
-        '#orbit-options .surface-body'
-      )!;
-      return body.scrollWidth - body.clientWidth;
+    const overflow = () =>
+      page.evaluate(() => {
+        const body = document.querySelector<HTMLElement>(
+          '#orbit-options .surface-body'
+        )!;
+        return body.scrollWidth - body.clientWidth;
+      });
+    expect(
+      await overflow(),
+      'le corps du panneau défile en largeur'
+    ).toBeLessThanOrEqual(1);
+
+    // La MÊME mesure sous une police plus large. Le coureur Linux sert une police de repli plus
+    // large que Segoe UI et a fait déborder de 33 px un tableau qui tenait ici sans une marge :
+    // une garde mesurée sur une seule police ne le voit pas. Un espacement de lettres
+    // fractionnaire reproduit cet écart sur n'importe quelle machine.
+    await page.addStyleTag({
+      content: '#orbit-options * { letter-spacing: 1.2px !important; }',
     });
-    expect(over, 'le corps du panneau défile en largeur').toBeLessThanOrEqual(
-      1
-    );
+    expect(
+      await overflow(),
+      'le corps du panneau défile en largeur sous une police plus large'
+    ).toBeLessThanOrEqual(1);
   });
 }
