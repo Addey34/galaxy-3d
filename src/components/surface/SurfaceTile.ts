@@ -27,6 +27,7 @@
 import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
 import { setCompareMap } from './compareMaterial';
+import { tileFadeOpacity } from '@/core/tileFade';
 
 import { buildTilePatch, type PatchHeights } from '@/core/tilePatch';
 import {
@@ -50,6 +51,8 @@ export class SurfaceTile {
   /** Image de l'édition comparée (rideau avant/après, lot 50), ou `null`. */
   private _compare: THREE.Texture | null = null;
   private readonly _releaseMaterial?: (material: THREE.Material) => void;
+  /** Instant (ms) où le fondu d'entrée a commencé, ou `null` hors fondu. */
+  private _fadeStart: number | null = null;
 
   constructor(params: {
     index: TileIndex;
@@ -139,7 +142,36 @@ export class SurfaceTile {
    * COMPARÉE (lot 50), le carreau montre l'une ou l'autre selon le côté de la ligne du rideau
    * (`compareMaterial.ts`) ; les deux sont réglées de la même façon.
    */
-  setTexture(texture: THREE.Texture, compare?: THREE.Texture): void {
+  /** Le carreau est-il en train d'apparaître ? Lu par le moteur et par le signal d'occupation. */
+  get fading(): boolean {
+    return this._fadeStart !== null;
+  }
+
+  /**
+   * Fait avancer le fondu d'entrée à l'instant `nowMs` ; rend vrai tant qu'il dure. À la fin, le
+   * matériau redevient OPAQUE : un matériau transparent ne s'écrit pas comme un opaque (Three le
+   * compile avec `OPAQUE` ou sans), et un carreau fini doit se comporter comme avant le fondu.
+   */
+  advanceFade(nowMs: number): boolean {
+    if (this._fadeStart === null) return false;
+    const opacity = tileFadeOpacity(nowMs - this._fadeStart);
+    const material = this._material;
+    if (opacity >= 1) {
+      this._fadeStart = null;
+      material.opacity = 1;
+      material.transparent = false;
+      material.needsUpdate = true;
+      return false;
+    }
+    material.opacity = opacity;
+    return true;
+  }
+
+  setTexture(
+    texture: THREE.Texture,
+    compare?: THREE.Texture,
+    fadeFromMs?: number
+  ): void {
     for (const image of compare ? [texture, compare] : [texture]) {
       image.colorSpace = THREE.SRGBColorSpace;
       // Le bord d'un carreau touche celui du voisin : répéter y ramènerait le pixel opposé.
@@ -156,6 +188,11 @@ export class SurfaceTile {
     if (compare) {
       this._compare = compare;
       setCompareMap(material, compare);
+    }
+    if (fadeFromMs !== undefined) {
+      this._fadeStart = fadeFromMs;
+      material.transparent = true;
+      material.opacity = 0;
     }
     material.needsUpdate = true;
     this.mesh.visible = true;

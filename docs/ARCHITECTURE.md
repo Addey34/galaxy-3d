@@ -2801,7 +2801,42 @@ Mont-Blanc (scène du 2026-10-10, Sentinel-2, fenêtre de 1 280 x 800).
   PLUS grossi : en vue rasante l'autre est comprimé, et le choisir laissait des blocs de nuages
   blancs à l'horizon (300 km). (Précisé le 2026-10-14 : la plus courte des deux dérivées d'écran
   n'était cet axe que s'il est aligné sur l'écran ; c'est désormais la plus petite valeur
-  singulière de la jacobienne, cf. § « Les nuages du jour ».)
+  singulière de la jacobienne, cf. § « Les nuages du jour ». **SUPERSEDED le 2026-10-19 pour le
+  CALCUL** : les dérivées d'UV sont constantes par triangle du maillage, et à 1 306 km des facettes
+  claires aux arêtes nettes dessinaient la couche sur l'océan. Le grossissement se calcule
+  maintenant sans elles : taille d'un texel sur la coquille (`π R` sur la hauteur de la carte,
+  ou le côté d'est si la carte est plus large que 2:1), divisée par la distance à la caméra et par
+  l'angle d'un pixel, lu comme la variation du rayon de vue normalisé. Le côté le plus long d'un
+  texel, vu en travers de la visée, n'est pas raccourci par l'inclinaison : c'est le même axe.)
+- **Garder la couche au lieu de l'effacer** (réglage « Garder les nuages et la pluie visibles de
+  près », Réglages, section rendu, éteint par défaut, persistant, `ssv-keep-appearance`) : le
+  facteur ne descend plus à 0 mais à `MAGNIFICATION_KEPT_FLOOR`, un voile. Aucun détail n'est
+  inventé. Avec l'interrupteur, le shader des nuages reconstruit en plus l'alpha extrait par une
+  B-spline cubique sur 4 x 4 texels (`cubicCloudAlpha`, 16 lectures, dès 1,5 à 3,5 px par texel) :
+  c'est la même donnée lissée, les carrés deviennent des formes arrondies (mesuré à 647 km), et
+  rien n'est synthétisé. Éteint, ce chemin ne s'exécute pas.
+
+- **Un carreau apparaît en fondu, et la surface dit quand elle a fini** (2026-10-19,
+  `core/tileFade.ts`, `SurfaceTile.advanceFade`). Un carreau remplaçait d'un coup la texture de base,
+  et sur la Terre les deux n'ont pas la même couleur d'océan (tuile Blue Marble de GIBS
+  (2, 5, 20), texture de base (63, 82, 110), lus dans les fichiers) : à 1 306 km, le bleu de l'eau
+  perdait 22 % en quelques secondes, par vagues, et tombait à zéro avec l'imagerie coupée
+  (`ssv-surface-imagery=0`). Le fondu (400 ms, piloté par le temps, supprimé sous
+  `prefers-reduced-motion`) ôte l'à-coup, pas la différence de couleur : le plus grand saut entre
+  deux mesures est passé de 16,1 à 8,7. Le matériau n'est transparent que le temps du fondu
+  (Three compile un opaque avec `OPAQUE`, alpha forcé à 1). `data-surface-busy` du canvas compte
+  les carreaux en vol, en file ou en fondu ; `data-textures-loading` ne les couvrait pas, et
+  l'attente de calme des tests (`e2e/mainThread.ts`) lit maintenant les deux.
+- **L'océan d'un carreau est ramené à celui de la texture de base** (2026-10-19,
+  `core/oceanMatch.ts`, `installOceanMatch`). C'est une RETOUCHE d'une image publiée, donc elle est
+  déclarée : le champ optionnel `oceanMatch` de la fiche du jeu de tuiles (`tileSrgb`, `baseSrgb`,
+  `measured`, `method`, médianes par canal lues dans les fichiers) et l'imagerie dit dans son
+  bandeau de provenance que la couleur de l'océan a été ramenée à celle de la texture de base
+  (`SurfaceImageryState.oceanMatched`). L'écart est relevé en lumière linéaire (additif) et ne
+  s'applique qu'aux pixels que le masque d'eau de la texture de base (`roughnessMap` de la surface,
+  255 = océan) dit océaniques : la terre et la glace gardent la couleur publiée. Sans masque sur le
+  corps, ou sans `oceanMatch` dans la fiche, rien n'est retouché. Gardes : `core/oceanMatch.test.ts`
+  et `config/oceanMatch.test.ts`, falsifiée (une valeur de `baseSrgb` changée la fait rougir).
 
 Constat, sans correction dans ce pas : à 3 km du sol, le relief d'ETOPO 2022 à 60″ (~1,2 km par
 échantillon sur la grille de Sentinel-2) donne des crêtes rondes et molles ; c'est la mesure qui

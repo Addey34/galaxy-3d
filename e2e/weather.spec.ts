@@ -247,3 +247,31 @@ test.describe('mobile weather defaults', () => {
     await expect.poll(() => requests.length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * Le point du dock dit qu'une couche ACTIVE charge, panneau fermé ou ouvert, et s'éteint quand
+ * on la coupe : même règle que le verrou de sa case. GIBS ne répond jamais, pour que la couche
+ * reste en chargement d'un bout à l'autre.
+ */
+test('the weather dock button shows a dot while an active layer loads', async ({
+  page,
+}) => {
+  await page.route('**/gibs.earthdata.nasa.gov/**', () => {});
+  await openWeatherPanel(page);
+
+  const trigger = page.locator('#weather-trigger');
+  const canvas = page.locator('canvas').first();
+  const satellite = weatherRow(page, 'Clouds (NASA)').locator('input');
+  await expect(satellite).toBeDisabled();
+  await expect(trigger).toHaveAttribute('data-loading', 'true');
+  await expect(canvas).toHaveAttribute('data-weather-loading', '1');
+  await expect(trigger).toHaveCSS('position', 'relative');
+
+  // Témoin de falsification : couper la couche éteint le point.
+  await satellite.evaluate((el: HTMLInputElement) => {
+    el.checked = false;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await expect(trigger).toHaveAttribute('data-loading', 'false');
+  await expect(canvas).toHaveAttribute('data-weather-loading', '0');
+});

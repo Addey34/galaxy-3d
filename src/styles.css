@@ -253,6 +253,31 @@ button {
 .tool[hidden] {
   display: none;
 }
+/* Une couche météo ACTIVE charge : un point sur le bouton du dock, que le panneau soit ouvert ou non. */
+#weather-trigger {
+  position: relative;
+}
+#weather-trigger[data-loading='true']::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(var(--accent));
+  animation: weather-loading-pulse 1.1s ease-in-out infinite;
+}
+@keyframes weather-loading-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #weather-trigger[data-loading='true']::after {
+    animation: none;
+  }
+}
 /* Les tools du dock bas partagent la hauteur du groupe de modes. */
 .tool--dock {
   width: var(--control-h);

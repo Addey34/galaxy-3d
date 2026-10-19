@@ -70,6 +70,8 @@ import type { TextureSystem } from '@/components/systems/TextureSystem';
 import type { MeteoRenderDiagnostics } from '@/core/meteoDiagnostics';
 import { whenIdle } from '@/utils/idleCallback';
 import { displayGain } from '@/config/displayAlbedo';
+import { installOceanMatch } from '@/config/layerConfig';
+import type { OceanMatch } from '@/core/oceanMatch';
 
 const CLOUDS_ROTATION_FACTOR = 0.1;
 // Opacité de l'ombre portée des nuages sur la surface (0 = aucune, 1 = noir).
@@ -589,8 +591,25 @@ export default class CelestialObject {
    * de chaque frame : sans cela un carreau resterait à pleine lumière pendant que la sphère
    * qu'il recouvre s'assombrit, et la différence se verrait d'abord à l'éclipse.
    */
-  createSurfaceOverlayMaterial(): THREE.Material {
+  hasOceanMask(): boolean {
+    const surface = this.layers.get('surface');
+    return !!(
+      surface &&
+      !Array.isArray(surface.material) &&
+      (surface.material as THREE.MeshStandardMaterial).roughnessMap
+    );
+  }
+
+  createSurfaceOverlayMaterial(oceanMatch?: OceanMatch): THREE.Material {
     const material = createSurfaceLayerMaterial(this.config, this.name);
+    // L'océan de la mosaïque ramené à celui de la base, par le masque d'eau de la base (la carte
+    // `spec`, posée en `roughnessMap`). Sans ce masque, la mosaïque reste telle que publiée.
+    const surface = this.layers.get('surface');
+    const mask =
+      surface && !Array.isArray(surface.material)
+        ? (surface.material as THREE.MeshStandardMaterial).roughnessMap
+        : null;
+    if (oceanMatch && mask) installOceanMatch(material, oceanMatch, mask);
     this._overlayMaterials.add(material);
     // Un carreau qui arrive ENTRE deux passes d'éclairage (une image sur six) prend tout de suite
     // l'état de la sphère : sinon il restait plein jour, sans teinte, jusqu'à la passe suivante.

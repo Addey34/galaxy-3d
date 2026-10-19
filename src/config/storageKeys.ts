@@ -30,6 +30,8 @@ export const STORAGE_KEYS = {
   gazetteer: 'ssv-gazetteer',
   /** Étiquettes des séismes et événements naturels de la Terre (activées par défaut, opt-out). */
   eventLabels: 'ssv-event-labels',
+  /** Couches d'apparence gardées à l'approche, en voile, au lieu de s'effacer (opt-in). */
+  keepAppearance: 'ssv-keep-appearance',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

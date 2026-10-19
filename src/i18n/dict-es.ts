@@ -346,6 +346,7 @@ export const es: Record<MessageKey, string> = {
   'settings.colorblind': 'Colores de órbita adaptados al daltonismo',
   'settings.gazetteer': 'Nombres de la superficie',
   'settings.eventLabels': 'Etiquetas de los eventos',
+  'settings.keepAppearance': 'Mantener las nubes y la lluvia visibles de cerca',
   'settings.surfaceEarthBase': 'Suelo de la Tierra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
   'settings.surfaceEarthBase.sentinel-2':
@@ -361,6 +362,8 @@ export const es: Record<MessageKey, string> = {
   'surface.imagery.acquired': 'imágenes de {from} a {to}',
   'surface.imagery.oversampled':
     'mostrada {factor} veces más grande que el mosaico publicado ({published} px/grado)',
+  'surface.imagery.oceanMatched':
+    'color del océano llevado al de la textura de base',
   'surface.relief.headline': 'Relieve {title} a {resolution}/píxel',
   'surface.relief.area': 'área nombrada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} y {to}',

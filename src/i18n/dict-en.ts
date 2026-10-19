@@ -360,6 +360,7 @@ export const en = {
   'settings.colorblind': 'Color-blind friendly orbit colors',
   'settings.gazetteer': 'Surface names',
   'settings.eventLabels': 'Event labels',
+  'settings.keepAppearance': 'Keep clouds and rain visible up close',
   'settings.surfaceEarthBase': 'Earth’s ground',
   'settings.surfaceEarthBase.mosaic': 'Blue Marble mosaic (2004)',
   'settings.surfaceEarthBase.sentinel-2':
@@ -373,6 +374,8 @@ export const en = {
   'surface.imagery.acquired': 'images from {from} to {to}',
   'surface.imagery.oversampled':
     'shown {factor}x larger than the published mosaic ({published} px/degree)',
+  'surface.imagery.oceanMatched':
+    'ocean colour brought back to that of the base texture',
   'surface.relief.headline': 'Relief {title} at {resolution}/pixel',
   'surface.relief.area': 'named area {name}',
   'surface.relief.acquired': 'heights measured from {from} to {to}',

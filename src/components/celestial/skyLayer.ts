@@ -16,6 +16,7 @@
  * vraiment plus mince).
  */
 import * as THREE from 'three';
+import type { OceanMatch } from '@/core/oceanMatch';
 import {
   dayZenithLuminance,
   skyScattering,
@@ -45,7 +46,7 @@ export interface SkyBody {
    * Fabrique du matériau d'un carreau d'imagerie : enveloppée pour que chaque carreau NEUF reçoive
    * la perspective aérienne (`aerialPerspective.ts`). Absente, seuls les sols déjà posés l'ont.
    */
-  createSurfaceOverlayMaterial?(): THREE.Material;
+  createSurfaceOverlayMaterial?(oceanMatch?: OceanMatch): THREE.Material;
 }
 
 export interface SkyBinding {
@@ -133,8 +134,8 @@ export function attachSky(
   }
   const createTileMaterial = body.createSurfaceOverlayMaterial;
   if (createTileMaterial)
-    body.createSurfaceOverlayMaterial = () => {
-      const tile = createTileMaterial.call(body);
+    body.createSurfaceOverlayMaterial = (oceanMatch?: OceanMatch) => {
+      const tile = createTileMaterial.call(body, oceanMatch);
       addAerialPerspective(tile, sky.uniforms);
       return tile;
     };

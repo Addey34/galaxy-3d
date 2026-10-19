@@ -342,6 +342,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.colorblind': 'Cores de órbita adaptadas ao daltonismo',
   'settings.gazetteer': 'Nomes da superfície',
   'settings.eventLabels': 'Rótulos dos eventos',
+  'settings.keepAppearance': 'Manter as nuvens e a chuva visíveis de perto',
   'settings.surfaceEarthBase': 'Solo da Terra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
   'settings.surfaceEarthBase.sentinel-2':
@@ -357,6 +358,7 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.imagery.acquired': 'imagens de {from} a {to}',
   'surface.imagery.oversampled':
     'exibida {factor} vezes maior que o mosaico publicado ({published} px/grau)',
+  'surface.imagery.oceanMatched': 'cor do oceano levada à da textura de base',
   'surface.relief.headline': 'Relevo {title} a {resolution}/pixel',
   'surface.relief.area': 'área nomeada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} e {to}',

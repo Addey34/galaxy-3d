@@ -34,6 +34,7 @@
  *     complet.
  */
 import type { Figure } from '@/core/ellipsoid';
+import type { OceanMatch } from '@/core/oceanMatch';
 import * as THREE from 'three';
 
 import {
@@ -76,6 +77,7 @@ import {
   type SurfaceHeightSet,
 } from '@/config/surfaceHeights';
 import Logger from '@/utils/Logger';
+import { prefersReducedMotion } from '@/utils/reducedMotion';
 
 import { SurfaceTile } from './SurfaceTile';
 
@@ -91,7 +93,9 @@ export interface SurfaceHost {
   readonly figure?: Figure | null;
   readonly group: THREE.Object3D;
   attachSpinningChild(object: THREE.Object3D): void;
-  createSurfaceOverlayMaterial(): THREE.Material;
+  createSurfaceOverlayMaterial(oceanMatch?: OceanMatch): THREE.Material;
+  /** Le corps a-t-il un masque d'eau (la carte `spec` de sa surface) ? */
+  hasOceanMask?(): boolean;
   releaseSurfaceOverlayMaterial(material: THREE.Material): void;
   worldPointToGeographic(worldPoint: THREE.Vector3): {
     latitudeDeg: number;
@@ -162,6 +166,8 @@ export interface SurfaceImageryState {
   relief: SurfaceReliefState | null;
   /** Année d'une édition annuelle (lot 50), ou `null`. */
   edition: number | null;
+  /** L'océan de la mosaïque est-il ramené à celui de la base ? Le bandeau le dit (retouche). */
+  oceanMatched: boolean;
   /**
    * L'édition COMPARÉE, peinte à gauche du rideau (lot 50, pas 2), ou `null` sans rideau. Son
    * attribution est exigée au même titre que celle de l'édition principale.
@@ -292,6 +298,8 @@ export class PlanetarySurfaceEngine {
   private _staleCompare: SurfaceTileset | null = null;
 
   private readonly _tiles = new Map<string, SurfaceTile>();
+  /** Carreaux en fondu d'entrée : évite de parcourir `_tiles` à chaque image au repos. */
+  private _fadingTiles = 0;
   private readonly _pending = new Map<string, AbortController>();
   private readonly _queue: TileIndex[] = [];
   private readonly _failed = new Set<string>();
@@ -561,6 +569,7 @@ export class PlanetarySurfaceEngine {
    * pas les mêmes, et le niveau servi doit suivre ce qui est réellement dessiné.
    */
   update(camera: THREE.PerspectiveCamera, viewportHeightPx: number): void {
+    this._advanceFades();
     const host = this._host;
     const tileset = this._tileset;
     if (!host || !tileset || this._radiusKm <= 0) return;
@@ -777,6 +786,9 @@ export class PlanetarySurfaceEngine {
       publishedPixelsPerDegree: tileset.publishedPixelsPerDegree,
       relief: this._reliefState(level, centre),
       edition: tileset.edition ?? null,
+      oceanMatched:
+        tileset.oceanMatch !== undefined &&
+        (this._host?.hasOceanMask?.() ?? false),
       compare: compare
         ? {
             tilesetId: compare.id,
@@ -967,6 +979,7 @@ export class PlanetarySurfaceEngine {
     this._failed.clear();
     for (const tile of this._tiles.values()) tile.dispose();
     this._tiles.clear();
+    this._fadingTiles = 0;
     this._relief.clear();
     this._staleTileset = null;
     this._staleCompare = null;
@@ -1253,6 +1266,26 @@ export class PlanetarySurfaceEngine {
     this._shellScaled = true;
   }
 
+  /** Fait avancer le fondu d'entrée de chaque carreau qui apparaît (`core/tileFade.ts`). */
+  private _advanceFades(): void {
+    if (this._fadingTiles === 0) return;
+    const now = performance.now();
+    let fading = 0;
+    for (const tile of this._tiles.values()) {
+      if (tile.advanceFade(now)) fading += 1;
+    }
+    this._fadingTiles = fading;
+  }
+
+  /**
+   * Ce que la surface a encore à faire : carreaux en vol, et carreaux en train d'apparaître.
+   * Publié sur le canvas (`data-surface-busy`) pour que les tests attendent la scène FINIE ;
+   * `data-textures-loading` ne couvre pas ces carreaux, qui ne passent pas par `TextureSystem`.
+   */
+  get busyCount(): number {
+    return this._pending.size + this._queue.length + this._fadingTiles;
+  }
+
   private _pump(): void {
     while (
       this._pending.size < this._budget.maxConcurrentLoads &&
@@ -1339,7 +1372,7 @@ export class PlanetarySurfaceEngine {
         radius: host.layerRadius,
         figure: host.figure ?? null,
         shape: tileset.matrix,
-        material: host.createSurfaceOverlayMaterial(),
+        material: host.createSurfaceOverlayMaterial(primary.oceanMatch),
         releaseMaterial: (material) =>
           host.releaseSurfaceOverlayMaterial(material),
         ...(relief
@@ -1348,10 +1381,12 @@ export class PlanetarySurfaceEngine {
       });
       tile.setTexture(
         texture,
-        compareBitmap ? textureOf(compareBitmap) : undefined
+        compareBitmap ? textureOf(compareBitmap) : undefined,
+        prefersReducedMotion() ? undefined : performance.now()
       );
       host.attachSpinningChild(tile.mesh);
       this._tiles.set(key, tile);
+      if (tile.fading) this._fadingTiles += 1;
       if (relief) {
         this._relief.set(key, { level: relief.level, entry: relief.entry });
         this._applyShellScale();

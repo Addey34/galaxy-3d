@@ -165,3 +165,52 @@ describe('géométrie d’un carreau', () => {
     expect(material.polygonOffsetUnits).toBeLessThan(-6);
   });
 });
+
+/**
+ * UN CARREAU APPARAÎT EN FONDU, PUIS REDEVIENT UN OPAQUE ORDINAIRE (2026-10-19).
+ *
+ * Sans fondu, l'océan du Blue Marble (plus sombre que la texture de base) remplaçait celle-ci par
+ * à-coups, carreau après carreau. Le matériau n'est transparent que le temps du fondu : Three
+ * compile un matériau opaque avec `OPAQUE` (alpha forcé à 1), donc un carreau fini doit le
+ * redevenir, sinon il resterait mélangé à ce qu'il recouvre.
+ */
+describe('fondu d’entrée d’un carreau', () => {
+  function fadingTile() {
+    const material = new THREE.MeshBasicMaterial();
+    const tile = new SurfaceTile({
+      index: { level: 3, row: 1, column: 2 },
+      radius: 0.27,
+      shape: WMTS_EQUIRECTANGULAR_2x1,
+      material,
+    });
+    return { tile, material };
+  }
+
+  it('starts transparent at zero opacity, and says it is fading', () => {
+    const { tile, material } = fadingTile();
+    tile.setTexture(new THREE.Texture(), undefined, 1000);
+    expect(tile.fading).toBe(true);
+    expect(material.transparent).toBe(true);
+    expect(material.opacity).toBe(0);
+  });
+
+  it('rises with the clock, then goes back to an opaque material', () => {
+    const { tile, material } = fadingTile();
+    tile.setTexture(new THREE.Texture(), undefined, 1000);
+    expect(tile.advanceFade(1200)).toBe(true);
+    expect(material.opacity).toBeGreaterThan(0);
+    expect(material.opacity).toBeLessThan(1);
+    expect(tile.advanceFade(5000)).toBe(false);
+    expect(tile.fading).toBe(false);
+    expect(material.opacity).toBe(1);
+    expect(material.transparent).toBe(false);
+  });
+
+  it('does not fade at all without a start instant (reduced motion)', () => {
+    const { tile, material } = fadingTile();
+    tile.setTexture(new THREE.Texture());
+    expect(tile.fading).toBe(false);
+    expect(material.transparent).toBe(false);
+    expect(tile.advanceFade(5000)).toBe(false);
+  });
+});

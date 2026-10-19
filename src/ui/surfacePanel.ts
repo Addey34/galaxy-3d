@@ -251,6 +251,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
         })
       );
     }
+    if (state.oceanMatched) parts.push(t('surface.imagery.oceanMatched'));
     detail.textContent = parts.join(' · ');
 
     const reliefState = state.relief;
@@ -358,7 +359,17 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     renderBadge();
   };
 
+  /** `data-surface-busy` du canvas : carreaux en vol ou en fondu, écrit sur CHANGEMENT seulement. */
+  let publishedBusy = '';
+  const publishBusy = (): void => {
+    const value = String(engine?.busyCount ?? 0);
+    if (value === publishedBusy) return;
+    publishedBusy = value;
+    api.sceneSystem.renderer.domElement.dataset['surfaceBusy'] = value;
+  };
+
   const tick = (): void => {
+    publishBusy();
     const name = api.cameraSystem.targetName;
     const distance = api.cameraSystem.getDistanceToTargetSceneUnits();
     if (!enabled || !name || distance === null) {
