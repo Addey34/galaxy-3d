@@ -2,7 +2,7 @@
   "$comment": "Écrit par pnpm surface:tiles. Ne pas éditer à la main : les tuiles portent le même quantum et le même offset dans leur propre en-tête.",
   "id": "mars-mola-megr",
   "body": "mars",
-  "directory": "assets/height-tiles/mars/d9d41f5a3bc3",
+  "directory": "assets/height-tiles/mars/28c66b5953c5",
   "format": {
     "magic": "GXHT",
     "version": 1,
@@ -25,11 +25,141 @@
       "global": true,
       "sourcePixelsPerDegree": 32,
       "sourceProductId": "MEGR90N000FB.IMG"
+    },
+    {
+      "level": 7,
+      "levels": [
+        5,
+        6,
+        7
+      ],
+      "area": {
+        "id": "olympus-mons",
+        "name": "Olympus Mons",
+        "gazetteerFeatureId": 4453,
+        "centre": {
+          "latitudeDeg": 18.653,
+          "longitudeDeg": -133.802
+        },
+        "diameterKm": 610.1
+      },
+      "bounds": {
+        "west": -136.40625,
+        "east": -130.78125,
+        "south": 15.46875,
+        "north": 21.09375
+      },
+      "sourcePixelsPerDegree": 128,
+      "sourceProductId": "MEGR44N180HB.IMG"
+    },
+    {
+      "level": 7,
+      "levels": [
+        5,
+        6,
+        7
+      ],
+      "area": {
+        "id": "elysium-mons",
+        "name": "Elysium Mons",
+        "gazetteerFeatureId": 1783,
+        "centre": {
+          "latitudeDeg": 25.023,
+          "longitudeDeg": 147.214
+        },
+        "diameterKm": 401
+      },
+      "bounds": {
+        "west": 144.84375,
+        "east": 150.46875,
+        "south": 22.5,
+        "north": 28.125
+      },
+      "sourcePixelsPerDegree": 128,
+      "sourceProductId": "MEGR44N090HB.IMG"
+    },
+    {
+      "level": 7,
+      "levels": [
+        5,
+        6,
+        7
+      ],
+      "area": {
+        "id": "gale",
+        "name": "Gale",
+        "gazetteerFeatureId": 2071,
+        "centre": {
+          "latitudeDeg": -5.367,
+          "longitudeDeg": 137.811
+        },
+        "diameterKm": 154.1
+      },
+      "bounds": {
+        "west": 135,
+        "east": 140.625,
+        "south": -7.03125,
+        "north": -2.8125
+      },
+      "sourcePixelsPerDegree": 128,
+      "sourceProductId": "MEGR00N090HB.IMG"
+    },
+    {
+      "level": 7,
+      "levels": [
+        5,
+        6,
+        7
+      ],
+      "area": {
+        "id": "arsia-mons",
+        "name": "Arsia Mons",
+        "gazetteerFeatureId": 394,
+        "centre": {
+          "latitudeDeg": -8.257,
+          "longitudeDeg": -120.092
+        },
+        "diameterKm": 470
+      },
+      "bounds": {
+        "west": -122.34375,
+        "east": -116.71875,
+        "south": -11.25,
+        "north": -5.625
+      },
+      "sourcePixelsPerDegree": 128,
+      "sourceProductId": "MEGR00N180HB.IMG"
+    },
+    {
+      "level": 7,
+      "levels": [
+        5,
+        6,
+        7
+      ],
+      "area": {
+        "id": "melas-chasma",
+        "name": "Melas Chasma",
+        "gazetteerFeatureId": 3812,
+        "centre": {
+          "latitudeDeg": -10.518,
+          "longitudeDeg": -72.539
+        },
+        "diameterKm": 563.5
+      },
+      "bounds": {
+        "west": -75.9375,
+        "east": -70.3125,
+        "south": -12.65625,
+        "north": -8.4375
+      },
+      "sourcePixelsPerDegree": 128,
+      "sourceProductId": "MEGR00N270HB.IMG"
     }
   ],
   "elevationMetres": {
     "minimum": -23183,
-    "maximum": 21290
+    "maximum": 21360
   },
   "figure": {
     "source": "naif-pck",
@@ -41,6 +171,6 @@
     ]
   },
   "figureFloorRatio": 0.997752,
-  "tiles": 512,
-  "bytes": 67650560
+  "tiles": 627,
+  "bytes": 82845510
 }
