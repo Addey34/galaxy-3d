@@ -1655,6 +1655,13 @@ button {
 .oo-group-toggle:hover {
   color: rgb(var(--accent));
 }
+.oo-group-title {
+  min-width: 0;
+  /* « interstellaires » est un mot de 15 lettres : sans cette permission, c'est lui qui fixe la
+     largeur minimale du tableau. Il ne se coupe que s'il ne tient pas. */
+  overflow-wrap: anywhere;
+  text-align: left;
+}
 .oo-group-count {
   color: var(--ink-dim);
   font-weight: 500;
@@ -1787,6 +1794,18 @@ button {
 }
 .oo-td-name {
   vertical-align: middle;
+  /* Colonne ÉLASTIQUE : elle prend ce que les trois colonnes de cases laissent et abrège le nom
+     au lieu de pousser le tableau. Sans borne, le nom le plus long fixait la largeur minimale :
+     le tableau tenait dans 262 px avec Segoe UI sans une marge, et la police de repli de Linux
+     le faisait dépasser de 33 px, donc le corps des Réglages défilait en largeur selon la machine
+     du visiteur. `max-width: 0` est la forme qui laisse une cellule rétrécir sous son contenu. */
+  max-width: 0;
+}
+.oo-td-name-inner .oo-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .oo-td-name-inner {
   display: flex;
