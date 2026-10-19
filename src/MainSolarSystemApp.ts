@@ -70,6 +70,7 @@ import { spacecraftPlacer } from './core/instrumentPlacement';
 import { NAVIGABLE_TARGETS } from './config/navigable';
 import { SPACECRAFT_MISSIONS } from './config/spacecraft';
 import { setupBodyPicker } from './ui/bodyPicker';
+import { setupPlaceDive } from './ui/placeDive';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
@@ -571,6 +572,9 @@ function wireChrome(): {
       )
     );
 
+    const placeDive = setupPlaceDive(cameraSystem, sceneSystem, (body) =>
+      body === EARTH_NAMES_BODY ? earthRadiusKm : gazetteerRadii.get(body)
+    );
     setupBodyPicker(
       sceneSystem.scene,
       cameraSystem.camera,
@@ -580,7 +584,11 @@ function wireChrome(): {
       [
         (x, y) => spacecraftOverlay.markerAt(x, y),
         (x, y) => interstellarOverlay.markerAt(x, y),
-      ]
+      ],
+      (x, y) => {
+        const place = gazetteerOverlay.placeAt(x, y);
+        return place ? placeDive.dive(place) : false;
+      }
     );
 
     const requested = parsePermalink(

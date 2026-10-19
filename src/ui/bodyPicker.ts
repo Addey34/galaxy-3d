@@ -68,7 +68,13 @@ export function setupBodyPicker(
   domElement: HTMLElement,
   nav: PlanetNavigation,
   validNames: ReadonlySet<string>,
-  overlayHits: readonly OverlayHitTest[] = []
+  overlayHits: readonly OverlayHitTest[] = [],
+  /**
+   * Un nom de la surface sous le pointeur (lot 63) : appelé APRÈS les marqueurs d'instrument,
+   * qui sont peints au-dessus, et AVANT le rayon, qui retrouverait sinon le corps lui-même et
+   * relancerait son vol d'approche par-dessus la plongée. Rend vrai quand il a pris le clic.
+   */
+  placeHit?: (clientX: number, clientY: number) => boolean
 ): () => void {
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
@@ -108,6 +114,8 @@ export function setupBodyPicker(
         return;
       }
     }
+
+    if (placeHit?.(event.clientX, event.clientY)) return;
 
     const rect = domElement.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
