@@ -2685,6 +2685,9 @@ le cuiseur plafonne sa boîte à environ 4° sur 6° (`areaSpanDeg`) et lit UNE 
 Valles Marineris (63° de large, à cheval sur plusieurs dalles) et Hellas n'en ont pas. Le niveau 7
 (182 échantillons par degré) dépasse la finesse de la source (128, soit 463 m) : l'imagerie Viking
 s'arrête au niveau 7 et le moteur ne prend une tuile de hauteurs que de niveau inférieur ou égal.
+`/sources` écrit donc, à côté du pas de la grille servie, celui de la SOURCE quand il est plus
+grossier (« Olympus Mons (325 m, source 462 m) ») et se tait sinon (`sourcePitch` dans
+`src/seo/sourcesPage.ts`, garde dans `src/seo/docPages.test.ts`).
 La phrase qui disait « aucune aire fine ailleurs que sur la Lune, et Mars garde son imagerie sans
 relief » est SUPERSEDED le 2026-10-12 : Mars a son socle MEGR, Cérès Occator et Ahuna Mons.
 
