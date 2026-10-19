@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  decodeFieldChanges,
   decodeLayerChanges,
   decodeSceneChanges,
+  encodeFieldChanges,
   encodeLayerChanges,
   encodeSceneChanges,
 } from './viewState';
@@ -59,5 +61,25 @@ describe('écarts des couches', () => {
       { id: 'clouds', on: true },
     ]);
     expect(decodeLayerChanges(null)).toEqual([]);
+  });
+});
+
+describe('champ de petits corps (lot 61)', () => {
+  it('écrit les catégories éteintes et les relit', () => {
+    const off = [
+      { id: 'neo', on: false },
+      { id: 'comet', on: false },
+    ];
+    const text = encodeFieldChanges(off);
+    expect(text).toBe('-comet,-neo');
+    expect(decodeFieldChanges(text)).toEqual([
+      { id: 'comet', on: false },
+      { id: 'neo', on: false },
+    ]);
+  });
+
+  it('écarte un jeton invalide sans rien inventer', () => {
+    expect(decodeFieldChanges('-neo,neo2,*x,-')).toEqual([{ id: 'neo', on: false }]); // prettier-ignore
+    expect(decodeFieldChanges(null)).toEqual([]);
   });
 });

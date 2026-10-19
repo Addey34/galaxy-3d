@@ -1,0 +1,23 @@
+{
+  "$schema": "../schema/preset.schema.json",
+  "id": "earth-weather",
+  "title": {
+    "en": "Earth weather",
+    "fr": "Météo de la Terre",
+    "es": "Tiempo de la Tierra",
+    "pt-BR": "Clima da Terra"
+  },
+  "description": {
+    "en": "Clouds, precipitation and surface temperature switched on for the Earth. The rest of the scene stays as by default.",
+    "fr": "Nuages, précipitations et température de surface allumés pour la Terre. Le reste de la scène reste celui par défaut.",
+    "es": "Nubes, precipitaciones y temperatura de superficie activadas para la Tierra. El resto de la escena se queda como por defecto.",
+    "pt-BR": "Nuvens, precipitação e temperatura da superfície ligadas para a Terra. O resto da cena fica como no padrão."
+  },
+  "weather": {
+    "on": [
+      "clouds",
+      "precip",
+      "thermal"
+    ]
+  }
+}

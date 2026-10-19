@@ -26,6 +26,8 @@ type Partial3 = Partial<DisplayCells>;
 export interface DisplayPresetShape {
   kinds?: Partial<Record<BodyKind, Partial3>>;
   bodies?: Record<string, Partial3>;
+  weather?: { on?: readonly string[]; off?: readonly string[] };
+  field?: Record<string, boolean | undefined>;
 }
 
 export function resolvePresetCells(
@@ -39,4 +41,36 @@ export function resolvePresetCells(
     ...preset.kinds?.[kind],
     ...preset.bodies?.[name],
   };
+}
+
+/** Un état posé sur une case à identifiant : une couche météo ou une catégorie du champ. */
+export interface PresetToggle {
+  id: string;
+  on: boolean;
+}
+
+/**
+ * Les couches météo d'un préréglage, en états ABSOLUS (lot 61). Une couche que la fiche ne nomme
+ * pas revient à son état de démarrage : choisir « Classe » après « Météo » éteint donc ce que
+ * « Météo » avait allumé, au lieu de dépendre du préréglage d'avant. `off` l'emporte sur le
+ * démarrage, `on` aussi ; le schéma interdit qu'une couche soit dans les deux.
+ */
+export function resolvePresetWeather(
+  preset: DisplayPresetShape | undefined,
+  layers: readonly { id: string; initial: boolean }[]
+): PresetToggle[] {
+  const on = new Set(preset?.weather?.on ?? []);
+  const off = new Set(preset?.weather?.off ?? []);
+  return layers.map((layer) => ({
+    id: layer.id,
+    on: on.has(layer.id) ? true : off.has(layer.id) ? false : layer.initial,
+  }));
+}
+
+/** Les catégories du champ de petits corps : visibles, sauf celles que la fiche éteint (lot 61). */
+export function resolvePresetField(
+  preset: DisplayPresetShape | undefined,
+  categories: readonly string[]
+): PresetToggle[] {
+  return categories.map((id) => ({ id, on: preset?.field?.[id] ?? true }));
 }

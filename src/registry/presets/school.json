@@ -8,17 +8,37 @@
     "pt-BR": "Sala de aula"
   },
   "description": {
-    "en": "The Sun, the eight planets and the Moon with their orbits, and nothing else: no dwarf planets, asteroids or comets to distract from the big picture.",
-    "fr": "Le Soleil, les huit planètes et la Lune avec leurs orbites, et rien d’autre : ni planètes naines, ni astéroïdes, ni comètes pour détourner de l’essentiel.",
-    "es": "El Sol, los ocho planetas y la Luna con sus órbitas, y nada más: sin planetas enanos, asteroides ni cometas que distraigan de lo esencial.",
-    "pt-BR": "O Sol, os oito planetas e a Lua com suas órbitas, e nada mais: sem planetas anões, asteroides ou cometas para distrair do essencial."
+    "en": "The Sun, the eight planets and the Moon with their orbits, and nothing else: no dwarf planets, asteroids, comets or asteroid field to distract from the big picture.",
+    "fr": "Le Soleil, les huit planètes et la Lune avec leurs orbites, et rien d’autre : ni planètes naines, ni astéroïdes, ni comètes, ni champ d’astéroïdes pour détourner de l’essentiel.",
+    "es": "El Sol, los ocho planetas y la Luna con sus órbitas, y nada más: sin planetas enanos, asteroides, cometas ni campo de asteroides que distraigan de lo esencial.",
+    "pt-BR": "O Sol, os oito planetas e a Lua com suas órbitas, e nada mais: sem planetas anões, asteroides, cometas nem campo de asteroides para distrair do essencial."
   },
   "kinds": {
-    "dwarf": { "label": false, "object": false, "orbit": false },
-    "asteroid": { "label": false, "object": false, "orbit": false },
-    "comet": { "label": false, "object": false, "orbit": false }
+    "dwarf": {
+      "label": false,
+      "object": false,
+      "orbit": false
+    },
+    "asteroid": {
+      "label": false,
+      "object": false,
+      "orbit": false
+    },
+    "comet": {
+      "label": false,
+      "object": false,
+      "orbit": false
+    }
   },
   "bodies": {
-    "moon": { "orbit": true }
+    "moon": {
+      "orbit": true
+    }
+  },
+  "field": {
+    "main-belt": false,
+    "neo": false,
+    "comet": false,
+    "tno": false
   }
 }

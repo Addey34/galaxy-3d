@@ -198,6 +198,68 @@
         },
         "additionalProperties": false
       }
+    },
+    "weather": {
+      "type": "object",
+      "properties": {
+        "on": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "clouds",
+              "clouds-model",
+              "humidity-model",
+              "precip",
+              "precip-model",
+              "pressure-model",
+              "sea-temperature",
+              "thermal",
+              "thermal-model",
+              "wind"
+            ]
+          }
+        },
+        "off": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "clouds",
+              "clouds-model",
+              "humidity-model",
+              "precip",
+              "precip-model",
+              "pressure-model",
+              "sea-temperature",
+              "thermal",
+              "thermal-model",
+              "wind"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "field": {
+      "type": "object",
+      "properties": {
+        "main-belt": {
+          "type": "boolean"
+        },
+        "neo": {
+          "type": "boolean"
+        },
+        "comet": {
+          "type": "boolean"
+        },
+        "tno": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [

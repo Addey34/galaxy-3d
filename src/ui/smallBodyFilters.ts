@@ -18,6 +18,7 @@ import { formatIsoDay } from '@/core/dateText';
 import { t, getLocale, intlLocale, onLocaleChange } from '@/i18n';
 import { isSnapshotStale, snapshotAgeMonths } from '@/core/snapshotAge';
 import type { SmallBodyCategory } from '@/core/sbdb';
+import type { LayerChange } from '@/core/viewState';
 import {
   SMALL_BODY_MARKER_RGB,
   type SmallBodyOverlay,
@@ -36,13 +37,27 @@ export interface SmallBodyFiltersPanel {
    * chargement échoue : la section n'annonce alors AUCUNE date plutôt qu'une date fausse.
    */
   setDataset(retrieved: string | null, count: number): void;
+  /** Les catégories du champ, dans l'ordre de la section. */
+  categories(): string[];
+  /** L'état de CHAQUE catégorie (lien de partage et préréglages, lots 60 et 61). */
+  states(): LayerChange[];
+  /** Pose ces états par les cases, comme un clic. Un identifiant inconnu est ignoré. */
+  apply(changes: readonly LayerChange[]): void;
+  /** Appelé après chaque changement d'une case, clic ou `apply`. */
+  onChange(listener: () => void): void;
 }
 
 export function setupSmallBodyFilters(
   overlay: SmallBodyOverlay
 ): SmallBodyFiltersPanel {
   const panel = document.getElementById('smallbody-filters');
-  const noop = { setDataset: () => {} };
+  const noop: SmallBodyFiltersPanel = {
+    setDataset: () => {},
+    categories: () => [],
+    states: () => [],
+    apply: () => {},
+    onChange: () => {},
+  };
   if (!panel) return noop;
   const bodyEl = panel.querySelector<HTMLElement>('.oo-body');
   if (!bodyEl) return noop;
@@ -51,6 +66,7 @@ export function setupSmallBodyFilters(
   const state = new Set<SmallBodyCategory>(CATEGORIES.map((c) => c.id));
   const applyState = (): void => overlay.setVisibleCategories(new Set(state));
   applyState();
+  const changeListeners: (() => void)[] = [];
 
   function buildRows(): void {
     bodyEl!.replaceChildren();
@@ -70,11 +86,13 @@ export function setupSmallBodyFilters(
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.className = 'oo-checkbox';
+      checkbox.dataset.category = cat.id;
       checkbox.checked = state.has(cat.id);
       checkbox.addEventListener('change', () => {
         if (checkbox.checked) state.add(cat.id);
         else state.delete(cat.id);
         applyState();
+        for (const listener of changeListeners) listener();
       });
 
       row.append(dot, nameEl, checkbox);
@@ -122,6 +140,22 @@ export function setupSmallBodyFilters(
     setDataset: (retrieved: string | null, count: number) => {
       dataset = { retrieved, count };
       renderNote();
+    },
+    categories: () => CATEGORIES.map((c) => c.id),
+    states: () => CATEGORIES.map((c) => ({ id: c.id, on: state.has(c.id) })),
+    apply: (changes) => {
+      for (const change of changes) {
+        const cat = CATEGORIES.find((c) => c.id === change.id);
+        if (!cat) continue;
+        if (change.on) state.add(cat.id);
+        else state.delete(cat.id);
+      }
+      applyState();
+      buildRows();
+      for (const listener of changeListeners) listener();
+    },
+    onChange: (listener) => {
+      changeListeners.push(listener);
     },
   };
 }

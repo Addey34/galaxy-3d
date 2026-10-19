@@ -1,8 +1,10 @@
 import { eclipseFromPathname } from './eclipsePages';
 import { splitLocalePath, withLocalePrefix } from './localePath';
 import {
+  decodeFieldChanges,
   decodeLayerChanges,
   decodeSceneChanges,
+  encodeFieldChanges,
   encodeLayerChanges,
   encodeSceneChanges,
   type LayerChange,
@@ -57,6 +59,8 @@ export interface PermalinkState {
   scene?: SceneChange[];
   /** L'état de chaque couche météo au moment du partage, absolu (lot 60). Même statut que `scene`. */
   layers?: LayerChange[];
+  /** Les catégories du champ de petits corps ÉTEINTES (lot 61) ; le champ démarre entier. */
+  field?: LayerChange[];
 }
 
 // `place` y figure pour être EFFACÉ à la réécriture : c'est une ouverture (lot 55), et l'adresse qui
@@ -73,6 +77,7 @@ const PERMALINK_KEYS = [
   'preset',
   'scene',
   'layers',
+  'field',
 ] as const;
 
 /**
@@ -220,6 +225,7 @@ export function parsePermalink(
     preset: parseTour(params.get('preset')),
     scene: nonEmpty(decodeSceneChanges(params.get('scene'))),
     layers: nonEmpty(decodeLayerChanges(params.get('layers'))),
+    field: nonEmpty(decodeFieldChanges(params.get('field'))),
   };
 }
 
@@ -308,6 +314,8 @@ export function serializePermalink(
     params.set('scene', encodeSceneChanges(state.scene));
   if (state.layers && state.layers.length > 0)
     params.set('layers', encodeLayerChanges(state.layers));
+  if (state.field && state.field.length > 0)
+    params.set('field', encodeFieldChanges(state.field));
 
   const query = params.toString();
   return query ? `?${query}` : '';

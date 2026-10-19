@@ -10,10 +10,16 @@ import { BODY_GROUPS } from './bodyGroups';
 import { defaultDisplay } from './defaultDisplay';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
+import type { WeatherLayersApi } from './weatherLayers';
+import type { SmallBodyFiltersPanel } from './smallBodyFilters';
 import { syncSurfaceFocus } from './surfaceFocus';
 import { PRESETS } from '@/registry/presets';
 import type { SceneChange } from '@/core/viewState';
-import { resolvePresetCells } from '@/core/displayPreset';
+import {
+  resolvePresetCells,
+  resolvePresetField,
+  resolvePresetWeather,
+} from '@/core/displayPreset';
 
 /** Les trois colonnes du tableau, dans l'ordre de l'en-tête. */
 type Column = 'label' | 'object' | 'orbit';
@@ -93,6 +99,16 @@ export interface SceneTableHandle {
   apply(changes: readonly SceneChange[]): void;
 }
 
+/**
+ * Ce qu'un préréglage pilote HORS du tableau (lot 61) : les couches météo de la Terre et les
+ * catégories du champ de petits corps. Deux panneaux qui vivent dans leur module ; le sélecteur
+ * ne les connaît que par ces deux faces étroites.
+ */
+export interface PresetCompanions {
+  weather: Pick<WeatherLayersApi, 'list' | 'apply' | 'onChange'>;
+  field: Pick<SmallBodyFiltersPanel, 'categories' | 'apply' | 'onChange'>;
+}
+
 const NO_TABLE: SceneTableHandle = { changes: () => [], apply: () => {} };
 
 export function setupOrbitOptions(
@@ -101,7 +117,8 @@ export function setupOrbitOptions(
   instrument: readonly InstrumentVisibility[] = [],
   coordinator?: OverlayCoordinator,
   /** Préréglage demandé par l'adresse (`?preset=`), appliqué une fois le tableau construit. */
-  initialPreset?: string
+  initialPreset?: string,
+  companions?: PresetCompanions
 ): SceneTableHandle {
   const panel = document.getElementById('orbit-options');
   if (!panel) return NO_TABLE;
@@ -271,9 +288,24 @@ export function setupOrbitOptions(
     }
   }
 
+  // Une couche météo ou une catégorie du champ touchée à la main : plus un préréglage. Poser un
+  // préréglage clique aussi ces cases, mais `applyPreset` finit par `setPresetChoice(id)`, qui
+  // reprend la main sur ces appels.
+  const touchedByHand = (): void => setPresetChoice(CUSTOM);
+  companions?.weather.onChange(touchedByHand);
+  companions?.field.onChange(touchedByHand);
+
   /** Pose les cases du préréglage (ou de la règle de départ) sur chaque ligne, puis l'applique. */
   function applyPreset(id: string): void {
     const preset = PRESETS.find((p) => p.id === id);
+    if (companions) {
+      companions.weather.apply(
+        resolvePresetWeather(preset, companions.weather.list())
+      );
+      companions.field.apply(
+        resolvePresetField(preset, companions.field.categories())
+      );
+    }
     for (const row of rows) {
       const base = defaultDisplay(row.name, row.cfg.kind);
       const cells = preset

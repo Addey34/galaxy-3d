@@ -1,7 +1,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PRESET_KINDS, presetJsonSchemaText, presetSchema } from './preset';
+import {
+  PRESET_FIELD_CATEGORIES,
+  PRESET_KINDS,
+  presetJsonSchemaText,
+  presetSchema,
+} from './preset';
+import type { SmallBodyCategory } from '@/core/sbdb';
 import { PRESET_ORDER, PRESET_RECORDS, loadPresets } from '../presets';
 import { BODY_GROUPS } from '@/ui/bodyGroups';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
@@ -76,5 +82,41 @@ describe('fiches de préréglage', () => {
     expect(() =>
       loadPresets(PRESET_RECORDS, [...PRESET_ORDER, 'ghost'])
     ).toThrow();
+  });
+});
+
+describe('météo et champ de petits corps (lot 61)', () => {
+  const base = JSON.parse(
+    readFileSync(join(PRESETS, 'moons.json'), 'utf-8')
+  ) as Record<string, unknown>;
+  const withBlock = (extra: Record<string, unknown>) =>
+    presetSchema.safeParse({ ...base, ...extra }).success;
+
+  it('accepte une fiche qui ne règle que la météo ou que le champ', () => {
+    const bare = { ...base, kinds: undefined, bodies: undefined };
+    expect(presetSchema.safeParse({ ...bare, weather: { on: ['clouds'] } }).success).toBe(true); // prettier-ignore
+    expect(presetSchema.safeParse({ ...bare, field: { neo: false } }).success).toBe(true); // prettier-ignore
+  });
+
+  it('refuse une couche inconnue, une couche des deux côtés et un bloc vide', () => {
+    expect(withBlock({ weather: { on: ['aurora'] } })).toBe(false);
+    expect(withBlock({ weather: { on: ['wind'], off: ['wind'] } })).toBe(false);
+    expect(withBlock({ weather: {} })).toBe(false);
+    expect(withBlock({ field: {} })).toBe(false);
+    expect(withBlock({ field: { asteroids: false } })).toBe(false);
+  });
+
+  it('nomme les quatre catégories du champ de SmallBodyCategory', () => {
+    const categories: SmallBodyCategory[] = [...PRESET_FIELD_CATEGORIES];
+    expect(categories).toHaveLength(4);
+    const all: Record<SmallBodyCategory, true> = {
+      'main-belt': true,
+      neo: true,
+      comet: true,
+      tno: true,
+    };
+    expect([...PRESET_FIELD_CATEGORIES].sort()).toEqual(
+      Object.keys(all).sort()
+    );
   });
 });

@@ -85,3 +85,89 @@ test('un préréglage inconnu ne change rien', async ({ page }) => {
   await openSettings(page);
   await expect(page.locator('#oo-preset-select')).toHaveValue('default');
 });
+
+// ─── Pas 3 (lot 61) : la météo et le champ de petits corps ─────────────────────────────────
+
+async function weatherChecked(page: import('@playwright/test').Page) {
+  return page.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll<HTMLInputElement>('[data-layer]')].map(
+        (box) => [box.dataset.layer, box.checked]
+      )
+    )
+  );
+}
+
+async function fieldChecked(page: import('@playwright/test').Page) {
+  return page.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll<HTMLInputElement>('[data-category]')].map(
+        (box) => [box.dataset.category, box.checked]
+      )
+    )
+  );
+}
+
+test('les couches et catégories que les fiches nomment sont celles du panneau', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  const { PRESET_WEATHER_LAYERS, PRESET_FIELD_CATEGORIES } =
+    await import('../src/registry/schema/preset');
+  expect(Object.keys(await weatherChecked(page)).sort()).toEqual(
+    [...PRESET_WEATHER_LAYERS].sort()
+  );
+  expect(Object.keys(await fieldChecked(page)).sort()).toEqual(
+    [...PRESET_FIELD_CATEGORIES].sort()
+  );
+});
+
+test('Classe éteint le champ de petits corps, Par défaut le rend', async ({
+  page,
+}) => {
+  await page.goto('/?preset=school');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  expect(Object.values(await fieldChecked(page)).some(Boolean)).toBe(false);
+  await openSettings(page);
+  await expect(page.locator('#oo-preset-select')).toHaveValue('school');
+
+  await page.locator('#oo-preset-select').selectOption('default');
+  expect(Object.values(await fieldChecked(page)).every(Boolean)).toBe(true);
+});
+
+test('Météo de la Terre allume ses couches, et le préréglage suivant les remet au démarrage', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  const start = await weatherChecked(page);
+  await openSettings(page);
+  const select = page.locator('#oo-preset-select');
+
+  await select.selectOption('earth-weather');
+  const lit = await weatherChecked(page);
+  expect(lit.clouds && lit.precip && lit.thermal).toBe(true);
+  // Appliquer un préréglage clique des cases : ce n'est pas une main qui les touche.
+  await expect(select).toHaveValue('earth-weather');
+
+  await select.selectOption('clean');
+  expect(await weatherChecked(page)).toEqual(start);
+});
+
+test('toucher une couche météo ramène à « Personnalisé »', async ({ page }) => {
+  await page.goto('/?preset=earth-weather');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  await openSettings(page);
+  const select = page.locator('#oo-preset-select');
+  await expect(select).toHaveValue('earth-weather');
+
+  await page.evaluate(() => {
+    const box = document.querySelector<HTMLInputElement>(
+      '[data-layer="wind"]'
+    )!;
+    box.checked = !box.checked;
+    box.dispatchEvent(new Event('change'));
+  });
+  await expect(select).toHaveValue('custom');
+});
