@@ -11,9 +11,12 @@ import * as THREE from 'three';
 import { iauLongitudeToSceneLongitude } from '@/core/gazetteer';
 import { altitudeToFrame, diveDistance } from '@/core/placeDive';
 import { viewAnglesFromDirection } from '@/core/viewAngles';
+import { t } from '@/i18n';
+import { bodyDisplayName } from '@/i18n/bodyText';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
+import { getAnnouncer } from './announcer';
 import type { DrawnPlace } from './gazetteerOverlay';
 
 /** Durée du vol de la dernière approche, en ms (nulle sous `prefers-reduced-motion`). */
@@ -73,6 +76,15 @@ export function setupPlaceDive(
     if (!(distance > 0)) return false;
 
     cancel();
+    // Les noms sont sur un canevas : sans cette annonce, la plongée serait muette pour un
+    // lecteur d'écran, qui n'a de toute façon aucun moyen de cliquer un nom.
+    getAnnouncer().announce(
+      t('a11y.placeDive', {
+        place: place.name,
+        body: bodyDisplayName(place.body),
+      }),
+      'place-dive'
+    );
     const publish = (): void => {
       canvas.dataset['placeDive'] = `${place.name}|${distance.toFixed(4)}`;
     };

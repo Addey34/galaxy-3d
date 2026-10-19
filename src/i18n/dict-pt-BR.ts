@@ -66,6 +66,7 @@ export const ptBR: Record<MessageKey, string> = {
   'a11y.searchResults': '{count} resultados correspondem.',
   'a11y.searchResultsOne': 'Um resultado corresponde.',
   'a11y.searchResultsNone': 'Nenhum resultado corresponde.',
+  'a11y.placeDive': 'Mergulhando em {place}, {body}.',
   'a11y.paletteResults': 'Resultados da busca',
   'a11y.tourPlayer': 'Visita guiada em andamento',
   'error.title': 'Erro do aplicativo',
