@@ -592,12 +592,14 @@ function wireChrome(): {
       [spacecraftOverlay, interstellarOverlay],
       overlayCoordinator,
       // `?preset=` (lot 59) : lu ici, avant que `setupPermalinks` réécrive l'adresse et l'efface.
-      requestedPreset
+      requestedPreset,
+      { weather: weatherPanel, field: smallBodyFilters }
     );
     // Un lien partagé (lot 60) porte aussi ce que le tableau et les couches montraient : posé APRÈS
     // le préréglage, qui est une base, et avant la première image.
     if (requested.scene) sceneTable.apply(requested.scene);
     if (requested.layers) weatherPanel.apply(requested.layers);
+    if (requested.field) smallBodyFilters.apply(requested.field);
 
     // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
     // pour la cible suivie ; en Éducatif ou en vue libre on passe `null` → bloc masqué.
@@ -783,6 +785,7 @@ function wireChrome(): {
     setupShare(cameraSystem, permalink, () => ({
       scene: sceneTable.changes(),
       layers: weatherPanel.states(),
+      field: smallBodyFilters.states().filter((c) => !c.on),
     }));
     setupCapture(cameraSystem, orbitalMechanics, planetNav);
     setupAstronomicalEvents(orbitalMechanics, {

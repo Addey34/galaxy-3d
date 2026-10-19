@@ -10,6 +10,7 @@
  * préréglage : un lien reste court, et un corps ajouté au catalogue demain garde son défaut.
  *   scene = « l-venus,b+io,o+europa »   (colonne : l étiquette, b objet, o orbite ; + allumé, - éteint)
  *   layers = « +precip,-clouds »        (l'état de chaque couche météo, absolu)
+ *   field  = « -neo,-comet »            (les catégories du champ de petits corps ÉTEINTES, lot 61)
  */
 
 type SceneColumn = 'label' | 'object' | 'orbit';
@@ -84,3 +85,11 @@ export function decodeLayerChanges(value: string | null): LayerChange[] {
   }
   return out;
 }
+
+/**
+ * Le champ de petits corps démarre ENTIER sur tous les appareils : on n'écrit donc que ce qui
+ * est éteint (`-neo,-comet`), un lien reste court, et un état allumé n'a rien à dire. Même forme
+ * de jeton que les couches, donc même lecture (`+` accepté et lu comme allumé).
+ */
+export const encodeFieldChanges = encodeLayerChanges;
+export const decodeFieldChanges = decodeLayerChanges;

@@ -50,6 +50,73 @@ export const PRESET_KINDS = [
   'interstellar',
 ] as const;
 
+/**
+ * Les couches météo que le panneau de la Terre propose, recopiées pour la même raison que
+ * `PRESET_KINDS` : un schéma de registre n'importe pas un module d'interface.
+ * `e2e/displayPresets.spec.ts` les confronte aux cases du panneau.
+ */
+export const PRESET_WEATHER_LAYERS = [
+  'clouds',
+  'clouds-model',
+  'humidity-model',
+  'precip',
+  'precip-model',
+  'pressure-model',
+  'sea-temperature',
+  'thermal',
+  'thermal-model',
+  'wind',
+] as const;
+
+/** Les quatre catégories du champ d'astéroïdes et de comètes (`SmallBodyCategory`). */
+export const PRESET_FIELD_CATEGORIES = [
+  'main-belt',
+  'neo',
+  'comet',
+  'tno',
+] as const;
+
+const weatherLayer = z.enum(PRESET_WEATHER_LAYERS);
+
+/**
+ * Les couches météo qu'un préréglage allume ou éteint. Toute couche non nommée revient à son état
+ * de DÉMARRAGE (les nuages sont allumés sur ordinateur et éteints sur mobile), comme une case du
+ * tableau revient à la règle de départ : choisir un préréglage ne dépend pas de celui d'avant.
+ */
+const weather = z
+  .object({
+    on: z.array(weatherLayer).min(1).optional(),
+    off: z.array(weatherLayer).min(1).optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'un écart vide ne change rien : le retirer',
+  })
+  .refine(
+    (value) => !(value.on ?? []).some((id) => (value.off ?? []).includes(id)),
+    {
+      message: 'une couche ne peut pas être à la fois allumée et éteinte',
+    }
+  );
+
+/** Le champ de petits corps, par catégorie ; une catégorie non nommée reste visible. */
+const field = z
+  .object(
+    Object.fromEntries(
+      PRESET_FIELD_CATEGORIES.map((category) => [
+        category,
+        z.boolean().optional(),
+      ])
+    ) as Record<
+      (typeof PRESET_FIELD_CATEGORIES)[number],
+      z.ZodOptional<z.ZodBoolean>
+    >
+  )
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'un écart vide ne change rien : le retirer',
+  });
+
 const kindsShape = Object.fromEntries(
   PRESET_KINDS.map((kind) => [kind, columns.optional()])
 ) as Record<(typeof PRESET_KINDS)[number], z.ZodOptional<typeof columns>>;
@@ -64,12 +131,18 @@ export const presetSchema = z
     kinds: z.object(kindsShape).strict().optional(),
     /** Écarts par objet, sous le nom exact du catalogue (« Io », « Voyager 1 »). */
     bodies: z.record(z.string().min(1), columns).optional(),
+    /** Couches météo de la Terre (lot 61). */
+    weather: weather.optional(),
+    /** Catégories du champ d'astéroïdes et de comètes (lot 61). */
+    field: field.optional(),
   })
   .strict()
   .superRefine((record, ctx) => {
     if (
       Object.keys(record.kinds ?? {}).length === 0 &&
-      Object.keys(record.bodies ?? {}).length === 0
+      Object.keys(record.bodies ?? {}).length === 0 &&
+      record.weather === undefined &&
+      record.field === undefined
     )
       ctx.addIssue({
         code: 'custom',

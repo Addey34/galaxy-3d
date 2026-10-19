@@ -8,16 +8,37 @@
     "pt-BR": "Vista limpa"
   },
   "description": {
-    "en": "The bodies alone: no names and no orbit lines, for a screenshot or a plain look at the scene.",
-    "fr": "Les corps seuls : ni noms ni lignes d’orbite, pour une capture ou un simple regard sur la scène.",
-    "es": "Solo los cuerpos: sin nombres ni líneas de órbita, para una captura o una mirada limpia a la escena.",
-    "pt-BR": "Só os corpos: sem nomes nem linhas de órbita, para uma captura ou um olhar limpo sobre a cena."
+    "en": "The bodies alone: no names, no orbit lines and no asteroid or comet field, for a screenshot or a plain look at the scene.",
+    "fr": "Les corps seuls : ni noms, ni lignes d’orbite, ni champ d’astéroïdes et de comètes, pour une capture ou un simple regard sur la scène.",
+    "es": "Solo los cuerpos: sin nombres, sin líneas de órbita y sin campo de asteroides y cometas, para una captura o una mirada limpia a la escena.",
+    "pt-BR": "Só os corpos: sem nomes, sem linhas de órbita e sem campo de asteroides e cometas, para uma captura ou um olhar limpo sobre a cena."
   },
   "kinds": {
-    "planet": { "label": false, "orbit": false },
-    "moon": { "label": false, "orbit": false },
-    "dwarf": { "label": false, "orbit": false },
-    "asteroid": { "label": false, "orbit": false },
-    "comet": { "label": false, "orbit": false }
+    "planet": {
+      "label": false,
+      "orbit": false
+    },
+    "moon": {
+      "label": false,
+      "orbit": false
+    },
+    "dwarf": {
+      "label": false,
+      "orbit": false
+    },
+    "asteroid": {
+      "label": false,
+      "orbit": false
+    },
+    "comet": {
+      "label": false,
+      "orbit": false
+    }
+  },
+  "field": {
+    "main-belt": false,
+    "neo": false,
+    "comet": false,
+    "tno": false
   }
 }

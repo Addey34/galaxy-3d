@@ -28,6 +28,7 @@ const MS_PER_DAY = 86_400_000;
 export interface PermalinkSharedState {
   scene?: SceneChange[];
   layers?: LayerChange[];
+  field?: LayerChange[];
 }
 
 export interface PermalinkController {
@@ -133,6 +134,7 @@ export function setupPermalinks(
         view,
         scene: extra?.scene,
         layers: extra?.layers,
+        field: extra?.field,
       },
       window.location.search,
       nextPathname

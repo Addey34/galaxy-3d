@@ -33,7 +33,7 @@ export interface WeatherLayersDeps {
 /** Ce que le panneau prête au reste de l'application : la recherche typée (lot 47) s'en sert. */
 export interface WeatherLayersApi {
   /** Les couches, dans l'ordre du panneau, avec la clé de leur libellé. */
-  list(): { id: string; labelKey: string }[];
+  list(): { id: string; labelKey: string; initial: boolean }[];
   /**
    * Active une couche PAR SA CASE, comme un clic (exclusivité, légende, badge suivent le même
    * chemin), puis ouvre le panneau pour qu'on voie ce qui a été activé.
@@ -51,6 +51,11 @@ export interface WeatherLayersApi {
    * couche allumée ne dépende pas de l'ordre. Un identifiant inconnu est ignoré.
    */
   apply(changes: readonly LayerChange[]): void;
+  /**
+   * Appelé après chaque changement d'une case, que ce soit un clic ou `apply`. Les préréglages
+   * (lot 61) s'en servent pour cesser de se dire actifs dès qu'une couche est touchée à la main.
+   */
+  onChange(listener: () => void): void;
 }
 
 const NO_WEATHER: WeatherLayersApi = {
@@ -58,6 +63,7 @@ const NO_WEATHER: WeatherLayersApi = {
   show: () => {},
   states: () => [],
   apply: () => {},
+  onChange: () => {},
 };
 
 export function setupWeatherLayers(
@@ -108,6 +114,7 @@ export function setupWeatherLayers(
     string,
     { checkbox: HTMLInputElement; loading: HTMLElement }
   >();
+  const changeListeners: (() => void)[] = [];
 
   // Une case n'est verrouillée que si sa couche est ACTIVE et charge : le verrou évite le
   // second clic qui couperait une activation en cours. Une couche coupée continue de charger
@@ -196,6 +203,7 @@ export function setupWeatherLayers(
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.className = 'oo-checkbox settings-checkbox';
+      checkbox.dataset.layer = layer.id;
       checkbox.checked = state.get(layer.id) ?? layer.initial;
 
       const nameEl = document.createElement('span');
@@ -274,6 +282,7 @@ export function setupWeatherLayers(
         if (layer.id === 'thermal') applyThermalInteraction();
         syncDetail();
         syncLoading(layer.id);
+        for (const listener of changeListeners) listener();
       });
       syncDetail();
       syncLoading(layer.id);
@@ -314,7 +323,8 @@ export function setupWeatherLayers(
   setOpen(false);
 
   return {
-    list: () => layers.map(({ id, labelKey }) => ({ id, labelKey })),
+    list: () =>
+      layers.map(({ id, labelKey, initial }) => ({ id, labelKey, initial })),
     show: (id) => {
       const control = controls.get(id);
       if (!control) return;
@@ -335,6 +345,9 @@ export function setupWeatherLayers(
           control.checkbox.checked = on;
           control.checkbox.dispatchEvent(new Event('change'));
         }
+    },
+    onChange: (listener) => {
+      changeListeners.push(listener);
     },
   };
 }

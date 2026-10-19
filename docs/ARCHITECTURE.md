@@ -7107,9 +7107,43 @@ l'anglais dans le bundle puis réhydraté par langue.
   l'adresse soit réécrite, jamais réécrite ensuite (`PERMALINK_KEYS` l'efface). Le tableau ne
   persiste rien entre les visites, et le préréglage non plus ; un identifiant inconnu ne change
   rien. Toucher une case après un préréglage affiche « Personnalisé » dans le sélecteur.
-- **Hors périmètre, délibérément** (choix de l'utilisateur, 2026-10-19) : les couches (météo de la
-  Terre, champ d'astéroïdes et de comètes), le mode et l'échelle. Un préréglage « météo » demanderait
-  de piloter `weatherLayers.ts` et ses groupes exclusifs ; il serait un lot à part.
+- **Hors périmètre au lot 59** (choix de l'utilisateur, 2026-10-19) : les couches (météo de la
+  Terre, champ d'astéroïdes et de comètes), le mode et l'échelle. **Les couches sont SUPERSEDED
+  par le lot 61 (ci-dessous) ; le mode et l'échelle restent hors périmètre.**
+
+## Un préréglage règle aussi la météo et le champ de petits corps (lot 61, 2026-10-19)
+
+Le lot 59 s'arrêtait au tableau « Dans la scène ». Une fiche de préréglage peut maintenant porter
+deux blocs de plus, au même schéma (`registry/schema/preset.ts`, seul propriétaire) :
+
+- **`weather`** : `{ "on": [...], "off": [...] }`, des identifiants de couche météo
+  (`PRESET_WEATHER_LAYERS`). **Toute couche non nommée revient à son état de DÉMARRAGE**
+  (`WeatherLayerHandle.initial`, qui diffère entre ordinateur et mobile) : choisir un préréglage ne
+  dépend pas de celui d'avant, comme une case du tableau revient à la règle. Le schéma refuse une
+  couche à la fois allumée et éteinte.
+- **`field`** : `{ "neo": false, ... }` sur les quatre catégories du champ
+  (`PRESET_FIELD_CATEGORIES`, celles de `SmallBodyCategory`). Une catégorie non nommée reste visible.
+  « Classe » et « Vue épurée » l'éteignent en entier.
+- **Résolution pure** : `core/displayPreset.ts::resolvePresetWeather` et `resolvePresetField` rendent
+  des états ABSOLUS, appliqués par `WeatherLayersApi.apply` et `SmallBodyFiltersPanel.apply`, donc par
+  les cases comme un clic (exclusivité des couches incluse). Le sélecteur (`ui/orbitOptions.ts`) ne
+  les connaît que par une face étroite, `PresetCompanions`. « Par défaut » remet donc aussi la météo
+  et le champ à leur démarrage.
+- **« Personnalisé »** : une couche ou une catégorie touchée à la main (`onChange` des deux panneaux)
+  y ramène le sélecteur, comme une case du tableau. Poser un préréglage clique ces mêmes cases, mais
+  `applyPreset` finit par `setPresetChoice(id)`, qui reprend la main.
+- **Le lien partagé suit** : `field=` s'écrit ; contrairement à `layers`, il n'écrit que les catégories
+  ÉTEINTES (`-comet,-neo`), parce que le champ démarre entier partout et qu'un lien sans écart reste
+  sans paramètre. Même forme de jeton que les couches (`core/viewState.ts`), lu une fois puis oublié
+  par l'adresse (`PERMALINK_KEYS`).
+- **Nouvelle fiche** : « Météo de la Terre » (`earth-weather` : nuages, précipitations, température).
+- **Gardes** : `e2e/displayPresets.spec.ts` confronte les identifiants des fiches aux cases du panneau
+  (`data-layer`, `data-category`) et observe l'effet des préréglages, le retour au démarrage et
+  « Personnalisé » (falsifié en retirant l'écoute des couches) ; `e2e/sharedViewState.spec.ts` le
+  champ dans le lien ; `displayPreset.test.ts` la résolution.
+- **Reste hors périmètre** : le mode (Educ ou Explo) et l'échelle. Les visites restaurent le mode
+  qu'elles ont trouvé en partant (`tourPlayer.finish()`), donc un préréglage qui l'imposerait devrait
+  d'abord dire comment il s'articule avec elles.
 
 ## Un lien partagé redonne la même image (lot 60, 2026-10-19)
 
@@ -7137,7 +7171,7 @@ partagé à `PermalinkController.sync`), et l'ouverture du lien les rejoue.
 - **Ce que le lien NE porte PAS, délibérément** : la langue (un lien n'a pas à imposer la sienne ;
   le chemin `/fr/` le fait déjà quand c'est voulu), la vitesse du temps, les réglages de rendu
   (qualité, exposition, daltonien, unités, qui sont des préférences de l'appareil), et le champ
-  d'astéroïdes. Et surtout : le lien redonne la même image AVEC L'APPLICATION ET LES DONNÉES
+  d'astéroïdes (SUPERSEDED au lot 61, qui l'écrit en `field`). Et surtout : le lien redonne la même image AVEC L'APPLICATION ET LES DONNÉES
   D'AUJOURD'HUI. Il ne fige ni la version du code ni les sources (choix de l'utilisateur,
   2026-10-19 : le lien complet, sans builds archivés ni fiche de provenance).
 - **Gardes** : `core/viewState.test.ts` (aller-retour, ordre stable, jetons invalides, plafond),

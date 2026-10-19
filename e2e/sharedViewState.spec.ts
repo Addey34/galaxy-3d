@@ -94,3 +94,52 @@ test('un écart ou une couche inconnus ne cassent rien', async ({ page }) => {
   await clickWhenCalm(page, page.locator('#settings-trigger'));
   await expect(page.locator('#orbit-options')).toBeVisible();
 });
+
+test('le champ de petits corps éteint voyage dans le lien, et rien quand il est entier', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  await page.locator('#share-btn').click();
+  let shared = new URL(
+    await page.evaluate(() => navigator.clipboard.readText())
+  );
+  expect(shared.searchParams.has('field')).toBe(false);
+
+  await page.evaluate(() => {
+    for (const id of ['neo', 'comet']) {
+      const box = document.querySelector<HTMLInputElement>(
+        `[data-category="${id}"]`
+      )!;
+      box.checked = false;
+      box.dispatchEvent(new Event('change'));
+    }
+  });
+  await page.locator('#share-btn').click();
+  shared = new URL(await page.evaluate(() => navigator.clipboard.readText()));
+  expect(shared.searchParams.get('field')).toBe('-comet,-neo');
+
+  const fresh = await page.context().newPage();
+  await blockExternalNetwork(fresh);
+  await fresh.addInitScript(() => {
+    localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
+    localStorage.setItem('ssv-locale', 'en');
+  });
+  await fresh.goto(shared.pathname + shared.search);
+  await expect(fresh.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  const state = await fresh.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll<HTMLInputElement>('[data-category]')].map(
+        (box) => [box.dataset.category, box.checked]
+      )
+    )
+  );
+  expect(state).toEqual({
+    'main-belt': true,
+    neo: false,
+    comet: false,
+    tno: true,
+  });
+  expect(fresh.url()).not.toContain('field=');
+});
