@@ -1500,9 +1500,27 @@ button {
 }
 .settings-switch-label {
   flex: 1;
+  min-width: 0;
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--ink);
+}
+/* Un choix dans une liste (fond de la Terre, année du rideau) : sa largeur propre est celle de son
+   option la plus longue, et un élément de flex ne rétrécit pas sous elle (`min-width: auto`). Sans
+   borne le panneau défilait de 79 à 103 px en largeur à 390 px. La ligne passe à la ligne : la liste
+   garde sa place à côté du libellé quand elle y tient, et prend sa propre ligne sinon, ce qui
+   laisse lire l'option choisie en entier plutôt que de la couper. */
+.settings-switch:has(> select) {
+  flex-wrap: wrap;
+}
+.settings-switch:has(> select) > .settings-switch-label {
+  flex: 0 1 auto;
+}
+.settings-switch > select {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
 }
 .wl-loading {
   flex: 0 0 auto;
