@@ -11,7 +11,7 @@
 import { t } from '@/i18n';
 import Logger from '@/utils/Logger';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
-import type { PermalinkController } from './permalink';
+import type { PermalinkController, PermalinkSharedState } from './permalink';
 
 const btn = document.getElementById('share-btn');
 
@@ -62,7 +62,9 @@ async function copyToClipboard(url: string): Promise<boolean> {
 
 export function setupShare(
   camera: CameraSystem,
-  permalink: PermalinkController
+  permalink: PermalinkController,
+  /** Ce que le lien porte en plus de la caméra : tableau de scène et couches actives (lot 60). */
+  sharedState: () => PermalinkSharedState = () => ({})
 ): void {
   if (!btn) return;
 
@@ -71,7 +73,7 @@ export function setupShare(
     // explicite, un partage pendant un vol caméra ou après un simple drag manquerait le
     // cadrage réellement regardé (le permalien de base ne suit que corps/date/mode).
     const view = camera.getViewAngles();
-    if (view) permalink.sync(view);
+    permalink.sync(view ?? undefined, sharedState());
 
     const url = window.location.href;
     const title = document.title;

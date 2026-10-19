@@ -7110,3 +7110,36 @@ l'anglais dans le bundle puis réhydraté par langue.
 - **Hors périmètre, délibérément** (choix de l'utilisateur, 2026-10-19) : les couches (météo de la
   Terre, champ d'astéroïdes et de comètes), le mode et l'échelle. Un préréglage « météo » demanderait
   de piloter `weatherLayers.ts` et ses groupes exclusifs ; il serait un lot à part.
+
+## Un lien partagé redonne la même image (lot 60, 2026-10-19)
+
+Le permalien portait le corps, la date, le mode et, sur demande, la caméra. Il ne portait pas ce
+qui change l'IMAGE : qui est nommé, dessiné, tracé dans le tableau « Dans la scène », et quelles
+couches météo sont allumées. Le bouton Partager les écrit désormais (`ui/share.ts` passe un état
+partagé à `PermalinkController.sync`), et l'ouverture du lien les rejoue.
+
+- **`scene`** : les cases du tableau qui diffèrent de la règle de départ, en écarts
+  (`l-venus,b+io,o+europa` : colonne l étiquette, b objet, o orbite ; + allumé, - éteint). En
+  écarts, parce que cette règle ne dépend pas de l'appareil, qu'un lien reste court et qu'un
+  corps ajouté demain garde son défaut. Absent tant que rien n'a changé.
+- **`layers`** : l'état ABSOLU de chaque couche (`+clouds,-precip,…`), et non un écart au
+  démarrage : les nuages sont allumés sur ordinateur et éteints sur mobile
+  (`WeatherLayerHandle.initial`), donc un écart ne redonnerait pas la même image d'un appareil à
+  l'autre.
+- **Codec pur** : `core/viewState.ts` (jetons validés un à un, jeton invalide écarté sans rien
+  inventer, valeur de plus de 4 000 caractères ignorée). Application : `SceneTableHandle.apply`
+  (`ui/orbitOptions.ts`, nom ou colonne inconnus ignorés, sélecteur de préréglage sur
+  « Personnalisé ») et `WeatherLayersApi.apply` (par les cases, extinctions d'abord, sans ouvrir
+  le panneau).
+- **Une ouverture, pas un état** : comme `?tour=` et `?preset=`, ces deux paramètres sont lus une
+  fois et l'adresse qui suit les oublie (`PERMALINK_KEYS`). Le préréglage s'applique d'abord (c'est
+  une base), l'état partagé par-dessus.
+- **Ce que le lien NE porte PAS, délibérément** : la langue (un lien n'a pas à imposer la sienne ;
+  le chemin `/fr/` le fait déjà quand c'est voulu), la vitesse du temps, les réglages de rendu
+  (qualité, exposition, daltonien, unités, qui sont des préférences de l'appareil), et le champ
+  d'astéroïdes. Et surtout : le lien redonne la même image AVEC L'APPLICATION ET LES DONNÉES
+  D'AUJOURD'HUI. Il ne fige ni la version du code ni les sources (choix de l'utilisateur,
+  2026-10-19 : le lien complet, sans builds archivés ni fiche de provenance).
+- **Gardes** : `core/viewState.test.ts` (aller-retour, ordre stable, jetons invalides, plafond),
+  `e2e/sharedViewState.spec.ts` (le bouton écrit les écarts, le lien les rallume, un jeton inconnu
+  ne casse rien ; falsifié en retirant l'application du tableau).

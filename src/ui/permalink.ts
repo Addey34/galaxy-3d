@@ -1,3 +1,4 @@
+import type { LayerChange, SceneChange } from '@/core/viewState';
 import { splitLocalePath, withLocalePrefix } from '@/core/localePath';
 import { getLocale, onLocaleChange } from '@/i18n';
 import { LOCALE_PATH } from '@/i18n/locales';
@@ -23,6 +24,12 @@ import type { PlaybackControls } from './playback';
 
 const MS_PER_DAY = 86_400_000;
 
+/** Ce que le bouton Partager ajoute à l'adresse en plus de la caméra (lot 60). */
+export interface PermalinkSharedState {
+  scene?: SceneChange[];
+  layers?: LayerChange[];
+}
+
 export interface PermalinkController {
   applyInitialState(): void;
   /**
@@ -32,7 +39,7 @@ export interface PermalinkController {
    * `view`, ces params sont retirés de l'URL. Seul le bouton Partager (`ui/share.ts`) capture
    * l'angle courant et le passe explicitement ici.
    */
-  sync(view?: PermalinkViewAngles): void;
+  sync(view?: PermalinkViewAngles, extra?: PermalinkSharedState): void;
   /**
    * Suspend `sync()` (no-op tant que suspendu) — utilisé par `ui/tourPlayer.ts` pour ne pas
    * écraser le permalien de l'utilisateur à chaque étape intermédiaire d'un tour scénarisé.
@@ -75,7 +82,10 @@ export function setupPermalinks(
   let eclipse: EclipseEvent | null =
     eclipseFromPathname(window.location.pathname) ?? null;
 
-  const sync = (view?: PermalinkViewAngles): void => {
+  const sync = (
+    view?: PermalinkViewAngles,
+    extra?: PermalinkSharedState
+  ): void => {
     // Un saut qui ATTEND ses octets (lot 17C) n'est pas encore la scène : écrire l'adresse
     // maintenant la ferait décrire l'instant d'avant, et pire, `eclipse` serait effacé alors
     // que la page d'éclipse est justement en train d'atteindre son pic. `onDateSettled`
@@ -121,6 +131,8 @@ export function setupPermalinks(
         body: selectedBody ?? undefined,
         date: om.simulationDate,
         view,
+        scene: extra?.scene,
+        layers: extra?.layers,
       },
       window.location.search,
       nextPathname
