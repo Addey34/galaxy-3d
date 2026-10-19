@@ -7085,3 +7085,28 @@ Gardes : `src/core/layerSource.test.ts` (jour, recul, borne basse, scène future
 `src/core/temporal.test.ts` (« analysé », témoin « observé »), `src/core/gibsLegend.test.ts`
 (fichier contre liste, unités), `e2e/seaTemperature.spec.ts` (le bon jour demandé, le badge
 « analysed », la légende de 0 à 32 °C ; falsifié en déclarant une mesure : « observed »).
+
+## Les préréglages d'affichage (lot 59, 2026-10-19)
+
+Un préréglage règle d'un coup le tableau « Dans la scène » des Réglages (étiquette, objet, orbite
+par ligne). C'est une fiche de registre (`src/registry/presets/*.json`, ordre dans `order.json`),
+au même contrat que les visites : schéma Zod seul propriétaire (`registry/schema/preset.ts`), JSON
+Schema généré (`pnpm schema:generate --only preset`), quatre langues obligatoires, texte allégé à
+l'anglais dans le bundle puis réhydraté par langue.
+
+- **Une fiche écrit des écarts, jamais un état complet.** La règle de départ reste
+  `ui/defaultDisplay.ts` ; la fonction pure `core/displayPreset.ts::resolvePresetCells` applique,
+  dans cet ordre, la règle, l'écart de la catégorie (`kinds`) puis l'écart nommé pour l'objet
+  (`bodies`). Une case non nommée garde la règle, donc un corps ajouté au catalogue reçoit le
+  comportement du préréglage sans retoucher une fiche. « Par défaut » n'a pas de fiche : c'est la
+  règle elle-même.
+- **Gardes** : `preset.schema.test.ts` croise les catégories du schéma avec celles que le tableau
+  liste (`BODY_GROUPS`) et exige que chaque objet nommé existe au catalogue ; `displayPreset.test.ts`
+  couvre la résolution ; `e2e/displayPresets.spec.ts` observe les cases du tableau.
+- **`?preset=<id>`** est une OUVERTURE, comme `?tour=` et `?place=` : lue une fois avant que
+  l'adresse soit réécrite, jamais réécrite ensuite (`PERMALINK_KEYS` l'efface). Le tableau ne
+  persiste rien entre les visites, et le préréglage non plus ; un identifiant inconnu ne change
+  rien. Toucher une case après un préréglage affiche « Personnalisé » dans le sélecteur.
+- **Hors périmètre, délibérément** (choix de l'utilisateur, 2026-10-19) : les couches (météo de la
+  Terre, champ d'astéroïdes et de comètes), le mode et l'échelle. Un préréglage « météo » demanderait
+  de piloter `weatherLayers.ts` et ses groupes exclusifs ; il serait un lot à part.

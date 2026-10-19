@@ -341,6 +341,9 @@ export const en = {
   'settings.orbitsToggle': 'Show every orbit and trajectory',
   'settings.tableHint':
     'A column header sets the whole column, a group row its group, a row one object. Spacecraft and interstellar objects start hidden.',
+  'settings.preset.label': 'Preset',
+  'settings.preset.default': 'Default',
+  'settings.preset.custom': 'Custom',
   'settings.tableCaption': 'What the scene shows, object by object',
   'settings.col.bodyName': 'Object',
   'settings.col.names': 'Label',

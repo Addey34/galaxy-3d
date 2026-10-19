@@ -1,0 +1,19 @@
+{
+  "$schema": "../schema/preset.schema.json",
+  "id": "moons",
+  "title": {
+    "en": "Moons",
+    "fr": "Lunes",
+    "es": "Lunas",
+    "pt-BR": "Luas"
+  },
+  "description": {
+    "en": "Every natural satellite named and with its orbit drawn around its planet.",
+    "fr": "Chaque satellite naturel nommé, avec son orbite tracée autour de sa planète.",
+    "es": "Cada satélite natural con su nombre y su órbita trazada alrededor de su planeta.",
+    "pt-BR": "Cada satélite natural com seu nome e sua órbita traçada ao redor do planeta."
+  },
+  "kinds": {
+    "moon": { "label": true, "object": true, "orbit": true }
+  }
+}

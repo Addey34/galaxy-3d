@@ -323,6 +323,9 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.orbitsToggle': 'Mostrar todas as órbitas e trajetórias',
   'settings.tableHint':
     'O cabeçalho ajusta a coluna inteira, uma linha de grupo todo o seu grupo, uma linha um único objeto. As sondas e os objetos interestelares começam ocultos.',
+  'settings.preset.label': 'Predefinição',
+  'settings.preset.default': 'Padrão',
+  'settings.preset.custom': 'Personalizado',
   'settings.tableCaption': 'O que a cena mostra, objeto por objeto',
   'settings.col.bodyName': 'Objeto',
   'settings.col.names': 'Rótulo',

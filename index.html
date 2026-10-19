@@ -1158,6 +1158,23 @@
                palette de recherche), une colonne par bascule (étiquette, objet, orbite).
                L'en-tête de colonne bascule toute la colonne, la ligne de groupe tout le
                groupe, chaque case un seul objet. Lignes construites par ui/orbitOptions.ts. -->
+          <!-- Préréglages d'affichage (lot 59) : options construites par ui/orbitOptions.ts
+               depuis le registre. Choisir règle le tableau d'un coup ; toucher une case
+               ensuite le ramène à « Personnalisé ». -->
+          <div class="oo-preset">
+            <label
+              class="oo-preset-label"
+              for="oo-preset-select"
+              data-i18n="settings.preset.label"
+              >Preset</label
+            >
+            <select id="oo-preset-select" class="oo-preset-select"></select>
+            <p
+              id="oo-preset-desc"
+              class="oo-table-hint oo-preset-desc"
+              aria-live="off"
+            ></p>
+          </div>
           <p class="oo-table-hint" data-i18n="settings.tableHint">
             A column header sets the whole column, a group row its group, a
             row one object. Spacecraft and interstellar objects start hidden.

@@ -316,6 +316,9 @@ export const fr: Record<MessageKey, string> = {
   'settings.orbitsToggle': 'Afficher toutes les orbites et trajectoires',
   'settings.tableHint':
     'L’en-tête règle toute la colonne, une ligne de groupe tout son groupe, une ligne un seul objet. Les sondes et les objets interstellaires sont masqués au départ.',
+  'settings.preset.label': 'Préréglage',
+  'settings.preset.default': 'Par défaut',
+  'settings.preset.custom': 'Personnalisé',
   'settings.tableCaption': 'Ce que montre la scène, objet par objet',
   'settings.col.bodyName': 'Objet',
   'settings.col.names': 'Étiquette',

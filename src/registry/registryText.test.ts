@@ -25,7 +25,14 @@ import {
  */
 
 const REGISTRY = resolve(import.meta.dirname);
-const DIRS = ['entities', 'spacecraft', 'interstellar', 'providers', 'tours'];
+const DIRS = [
+  'entities',
+  'spacecraft',
+  'interstellar',
+  'providers',
+  'tours',
+  'presets',
+];
 
 function fiches(): { file: string; json: unknown }[] {
   const out: { file: string; json: unknown }[] = [];

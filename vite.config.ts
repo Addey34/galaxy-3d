@@ -155,6 +155,7 @@ function deriveRegistryText() {
       'interstellar',
       'providers',
       'tours',
+      'presets',
     ]) {
       if (only && !only.includes(dir)) continue;
       const full = resolve(__dirname, 'src/registry', dir);

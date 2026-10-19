@@ -1,0 +1,23 @@
+{
+  "$schema": "../schema/preset.schema.json",
+  "id": "clean",
+  "title": {
+    "en": "Bare view",
+    "fr": "Vue épurée",
+    "es": "Vista despejada",
+    "pt-BR": "Vista limpa"
+  },
+  "description": {
+    "en": "The bodies alone: no names and no orbit lines, for a screenshot or a plain look at the scene.",
+    "fr": "Les corps seuls : ni noms ni lignes d’orbite, pour une capture ou un simple regard sur la scène.",
+    "es": "Solo los cuerpos: sin nombres ni líneas de órbita, para una captura o una mirada limpia a la escena.",
+    "pt-BR": "Só os corpos: sem nomes nem linhas de órbita, para uma captura ou um olhar limpo sobre a cena."
+  },
+  "kinds": {
+    "planet": { "label": false, "orbit": false },
+    "moon": { "label": false, "orbit": false },
+    "dwarf": { "label": false, "orbit": false },
+    "asteroid": { "label": false, "orbit": false },
+    "comet": { "label": false, "orbit": false }
+  }
+}

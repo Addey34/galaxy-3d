@@ -35,6 +35,7 @@ const SCHEMAS = [
   ['interstellar.ts', 'interstellarJsonSchemaText', 'interstellar.schema.json'],
   ['tour.ts', 'tourJsonSchemaText', 'tour.schema.json'],
   ['activity.ts', 'activityJsonSchemaText', 'activity.schema.json'],
+  ['preset.ts', 'presetJsonSchemaText', 'preset.schema.json'],
 ];
 
 const DIR = resolve(process.cwd(), 'src/registry/schema');

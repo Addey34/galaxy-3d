@@ -1,7 +1,7 @@
 import { flattenBodies } from '@/config/catalog';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { NAVIGABLE_TARGETS } from '@/config/navigable';
-import { onLocaleChange, t } from '@/i18n';
+import { getLocale, onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
 import type { CelestialBodyConfig } from '@/types';
@@ -11,6 +11,8 @@ import { defaultDisplay } from './defaultDisplay';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { syncSurfaceFocus } from './surfaceFocus';
+import { PRESETS } from '@/registry/presets';
+import { resolvePresetCells } from '@/core/displayPreset';
 
 /** Les trois colonnes du tableau, dans l'ordre de l'en-tête. */
 type Column = 'label' | 'object' | 'orbit';
@@ -86,7 +88,9 @@ export function setupOrbitOptions(
   sceneSystem: SceneSystem,
   exploHud: Pick<ExploHud, 'setHiddenNames'>,
   instrument: readonly InstrumentVisibility[] = [],
-  coordinator?: OverlayCoordinator
+  coordinator?: OverlayCoordinator,
+  /** Préréglage demandé par l'adresse (`?preset=`), appliqué une fois le tableau construit. */
+  initialPreset?: string
 ): void {
   const panel = document.getElementById('orbit-options');
   if (!panel) return;
@@ -232,7 +236,69 @@ export function setupOrbitOptions(
     for (const name of names) state[column].set(name, on);
     apply[column](names);
     syncBoxes();
+    // Une case touchée à la main : l'état n'est plus celui d'un préréglage.
+    setPresetChoice(CUSTOM);
   }
+
+  // ─── Préréglages (lot 59) ─────────────────────────────────────────────────────────────────
+  const DEFAULT = 'default';
+  const CUSTOM = 'custom';
+  const presetSelect =
+    panel.querySelector<HTMLSelectElement>('#oo-preset-select');
+  const presetDesc = panel.querySelector<HTMLElement>('#oo-preset-desc');
+
+  function setPresetChoice(id: string): void {
+    if (!presetSelect) return;
+    if (presetSelect.value !== id) presetSelect.value = id;
+    const preset = PRESETS.find((p) => p.id === id);
+    if (presetDesc) {
+      const locale = getLocale();
+      presetDesc.textContent = preset
+        ? (preset.description[locale] ?? preset.description.en)
+        : '';
+    }
+  }
+
+  /** Pose les cases du préréglage (ou de la règle de départ) sur chaque ligne, puis l'applique. */
+  function applyPreset(id: string): void {
+    const preset = PRESETS.find((p) => p.id === id);
+    for (const row of rows) {
+      const base = defaultDisplay(row.name, row.cfg.kind);
+      const cells = preset
+        ? resolvePresetCells(preset, row.name, row.cfg.kind, base)
+        : base;
+      for (const column of COLUMNS)
+        if (state[column].has(row.name))
+          state[column].set(row.name, cells[column]);
+    }
+    for (const column of COLUMNS) apply[column](namesOf(column));
+    syncBoxes();
+    setPresetChoice(id);
+  }
+
+  function buildPresetOptions(): void {
+    if (!presetSelect) return;
+    const current = presetSelect.value || DEFAULT;
+    const locale = getLocale();
+    presetSelect.replaceChildren();
+    const add = (value: string, text: string): void => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = text;
+      presetSelect.append(option);
+    };
+    add(DEFAULT, t('settings.preset.default'));
+    for (const preset of PRESETS)
+      add(preset.id, preset.title[locale] ?? preset.title.en);
+    // « Personnalisé » n'est proposé que lorsqu'il décrit l'état : on ne le CHOISIT pas.
+    add(CUSTOM, t('settings.preset.custom'));
+    presetSelect.options[presetSelect.options.length - 1]!.disabled = true;
+    presetSelect.value = current;
+    setPresetChoice(current);
+  }
+  presetSelect?.addEventListener('change', () =>
+    applyPreset(presetSelect.value)
+  );
 
   for (const column of COLUMNS)
     headers[column].addEventListener('change', () =>
@@ -359,7 +425,13 @@ export function setupOrbitOptions(
     syncBoxes();
   }
   buildTable();
-  onLocaleChange(buildTable);
+  buildPresetOptions();
+  if (initialPreset && PRESETS.some((p) => p.id === initialPreset))
+    applyPreset(initialPreset);
+  onLocaleChange(() => {
+    buildTable();
+    buildPresetOptions();
+  });
   // Mode daltonien basculé : recolore les pastilles déjà rendues.
   onAccentChange(buildTable);
 
