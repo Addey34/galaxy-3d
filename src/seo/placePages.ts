@@ -43,7 +43,7 @@ import { longDay } from './instrumentLandingPage';
 /** Un grand lieu : diamètre publié d'au moins cette fraction du rayon de son corps. */
 export const GREAT_PLACE_RATIO = 0.2;
 
-export interface DescriptorTerm {
+interface DescriptorTerm {
   label: string;
   code: string;
   definition: string;
@@ -56,7 +56,7 @@ export interface DescriptorTerms {
 }
 
 /** Une observation par instrument, telle que la donne une fiche de `place-observations`. */
-export interface PlaceObservationRow {
+interface PlaceObservationRow {
   mission: string;
   instrument: string;
   count: number;

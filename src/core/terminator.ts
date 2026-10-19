@@ -21,7 +21,7 @@
  */
 
 /** Rayon moyen terrestre (km) — pour l'abaissement d'horizon en altitude. */
-export const EARTH_MEAN_RADIUS_KM = 6371;
+const EARTH_MEAN_RADIUS_KM = 6371;
 
 const sinDeg = (deg: number): number => Math.sin((deg * Math.PI) / 180);
 
@@ -68,9 +68,9 @@ export const TERMINATOR_WRAP_VACUUM = sinDeg(3);
 export const TERMINATOR_WRAP_ATMOSPHERE = CIVIL_TWILIGHT_DOT;
 
 /** Sommet des nuages troposphériques (km). */
-export const CLOUD_TOP_ALTITUDE_KM = 10;
+const CLOUD_TOP_ALTITUDE_KM = 10;
 /** Sommet d'un système convectif profond — orages, la couche précipitations (km). */
-export const STORM_TOP_ALTITUDE_KM = 12;
+const STORM_TOP_ALTITUDE_KM = 12;
 
 /**
  * Largeur du crépuscule pour une couche à l'altitude `altitudeKm`.
@@ -100,7 +100,7 @@ export function twilightWrapAtAltitude(
  * Altitude de la lueur atmosphérique encore visible au limbe (km). Bien au-dessus des nuages :
  * c'est pourquoi le halo persiste après que le sol ET les nuages sont passés dans l'ombre.
  */
-export const ATMOSPHERE_GLOW_ALTITUDE_KM = 50;
+const ATMOSPHERE_GLOW_ALTITUDE_KM = 50;
 
 /** Largeur du crépuscule de la coque atmosphérique (halo au limbe). */
 /**

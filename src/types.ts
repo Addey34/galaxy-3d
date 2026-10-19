@@ -52,13 +52,13 @@ export const SMALL_BODY_KINDS: ReadonlySet<BodyKind> = new Set<BodyKind>([
 ]);
 
 /** Référentiel de position d'un corps. */
-export type OrbitFrame = 'heliocentric' | 'parentRelative';
+type OrbitFrame = 'heliocentric' | 'parentRelative';
 
 /** Corps jovien supporté par le modèle d'éphémérides astronomy-engine. */
 export type JupiterMoonKey = 'io' | 'europa' | 'ganymede' | 'callisto';
 
 /** Source d'une position relative fournie par une éphéméride spécialisée. */
-export type RelativeEphemerisSource =
+type RelativeEphemerisSource =
   | { kind: 'jupiterMoon'; moon: JupiterMoonKey }
   | { kind: 'horizonsParentRelative' };
 
@@ -166,7 +166,7 @@ export interface ModelConfig {
   atlas?: boolean;
 }
 
-export interface RingConfig {
+interface RingConfig {
   bodyName: string;
   innerRadius: number;
   outerRadius: number;

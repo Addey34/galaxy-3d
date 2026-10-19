@@ -27,7 +27,7 @@ import { GL } from '@/core/gpuLedger';
 import { isGpuLedgerInstalled, ledgerFor } from './gpuLedgerHook';
 
 /** Ce que la sonde rend à chaque lecture. */
-export interface PerfSnapshot {
+interface PerfSnapshot {
   renderer: string;
   frames: { count: number; p50Ms: number; p95Ms: number; maxMs: number };
   longTasks: { count: number; totalMs: number; maxMs: number };

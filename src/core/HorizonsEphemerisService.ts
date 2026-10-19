@@ -229,10 +229,10 @@ const DEFAULT_CONCURRENCY = 6;
 // démarrage rapide) ; le frein d'âge empêche d'en ajouter dès qu'une requête dépasse
 // `2 × IN_FLIGHT_SECONDS`. La durée d'une requête est donc bornée par ces octets divisés par
 // le débit réel, loin des 706 s du lot 15, où 64 fichiers ENTIERS étaient en vol.
-export const IN_FLIGHT_SECONDS = 2;
+const IN_FLIGHT_SECONDS = 2;
 
 /** Jamais plus de requêtes en vol que ceci, même sur un lien qui absorbe tout. */
-export const MAX_CONCURRENCY = 64;
+const MAX_CONCURRENCY = 64;
 
 /**
  * Deux reprises, à 1 s puis 4 s. Bornées parce qu'un chargement qui insiste indéfiniment est

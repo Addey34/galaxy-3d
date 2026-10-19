@@ -180,10 +180,7 @@ const DECIMAL: Record<Locale, string> = {
  * texte de la fiche écrit « {inclinaison}° » ou « {ecart} % », parce que l'espace devant le signe
  * pour cent est une convention de langue que la fiche tient déjà.
  */
-export function formatActivityValue(
-  value: EvaluatedValue,
-  locale: Locale
-): string {
+function formatActivityValue(value: EvaluatedValue, locale: Locale): string {
   switch (value.kind) {
     case 'degrees':
     case 'percent':

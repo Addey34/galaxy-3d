@@ -1,0 +1,47 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.ts",
+    "scripts/**/*.{mjs,mts}",
+    "e2e/**/*.ts",
+    "public/privacy.js",
+    "vite.config.ts"
+  ],
+  "project": [
+    "src/**/*.ts",
+    "scripts/**/*.{mjs,mts}",
+    "e2e/**/*.ts"
+  ],
+  "ignore": [
+    "scripts/**/*.d.mts"
+  ],
+  "ignoreDependencies": [
+    "meshoptimizer",
+    "xatlasjs"
+  ],
+  "ignoreIssues": {
+    "src/registry/schema/*.ts": [
+      "types"
+    ],
+    "src/config/storageKeys.ts": [
+      "types"
+    ],
+    "src/core/activityMeasures.ts": [
+      "types"
+    ],
+    "src/types.ts": [
+      "exports",
+      "types"
+    ],
+    "src/seo/{instrumentLandingPage,placePages,socialCard}.ts": [
+      "exports",
+      "types"
+    ],
+    "src/core/{HorizonsEphemerisService,displayAlbedo,startupBudget}.ts": [
+      "exports"
+    ],
+    "src/core/terminator.ts": [
+      "duplicates"
+    ]
+  }
+}

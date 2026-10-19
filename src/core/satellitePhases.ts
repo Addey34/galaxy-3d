@@ -38,7 +38,7 @@ import type * as THREE from 'three';
 import { MU_SUN_AU3_PER_DAY2 } from './twoBodyPropagation';
 
 /** Durée liée cumulée en deçà de laquelle un corps ne devient pas le repère d'une sonde. */
-export const SATELLITE_MIN_BOUND_DAYS = 30;
+const SATELLITE_MIN_BOUND_DAYS = 30;
 
 /** Une phase : la sonde est le satellite de `body` de `fromMs` à `toMs` inclus. */
 export interface SatellitePhase {

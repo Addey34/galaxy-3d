@@ -13,7 +13,7 @@ import { decode } from '../load';
 import orderFile from './order.json';
 
 /** Toutes les fiches, sans `order.json`. */
-export const TOUR_RECORDS: readonly TourRecord[] = Object.values(
+const TOUR_RECORDS: readonly TourRecord[] = Object.values(
   import.meta.glob(['./*.json', '!./order.json'], {
     eager: true,
     import: 'default',

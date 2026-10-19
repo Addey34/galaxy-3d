@@ -25,7 +25,7 @@ export interface TimeInterval {
 const MS_PER_DAY = 86_400_000;
 
 /** Instants répartis sur l'ensemble des tronçons en route, au prorata de leur durée. */
-export const CRUISE_POINTS = 1500;
+const CRUISE_POINTS = 1500;
 /** Instants ajoutés dans chaque segment qui touche un tronçon (survol, bord d'une phase). */
 export const SEGMENT_POINTS = 64;
 /** Instants d'une révolution tracée. */
@@ -162,7 +162,7 @@ export function revolutionTimes(
 }
 
 /** `count` instants réguliers sur une fenêtre, bornes comprises. */
-export function windowTimes(window: TimeInterval, count: number): number[] {
+function windowTimes(window: TimeInterval, count: number): number[] {
   return intervalTimes(window, count, []);
 }
 

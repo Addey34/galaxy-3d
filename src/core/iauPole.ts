@@ -42,7 +42,7 @@ export type Vec3 = readonly [number, number, number];
  * puis degrés par siècle julien, puis degrés par siècle carré. Le tableau porte sa longueur,
  * donc son degré : c'est ce qui distingue le système de Mars des autres.
  */
-export type NutationAngle = readonly number[];
+type NutationAngle = readonly number[];
 
 /** Les arguments d'un système planétaire, dans l'ordre où le noyau les déclare. */
 export type NutationAngles = readonly NutationAngle[];
@@ -62,7 +62,7 @@ export interface IauRotationModel {
 }
 
 /** Époque J2000.0 en jour julien ; l'origine du temps de tous les polynômes ci-dessous. */
-export const J2000_JD = 2451545;
+const J2000_JD = 2451545;
 
 /** Siècles juliens écoulés depuis J2000.0, la variable de tous les polynômes du modèle. */
 export function centuriesFromJ2000(date: Date): number {
@@ -110,7 +110,7 @@ export function iauPoleDeg(
 }
 
 /** Direction unitaire d'une ascension droite et d'une déclinaison, dans leur propre repère. */
-export function directionFromRaDec(raDeg: number, decDeg: number): Vec3 {
+function directionFromRaDec(raDeg: number, decDeg: number): Vec3 {
   const ra = raDeg * DEG_TO_RAD;
   const dec = decDeg * DEG_TO_RAD;
   return [

@@ -41,7 +41,7 @@ interface PlaceObservationIndex {
 }
 
 /** Un instrument tel que l'ODE le nomme : ses noms publiés, jamais réécrits. */
-export interface PlaceInstrument {
+interface PlaceInstrument {
   readonly host: string;
   readonly id: string;
   readonly mission: string;

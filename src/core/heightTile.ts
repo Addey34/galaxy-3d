@@ -21,7 +21,7 @@
 /** Marque de tête des tuiles produites par le cuiseur. */
 export const HEIGHT_TILE_MAGIC = 'GXHT';
 /** Version de format que ce décodeur sait lire. */
-export const HEIGHT_TILE_VERSION = 1;
+const HEIGHT_TILE_VERSION = 1;
 
 /** Une tuile de hauteurs décodée. Les valeurs sont des entiers, en pas de `quantumMetres`. */
 export interface HeightTile {

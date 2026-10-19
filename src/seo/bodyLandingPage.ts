@@ -108,7 +108,7 @@ export interface BodyVisual {
   figure: Figure | null;
 }
 
-export interface BodyRingVisual {
+interface BodyRingVisual {
   /** Profil radial de l'anneau, chemin depuis la racine du dépôt. */
   texture: string;
   /** Rayon interne, en rayons du corps. */
@@ -539,7 +539,7 @@ export function bodyFacts(
   return bodyFactsWithSources(config, parentDisplayName, locale).facts;
 }
 
-export function bodyFactsWithSources(
+function bodyFactsWithSources(
   config: CelestialBodyConfig,
   parentDisplayName?: string,
   locale: Locale = 'en'

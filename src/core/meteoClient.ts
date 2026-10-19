@@ -38,7 +38,7 @@ export interface MeteoGridFetchOptions {
   skipGalaxyData?: boolean;
 }
 
-export interface MeteoNetworkOptions {
+interface MeteoNetworkOptions {
   /** Nombre total d'essais, première requête comprise. */
   maxAttempts?: number;
   /** Délai initial entre deux essais transitoires (429/5xx). */

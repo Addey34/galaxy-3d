@@ -61,7 +61,7 @@ import { brightnessSection } from './brightnessSection';
 
 // ─────────────────────────── données d'entrée ───────────────────────────
 
-export interface ValidationStats {
+interface ValidationStats {
   mean: number | null;
   median: number | null;
   p95: number | null;
@@ -94,7 +94,7 @@ export interface ValidationRow {
 }
 
 /** La substitution de référence des époques profondes, corps par corps (lot 39). */
-export interface DeepReference {
+interface DeepReference {
   target: string;
   targetName: string;
   /** Biais mesuré par le chemin RÉELLEMENT emprunté (les deux positions héliocentriques). */

@@ -221,7 +221,7 @@ function table(rows: readonly InventoryRow[]): string[] {
 }
 
 /** Combien de lignes déclarent chaque capacité, et combien n'en ont aucun artefact. */
-export function capabilityTally(inventory: Inventory): {
+function capabilityTally(inventory: Inventory): {
   capability: Capability;
   applicable: number;
   absent: number;

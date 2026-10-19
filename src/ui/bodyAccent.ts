@@ -2,8 +2,8 @@ import type { CelestialBodyConfig } from '@/types';
 import { colorblindSafeColor } from '@/core/colorblindPalette';
 
 /** Shared scene-overlay accents. Catalog colors remain the source for each body. */
-export const DEFAULT_BODY_ACCENT = 0x9acaff;
-export const SUN_ACCENT = 0xffc857;
+const DEFAULT_BODY_ACCENT = 0x9acaff;
+const SUN_ACCENT = 0xffc857;
 
 let colorblindEnabled = false;
 const accentChangeListeners = new Set<() => void>();

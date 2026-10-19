@@ -22,7 +22,7 @@ export type SearchKind =
   | 'discovery';
 
 /** L'ordre d'affichage des types, sous les corps. */
-export const SEARCH_KINDS: readonly SearchKind[] = [
+const SEARCH_KINDS: readonly SearchKind[] = [
   'dataset',
   'place',
   'mission',
@@ -189,7 +189,7 @@ export function prepareSearchIndex(
  * dans le texte cherché ; le score se lit sur le LIBELLÉ : nom exact, puis début du nom, puis
  * début d'un mot, puis n'importe où, puis seulement dans le contexte.
  */
-export function matchScore(
+function matchScore(
   entry: { label: string; haystack: string },
   words: readonly string[],
   whole: string
@@ -203,7 +203,7 @@ export function matchScore(
 }
 
 /** Une requête trop courte rendrait des milliers de lieux sans rien apprendre au visiteur. */
-export const MIN_QUERY_LENGTH = 2;
+const MIN_QUERY_LENGTH = 2;
 
 /**
  * Les meilleurs résultats de chaque type, au plus `perKind`, dans l'ordre : score, puis libellé

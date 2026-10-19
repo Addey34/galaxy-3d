@@ -14,7 +14,7 @@ import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
 
 /** Nom catalogue du corps Terre (source unique, ex-duplication dans 5 fichiers). */
-export const EARTH_NAME = 'earth';
+const EARTH_NAME = 'earth';
 
 /**
  * Récupère l'objet Terre. `warnIfMissing` (défaut true) journalise une fois si absent, avec

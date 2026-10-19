@@ -52,11 +52,6 @@ export function loadMissionIndex(): Promise<MissionIndex | null> {
   return indexPromise;
 }
 
-/** Combien de missions le registre du PDS déclare pour ce corps, l'index étant arrivé. */
-export function missionCount(body: string): number | null {
-  return index ? (index.bodies[body]?.count ?? null) : null;
-}
-
 /** La provenance à citer sous le bloc, et la date à laquelle le registre a été lu. */
 export function missionProvenance(): {
   provider: MissionIndex['provider'];

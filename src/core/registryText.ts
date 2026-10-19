@@ -230,7 +230,7 @@ export function englishStrings(
  * plugin `deriveRegistryText` ne touche pas. Mesuré : 2,7 Ko par langue au démarrage, dont 968 o
  * pour le seul fournisseur EOX. Le plugin casse le build si un module client en importe un.
  */
-export const RUNTIME_SERVICE_ROLES: readonly string[] = [
+const RUNTIME_SERVICE_ROLES: readonly string[] = [
   'event-source',
   'tile-source',
 ];
@@ -257,7 +257,7 @@ export function isRuntimeServiceFiche(fiche: unknown): boolean {
  * seul lecteur et qu'elle attend la carte : un nom manquant au démarrage serait visible, une
  * description absente une fraction de seconde ne l'est pas.
  */
-export const DEFERRED_TEXT_KEYS: readonly string[] = [
+const DEFERRED_TEXT_KEYS: readonly string[] = [
   'description',
   'reason',
   'credit',

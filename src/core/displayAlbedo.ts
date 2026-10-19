@@ -79,8 +79,8 @@ export function meanLinearLuminance(
 }
 
 /** Largeur en longitude et demi-hauteur en latitude d'une « face » pour `faceContrast`. */
-export const FACE_LONGITUDE_DEG = 60;
-export const FACE_HALF_LATITUDE_DEG = 40;
+const FACE_LONGITUDE_DEG = 60;
+const FACE_HALF_LATITUDE_DEG = 40;
 
 /**
  * LE CONTRASTE ENTRE LES FACES d'une carte équirectangulaire (2026-10-07) : la luminance
@@ -139,7 +139,7 @@ export function faceContrast(
 export const ATMOSPHERE_MIN_SURFACE_PRESSURE_BAR = 1e-3;
 
 /** Ce que le générateur a besoin de savoir d'un corps pour décider s'il suit la règle. */
-export interface DisplayAlbedoCandidate {
+interface DisplayAlbedoCandidate {
   kind: string;
   /**
    * La PREUVE d'une atmosphère, en une phrase citant sa source, ou `undefined` : le catalogue en
@@ -167,7 +167,7 @@ export const DISPLAY_ALBEDO_EXCLUSIONS = [
 export type DisplayAlbedoExclusionKind =
   (typeof DISPLAY_ALBEDO_EXCLUSIONS)[number];
 
-export interface DisplayAlbedoExclusion {
+interface DisplayAlbedoExclusion {
   kind: DisplayAlbedoExclusionKind;
   /** Une phrase publiable, en français : la table la garde, et l'inventaire la lit. */
   reason: string;

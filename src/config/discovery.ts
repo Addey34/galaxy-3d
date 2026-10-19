@@ -16,7 +16,7 @@ import type {
 import Logger from '@/utils/Logger';
 
 /** Une source citée par les affirmations, telle que l'index la décrit. */
-export interface DiscoverySourceInfo {
+interface DiscoverySourceInfo {
   readonly publisher: string;
   readonly title: string;
   readonly url: string;
@@ -54,7 +54,7 @@ let index: DiscoveryIndex | null = null;
 let indexPromise: Promise<DiscoveryIndex | null> | null = null;
 
 /** L'index, chargé une seule fois ; un échec n'est pas retenu, la fiche le redemandera. */
-export function loadDiscoveryIndex(): Promise<DiscoveryIndex | null> {
+function loadDiscoveryIndex(): Promise<DiscoveryIndex | null> {
   if (index) return Promise.resolve(index);
   indexPromise ??= import('./discoveryIndex.json')
     .then((module) => {

@@ -12,7 +12,7 @@
  *   layers = « +precip,-clouds »        (l'état de chaque couche météo, absolu)
  */
 
-export type SceneColumn = 'label' | 'object' | 'orbit';
+type SceneColumn = 'label' | 'object' | 'orbit';
 
 const COLUMN_CODE: Record<SceneColumn, string> = {
   label: 'l',

@@ -21,7 +21,7 @@
  */
 
 /** Longueurs d'onde du rouge, du vert et du bleu, en nm (`kLambdaR/G/B` de la source). */
-export const SKY_WAVELENGTHS_NM = [680, 550, 440] as const;
+const SKY_WAVELENGTHS_NM = [680, 550, 440] as const;
 
 /** Les modèles publiés qu'une fiche peut déclarer. */
 export const SKY_SCATTERING_MODELS = ['bruneton-2017'] as const;

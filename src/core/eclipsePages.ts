@@ -50,9 +50,7 @@ export const ECLIPSE_PEAK_TOLERANCE_MS = 60_000;
 const DAY_MS = 86_400_000;
 const SLUG_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-export function isEclipseEvent(
-  event: AstronomicalEvent
-): event is EclipseEvent {
+function isEclipseEvent(event: AstronomicalEvent): event is EclipseEvent {
   return event.kind === 'solar-eclipse' || event.kind === 'lunar-eclipse';
 }
 

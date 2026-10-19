@@ -49,7 +49,7 @@ import type CelestialObject from '@/components/celestial/CelestialObject';
  */
 
 /** Au-delà de cette taille apparente, on ne charge rien : le corps n'occupe pas l'écran. */
-export const GAZETTEER_LOAD_RADII = 8;
+const GAZETTEER_LOAD_RADII = 8;
 
 export class GazetteerOverlay {
   private readonly canvas: HTMLCanvasElement;

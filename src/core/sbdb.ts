@@ -113,7 +113,7 @@ export const ALL_SMALL_BODY_CATEGORIES: readonly SmallBodyCategory[] = [
 ];
 
 /** Où le build dépose l'instantané ; nom STABLE, donc servi « réseau d'abord » par le SW. */
-export const SMALL_BODY_DATASET_URL = '/assets/small-bodies/dataset.json';
+const SMALL_BODY_DATASET_URL = '/assets/small-bodies/dataset.json';
 
 /** Forme du fichier commité : celle de l'API, une entrée par catégorie. */
 export interface SmallBodyDatasetFile {

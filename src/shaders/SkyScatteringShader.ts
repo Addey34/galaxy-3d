@@ -27,8 +27,8 @@ import {
 } from '@/core/multipleScattering';
 
 /** Échantillons le long de la visée, puis vers le Soleil depuis chacun. */
-export const SKY_VIEW_SAMPLES = 16;
-export const SKY_LIGHT_SAMPLES = 6;
+const SKY_VIEW_SAMPLES = 16;
+const SKY_LIGHT_SAMPLES = 6;
 
 export interface SkyScatteringUniforms {
   uCenterView: THREE.IUniform<THREE.Vector3>;
@@ -52,7 +52,7 @@ export interface SkyScatteringUniforms {
   [key: string]: THREE.IUniform<any>;
 }
 
-export const vertexShader = /* glsl */ `
+const vertexShader = /* glsl */ `
   varying vec3 vViewPosition;
   void main() {
     vec4 view = modelViewMatrix * vec4(position, 1.0);
@@ -200,7 +200,7 @@ export const SCATTER_GLSL = /* glsl */ `
   }
 `;
 
-export const fragmentShader = /* glsl */ `
+const fragmentShader = /* glsl */ `
   #define VIEW_SAMPLES ${SKY_VIEW_SAMPLES}
   #define LIGHT_SAMPLES ${SKY_LIGHT_SAMPLES}
   ${SCATTER_GLSL}
@@ -220,7 +220,7 @@ export const fragmentShader = /* glsl */ `
   }
 `;
 
-export function createUniforms(sky: SkyScattering): SkyScatteringUniforms {
+function createUniforms(sky: SkyScattering): SkyScatteringUniforms {
   return {
     uCenterView: { value: new THREE.Vector3() },
     uSunDirView: { value: new THREE.Vector3(1, 0, 0) },
@@ -249,9 +249,7 @@ const MS_TEXTURES = new WeakMap<SkyScattering, THREE.DataTexture>();
  * demi-flottant aurait ramené le crépuscule profond à zéro, et sa conversion tirait 1,4 ko dans le
  * morceau de Three chargé au démarrage. Calculée une fois par modèle (~50 ms mesurées sous Node).
  */
-export function multipleScatteringTexture(
-  sky: SkyScattering
-): THREE.DataTexture {
+function multipleScatteringTexture(sky: SkyScattering): THREE.DataTexture {
   const known = MS_TEXTURES.get(sky);
   if (known) return known;
   const size = MULTIPLE_SCATTERING_LUT_SIZE;

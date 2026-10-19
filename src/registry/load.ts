@@ -78,13 +78,13 @@ interface EntityBase {
 }
 
 /** Un corps décrit dans la forme du catalogue (`CelestialBodyConfig`). */
-export interface CatalogueEntity extends EntityBase {
+interface CatalogueEntity extends EntityBase {
   source: 'catalogue';
   config: { [key: string]: Encoded };
 }
 
 /** Un petit corps décrit par ses éléments publiés, converti par `smallBodyToConfig`. */
-export interface SmallBodyEntity extends EntityBase {
+interface SmallBodyEntity extends EntityBase {
   source: 'small-body';
   elements: { [key: string]: Encoded };
 }

@@ -38,7 +38,7 @@
 import { jdTdbFromDate } from './timeScale';
 
 /** Composantes d'un état Horizons : position (x, y, z) puis vitesse (vx, vy, vz). */
-export const COMPONENTS_PER_SAMPLE = 6;
+const COMPONENTS_PER_SAMPLE = 6;
 
 /** Un état occupe six flottants doubles. C'est le pas d'adressage du fichier. */
 export const BYTES_PER_SAMPLE =

@@ -13,7 +13,7 @@
  */
 
 /** Un arrêt de couleur à une position normalisée `t` (0..1) du domaine. */
-export interface PaletteStop {
+interface PaletteStop {
   /** Position dans le domaine [0..1] (0 = min, 1 = max). */
   t: number;
   /** Couleur RGB (0..255). */

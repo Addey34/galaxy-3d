@@ -56,8 +56,7 @@ export interface OrbitInsertion {
   retrieved: string;
 }
 
-export type OrbitInsertionExclusion =
-  'boundAtEntry' | 'coverage' | 'unresolved';
+type OrbitInsertionExclusion = 'boundAtEntry' | 'coverage' | 'unresolved';
 
 export interface OrbitInsertionRecord {
   source: string;
@@ -325,7 +324,7 @@ export const orbitInsertionSlug = (
   `${ORBIT_INSERTIONS_SLUG}/${insertion.probe}-${insertion.body}-${insertion.at.slice(0, 10)}`;
 
 /** Une mise en orbite est une prédiction quand elle suit la date à laquelle sa trajectoire a été lue. */
-export const isPredicted = (
+const isPredicted = (
   insertion: Pick<OrbitInsertion, 'at' | 'retrieved'>
 ): boolean => insertion.at.slice(0, 10) > insertion.retrieved;
 

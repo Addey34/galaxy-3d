@@ -40,7 +40,7 @@ import {
 import { longDay } from './instrumentLandingPage';
 
 /** Une cible telle que l'archive la déclare ; `body` est le corps du catalogue qu'elle désigne. */
-export interface MissionTarget {
+interface MissionTarget {
   lid: string;
   name: string | null;
   type: string | null;
@@ -79,7 +79,7 @@ export interface MissionPageInputs {
 }
 
 /** Le registre interrogé, tel que l'index des missions le publie déjà. */
-export const PDS_REGISTRY = {
+const PDS_REGISTRY = {
   publisher: 'NASA Planetary Data System',
   title: 'PDS Registry, investigation context products',
   url: 'https://pds.nasa.gov/',
@@ -365,7 +365,7 @@ export function missionDescription(raw: string): {
 }
 
 /** Le chemin d'une page de mission sans la langue : `missions/voyager`. */
-export const missionSlug = (mission: Pick<CatalogueMission, 'slug'>): string =>
+const missionSlug = (mission: Pick<CatalogueMission, 'slug'>): string =>
   `${MISSIONS_SLUG}/${mission.slug}`;
 
 /** Corps du catalogue et objets navigables, sous une seule clé : leur identifiant. */
@@ -402,7 +402,7 @@ const pageLink = (id: string, label: string, locale: Locale): string =>
  * Les missions, triées par début déclaré puis par nom : l'ordre de l'index et des fiches. Un
  * début non déclaré va à la FIN : en tête, il passait pour la plus ancienne mission.
  */
-export function byStart(
+function byStart(
   a: Pick<CatalogueMission, 'start' | 'name'>,
   b: Pick<CatalogueMission, 'start' | 'name'>
 ): number {

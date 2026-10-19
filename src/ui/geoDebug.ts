@@ -42,7 +42,7 @@ const NEWLINE = String.fromCharCode(10);
  * choisis sur trois hémisphères et trois longitudes bien séparées : une erreur de phase ne
  * peut pas les laisser tous d'accord.
  */
-export const GEO_DEBUG_SITES: readonly {
+const GEO_DEBUG_SITES: readonly {
   id: string;
   latitudeDeg: number;
   longitudeDeg: number;

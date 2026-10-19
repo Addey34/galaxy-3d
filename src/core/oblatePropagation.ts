@@ -25,7 +25,7 @@ export interface Oblateness {
 }
 
 /** Fraction du temps caractéristique local √(r³/μ) prise à chaque pas. */
-export const OBLATE_STEP_FRACTION = 0.02;
+const OBLATE_STEP_FRACTION = 0.02;
 /** Garde-fou : au-delà, l'intégration abandonne et l'appelant retombe sur la conique. */
 const MAX_STEPS = 20_000;
 

@@ -38,7 +38,7 @@ export interface EarthName {
 export const WEB_MAP_EQUATOR_M = 40_075_016.686;
 
 /** Taille de tuile qui définit les niveaux de zoom d'une carte web. */
-export const WEB_MAP_TILE_PX = 256;
+const WEB_MAP_TILE_PX = 256;
 
 /** Niveau de zoom d'une carte web dont la résolution à l'équateur vaut `metresPerPixel`. */
 export function webMapZoom(metresPerPixel: number): number {

@@ -64,7 +64,7 @@ export interface RestContact extends ContactBase {
 }
 
 /** Le passage du niveau de 1 bar d'une planète géante. */
-export interface EntryContact extends ContactBase {
+interface EntryContact extends ContactBase {
   kind: 'entry';
   /** Latitude planétocentrique au pôle de l'UAI, degrés. */
   latitudeDeg: number;
@@ -76,7 +76,7 @@ export interface EntryContact extends ContactBase {
 
 export type SurfaceContact = RestContact | EntryContact;
 
-export type SurfaceContactExclusion = 'unresolved';
+type SurfaceContactExclusion = 'unresolved';
 
 export interface SurfaceContactRecord {
   source: string;

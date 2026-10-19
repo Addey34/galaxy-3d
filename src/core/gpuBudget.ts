@@ -15,7 +15,7 @@
  */
 
 /** La date des scènes : la caméra aborde un corps côté Soleil (piège du 2026-10-01). */
-export const GPU_SCENE_DATE = '2024-07-01T12:00:00Z';
+const GPU_SCENE_DATE = '2024-07-01T12:00:00Z';
 
 export interface GpuSceneCeiling {
   id: string;

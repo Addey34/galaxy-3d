@@ -10,7 +10,7 @@
 import { t, getLocale, onLocaleChange, HTML_LANG } from './index';
 
 /** Applique les traductions à tous les nœuds `data-i18n*` sous `root`. */
-export function applyStaticI18n(root: ParentNode = document): void {
+function applyStaticI18n(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
     el.textContent = t(el.dataset.i18n!);
   });

@@ -30,7 +30,7 @@
  */
 
 /** Pourquoi un corps n'a pas de modèle de forme. Une raison par CAUSE, jamais une phrase libre. */
-export type ShapeGapReason =
+type ShapeGapReason =
   /**
    * Aucune des trois collections de formes du PDS ne le contient. C'est une absence CHERCHÉE,
    * pas une absence supposée.

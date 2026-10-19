@@ -17,7 +17,7 @@
  */
 import type { HeightfieldSetProduct } from '@/registry/schema/product';
 import type { HeightCoverageEntry } from '@/core/heightPyramid';
-import type { DatedProduct, TimeInterval } from '@/core/temporal';
+import type { TimeInterval } from '@/core/temporal';
 import type { TileMatrixShape } from '@/core/tilePyramid';
 import { sameGrid } from '@/core/heightPyramid';
 
@@ -166,17 +166,6 @@ export function heightsForGrid(
   return (
     loaded.find((entry) => sameGrid(entry.manifest.matrix, matrix)) ?? null
   );
-}
-
-/**
- * Produit daté d'un jeu de hauteurs, pour `classifyTemporal`.
- *
- * Comme une mosaïque : une mesure sur l'intervalle de sa campagne d'acquisition. Le relief
- * d'un corps ne décrit pas la date de la scène, et la catégorie rendue est donc `observed`
- * quelle que soit cette date.
- */
-export function heightSetProduct(set: SurfaceHeightSet): DatedProduct {
-  return { kind: 'measurement', validTime: set.acquired };
 }
 
 /** Adresse publiée d'une tuile de hauteurs. */

@@ -26,7 +26,7 @@ import {
 import type { SourceCandidate } from '@/core/layerSource';
 import type { PublicAPI } from '@/SolarSystemApp';
 
-export interface MeteoTextureData {
+interface MeteoTextureData {
   data: Uint8ClampedArray;
   width: number;
   height: number;

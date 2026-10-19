@@ -25,7 +25,7 @@ import {
   formatQuantity,
 } from './documentPage';
 
-export interface DisplayAlbedoRow {
+interface DisplayAlbedoRow {
   body: string;
   /** `texture`, `baked` ou `excluded` : lu dans un JSON, donc vérifié à l'entrée. */
   rule: string;

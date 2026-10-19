@@ -89,7 +89,7 @@ export function sameGrid(a: TileMatrixShape, b: TileMatrixShape): boolean {
 }
 
 /** L'emprise d'une tuile d'imagerie tient-elle ENTIÈREMENT dans une emprise cuite ? */
-export function containsTile(
+function containsTile(
   bounds: TileBounds,
   imagery: TileIndex,
   shape: TileMatrixShape = WMTS_EQUIRECTANGULAR_2x1
