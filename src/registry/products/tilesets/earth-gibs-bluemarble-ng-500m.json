@@ -22,6 +22,12 @@
     "maxLevel": 7
   },
   "publishedPixelsPerDegree": 240,
+  "oceanMatch": {
+    "tileSrgb": [2, 5, 20],
+    "baseSrgb": [31, 60, 118],
+    "measured": "2026-10-19",
+    "method": "Médiane par canal des pixels d'océan (masque earth_spec = 255, entre 60° S et 60° N) sur une grille de 2048 x 1024 : mosaïque GIBS au niveau 3 entier lue le 2026-10-19 pour tileSrgb, texture earth_surface_2k.jpg livrée pour baseSrgb"
+  },
   "acquired": {
     "interval": [["2004-08-01T00:00:00Z", "2004-08-31T23:59:59Z"]]
   },

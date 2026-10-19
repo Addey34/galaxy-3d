@@ -263,6 +263,32 @@ const imageryTileset = z
      * prendrait sur sa propre matrice, confrontés à sa finesse publiée par la garde.
      */
     regional: z.literal(true).optional(),
+    /**
+     * HARMONISATION DE L'OCÉAN (2026-10-19) : l'océan de cette mosaïque n'a pas la couleur de la
+     * texture de base du corps (celui du Blue Marble de GIBS vaut (2, 5, 20), celui de la texture
+     * livrée (63, 82, 110)), et le remplacer carreau après carreau assombrissait l'eau de la scène.
+     * Les deux couleurs sont MESURÉES (`tileSrgb` dans la mosaïque, à la date `measured`;
+     * `baseSrgb` dans la texture livrée, relue par `config/surfaceTilesets.test.ts`), et le
+     * shader ajoute leur écart aux seuls pixels que le masque d'eau de la base désigne. Le
+     * bandeau de provenance le DIT : c'est une retouche d'une image publiée.
+     */
+    oceanMatch: z
+      .object({
+        tileSrgb: z.tuple([
+          z.number().int().min(0).max(255),
+          z.number().int().min(0).max(255),
+          z.number().int().min(0).max(255),
+        ]),
+        baseSrgb: z.tuple([
+          z.number().int().min(0).max(255),
+          z.number().int().min(0).max(255),
+          z.number().int().min(0).max(255),
+        ]),
+        measured: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        method: z.string().min(1),
+      })
+      .strict()
+      .optional(),
     mission: z.string().min(1),
     instrument: z.string().min(1),
     service: z

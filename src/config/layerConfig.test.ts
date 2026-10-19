@@ -1,5 +1,8 @@
 import * as THREE from 'three';
-import { MAGNIFICATION_FADE_GLSL } from '@/core/dataMagnification';
+import {
+  MAGNIFICATION_FADE_GLSL,
+  MAGNIFICATION_VERTEX_GLSL,
+} from '@/core/dataMagnification';
 import { describe, expect, it } from 'vitest';
 import {
   createCloudsMaterial,
@@ -665,7 +668,7 @@ describe('precip layer at rest', () => {
     // La cle de cache doit changer avec la source, sinon un programme compile avant le
     // correctif serait reutilise tel quel.
     expect(material.customProgramCacheKey()).toBe(
-      'precip-remap-v6-magnification'
+      'precip-remap-v8-magnification'
     );
     material.dispose();
   });
@@ -702,7 +705,8 @@ describe('magnification fade of the appearance layers', () => {
   const compile = (material: THREE.Material) => {
     const shader = {
       uniforms: {},
-      vertexShader: '#include <common>\n#include <worldpos_vertex>',
+      vertexShader:
+        '#include <common>\n#include <begin_vertex>\n#include <worldpos_vertex>',
       fragmentShader:
         '#include <common>\n#include <map_pars_fragment>\n#include <map_fragment>\n#include <dithering_fragment>',
     } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
@@ -722,6 +726,11 @@ describe('magnification fade of the appearance layers', () => {
       expect(shader.fragmentShader).toContain(
         '#include <dithering_fragment>' + MAGNIFICATION_FADE_GLSL
       );
+      // Et le shader de sommets porte ce que la mesure lit : sans ces varyings, le programme ne
+      // se lie pas, et la couche disparaît sans un mot.
+      expect(shader.vertexShader).toContain(MAGNIFICATION_VERTEX_GLSL);
+      expect(shader.vertexShader).toContain('varying vec3 vMagView;');
+      expect(shader.fragmentShader).toContain('varying vec3 vMagView;');
       material.dispose();
     }
   });

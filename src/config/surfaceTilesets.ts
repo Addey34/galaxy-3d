@@ -16,6 +16,7 @@
 import type { ImageryTilesetProduct } from '@/registry/schema/product';
 import type { TileMatrixShape } from '@/core/tilePyramid';
 import type { TileService } from '@/core/tileUrl';
+import type { OceanMatch } from '@/core/oceanMatch';
 import type { DatedProduct, TimeInterval } from '@/core/temporal';
 
 import { parseDayDomain, publishedDay, type DayRange } from '@/core/timeDomain';
@@ -66,6 +67,8 @@ export interface SurfaceTileset {
   day?: string;
   /** Année d'une ÉDITION annuelle d'un fond de rechange (lot 50), cf. {@link editionFor}. */
   edition?: number;
+  /** Couleurs d'océan de la mosaïque et de la base, si la fiche les harmonise (cf. fiche). */
+  oceanMatch?: OceanMatch;
 }
 
 function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
@@ -95,6 +98,7 @@ function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
     },
     credit: fiche.providers.map((provider) => provider.name).join(' · '),
     ...(fiche.edition !== undefined ? { edition: fiche.edition } : {}),
+    ...(fiche.oceanMatch ? { oceanMatch: fiche.oceanMatch } : {}),
     ...(time
       ? {
           domainsUrl: time.domains

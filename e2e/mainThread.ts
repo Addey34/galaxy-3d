@@ -78,7 +78,7 @@ export interface CalmOptions {
 
 /**
  * Rend la main quand la page a enchaîné `frames` images calmes : chacune sous `budgetMs`, aucune
- * texture en vol, ni vol de caméra ni glissement d'échelle (`data-scene-moving`).
+ * texture ni carreau de surface en vol, ni vol de caméra ni glissement d'échelle (`data-scene-moving`).
  *
  * Les images sont observées DANS la page, sans trou entre elles : un aller-retour par image
  * laissait passer des images que personne ne regardait. La première image compte depuis l'entrée
@@ -114,11 +114,16 @@ export async function waitForCalmMainThread(
             last = now;
             const loading = canvas?.dataset['texturesLoading'] ?? '0';
             const moving = canvas?.dataset['sceneMoving'] === '1';
+            // Les carreaux de surface (en vol, ou en fondu d'entrée) ne passent pas par
+            // `TextureSystem` : `data-surface-busy` les compte.
+            const tiles = canvas?.dataset['surfaceBusy'] ?? '0';
             out.push(
-              `${took}${loading === '0' ? '' : `+${loading}tex`}${moving ? '~' : ''}`
+              `${took}${loading === '0' ? '' : `+${loading}tex`}${tiles === '0' ? '' : `+${tiles}tile`}${moving ? '~' : ''}`
             );
             streak =
-              took <= budget && loading === '0' && !moving ? streak + 1 : 0;
+              took <= budget && loading === '0' && tiles === '0' && !moving
+                ? streak + 1
+                : 0;
             if (streak >= wanted) resolve({ calm: true, series: out });
             else if (now - start > windowMs)
               resolve({ calm: false, series: out });
