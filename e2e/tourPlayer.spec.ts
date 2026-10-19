@@ -234,7 +234,11 @@ test.describe('mobile scripted tour', () => {
     const next = page.locator('.stour-next');
     for (let i = 0; i < 24; i++) {
       if (((await caption.textContent()) ?? '').includes(needle)) break;
-      if (!(await next.isDisabled())) await next.click();
+      // Visible ET activé : pendant la transition d'une légende le bouton est masqué sans être
+      // désactivé, et cliquer alors attendait 15 s un élément invisible (vu en CI, shard 3,
+      // 2026-10-19, passé au seul réessai).
+      if ((await next.isVisible()) && !(await next.isDisabled()))
+        await next.click();
       else await page.waitForTimeout(200);
     }
     await expect(caption).toContainText(needle);
