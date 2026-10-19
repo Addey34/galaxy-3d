@@ -12,6 +12,7 @@ import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { syncSurfaceFocus } from './surfaceFocus';
 import { PRESETS } from '@/registry/presets';
+import type { SceneChange } from '@/core/viewState';
 import { resolvePresetCells } from '@/core/displayPreset';
 
 /** Les trois colonnes du tableau, dans l'ordre de l'en-tête. */
@@ -84,6 +85,16 @@ function reflect(
   box.indeterminate = on > 0 && on < names.length;
 }
 
+/** Ce que le tableau prête au lien de partage (lot 60). */
+export interface SceneTableHandle {
+  /** Les cases qui diffèrent de la règle de départ. */
+  changes(): SceneChange[];
+  /** Pose ces cases ; un nom ou une colonne que le tableau ne règle pas est ignoré. */
+  apply(changes: readonly SceneChange[]): void;
+}
+
+const NO_TABLE: SceneTableHandle = { changes: () => [], apply: () => {} };
+
 export function setupOrbitOptions(
   sceneSystem: SceneSystem,
   exploHud: Pick<ExploHud, 'setHiddenNames'>,
@@ -91,15 +102,16 @@ export function setupOrbitOptions(
   coordinator?: OverlayCoordinator,
   /** Préréglage demandé par l'adresse (`?preset=`), appliqué une fois le tableau construit. */
   initialPreset?: string
-): void {
+): SceneTableHandle {
   const panel = document.getElementById('orbit-options');
-  if (!panel) return;
+  if (!panel) return NO_TABLE;
 
   const tableEl = panel.querySelector<HTMLTableElement>('#settings-table');
   const labelsToggle = panel.querySelector<HTMLInputElement>('#labels-visible');
   const bodiesToggle = panel.querySelector<HTMLInputElement>('#bodies-visible');
   const orbitsToggle = panel.querySelector<HTMLInputElement>('#orbits-visible');
-  if (!tableEl || !labelsToggle || !bodiesToggle || !orbitsToggle) return;
+  if (!tableEl || !labelsToggle || !bodiesToggle || !orbitsToggle)
+    return NO_TABLE;
   const headers: Record<Column, HTMLInputElement> = {
     label: labelsToggle,
     object: bodiesToggle,
@@ -462,4 +474,27 @@ export function setupOrbitOptions(
   });
 
   setOpen(false);
+
+  return {
+    changes: () =>
+      rows.flatMap((row) => {
+        const base = defaultDisplay(row.name, row.cfg.kind);
+        return COLUMNS.filter(
+          (column) =>
+            state[column].has(row.name) &&
+            isOn(column)(row.name) !== base[column]
+        ).map((column) => ({
+          column,
+          name: row.name,
+          on: isOn(column)(row.name),
+        }));
+      }),
+    apply: (changes) => {
+      for (const { column, name, on } of changes)
+        if (state[column].has(name)) state[column].set(name, on);
+      for (const column of COLUMNS) apply[column](namesOf(column));
+      syncBoxes();
+      setPresetChoice(CUSTOM);
+    },
+  };
 }

@@ -579,13 +579,14 @@ function wireChrome(): {
       ]
     );
 
-    const requestedPreset = parsePermalink(
+    const requested = parsePermalink(
       window.location.search,
       LANDING_PAGE_BODIES
-    ).preset;
+    );
+    const requestedPreset = requested.preset;
     // Réglages : appelé ICI, après les couches instrument, parce que son tableau pilote
     // désormais leurs marqueurs et leurs noms autant que les corps de la scène.
-    setupOrbitOptions(
+    const sceneTable = setupOrbitOptions(
       sceneSystem,
       exploHud,
       [spacecraftOverlay, interstellarOverlay],
@@ -593,6 +594,10 @@ function wireChrome(): {
       // `?preset=` (lot 59) : lu ici, avant que `setupPermalinks` réécrive l'adresse et l'efface.
       requestedPreset
     );
+    // Un lien partagé (lot 60) porte aussi ce que le tableau et les couches montraient : posé APRÈS
+    // le préréglage, qui est une base, et avant la première image.
+    if (requested.scene) sceneTable.apply(requested.scene);
+    if (requested.layers) weatherPanel.apply(requested.layers);
 
     // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
     // pour la cible suivie ; en Éducatif ou en vue libre on passe `null` → bloc masqué.
@@ -775,7 +780,10 @@ function wireChrome(): {
         })),
       showDataset: (id) => weatherPanel.show(id),
     });
-    setupShare(cameraSystem, permalink);
+    setupShare(cameraSystem, permalink, () => ({
+      scene: sceneTable.changes(),
+      layers: weatherPanel.states(),
+    }));
     setupCapture(cameraSystem, orbitalMechanics, planetNav);
     setupAstronomicalEvents(orbitalMechanics, {
       onDateChange: () => syncPermalink(),

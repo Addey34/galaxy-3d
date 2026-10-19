@@ -1,5 +1,13 @@
 import { eclipseFromPathname } from './eclipsePages';
 import { splitLocalePath, withLocalePrefix } from './localePath';
+import {
+  decodeLayerChanges,
+  decodeSceneChanges,
+  encodeLayerChanges,
+  encodeSceneChanges,
+  type LayerChange,
+  type SceneChange,
+} from './viewState';
 
 /** Etat partageable de l'application, encode dans la query string. */
 export type PermalinkMode = 'educ' | 'explo';
@@ -42,6 +50,13 @@ export interface PermalinkState {
    * validée ; un préréglage inconnu ne change rien (`ui/orbitOptions.ts`).
    */
   preset?: string;
+  /**
+   * Ce que le tableau « Dans la scène » montre de DIFFÉRENT de la règle de départ (lot 60). Écrit
+   * par le seul bouton Partager, comme la caméra ; lu à l'ouverture, jamais réécrit ensuite.
+   */
+  scene?: SceneChange[];
+  /** L'état de chaque couche météo au moment du partage, absolu (lot 60). Même statut que `scene`. */
+  layers?: LayerChange[];
 }
 
 // `place` y figure pour être EFFACÉ à la réécriture : c'est une ouverture (lot 55), et l'adresse qui
@@ -56,6 +71,8 @@ const PERMALINK_KEYS = [
   'place',
   'tour',
   'preset',
+  'scene',
+  'layers',
 ] as const;
 
 /**
@@ -88,6 +105,10 @@ function parseTour(value: string | null): string | undefined {
   return tour && tour.length <= 64 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(tour)
     ? tour
     : undefined;
+}
+
+function nonEmpty<T>(list: T[]): T[] | undefined {
+  return list.length > 0 ? list : undefined;
 }
 
 function parseView(params: URLSearchParams): PermalinkViewAngles | undefined {
@@ -197,6 +218,8 @@ export function parsePermalink(
     place: parsePlace(params.get('place')),
     tour: parseTour(params.get('tour')),
     preset: parseTour(params.get('preset')),
+    scene: nonEmpty(decodeSceneChanges(params.get('scene'))),
+    layers: nonEmpty(decodeLayerChanges(params.get('layers'))),
   };
 }
 
@@ -280,6 +303,11 @@ export function serializePermalink(
     params.set('pol', String(roundForUrl(state.view.polarDeg, 1)));
     params.set('dist', String(roundSignificant(state.view.distance, 6)));
   }
+
+  if (state.scene && state.scene.length > 0)
+    params.set('scene', encodeSceneChanges(state.scene));
+  if (state.layers && state.layers.length > 0)
+    params.set('layers', encodeLayerChanges(state.layers));
 
   const query = params.toString();
   return query ? `?${query}` : '';

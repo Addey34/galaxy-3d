@@ -14,6 +14,7 @@ import { t, onLocaleChange } from '@/i18n';
 import type { SourceCandidate } from '@/core/layerSource';
 import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
+import type { LayerChange } from '@/core/viewState';
 import type { WeatherLayerHandle } from './earthLayer';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { sourceBadgeText } from './sourceBadge';
@@ -38,9 +39,26 @@ export interface WeatherLayersApi {
    * chemin), puis ouvre le panneau pour qu'on voie ce qui a été activé.
    */
   show(id: string): void;
+  /**
+   * L'état de CHAQUE couche (lien de partage, lot 60). Absolu et non en écarts : le démarrage
+   * n'est pas le même partout (les nuages sont allumés sur ordinateur et éteints sur mobile), un
+   * écart au démarrage ne redonnerait donc pas la même image d'un appareil à l'autre.
+   */
+  states(): LayerChange[];
+  /**
+   * Pose ces états par les cases, comme un clic, SANS ouvrir le panneau : c'est l'ouverture d'un
+   * lien partagé, pas une recherche. Les extinctions d'abord, pour que l'exclusivité d'une
+   * couche allumée ne dépende pas de l'ordre. Un identifiant inconnu est ignoré.
+   */
+  apply(changes: readonly LayerChange[]): void;
 }
 
-const NO_WEATHER: WeatherLayersApi = { list: () => [], show: () => {} };
+const NO_WEATHER: WeatherLayersApi = {
+  list: () => [],
+  show: () => {},
+  states: () => [],
+  apply: () => {},
+};
 
 export function setupWeatherLayers(
   api: PublicAPI,
@@ -305,6 +323,18 @@ export function setupWeatherLayers(
         control.checkbox.dispatchEvent(new Event('change'));
       }
       setOpen(true);
+    },
+    states: () =>
+      layers.map((l) => ({ id: l.id, on: state.get(l.id) ?? false })),
+    apply: (changes) => {
+      for (const on of [false, true])
+        for (const change of changes) {
+          const control = controls.get(change.id);
+          if (change.on !== on || !control) continue;
+          if (control.checkbox.checked === on) continue;
+          control.checkbox.checked = on;
+          control.checkbox.dispatchEvent(new Event('change'));
+        }
     },
   };
 }
