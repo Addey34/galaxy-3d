@@ -20,6 +20,7 @@ import {
   webMapZoom,
   type EarthName,
 } from '@/core/earthNames';
+import { diameterFromWebZoom } from '@/core/placeDive';
 import { getLocale } from '@/i18n';
 import Logger from '@/utils/Logger';
 import type CelestialObject from '@/components/celestial/CelestialObject';
@@ -50,6 +51,24 @@ import type CelestialObject from '@/components/celestial/CelestialObject';
 
 /** Au-delà de cette taille apparente, on ne charge rien : le corps n'occupe pas l'écran. */
 const GAZETTEER_LOAD_RADII = 8;
+
+/**
+ * Un nom écrit à l'image courante, avec de quoi y plonger : son rectangle à l'écran, son point de
+ * surface et la taille qu'on lui connaît (km), publiée par l'UAI ou déduite du niveau de zoom
+ * d'apparition d'un nom de la Terre.
+ */
+export interface DrawnPlace {
+  readonly body: string;
+  readonly name: string;
+  readonly lat: number;
+  /** Longitude EST de la source (0 à 360 pour l'UAI, −180 à 180 pour la Terre). */
+  readonly lon: number;
+  readonly diameterKm: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
 
 export class GazetteerOverlay {
   private readonly canvas: HTMLCanvasElement;
@@ -99,6 +118,33 @@ export class GazetteerOverlay {
 
   /** Combien de noms la dernière image a écrits — lu par l'e2e, jamais par le produit. */
   private lastDrawn = 0;
+  /** Les noms de la dernière image : c'est eux qu'un clic peut viser. */
+  private drawnPlaces: DrawnPlace[] = [];
+
+  /**
+   * Le nom sous un clic, s'il y en a un (marge de 6 px autour du texte, un doigt n'est pas un
+   * pixel). Le plus proche du centre du texte gagne quand deux rectangles se recouvrent.
+   */
+  placeAt(px: number, py: number): DrawnPlace | null {
+    const slop = 6;
+    let best: DrawnPlace | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (const p of this.drawnPlaces) {
+      if (
+        px < p.x - slop ||
+        px > p.x + p.width + slop ||
+        py < p.y - slop ||
+        py > p.y + p.height + slop
+      )
+        continue;
+      const d = Math.hypot(px - (p.x + p.width / 2), py - (p.y + p.height / 2));
+      if (d < bestDistance) {
+        best = p;
+        bestDistance = d;
+      }
+    }
+    return best;
+  }
 
   /**
    * Charge le répertoire d'un corps, une seule fois, et jamais deux en parallèle.
@@ -154,12 +200,14 @@ export class GazetteerOverlay {
     occlusion: ScreenOcclusion | null = null
   ): void {
     this.lastDrawn = 0;
+    this.drawnPlaces = [];
     // Le compte PUBLIÉ se remet à zéro AVANT les sorties anticipées, pas seulement à la fin :
     // sinon il garde la valeur de la dernière image qui a dessiné, et la couche annonce encore
     // cinq noms alors qu'on s'est éloigné et qu'elle ne peint plus rien. C'est un témoin
     // d'e2e, donc un témoin qui ment est pire que pas de témoin du tout.
     this.canvas.dataset['names'] = '0';
     this.canvas.dataset['drawn'] = '';
+    this.canvas.dataset['places'] = '';
     if (!this.ctx || !this.active) return;
     this._clear();
     if (!target || !targetName) return;
@@ -187,7 +235,12 @@ export class GazetteerOverlay {
 
     // Une seule liste de noms à poser, quelle que soit leur source : le placement ne change pas.
     const locale = getLocale();
-    const labels: { lat: number; lon: number; text: string }[] = isEarth
+    const labels: {
+      lat: number;
+      lon: number;
+      text: string;
+      diameterKm: number;
+    }[] = isEarth
       ? earthNamesToLabel(
           this.earthNames ?? [],
           webMapZoom(
@@ -198,9 +251,19 @@ export class GazetteerOverlay {
             )
           ),
           MAX_FEATURE_LABELS
-        ).map((e) => ({ lat: e.lat, lon: e.lon, text: earthNameIn(e, locale) }))
+        ).map((e) => ({
+          lat: e.lat,
+          lon: e.lon,
+          text: earthNameIn(e, locale),
+          diameterKm: diameterFromWebZoom(e.minZoom),
+        }))
       : featuresToLabel(features, radiusKm, apparentRadii, h, camera.fov).map(
-          (f) => ({ lat: f.lat, lon: f.lon, text: f.name })
+          (f) => ({
+            lat: f.lat,
+            lon: f.lon,
+            text: f.name,
+            diameterKm: f.diameterKm,
+          })
         );
 
     const drawnText: string[] = [];
@@ -264,12 +327,31 @@ export class GazetteerOverlay {
       );
       this.lastDrawn += 1;
       drawnText.push(feature.text);
+      this.drawnPlaces.push({
+        body: targetName,
+        name: feature.text,
+        lat: feature.lat,
+        lon: feature.lon,
+        diameterKm: feature.diameterKm,
+        x: x + placed.dx - textWidth / 2,
+        y: y + placed.dy - MARKER_LABEL_HEIGHT / 2,
+        width: textWidth,
+        height: MARKER_LABEL_HEIGHT,
+      });
     }
 
     this.canvas.dataset['names'] = String(this.lastDrawn);
     // Les noms ÉCRITS, au plus `MAX_FEATURE_LABELS` : un canevas ne se lit pas, et c'est le seul
     // moyen pour l'e2e de vérifier la LANGUE d'un nom de la Terre.
     this.canvas.dataset['drawn'] = drawnText.join('|');
+    // Où chacun est écrit (centre du texte, px CSS) : un canevas ne se clique pas à l'aveugle, et
+    // l'e2e de la plongée en a besoin pour viser un nom qui existe vraiment à cette image.
+    this.canvas.dataset['places'] = this.drawnPlaces
+      .map(
+        (p) =>
+          `${p.name}@${Math.round(p.x + p.width / 2)},${Math.round(p.y + p.height / 2)}`
+      )
+      .join('|');
   }
 
   dispose(): void {
