@@ -231,15 +231,20 @@ test.describe('mobile scripted tour', () => {
     // `reducedMotion`, et « Suivant » reste désactivé tant qu'elles courent.
     const needle = LONGEST_CAPTION.text.slice(0, 40);
     const caption = page.locator('.stour-caption');
-    const next = page.locator('.stour-next');
     for (let i = 0; i < 24; i++) {
-      if (((await caption.textContent()) ?? '').includes(needle)) break;
-      // Visible ET activé : pendant la transition d'une légende le bouton est masqué sans être
-      // désactivé, et cliquer alors attendait 15 s un élément invisible (vu en CI, shard 3,
-      // 2026-10-19, passé au seul réessai).
-      if ((await next.isVisible()) && !(await next.isDisabled()))
-        await next.click();
-      else await page.waitForTimeout(200);
+      // LECTURE ET CLIC EN UN SEUL TEMPS, dans la page : la légende cherchée peut apparaître
+      // entre une lecture faite côté test et le clic qui suit, et ce clic la sautait (vu en CI,
+      // shard 3, 2026-10-19 : le test se retrouvait au périhélie). « Suivant » est aussi masqué
+      // sans être désactivé pendant la transition d'une légende, d'où le test de visibilité.
+      const found = await page.evaluate((text) => {
+        const cap = document.querySelector('.stour-caption');
+        if ((cap?.textContent ?? '').includes(text)) return true;
+        const btn = document.querySelector<HTMLButtonElement>('.stour-next');
+        if (btn && !btn.disabled && btn.offsetParent !== null) btn.click();
+        return false;
+      }, needle);
+      if (found) break;
+      await page.waitForTimeout(200);
     }
     await expect(caption).toContainText(needle);
 
