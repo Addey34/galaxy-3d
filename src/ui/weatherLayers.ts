@@ -128,6 +128,25 @@ export function setupWeatherLayers(
     control.checkbox.disabled = isLoading;
     control.checkbox.setAttribute('aria-busy', String(isLoading));
     control.loading.hidden = !isLoading;
+    publishLoading();
+  };
+
+  // Un point sur le bouton du dock (`data-loading`) et `data-weather-loading` sur le canvas :
+  // une couche ACTIVE qui charge se voit panneau fermé. Même règle que la case (active ET en
+  // chargement), écrit sur changement seulement ; pas de texte, donc rien à traduire.
+  const trigger = document.getElementById('weather-trigger');
+  const canvas = document.querySelector('canvas');
+  let publishedLoading = '';
+  const publishLoading = (): void => {
+    let count = 0;
+    for (const [id, control] of controls) {
+      if (loadState.get(id) === 'loading' && control.checkbox.checked) count++;
+    }
+    const value = String(count);
+    if (value === publishedLoading) return;
+    publishedLoading = value;
+    trigger?.setAttribute('data-loading', String(count > 0));
+    if (canvas) canvas.dataset['weatherLoading'] = value;
   };
 
   for (const layer of layers) {
