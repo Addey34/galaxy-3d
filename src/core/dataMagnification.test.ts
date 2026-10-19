@@ -3,9 +3,14 @@ import {
   MAGNIFICATION_FADE_END_PX,
   MAGNIFICATION_FADE_GLSL,
   MAGNIFICATION_FADE_START_PX,
+  MAGNIFICATION_FLOOR_PARS_GLSL,
+  MAGNIFICATION_KEPT_FLOOR,
+  magnificationFloorUniform,
+  setKeepAppearanceLayers,
   magnificationFade,
-  maxPxPerTexel,
+  pxPerTexel,
 } from './dataMagnification';
+import { texelMagnification } from './surfaceApproach';
 
 describe('magnificationFade', () => {
   it('keeps the layer whole while a texel fits in a few screen pixels', () => {
@@ -40,48 +45,87 @@ describe('magnificationFade', () => {
   });
 });
 
-describe('maxPxPerTexel', () => {
-  // Jacobienne d'un horizon : un quart de texel par pixel LE LONG de l'horizon, un texel par
-  // pixel en travers. Le grossissement maximal est donc 4 px par texel, quelle que soit
-  // l'inclinaison de l'horizon sur l'écran.
-  const horizon = (degrees: number) => {
-    const a = (degrees * Math.PI) / 180;
-    const [c, s] = [Math.cos(a), Math.sin(a)];
-    // J = R(a) · diag(0,25 ; 1) : colonnes = dérivées selon x et y de l'écran.
-    const dx: [number, number] = [0.25 * c, 0.25 * s];
-    const dy: [number, number] = [-s, c];
-    return { dx, dy };
-  };
-
-  it('reads an axis-aligned stretch as the shorter derivative', () => {
-    const { dx, dy } = horizon(0);
-    expect(maxPxPerTexel(dx, dy)).toBeCloseTo(4, 9);
-    expect(maxPxPerTexel([0.5, 0], [0, 0.5])).toBeCloseTo(2, 9);
+describe('keeping the layer (floor)', () => {
+  it('never goes below the floor, and still ramps down to it', () => {
+    expect(magnificationFade(14, 0.4)).toBeCloseTo(0.4, 12);
+    expect(magnificationFade(0.3, 0.4)).toBe(1);
+    const mid = magnificationFade(4.5, 0.4);
+    expect(mid).toBeGreaterThan(0.4);
+    expect(mid).toBeLessThan(1);
   });
 
-  it('does not depend on how the stretch is oriented on screen', () => {
-    for (const degrees of [10, 20, 33, 45, 70, 90, 135]) {
-      const { dx, dy } = horizon(degrees);
-      expect(maxPxPerTexel(dx, dy), `${degrees}°`).toBeCloseTo(4, 9);
+  it('is the shared uniform that every material reads, off by default', () => {
+    expect(magnificationFloorUniform.value).toBe(0);
+    setKeepAppearanceLayers(true);
+    expect(magnificationFloorUniform.value).toBe(MAGNIFICATION_KEPT_FLOOR);
+    setKeepAppearanceLayers(false);
+    expect(magnificationFloorUniform.value).toBe(0);
+    expect(MAGNIFICATION_FADE_GLSL).toContain('mix( uMagFloor, 1.0,');
+  });
+});
+
+describe('pxPerTexel', () => {
+  // La Terre vue de 1 306 km d'altitude (mesure du 2026-10-19), nuages du jour de 2 048 x 1 024.
+  const earth = {
+    shellRadius: 6371 * 1.01,
+    texelsWide: 2048,
+    texelsHigh: 1024,
+  };
+  const fov = 55 * (Math.PI / 180);
+  const viewportHeightPx = 800;
+  const pixelAngle = (2 * Math.tan(fov / 2)) / viewportHeightPx;
+
+  it('agrees with the nadir arithmetic of the surface approach', () => {
+    // Au centre de l'écran, regard vers le bas, la coquille est à (altitude − 1 % du rayon).
+    const altitudeKm = 1306.597;
+    const viewDistance = altitudeKm - 0.01 * 6371;
+    const analytic = pxPerTexel({ ...earth, viewDistance, pixelAngle });
+    const approach = texelMagnification({
+      textureWidthPx: 2048,
+      radiusKm: earth.shellRadius,
+      altitudeKm: viewDistance,
+      fovDeg: 55,
+      viewportHeightPx,
+    });
+    expect(analytic).toBeCloseTo(approach, 6);
+    // ~12 px par texel : bien au-delà de la fin du fondu, donc la couche a disparu.
+    expect(magnificationFade(analytic)).toBe(0);
+  });
+
+  it('is smooth: it only depends on distance, never on a mesh triangle', () => {
+    let previous = Number.POSITIVE_INFINITY;
+    for (let km = 800; km < 20_000; km *= 1.05) {
+      const px = pxPerTexel({ ...earth, viewDistance: km, pixelAngle });
+      expect(px).toBeLessThan(previous);
+      previous = px;
     }
   });
 
-  it('sees the horizon the shorter derivative missed (2026-10-14)', () => {
-    // Même jacobienne, mais la direction comprimée tournée de 20° par rapport aux axes de
-    // l'écran (J = diag(0,25 ; 1) · R(20°)) : chaque colonne mélange les deux étirements.
-    const a = (20 * Math.PI) / 180;
-    const [c, s] = [Math.cos(a), Math.sin(a)];
-    const dx: [number, number] = [0.25 * c, s];
-    const dy: [number, number] = [-0.25 * s, c];
-    const shorterDerivative =
-      1 / Math.min(Math.hypot(...dx), Math.hypot(...dy));
-    expect(shorterDerivative).toBeLessThan(MAGNIFICATION_FADE_START_PX);
-    expect(maxPxPerTexel(dx, dy)).toBeCloseTo(4, 9);
-    expect(magnificationFade(maxPxPerTexel(dx, dy))).toBeLessThan(1);
+  it('keeps clouds whole from the orbit the lot 48 thresholds were read at', () => {
+    // 4 235 km au-dessus de la coquille : 3,6 px par texel, les nuages se lisent encore.
+    const px = pxPerTexel({ ...earth, viewDistance: 4235, pixelAngle });
+    expect(px).toBeGreaterThan(3);
+    expect(px).toBeLessThan(4);
   });
 
-  it('computes the same thing in the shader', () => {
-    expect(MAGNIFICATION_FADE_GLSL).toContain('jDet / sigmaMax');
-    expect(MAGNIFICATION_FADE_GLSL).not.toContain('min( length(');
+  it('takes the longer side of a texel for a map wider than 2:1', () => {
+    const wide = pxPerTexel({
+      shellRadius: 1,
+      texelsWide: 1000,
+      texelsHigh: 100,
+      viewDistance: 1,
+      pixelAngle: 1,
+    });
+    // Côté d'est (2/1000) plus court que le côté du nord (1/100) : le nord décide.
+    expect(wide).toBeCloseTo(Math.PI / 100, 12);
+  });
+
+  it('computes the same thing in the shader, from the camera and not from the mesh', () => {
+    expect(MAGNIFICATION_FLOOR_PARS_GLSL).toContain('dFdx( magRay )');
+    expect(MAGNIFICATION_FLOOR_PARS_GLSL).toContain('vMagShell');
+    expect(MAGNIFICATION_FADE_GLSL).toContain('magnificationPxPerTexel(');
+    // Les dérivées d'UV, constantes par triangle, ont dessiné le maillage sur l'océan.
+    expect(MAGNIFICATION_FADE_GLSL).not.toContain('dFdx( texelCoord )');
+    expect(MAGNIFICATION_FADE_GLSL).not.toContain('vMapUv');
   });
 });

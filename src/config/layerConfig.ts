@@ -3,7 +3,21 @@
  * Centralise les conventions de rendu : facteurs d'échelle des couches (surface, nuages,
  * atmosphère, lumières), finesse des sphères/anneaux et matériaux standard réutilisés.
  */
-import { MAGNIFICATION_FADE_GLSL } from '@/core/dataMagnification';
+import {
+  MAGNIFICATION_FADE_GLSL,
+  MAGNIFICATION_FLOOR_PARS_GLSL,
+  magnificationFloorUniform,
+  MAGNIFICATION_VERTEX_GLSL,
+  MAGNIFICATION_VERTEX_PARS_GLSL,
+} from '@/core/dataMagnification';
+import {
+  OCEAN_MATCH_FRAGMENT_GLSL,
+  OCEAN_MATCH_FRAGMENT_PARS_GLSL,
+  OCEAN_MATCH_VERTEX_GLSL,
+  OCEAN_MATCH_VERTEX_PARS_GLSL,
+  oceanLiftLinear,
+  type OceanMatch,
+} from '@/core/oceanMatch';
 import { isSoftwareRenderer } from '@/components/systems/rendererKind';
 import { srgbByteToLinear } from '@/core/srgb';
 import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
@@ -50,6 +64,44 @@ function chainOnBeforeCompile(
   };
 }
 
+/**
+ * Ramène l'océan d'un carreau à celui de la texture de base (`core/oceanMatch.ts`). Sans masque
+ * (la base n'en a pas encore, ou aucun), rien n'est posé : un carreau reste ce que la source a
+ * publié.
+ */
+export function installOceanMatch(
+  material: THREE.Material,
+  match: OceanMatch,
+  mask: THREE.Texture
+): void {
+  const lift = new THREE.Vector3(...oceanLiftLinear(match));
+  chainOnBeforeCompile(material, (shader) => {
+    shader.uniforms['uOceanMask'] = { value: mask };
+    shader.uniforms['uOceanLift'] = { value: lift };
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>' + OCEAN_MATCH_VERTEX_PARS_GLSL
+      )
+      .replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>' + OCEAN_MATCH_VERTEX_GLSL
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        '#include <common>' + OCEAN_MATCH_FRAGMENT_PARS_GLSL
+      )
+      .replace(
+        '#include <map_fragment>',
+        '#include <map_fragment>' + OCEAN_MATCH_FRAGMENT_GLSL
+      );
+  });
+  const previousCacheKey = material.customProgramCacheKey?.bind(material);
+  material.customProgramCacheKey = () =>
+    `${previousCacheKey ? previousCacheKey() : ''}-ocean-match`;
+}
+
 const MAGNIFICATION_FADE_KEY = '__magnificationFade';
 
 /** Vrai si ce matériau s'efface quand sa donnée est trop grossie (`core/dataMagnification.ts`). */
@@ -68,10 +120,27 @@ export function hasMagnificationFade(material: THREE.Material): boolean {
 function installMagnificationFade(material: THREE.Material): void {
   material.userData[MAGNIFICATION_FADE_KEY] = true;
   chainOnBeforeCompile(material, (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <dithering_fragment>',
-      '#include <dithering_fragment>' + MAGNIFICATION_FADE_GLSL
-    );
+    shader.uniforms['uMagFloor'] = magnificationFloorUniform;
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>' + MAGNIFICATION_VERTEX_PARS_GLSL
+      )
+      .replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>' + MAGNIFICATION_VERTEX_GLSL
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        '#include <common>' +
+          MAGNIFICATION_VERTEX_PARS_GLSL +
+          MAGNIFICATION_FLOOR_PARS_GLSL
+      )
+      .replace(
+        '#include <dithering_fragment>',
+        '#include <dithering_fragment>' + MAGNIFICATION_FADE_GLSL
+      );
   });
 }
 
@@ -471,6 +540,38 @@ const REAL_CLOUDS_PARS_GLSL = `
           float a11 = extractCloudAlpha( vec2( uv00.x + texel.x, v1 ), gx, gy );
           return mix( mix( a00, a10, f.x ), mix( a01, a11, f.x ), f.y );
         }
+        // RECONSTRUCTION LISSE (2026-10-19), pour le mode « garder les nuages de près » : une
+        // B-spline cubique de l'alpha extrait, sur 4 x 4 texels. Elle ne crée AUCUN détail (c'est
+        // la même donnée, lissée), elle transforme les carrés d'un texel en formes arrondies.
+        // Les dérivées arrivent en paramètre : cette fonction est appelée dans une branche, où
+        // en prendre serait indéfini.
+        float cubicCloudAlpha( vec2 uv, vec2 gx, vec2 gy ) {
+          vec2 texel = 1.0 / vec2( textureSize( map, 0 ) );
+          vec2 st = uv / texel - 0.5;
+          vec2 cell = floor( st );
+          vec2 f = st - cell;
+          vec2 f2 = f * f;
+          vec2 f3 = f2 * f;
+          vec2 w0 = ( 1.0 - 3.0 * f + 3.0 * f2 - f3 ) / 6.0;
+          vec2 w1 = ( 4.0 - 6.0 * f2 + 3.0 * f3 ) / 6.0;
+          vec2 w2 = ( 1.0 + 3.0 * f + 3.0 * f2 - 3.0 * f3 ) / 6.0;
+          vec2 w3 = f3 / 6.0;
+          vec4 wx = vec4( w0.x, w1.x, w2.x, w3.x );
+          vec4 wy = vec4( w0.y, w1.y, w2.y, w3.y );
+          float acc = 0.0;
+          // Déroulée à la main : indexer un vec4 par une variable de boucle fait avertir le
+          // compilateur de D3D (« variable potentiellement non initialisée »).
+          for ( int j = 0; j < 4; j ++ ) {
+            float wj = j == 0 ? wy.x : j == 1 ? wy.y : j == 2 ? wy.z : wy.w;
+            float v = clamp( ( cell.y + 0.5 + float( j - 1 ) ) * texel.y, 0.0, 1.0 );
+            for ( int i = 0; i < 4; i ++ ) {
+              float wi = i == 0 ? wx.x : i == 1 ? wx.y : i == 2 ? wx.z : wx.w;
+              float u = ( cell.x + 0.5 + float( i - 1 ) ) * texel.x;
+              acc += wi * wj * extractCloudAlpha( vec2( u, v ), gx, gy );
+            }
+          }
+          return acc;
+        }
         #endif`;
 
 const REAL_CLOUDS_GLSL = `
@@ -478,6 +579,16 @@ const REAL_CLOUDS_GLSL = `
         if ( uRealClouds > 0.5 ) {
           // Extraite AUX TEXELS puis interpolée (cf. bilinearCloudAlpha), jamais l'inverse.
           float rcAlpha = bilinearCloudAlpha( vMapUv );
+          // Gardée de près : reconstruction lisse dès que le texel passe quelques pixels. Mesure
+          // et dérivées HORS de la branche, qui n'est pas uniforme.
+          vec2 rcGx = dFdx( vMapUv );
+          vec2 rcGy = dFdy( vMapUv );
+          float rcSmooth = uMagFloor > 0.0
+            ? smoothstep( 1.5, 3.5, magnificationPxPerTexel( vec2( textureSize( map, 0 ) ) ) )
+            : 0.0;
+          if ( rcSmooth > 0.0 ) {
+            rcAlpha = mix( rcAlpha, cubicCloudAlpha( vMapUv, rcGx, rcGy ), rcSmooth );
+          }
           // Lissage de la frontière True Color/no-data : la décision de bascule vers MODIS
           // est spatiale, tandis que rcMax reste local pour extraire les nuages optiques.
           vec2 opticalStep = uCloudDayTexelSize * uCloudOpticalBlendRadiusTexels;
@@ -734,7 +845,7 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
   });
   const previousCacheKey = material.customProgramCacheKey?.bind(material);
   material.customProgramCacheKey = () =>
-    `${previousCacheKey ? previousCacheKey() : ''}-realclouds-extract-then-interpolate`;
+    `${previousCacheKey ? previousCacheKey() : ''}-realclouds-extract-then-interpolate-cubic`;
   return material;
 }
 const THERMAL_UNIFORM_KEY = '__thermalUniforms';
@@ -872,7 +983,7 @@ export function createColoredOverlayMaterial(
       );
   });
   installMagnificationFade(material);
-  material.customProgramCacheKey = () => 'overlay-terminator-v2-magnification';
+  material.customProgramCacheKey = () => 'overlay-terminator-v4-magnification';
   return material;
 }
 const PRECIP_UNIFORM_KEY = '__precipUniforms';
@@ -1023,7 +1134,7 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
       );
   });
   installMagnificationFade(material);
-  material.customProgramCacheKey = () => 'precip-remap-v6-magnification';
+  material.customProgramCacheKey = () => 'precip-remap-v8-magnification';
 
   return material;
 }

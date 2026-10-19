@@ -28,6 +28,8 @@ export const STORAGE_KEYS = {
   surfaceImagery: 'ssv-surface-imagery',
   /** Noms de formations de l'UAI écrits à l'approche (activés par défaut, opt-out). */
   gazetteer: 'ssv-gazetteer',
+  /** Couches d'apparence gardées à l'approche, en voile, au lieu de s'effacer (opt-in). */
+  keepAppearance: 'ssv-keep-appearance',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
