@@ -334,6 +334,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.exposure': 'Luminosité (exposition)',
   'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
   'settings.gazetteer': 'Noms de la surface',
+  'settings.eventLabels': 'Étiquettes des événements',
   'settings.surfaceEarthBase': 'Sol de la Terre',
   'settings.surfaceEarthBase.mosaic': 'Mosaïque Blue Marble (2004)',
   'settings.surfaceEarthBase.sentinel-2':

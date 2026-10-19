@@ -58,6 +58,7 @@ import { setupSmallBodyFilters } from './ui/smallBodyFilters';
 import { EarthEventsOverlay } from './ui/earthEventsOverlay';
 import { GazetteerOverlay } from './ui/gazetteerOverlay';
 import { setupGazetteerToggle } from './ui/gazetteerToggle';
+import { setupEventLabelsToggle } from './ui/eventLabelsToggle';
 import gazetteerIndex from './config/gazetteerIndex.json';
 import { EARTH_NAMES_BODY } from './core/earthNames';
 import { setupEarthEvents } from './ui/earthEvents';
@@ -513,6 +514,7 @@ function wireChrome(): {
     );
     gazetteerOverlay.mount();
     setupGazetteerToggle(gazetteerOverlay);
+    setupEventLabelsToggle(earthEventsOverlay);
     setupEarthEvents(
       api,
       earthEventLayers,

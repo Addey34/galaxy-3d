@@ -49,6 +49,7 @@ export class EarthEventsOverlay {
   private readonly events = new Map<EarthEventLayerId, EarthEvent[]>();
   private readonly visible = new Set<EarthEventLayerId>();
   private active = false;
+  private labelsOn = true;
   private readonly _point = new THREE.Vector3();
   private readonly _earth = new THREE.Vector3();
   private readonly _camera = new THREE.Vector3();
@@ -81,6 +82,11 @@ export class EarthEventsOverlay {
       layerId,
       topEvents(events, layer?.maxMarkers ?? events.length)
     );
+  }
+
+  /** Étiquettes seules : les marqueurs restent, leur texte (et la place qu'il réserve) disparaît. */
+  setLabelsActive(on: boolean): void {
+    this.labelsOn = on;
   }
 
   /** Allume ou éteint une couche. Le canvas reste monté ; seul ce qu'il peint change. */
@@ -174,7 +180,7 @@ export class EarthEventsOverlay {
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.stroke();
 
-        if (labelled >= MAX_LABELS_PER_LAYER) continue;
+        if (!this.labelsOn || labelled >= MAX_LABELS_PER_LAYER) continue;
         this.ctx.font = '11px sans-serif';
         const textWidth = this.ctx.measureText(event.label).width;
         // Même règle que les sondes : un nom ne s'écrit que s'il trouve une place libre dans

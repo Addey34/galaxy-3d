@@ -341,6 +341,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.exposure': 'Brilho (exposição)',
   'settings.colorblind': 'Cores de órbita adaptadas ao daltonismo',
   'settings.gazetteer': 'Nomes da superfície',
+  'settings.eventLabels': 'Rótulos dos eventos',
   'settings.surfaceEarthBase': 'Solo da Terra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
   'settings.surfaceEarthBase.sentinel-2':

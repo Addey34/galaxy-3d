@@ -28,6 +28,8 @@ export const STORAGE_KEYS = {
   surfaceImagery: 'ssv-surface-imagery',
   /** Noms de formations de l'UAI écrits à l'approche (activés par défaut, opt-out). */
   gazetteer: 'ssv-gazetteer',
+  /** Étiquettes des séismes et événements naturels de la Terre (activées par défaut, opt-out). */
+  eventLabels: 'ssv-event-labels',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
