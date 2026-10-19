@@ -2675,9 +2675,17 @@ Sentinel-2 à 10 m, ce plancher tombait à 0,9 km de la sphère de 6 371 km, et 
 3,2 km SOUS le sol de la Terre (mesuré, puis falsifié par `e2e/surfaceImageryEarth.spec.ts` : −4,083 km
 sans la correction). Le maximum avec la sphère est conservateur aux pôles d'un globe aplati
 (environ 14 km de plancher en trop sur la Terre), jamais dangereux. `?debug-surface` affiche
-l'altitude MESURÉE du sol sous la caméra. Des aires fines ne sont déclarées que sur la Lune et
-sur Cérès ; Mars et la Terre n'ont que leur socle (chaque manifeste en liste la couverture). La
-phrase qui disait « aucune aire fine ailleurs que sur la Lune, et Mars garde son imagerie sans
+l'altitude MESURÉE du sol sous la caméra. Des aires fines sont déclarées sur la Lune, sur Cérès et,
+depuis le 2026-10-20, sur Mars (chaque manifeste en liste la couverture). La phrase qui disait
+« des aires fines ne sont déclarées que sur la Lune et sur Cérès ; Mars n'a que son socle » est
+SUPERSEDED le 2026-10-20 : cinq aires de Mars (Olympus Mons, Elysium Mons, Gale, Arsia Mons, Melas
+Chasma) sont cuites depuis MOLA MEGR à 128 pixels par degré (une dalle `megr*hb` par aire, domaine
+public NASA, même hôte que le socle), aux niveaux 5 à 7. Une aire n'est qu'une FENÊTRE de plongée :
+le cuiseur plafonne sa boîte à environ 4° sur 6° (`areaSpanDeg`) et lit UNE dalle source, donc
+Valles Marineris (63° de large, à cheval sur plusieurs dalles) et Hellas n'en ont pas. Le niveau 7
+(182 échantillons par degré) dépasse la finesse de la source (128, soit 463 m) : l'imagerie Viking
+s'arrête au niveau 7 et le moteur ne prend une tuile de hauteurs que de niveau inférieur ou égal.
+La phrase qui disait « aucune aire fine ailleurs que sur la Lune, et Mars garde son imagerie sans
 relief » est SUPERSEDED le 2026-10-12 : Mars a son socle MEGR, Cérès Occator et Ahuna Mons.
 
 ### Le relief de la Terre : ETOPO 2022, l'eau à son niveau, servi par la VM (lot 48, pas 3)

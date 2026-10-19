@@ -70,7 +70,93 @@
         "label": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg032/megr90n000fb.lbl",
         "image": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg032/megr90n000fb.img"
       },
-      "areas": []
+      "areas": [
+        {
+          "id": "olympus-mons",
+          "name": "Olympus Mons",
+          "gazetteerFeatureId": 4453,
+          "centre": {
+            "latitudeDeg": 18.653,
+            "longitudeDeg": -133.802
+          },
+          "diameterKm": 610.1,
+          "levels": [
+            5,
+            6,
+            7
+          ],
+          "label": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr44n180hb.lbl",
+          "image": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr44n180hb.img"
+        },
+        {
+          "id": "elysium-mons",
+          "name": "Elysium Mons",
+          "gazetteerFeatureId": 1783,
+          "centre": {
+            "latitudeDeg": 25.023,
+            "longitudeDeg": 147.214
+          },
+          "diameterKm": 401,
+          "levels": [
+            5,
+            6,
+            7
+          ],
+          "label": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr44n090hb.lbl",
+          "image": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr44n090hb.img"
+        },
+        {
+          "id": "gale",
+          "name": "Gale",
+          "gazetteerFeatureId": 2071,
+          "centre": {
+            "latitudeDeg": -5.367,
+            "longitudeDeg": 137.811
+          },
+          "diameterKm": 154.1,
+          "levels": [
+            5,
+            6,
+            7
+          ],
+          "label": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr00n090hb.lbl",
+          "image": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr00n090hb.img"
+        },
+        {
+          "id": "arsia-mons",
+          "name": "Arsia Mons",
+          "gazetteerFeatureId": 394,
+          "centre": {
+            "latitudeDeg": -8.257,
+            "longitudeDeg": -120.092
+          },
+          "diameterKm": 470,
+          "levels": [
+            5,
+            6,
+            7
+          ],
+          "label": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr00n180hb.lbl",
+          "image": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr00n180hb.img"
+        },
+        {
+          "id": "melas-chasma",
+          "name": "Melas Chasma",
+          "gazetteerFeatureId": 3812,
+          "centre": {
+            "latitudeDeg": -10.518,
+            "longitudeDeg": -72.539
+          },
+          "diameterKm": 563.5,
+          "levels": [
+            5,
+            6,
+            7
+          ],
+          "label": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr00n270hb.lbl",
+          "image": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg128/megr00n270hb.img"
+        }
+      ]
     },
     {
       "id": "ceres-dawn-hamo-dtm",
