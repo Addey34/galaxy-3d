@@ -69,6 +69,7 @@ export const es: Record<MessageKey, string> = {
   'a11y.searchResults': '{count} resultados coinciden.',
   'a11y.searchResultsOne': 'Un resultado coincide.',
   'a11y.searchResultsNone': 'Ningún resultado coincide.',
+  'a11y.placeDive': 'Descendiendo hacia {place}, {body}.',
   'a11y.paletteResults': 'Resultados de la búsqueda',
   'a11y.tourPlayer': 'Visita guiada en curso',
   'error.title': 'Error de la aplicación',

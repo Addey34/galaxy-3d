@@ -42,4 +42,8 @@ export async function diveByTapping(
   });
   const dive = (await canvas.getAttribute('data-place-dive')) ?? '';
   expect(dive.startsWith(`${name}|`)).toBe(true);
+  // Les noms sont sur un canevas : la plongée doit être dite à un lecteur d'écran.
+  await expect(page.locator('[role="status"].sr-only').first()).toContainText(
+    `Diving to ${name}`
+  );
 }

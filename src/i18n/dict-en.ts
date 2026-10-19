@@ -75,6 +75,7 @@ export const en = {
   'a11y.searchResults': '{count} results match.',
   'a11y.searchResultsOne': 'One result matches.',
   'a11y.searchResultsNone': 'No result matches.',
+  'a11y.placeDive': 'Diving to {place}, {body}.',
   'a11y.paletteResults': 'Search results',
   'a11y.tourPlayer': 'Guided tour in progress',
   'error.title': 'Application Error',
