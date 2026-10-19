@@ -9,9 +9,9 @@
  */
 
 /** `[altitude au-dessus du niveau de 1 bar (km), pression (bar), température (K)]`. */
-export type ProfileSample = readonly [number, number, number];
+type ProfileSample = readonly [number, number, number];
 
-export interface ProfileSegment {
+interface ProfileSegment {
   /** `entry` : réduit des mesures de l'entrée ; `descent` : AJUSTÉ à l'adiabatique sèche. */
   readonly kind: 'entry' | 'descent';
   readonly product: string;
@@ -48,7 +48,7 @@ export interface ProfileRow {
 }
 
 /** Les pressions repères, en bar : une ligne par décade utile, de la stratosphère au fond. */
-export const REFERENCE_PRESSURES_BAR: readonly number[] = [1e-3, 0.1, 1, 10];
+const REFERENCE_PRESSURES_BAR: readonly number[] = [1e-3, 0.1, 1, 10];
 
 /**
  * Les lignes affichées : le plus haut échantillon, celui dont la pression est la plus proche

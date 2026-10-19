@@ -38,7 +38,7 @@ export const MU_SUN_AU3_PER_DAY2 = GAUSS_K * GAUSS_K;
  *   1 s = 1 / 86 400 jour           →   s⁻² = 86 400² jour⁻²
  */
 const METRES_PER_AU = 1.495_978_707e11;
-export const G_AU3_PER_KG_DAY2 =
+const G_AU3_PER_KG_DAY2 =
   (6.674_30e-11 / (METRES_PER_AU * METRES_PER_AU * METRES_PER_AU)) *
   (86_400 * 86_400);
 

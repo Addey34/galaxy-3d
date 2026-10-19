@@ -7,12 +7,7 @@ import type {
 } from '@/types';
 
 /** Qualités acceptées par le convention de nommage des assets. */
-export const TEXTURE_QUALITIES: readonly TextureQuality[] = [
-  '8k',
-  '4k',
-  '2k',
-  '1k',
-];
+const TEXTURE_QUALITIES: readonly TextureQuality[] = ['8k', '4k', '2k', '1k'];
 
 const TEXTURE_QUALITY_SET = new Set<string>(TEXTURE_QUALITIES);
 const SAFE_TEXTURE_PATH = /^(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+$/;

@@ -59,7 +59,7 @@ export const EONET_COVERAGE_START = Date.UTC(2000, 0, 1);
 export const EONET_WINDOW_DAYS = 30;
 
 /** Plafond d'événements demandés. */
-export const EONET_QUERY_LIMIT = 200;
+const EONET_QUERY_LIMIT = 200;
 
 const DAY_MS = 86_400_000;
 

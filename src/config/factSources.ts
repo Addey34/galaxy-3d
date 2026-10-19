@@ -29,7 +29,7 @@ import type { MessageKey } from '@/i18n/dict-en';
 import { KM_PER_AU } from '@/core/ScaleService';
 import { FACT_SOURCE_PROVIDERS } from '@/registry/providers';
 
-export type FactSourceKind = 'agency' | 'database' | 'article' | 'preprint';
+type FactSourceKind = 'agency' | 'database' | 'article' | 'preprint';
 
 export interface FactSource {
   /** Qui publie : agence, base, ou auteurs d'un article (« Sicardy et al. »). */

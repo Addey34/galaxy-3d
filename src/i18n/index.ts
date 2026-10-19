@@ -36,13 +36,9 @@ export type { Locale } from './locales';
 export {
   LOCALES,
   LOCALE_ENDONYM,
-  LOCALE_SHORT,
-  LOCALE_PATH,
   HTML_LANG,
   INTL_LOCALE,
   isLocale,
-  localeOfPathname,
-  negotiateLocale,
 } from './locales';
 
 const STORAGE_KEY = STORAGE_KEYS.locale;

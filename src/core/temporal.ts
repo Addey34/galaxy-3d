@@ -27,7 +27,7 @@
 /** Ce qu'est le produit, déclaré par la source : c'est lui qui décide mesure ou modèle. */
 import type { MessageKey } from '@/i18n/dict-en';
 
-export type ProductKind =
+type ProductKind =
   /** Capteur à l'instant décrit (imagerie satellite, IMERG, solution d'origine d'un séisme). */
   | 'measurement'
   /** Modèle qui assimile des observations sur le passé (ERA5, MERRA-2). */

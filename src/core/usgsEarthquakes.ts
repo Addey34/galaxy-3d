@@ -64,7 +64,7 @@ export const EARTHQUAKE_WINDOW_DAYS = 7;
 export const EARTHQUAKE_MIN_MAGNITUDE = 4.5;
 
 /** Plafond de lignes demandées (le service refuse au-delà de 20 000 par un 400). */
-export const EARTHQUAKE_QUERY_LIMIT = 500;
+const EARTHQUAKE_QUERY_LIMIT = 500;
 
 const DAY_MS = 86_400_000;
 

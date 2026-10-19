@@ -6,7 +6,7 @@
  */
 import type { SourceCandidate } from './layerSource';
 
-export type MeteoLayerFamily = 'observed' | 'model' | 'vector' | 'realtime';
+type MeteoLayerFamily = 'observed' | 'model' | 'vector' | 'realtime';
 export type MeteoLayerPhase = 'idle' | 'loading' | 'ready' | 'error';
 
 export interface MeteoGridDiagnostics {
@@ -19,7 +19,7 @@ export interface MeteoGridDiagnostics {
   longitudeSpan: number;
 }
 
-export interface MeteoTextureDiagnostics {
+interface MeteoTextureDiagnostics {
   width: number;
   height: number;
   wrapS: string;
@@ -30,7 +30,7 @@ export interface MeteoTextureDiagnostics {
   colorSpace: string;
 }
 
-export interface MeteoGeometryDiagnostics {
+interface MeteoGeometryDiagnostics {
   type: string;
   radius: number;
   vertexCount: number;

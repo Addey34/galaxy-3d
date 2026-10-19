@@ -36,7 +36,7 @@ import {
 } from '@/core/tilePyramid';
 
 /** Segments par carreau SANS relief : la courbure d'un carreau est faible, 8 suffisent. */
-export const TILE_SEGMENTS = 8;
+const TILE_SEGMENTS = 8;
 
 export class SurfaceTile {
   readonly mesh: THREE.Mesh;

@@ -10,7 +10,7 @@ import {
 } from './viewState';
 
 /** Etat partageable de l'application, encode dans la query string. */
-export type PermalinkMode = 'educ' | 'explo';
+type PermalinkMode = 'educ' | 'explo';
 
 export interface PermalinkViewAngles {
   /** Rotation horizontale autour de la cible, en degrés (périodique, toute valeur réelle). */

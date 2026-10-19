@@ -40,13 +40,13 @@ export interface GalaxyDataManifest {
 }
 
 /** Une plage d'archive, instants `AAAAMMJJHH` INCLUSIFS. */
-export interface GalaxyDataArchiveRange {
+interface GalaxyDataArchiveRange {
   from: string;
   to: string;
   path: string;
 }
 
-export interface GalaxyDataArchive {
+interface GalaxyDataArchive {
   era5: GalaxyDataArchiveRange;
   era5t: GalaxyDataArchiveRange;
   stepHours: number;
@@ -205,7 +205,7 @@ export function decodeGxf(buffer: ArrayBuffer): {
  * par réindexation EXACTE : la grille du service est régulière au pas de `dLon`, et chaque
  * nœud de la grille rendue en est un. `convert` passe de l'unité du service à celle de la couche.
  */
-export function gxfBandToScalarGrid(
+function gxfBandToScalarGrid(
   header: GxfHeader,
   band: Float32Array,
   convert: (value: number) => number = (v) => v

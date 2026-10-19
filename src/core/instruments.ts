@@ -18,7 +18,7 @@
 import type { MissionRecord } from './missions';
 
 /** Un porteur d'instruments : un engin, qui n'est pas toujours la sonde entière. */
-export interface InstrumentHost {
+interface InstrumentHost {
   /** L'identifiant logique PDS, qui est la citation de la source. */
   readonly lid: string;
   /** Le nom PUBLIÉ par l'archive, jamais réécrit. */

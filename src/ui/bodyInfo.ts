@@ -177,7 +177,7 @@ export function formatLiveDistance(km: number): string {
   return `${auStr} · ${kmStr}`;
 }
 
-export function formatLightTime(km: number): string {
+function formatLightTime(km: number): string {
   const s = km / C_KM_PER_S;
   const light = t('unit.light');
   if (s < 1) return `${(s * 1000).toFixed(0)} ms ${light}`;
@@ -524,7 +524,7 @@ function factLabel(
  * instrument : `core/bodyFacts.notApplicableFacts` les déclare hors sujet pour tout corps du
  * catalogue, et réciproquement, de sorte qu'un seul ordre serve les deux familles.
  */
-export const CARD_FACT_ORDER: readonly FactField[] = [
+const CARD_FACT_ORDER: readonly FactField[] = [
   'radiusKm',
   'distanceAU',
   'massKg',

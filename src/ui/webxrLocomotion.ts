@@ -13,9 +13,9 @@ import * as THREE from 'three';
 import type { PlayerState } from './webxrReferenceSpace';
 
 /** Unités scène/seconde en vol libre — traverse tout le système Éduc (~200u) en ~6-7 s. */
-export const FLIGHT_SPEED = 30;
+const FLIGHT_SPEED = 30;
 /** Zone morte standard manette — filtre la dérive/le bruit du stick au repos. */
-export const DEADZONE = 0.15;
+const DEADZONE = 0.15;
 /** Angle de virage snap, degrés — défaut confort VR courant. */
 export const SNAP_TURN_DEG = 30;
 

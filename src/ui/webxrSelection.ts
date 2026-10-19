@@ -49,7 +49,7 @@ export function aimController(
 }
 
 /** Corps touché par le rayon d'un contrôleur, ou `null` si rien de valide dans sa ligne de mire. */
-export function pickBodyFromController(
+function pickBodyFromController(
   controller: THREE.XRTargetRaySpace,
   scene: THREE.Scene,
   validNames: ReadonlySet<string>

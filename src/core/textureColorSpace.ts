@@ -8,7 +8,7 @@
  * retéléversé ; le GPU « linéarisait » donc les normales 8k et la carte de déplacement de la Terre
  * (écart de 73 sur 255 avec une lecture brute, 0 une fois retéléversées comme déclarées).
  */
-export const DATA_TEXTURE_KEYS: ReadonlySet<string> = new Set([
+const DATA_TEXTURE_KEYS: ReadonlySet<string> = new Set([
   'normalMap',
   'bump',
   'displacement',

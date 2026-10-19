@@ -18,7 +18,7 @@
 import { DAY_MS, type DatedProduct } from './temporal';
 
 /** Endpoint Open-Meteo à utiliser pour une date. */
-export type MeteoSource = 'forecast' | 'archive';
+type MeteoSource = 'forecast' | 'archive';
 
 export interface MeteoTimePlanOptions {
   /** « Maintenant » injectable (tests). Défaut new Date(). */

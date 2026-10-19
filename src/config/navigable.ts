@@ -123,7 +123,7 @@ export function isNavigableTarget(name: string): boolean {
  * Tout ce qui se nomme, se cherche et se cible : corps du catalogue d'abord (l'ordre du
  * catalogue est une donnée), objets d'instrument ensuite.
  */
-export function navigableBodies(
+function navigableBodies(
   config: CelestialConfig = CELESTIAL_CONFIG
 ): Map<string, CelestialBodyConfig> {
   const bodies = flattenBodies(config);

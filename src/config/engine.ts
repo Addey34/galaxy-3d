@@ -108,7 +108,7 @@ export const BOOT_QUALITY_PROFILE: QualityProfile =
  * (pixel ratio, bloom, densité LOD). Relit le choix persisté à chaque appel → un changement
  * de mode en cours de session est pris en compte sans recharger, pour ces leviers-là.
  */
-export const activeQualityProfile = (): QualityProfile =>
+const activeQualityProfile = (): QualityProfile =>
   qualityProfile(resolveQualityTier(readQualityMode(), isMobile()));
 
 /** Pixel ratio maximal courant, dérivé du palier actif (réévalué à chaud). */
@@ -119,13 +119,13 @@ export const currentMaxPixelRatio = (): number =>
 // EXPORTED INTERFACES
 // ============================================================================
 
-export interface TextureQualityLevel {
+interface TextureQualityLevel {
   segments: number;
   distance: number;
   quality: TextureQuality;
 }
 
-export interface TextureQualityMap {
+interface TextureQualityMap {
   ultra: TextureQualityLevel;
   high: TextureQualityLevel;
   medium: TextureQualityLevel;
@@ -500,7 +500,7 @@ export const REALTIME_CLOUDS_SETTINGS = {
 };
 
 /** Grille commune des modèles Open-Meteo : forecast plus fin, archive ERA5 plus grossière. */
-export const METEO_MODEL_GRID_SETTINGS = {
+const METEO_MODEL_GRID_SETTINGS = {
   gridStep: 4,
   archiveGridStep: 8,
   maxLat: 90,

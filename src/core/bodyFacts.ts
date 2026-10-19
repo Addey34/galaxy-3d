@@ -110,8 +110,9 @@ export const NAME_FACTS: ReadonlySet<FactField> = new Set<FactField>([
  * magnitude de 22,08 ± 0,45 n'est pas « à 2 % près » : 0,45 magnitude, c'est un facteur 1,5 sur
  * la brillance, donc de l'ordre de 20 % sur le diamètre qu'on en déduit.
  */
-export const ABSOLUTE_UNCERTAINTY_FACTS: ReadonlySet<FactField> =
-  new Set<FactField>(['absoluteMagnitude']);
+const ABSOLUTE_UNCERTAINTY_FACTS: ReadonlySet<FactField> = new Set<FactField>([
+  'absoluteMagnitude',
+]);
 
 /**
  * Faits que SEULE la couche instrument porte (`config/navigable.ts`), par `kind`. Un objet
@@ -286,7 +287,7 @@ export function bodyFact(
  * l'arrondi affiché dit déjà la précision utile ; au-dessus, taire l'incertitude laisserait lire
  * la masse de Protée (± 94 %) avec la même assurance que celle de la Terre.
  */
-export const UNCERTAINTY_DISPLAY_THRESHOLD = 0.05;
+const UNCERTAINTY_DISPLAY_THRESHOLD = 0.05;
 
 export function displayedUncertainty(entry: FactEntry): number | null {
   if (entry.status !== 'value' || entry.provenance.uncertainty === undefined)

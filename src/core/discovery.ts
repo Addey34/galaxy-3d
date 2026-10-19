@@ -20,7 +20,7 @@
  */
 
 /** Qui publie une affirmation. Les cinq sources sont décrites dans `config/discoveryIndex.json`. */
-export type DiscoverySource =
+type DiscoverySource =
   'jpl-sats' | 'sbdb' | 'nssdca' | 'jpl-planets' | 'nasa-science';
 
 /** Une affirmation de découverte, telle que sa source la déclare. */
@@ -75,13 +75,6 @@ export type DiscoveryStanding =
   | 'withinPublishedDates'
   /** La scène est après la dernière date publiée. */
   | 'known';
-
-export const DISCOVERY_STANDINGS: readonly DiscoveryStanding[] = [
-  'knownSinceAntiquity',
-  'notYetKnown',
-  'withinPublishedDates',
-  'known',
-];
 
 const ANCIENT_FORMS: ReadonlySet<DiscoveryClaim['form']> = new Set([
   'prehistoric',

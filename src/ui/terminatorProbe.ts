@@ -41,7 +41,7 @@ import type { PublicAPI } from '@/SolarSystemApp';
 import { hasDebugFlag } from '@/utils/debugFlags';
 
 /** Une tranche d'éclairement et ce que l'écran y montre. */
-export interface TerminatorBin {
+interface TerminatorBin {
   /** `dot(normale monde, direction du Soleil)` — le sinus de la hauteur solaire. */
   raw: number;
   pixels: number;
@@ -59,7 +59,7 @@ export interface TerminatorBin {
   meanColor: [number, number, number];
 }
 
-export interface TerminatorProbe {
+interface TerminatorProbe {
   /**
    * Place la caméra à 90° du Soleil : le terminateur passe par le centre du disque.
    * À ne pas appeler PENDANT la transition éduc↔explo : le rayon vient du mode courant

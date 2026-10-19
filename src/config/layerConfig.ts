@@ -121,7 +121,7 @@ export const LAYER_TERMINATOR_WRAP: Record<string, number | undefined> = {
 // 64 segments pour les planètes : bon compromis silhouette/perf (≈ 8 k triangles).
 // 128 pour les anneaux de Saturne : la géométrie RingGeometry est plate, mais ses
 // subdivisions radiales déterminent la précision des UVs corrigés (_correctRingUVs).
-export const GEOMETRY_SEGMENTS = 64;
+const GEOMETRY_SEGMENTS = 64;
 // Segments haute densité pour le displacement (relief géométrique) : une carte de
 // hauteur n'est visible qu'avec assez de vertices. Réservé au corps proche/
 // sélectionné (cf. CelestialObject) — trop coûteux pour tous les corps en continu.
@@ -1424,7 +1424,7 @@ export interface MoonlightUniforms {
   color: { value: THREE.Color };
 }
 
-export function createShadowAwareStandardMaterial(
+function createShadowAwareStandardMaterial(
   params: THREE.MeshStandardMaterialParameters,
   options: {
     invertRoughnessMap?: boolean;

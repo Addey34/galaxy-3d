@@ -19,8 +19,8 @@ export interface LabelRect {
 }
 
 /** Marges de respiration entre deux libellés (px). Reprises du placement de l'ExploHud. */
-export const LABEL_PAD_X = 4;
-export const LABEL_PAD_Y = 3;
+const LABEL_PAD_X = 4;
+const LABEL_PAD_Y = 3;
 
 export function rectsCollide(
   a: LabelRect,

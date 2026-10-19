@@ -16,9 +16,6 @@
  * `core/calendar.ts`, ligne 22.10).
  */
 
-/** Première année qu'un `<input type="date">` sait porter. */
-export const MIN_DATE_FIELD_YEAR = 1;
-
 /** Valeur `yyyy-mm-dd` (UTC) du champ date. Année toujours sur quatre chiffres. */
 export function dateFieldValue(date: Date): string {
   const year = String(date.getUTCFullYear()).padStart(4, '0');

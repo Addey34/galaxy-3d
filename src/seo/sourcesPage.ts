@@ -56,7 +56,7 @@ export interface TextureProvenance {
   illustrative?: boolean;
 }
 
-export interface DependencyNotice {
+interface DependencyNotice {
   name: string;
   version: string;
   license: string;

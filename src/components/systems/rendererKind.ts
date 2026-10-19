@@ -10,7 +10,7 @@ import type * as THREE from 'three';
 const SOFTWARE = /swiftshader|llvmpipe|software|basic render/i;
 
 /** Le nom du moteur de rendu tel que le pilote le publie, ou `''` s'il ne le publie pas. */
-export function rendererName(renderer: THREE.WebGLRenderer): string {
+function rendererName(renderer: THREE.WebGLRenderer): string {
   const gl = renderer.getContext();
   const info = gl.getExtension('WEBGL_debug_renderer_info');
   return info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';

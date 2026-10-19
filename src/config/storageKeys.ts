@@ -41,9 +41,7 @@ export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
  * 2026-09-22, la colonne « Orbite » du tableau Réglages, et le contenu de la scène ne se
  * conserve pas d'une visite à l'autre (seules les préférences de rendu et de lecture le sont).
  */
-export const RETIRED_STORAGE_KEYS: readonly string[] = [
-  'ssv-interstellar-paths',
-];
+const RETIRED_STORAGE_KEYS: readonly string[] = ['ssv-interstellar-paths'];
 
 /** Efface les clés retirées ; un stockage refusé (mode privé) n'a rien à effacer. */
 export function clearRetiredStorage(): void {

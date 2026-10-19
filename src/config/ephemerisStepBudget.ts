@@ -57,7 +57,7 @@ export function shippedBytesForStep(stepDays: number): number {
 }
 
 /** Pourquoi un pas n'est pas raffiné. Une raison par CAUSE, jamais une phrase libre. */
-export type StepRefusalReason =
+type StepRefusalReason =
   /** Le pas qui tiendrait la cible coûte trop d'octets livrés, et le coût est chiffré ici. */
   | 'cost-in-shipped-bytes'
   /**

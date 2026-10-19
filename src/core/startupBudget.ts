@@ -75,7 +75,7 @@ export const BUDGETED_FAMILIES = [
   'javascript',
 ] as const;
 
-export type BudgetedFamily = (typeof BUDGETED_FAMILIES)[number];
+type BudgetedFamily = (typeof BUDGETED_FAMILIES)[number];
 
 /**
  * À quelle famille appartient une URL du démarrage.

@@ -125,14 +125,6 @@ export const LOCALE_ENDONYM: Record<Locale, string> = {
   'pt-BR': 'Português (Brasil)',
 };
 
-/** Libellé court du sélecteur. Ce que l'œil lit ; l'endonyme est ce que le lecteur d'écran dit. */
-export const LOCALE_SHORT: Record<Locale, string> = {
-  en: 'EN',
-  fr: 'FR',
-  es: 'ES',
-  'pt-BR': 'PT',
-};
-
 export function isLocale(value: unknown): value is Locale {
   return LOCALES.includes(value as Locale);
 }

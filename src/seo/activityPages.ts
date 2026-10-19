@@ -41,7 +41,7 @@ import { longDay } from './instrumentLandingPage';
  * La source du FORMAT, lue le 2026-10-18 (journal du lot 58). Une constante et non une fiche de
  * fournisseur : elle ne fonde aucun fait affiché, elle dit d'où vient la forme de la page.
  */
-export const ESA_FORMAT_SOURCE = {
+const ESA_FORMAT_SOURCE = {
   publisher: 'ESA Education',
   title: 'One year on Earth: Understanding seasons (teach with space, PR45)',
   url: 'https://www.esa.int/Education/Teachers_Corner/One_year_on_Earth_-_Understanding_seasons_Teach_with_space_PR45',
@@ -246,7 +246,7 @@ export interface ActivityPageInputs {
   origin: string;
 }
 
-export const activitySlug = (activity: Pick<ActivityRecord, 'id'>): string =>
+const activitySlug = (activity: Pick<ActivityRecord, 'id'>): string =>
   `${ACTIVITIES_SLUG}/${activity.id}`;
 
 /** La scène que l'élève ouvre : la page de la Terre dans la langue de la fiche, et sa visite. */

@@ -18,12 +18,12 @@
 import type * as THREE from 'three';
 import { SCATTER_GLSL } from '@/shaders/SkyScatteringShader';
 
-export const AERIAL_VIEW_SAMPLES = 8;
-export const AERIAL_LIGHT_SAMPLES = 4;
+const AERIAL_VIEW_SAMPLES = 8;
+const AERIAL_LIGHT_SAMPLES = 4;
 
 const FLAG = '__aerialPerspective';
 
-export const AERIAL_VERTEX_GLSL = /* glsl */ `
+const AERIAL_VERTEX_GLSL = /* glsl */ `
   #define VIEW_SAMPLES ${AERIAL_VIEW_SAMPLES}
   #define LIGHT_SAMPLES ${AERIAL_LIGHT_SAMPLES}
   ${SCATTER_GLSL}

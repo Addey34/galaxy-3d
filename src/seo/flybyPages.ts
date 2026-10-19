@@ -56,8 +56,7 @@ export interface FlybyEvent {
   measuredFrom: 'centre' | 'difference';
 }
 
-export type FlybyExclusion =
-  'departure' | 'edge' | 'bound' | 'phase' | 'unresolved';
+type FlybyExclusion = 'departure' | 'edge' | 'bound' | 'phase' | 'unresolved';
 
 export interface FlybyRecord {
   source: string;

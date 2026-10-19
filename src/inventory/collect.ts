@@ -60,7 +60,7 @@ export type Capability =
   | 'page'
   | 'card';
 
-export interface PositionState {
+interface PositionState {
   /** Binaire Horizons livré, tel que le manifeste le déclare, ou `null`. */
   readonly binary: {
     readonly file: string;
@@ -121,7 +121,7 @@ export interface PositionState {
   }[];
 }
 
-export interface TextureLayerState {
+interface TextureLayerState {
   readonly layer: string;
   readonly shipped: readonly TextureQuality[];
   /**
@@ -135,7 +135,7 @@ export interface TextureLayerState {
   readonly refusedAbove: TierRefusal | null;
 }
 
-export interface FactsState {
+interface FactsState {
   readonly applicable: number;
   readonly sourced: number;
   /** Faits volontairement non publiés, avec une raison RÉDIGÉE dans la fiche. */

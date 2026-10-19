@@ -25,7 +25,7 @@ export interface PlaceDisc {
 const RAD = Math.PI / 180;
 
 /** Distance angulaire entre deux points, en radians. */
-export function angularDistance(
+function angularDistance(
   lat1: number,
   lon1: number,
   lat2: number,
@@ -234,11 +234,7 @@ function planar(ring: Ring): Ring {
   return out;
 }
 
-export function ringContainsPoint(
-  ring: Ring,
-  lat: number,
-  lon: number
-): boolean {
+function ringContainsPoint(ring: Ring, lat: number, lon: number): boolean {
   // SUR LA COUTURE, les deux côtés. Le gazetteer publie des formations EXACTEMENT à 360° (Cydonia,
   // Chalce… six sur Mars), et un anneau découpé au méridien s'arrête sur cette même valeur : le
   // test pair-impair n'y tranche pas, et ces six formations sortaient « jamais observées ».
@@ -407,10 +403,7 @@ export function antipode(place: PlaceDisc): { lat: number; lon: number } {
  * Diviner ont une empreinte [-90, 90] × [0, 360]), qui répondent identiquement partout. La règle
  * est posée PAR PRODUIT et se dérive de sa géométrie : aucune liste de types exclus n'est tenue.
  */
-export function coversAntipode(
-  rings: ReadonlyArray<Ring>,
-  place: PlaceDisc
-): boolean {
+function coversAntipode(rings: ReadonlyArray<Ring>, place: PlaceDisc): boolean {
   const a = antipode(place);
   return rings.some((ring) => ringContainsPoint(ring, a.lat, a.lon));
 }

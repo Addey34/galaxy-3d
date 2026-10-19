@@ -27,8 +27,8 @@ import {
  * Contrat complet dans `docs/ARCHITECTURE.md` § « Position d'un corps ».
  */
 
-export const ORBIT_SAMPLE_COUNT = 512;
-export const EXPLO_ORBIT_SAMPLE_COUNT = 4096;
+const ORBIT_SAMPLE_COUNT = 512;
+const EXPLO_ORBIT_SAMPLE_COUNT = 4096;
 
 const MS_PER_DAY = 86_400_000;
 
