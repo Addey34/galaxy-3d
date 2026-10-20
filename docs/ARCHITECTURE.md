@@ -6435,6 +6435,8 @@ joue dans la scène est la VISITE que l'activité nomme, ouverte par `?tour=<id>
   duplique aucun fait : il pose une autre question sur les MÊMES valeurs (le prolongement avancé
   des saisons ajoute une seule mesure, le gain de flux au périhélie, `apsisFluxGainPercent`).
 
+- **Une valeur peut lire l'imagerie** (2026-10-20, activité `nile-delta`) : `imageryEdition` donne le mois de début ou de fin d'une édition annuelle de Sentinel-2 (EOX), LU dans la fiche de tuiles de cette édition (`SurfaceTileset.verified`, `config/activityFacts.ts::catalogueEditionReader`), jamais écrit dans la fiche d'activité. Une édition que le catalogue ne sert pas (2017, écartée avec sa raison dans `eoxEditions.json`) fait échouer le build (« n'a pas d'édition »). `years` n'est exigé que par une mesure de scène. L'activité nomme la visite `nile-delta` ; sa dernière partie sépare ce qui est observé (les deux éditions) de ce qui est calculé (l'éclairage) : à une date future l'image reste la dernière édition, et la question `future-image` corrige l'idée d'une photo du futur.
+
 Gardes : `src/config/activities.test.ts` (chaque valeur évaluée sur tout le domaine, chaque
 emplacement rempli dans chaque langue, valeurs du jour figées, et quatre falsifications gardées
 comme tests : 23,5°, fait absent, précision non tenue, visite inconnue),
