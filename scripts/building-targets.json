@@ -4,6 +4,7 @@
     {
       "id": "paris-bdtopo",
       "title": "Bâtiments de Paris, BD TOPO (IGN)",
+      "body": "earth",
       "source": {
         "kind": "wfs",
         "name": "BD TOPO, Institut national de l'information géographique et forestière",

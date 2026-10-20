@@ -134,6 +134,8 @@ export class SurfaceTile {
     // Le carreau n'est montré qu'une fois son image décodée : un carreau blanc au-dessus de
     // la surface serait pire que l'absence de carreau.
     this.mesh.visible = false;
+    // Marque lue par la couche de bâtiments : le sol RENDU se mesure sur ces maillages-là.
+    this.mesh.userData['surfaceTile'] = true;
     this.mesh.renderOrder = 1 + this.level;
   }
 

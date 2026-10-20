@@ -248,6 +248,7 @@ async function bakeSet(set) {
   const manifest = {
     id: set.id,
     title: set.title,
+    body: set.body,
     format: 'GXBD',
     version: 1,
     zoom: set.zoom,
@@ -309,3 +310,26 @@ const recipe = JSON.parse(readFileSync(RECIPE, 'utf8'));
 const sets = recipe.sets.filter((s) => !only || s.id === only);
 if (!sets.length) throw new Error(`aucun jeu « ${only} » dans la recette`);
 for (const set of sets) await bakeSet(set);
+
+// L'index lit les manifestes EN PLACE, dans l'ordre de la recette : c'est l'ordre de priorité
+// (le premier jeu qui couvre un lieu gagne, `config/buildingSets.ts`). Il est dérivé, jamais écrit
+// à la main, et un jeu sans manifeste n'y figure pas.
+if (!DRY_RUN) {
+  const entries = [];
+  for (const set of recipe.sets) {
+    const file = join(MANIFEST_OUT, set.id, 'manifest.json');
+    if (!existsSync(file)) continue;
+    const m = JSON.parse(readFileSync(file, 'utf8'));
+    entries.push({
+      id: m.id,
+      body: m.body,
+      bboxLonLat: m.bboxLonLat,
+      manifest: `assets/buildings/${m.id}/manifest.json`,
+    });
+  }
+  writeFileSync(
+    join(MANIFEST_OUT, 'index.json'),
+    `${JSON.stringify({ sets: entries }, null, 2)}\n`
+  );
+  console.log(`index : ${entries.length} jeu(x)`);
+}

@@ -1,6 +1,7 @@
 {
   "id": "paris-bdtopo",
   "title": "Bâtiments de Paris, BD TOPO (IGN)",
+  "body": "earth",
   "format": "GXBD",
   "version": 1,
   "zoom": 14,
