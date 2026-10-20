@@ -135,10 +135,10 @@ export function doiUrl(meta: CitationMetadata): string {
  * texte divergent, et celle qu'on oublie est celle que le lecteur a sous les yeux.
  */
 /** Le titre de la section, dans les quatre langues livrees. */
-const HOW_TO_CITE: DocText = {
+export const HOW_TO_CITE: DocText = {
   en: 'How to cite',
   fr: 'Comment citer',
-  es: 'Como citar',
+  es: 'Cómo citar',
   'pt-BR': 'Como citar',
 };
 
