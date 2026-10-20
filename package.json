@@ -35,6 +35,7 @@
     "pose:spice": "node scripts/spice-pose.mjs",
     "smallbodies:age": "node scripts/check-small-body-snapshot-age.mjs",
     "spacecraft:phases": "node scripts/derive-spacecraft-phases.mjs",
+    "buildings:bake": "node scripts/bake-building-tiles.mjs",
     "surface:tiles": "node --max-old-space-size=4096 scripts/bake-surface-height-tiles.mjs",
     "surface:glo30": "node scripts/pull-glo30.mjs",
     "surface:capabilities": "node scripts/read-wmts-capabilities.mjs",

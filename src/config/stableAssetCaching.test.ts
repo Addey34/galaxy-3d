@@ -54,6 +54,8 @@ describe('actifs au nom stable : cache Firebase et service worker d’accord', (
       'noms hachés par contenu ; seul le manifeste a un nom stable, et sa règle propre le revalide',
     'height-tiles':
       'répertoires hachés par contenu ; le manifeste a sa règle, tenue par la garde suivante',
+    buildings:
+      'pas encore demandé par l’application (lot 63, C.2 : le cuiseur écrit le manifeste, le rendu viendra en C.3) ; Firebase le revalide, et sa règle de service worker arrivera avec le rendu',
     kernels:
       'non déployé (exclu par `ignore` dans firebase.json), et absent de git : posé en local par `pnpm spk:stage`',
     social:

@@ -1,0 +1,32 @@
+{
+  "$comment": "Cibles du cuiseur de tuiles de bâtiments (pnpm buildings:bake), lues par scripts/bake-building-tiles.mjs. DONNÉE, jamais du code. Un jeu = UNE source (l'ODbL interdit de mélanger des contenus incompatibles dans une base dérivée, clause 4.4 d). Ajouter une zone = ajouter une entrée. Mesures du lot 63 dans docs/private/MICRO_LOT63.md.",
+  "sets": [
+    {
+      "id": "paris-bdtopo",
+      "title": "Bâtiments de Paris, BD TOPO (IGN)",
+      "source": {
+        "kind": "wfs",
+        "name": "BD TOPO, Institut national de l'information géographique et forestière",
+        "endpoint": "https://data.geopf.fr/wfs/ows",
+        "typeName": "BDTOPO_V3:batiment",
+        "license": "Licence Ouverte 2.0",
+        "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+        "pageSize": 3000,
+        "minIntervalMs": 1100
+      },
+      "bboxLonLat": [2.32, 48.85, 2.36, 48.87],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode_d_acquisition_altimetrique",
+        "originByMethod": {
+          "Photogrammétrie": "measured",
+          "Interpolation bâti BDTopo": "interpolated",
+          "Pas de Z": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    }
+  ]
+}
