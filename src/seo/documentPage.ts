@@ -57,6 +57,8 @@ export const CONTACTS_SLUG = 'contacts';
 export const PLACES_SLUG = 'places';
 /** Les activités pour la classe (lot 58), même forme : `/activities/` et `/activities/seasons/`. */
 export const ACTIVITIES_SLUG = 'activities';
+/** La porte « recherche » (lot 63, pas 3), une page d'entrée : `/research/`. */
+export const RESEARCH_SLUG = 'research';
 const NAV_SLUGS: readonly string[] = [
   ...DOC_SLUGS,
   MISSIONS_SLUG,
@@ -65,6 +67,7 @@ const NAV_SLUGS: readonly string[] = [
   CONTACTS_SLUG,
   PLACES_SLUG,
   ACTIVITIES_SLUG,
+  RESEARCH_SLUG,
 ];
 
 /**
@@ -151,6 +154,12 @@ const NAV: Record<string, DocText> = {
     fr: 'Activités',
     es: 'Actividades',
     'pt-BR': 'Atividades',
+  },
+  research: {
+    en: 'For research',
+    fr: 'Pour la recherche',
+    es: 'Para la investigación',
+    'pt-BR': 'Para a pesquisa',
   },
 };
 

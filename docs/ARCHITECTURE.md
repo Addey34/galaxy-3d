@@ -6446,6 +6446,18 @@ l'adresse ne la garde pas ; falsifiée en rappelant la découverte), `e2e/built-
 et fiche des saisons dans les quatre langues, à l'écran ET imprimées : axe, 390 px, sans habillage
 du site, fiche élève sur sa feuille).
 
+## La porte « recherche » (`/research/`, lot 63, pas 3, 2026-10-20)
+
+Une page d'entrée par langue (`src/seo/researchPages.ts`, module pur), sans sous-pages et SANS
+nombre : elle dit où vérifier (`/methodology/`, `/sources/`), citer (l'ancre `#citation` de la
+méthodologie), parcourir les événements datés (missions, survols, mises en orbite, contacts, grands
+lieux, activités) et reproduire une vue. L'adresse d'exemple est écrite par `formatPermalinkDate`,
+la fonction des liens partagés. Son slug est dans la navigation de tous les documents
+(`documentPage.ts`), donc l'empreinte des documents générés bouge d'un coup. Garde :
+`src/seo/researchPages.test.ts` (chaque famille citée est liée dans la langue de la page, l'ancre
+existe dans `citationSection`, aucun chiffre dans le texte, falsifiée en changeant l'ancre) et
+`e2e/built-pages.spec.ts` (axe et 390 px, comme les autres documents).
+
 ## Les cibles des missions entrées au catalogue (2026-10-04, vague 1)
 
 Les pages des missions montraient ce que le registre du PDS déclare, et vingt de ses missions ne

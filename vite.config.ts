@@ -1275,6 +1275,25 @@ function bodyLandingPages() {
             `pages des activités : ${activityDocPages.length} au lieu de ${(activityInputs.activities.length + 1) * DOC_LOCALE_COUNT}`
           );
         docPages.push(...activityDocPages);
+        /**
+         * LA PORTE « RECHERCHE » (lot 63, pas 3) : une page d'entrée par langue, sans nombre, qui
+         * renvoie aux pages générées ci-dessus. Le dépôt vient de `CITATION.cff`, la date de /sources.
+         */
+        const researchSeo = (await loader.ssrLoadModule(
+          '/src/seo/researchPages.ts'
+        )) as typeof import('./src/seo/researchPages');
+        docPages.push(
+          ...[undefined, ...OTHER_LOCALES].map((locale) =>
+            researchSeo.researchPage(
+              {
+                origin: SITE_ORIGIN,
+                repository,
+                updated: sourcesUpdated,
+              },
+              locale ?? 'en'
+            )
+          )
+        );
         for (const page of docPages) {
           const dir = resolve(dist, new URL(page.canonical).pathname.slice(1));
           await mkdir(dir, { recursive: true });

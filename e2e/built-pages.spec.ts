@@ -62,6 +62,7 @@ function generatedDocuments(): string[] {
       'contacts',
       'places',
       'activities',
+      'research',
     ])
       if (existsSync(join(DIST, prefix, name, 'index.html')))
         docs.push(prefix ? `${prefix}/${name}` : name);
@@ -199,7 +200,7 @@ test.describe('pages générées, à 390 px', () => {
 
   test('la dérivation trouve les sept documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(32);
+    expect(DOCUMENTS.length).toBe(36);
     expect(PLACE_PAGES.length).toBe(4);
     expect(ACTIVITY_PAGES.length).toBe(8);
     expect(DOCUMENTS).toContain('pt-br/activities');
