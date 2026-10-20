@@ -1103,3 +1103,37 @@ describe('/methodology : un ellipsoïde AJUSTÉ est dit, avec ses demi-axes (lig
     }
   );
 });
+
+describe('/sources : le relief dit la finesse de la SOURCE quand la grille est plus fine', () => {
+  /**
+   * `Olympus Mons (325 m)` se lisait comme une mesure à 325 m : c'est le pas de la grille servie
+   * au niveau 7, alors que MOLA est à 128 pixels par degré, soit 462 m. La page ajoute le pas de
+   * la source quand il est plus GROSSIER que celui de la grille, et se tait sinon (Tycho : la
+   * source à 1024 pixels par degré est plus fine que la grille, rien à dire).
+   */
+  const word = { en: 'source', fr: 'source', es: 'fuente', 'pt-BR': 'fonte' };
+  const marsRadiusKm =
+    flattenBodies(CELESTIAL_CONFIG).get('mars')!.realData!.radiusKm!;
+  const mars = JSON.parse(
+    readFileSync(
+      resolve(ROOT, 'public/assets/height-tiles/mars/manifest.json'),
+      'utf-8'
+    )
+  ) as HeightManifestSummary;
+  const sourcePpd = mars.coverage.find((e) => e.area)!.sourcePixelsPerDegree!;
+  const sourceMetres = Math.round(
+    ((2 * Math.PI * marsRadiusKm) / 360 / sourcePpd) * 1000
+  );
+
+  it.each(sources.map((p) => [p.locale, p] as const))(
+    '%s : Mars dit son pas de source, la Lune se tait',
+    (locale, page) => {
+      const label = word[locale as keyof typeof word];
+      expect(page.body).toContain(
+        `Olympus Mons (325 m, ${label} ${sourceMetres} m)`
+      );
+      expect(page.body).toContain('Tycho (83 m)');
+      expect(page.body).not.toContain(`Tycho (83 m, ${label}`);
+    }
+  );
+});

@@ -91,8 +91,17 @@ export interface HeightfieldProvenance {
   matrix: TileMatrixShape;
   /** Hôte qui sert les tuiles quand ce n'est pas le site lui-même, sinon `null`. */
   servedBy: string | null;
-  /** Aires nommées cuites plus finement, avec le niveau atteint. */
-  areas: readonly { name: string; level: number }[];
+  /**
+   * Aires nommées cuites plus finement, avec le niveau atteint et la finesse de leur SOURCE
+   * (pixels par degré) : la grille servie peut être plus fine que la source qui la nourrit (les
+   * aires de Mars : 182 échantillons par degré au niveau 7, pour une source à 128), et la page
+   * ne doit pas laisser lire le pas de la grille comme celui de la mesure.
+   */
+  areas: readonly {
+    name: string;
+    level: number;
+    sourcePixelsPerDegree?: number;
+  }[];
   tiles: number;
   bytes: number;
 }
@@ -108,6 +117,7 @@ export interface HeightManifestSummary {
     levels?: number[];
     global?: boolean;
     area?: { name: string };
+    sourcePixelsPerDegree?: number;
   }[];
 }
 
@@ -157,6 +167,7 @@ export function heightfieldProvenance(
       .map((entry) => ({
         name: entry.area!.name,
         level: Math.max(...(entry.levels ?? [entry.level])),
+        sourcePixelsPerDegree: entry.sourcePixelsPerDegree,
       })),
     tiles: manifest.tiles,
     bytes: manifest.bytes,
@@ -985,16 +996,37 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
 
   // ── Relief ──
   if (input.heightfields.length > 0) {
+    const format = (value: number): string =>
+      value >= 1000
+        ? `${(value / 1000).toFixed(2).replace('.', DECIMAL[locale])} km`
+        : `${Math.round(value)} m`;
+    const radiusOf = (body: string): number =>
+      flat.get(body)?.realData?.radiusKm ?? 0;
     const metres = (
       body: string,
       level: number,
       matrix: TileMatrixShape
+    ): string =>
+      format(groundResolutionKm(level, radiusOf(body), matrix) * 1000);
+    /**
+     * Le pas de la SOURCE d'une aire, dit seulement quand il est plus GROSSIER que celui de la
+     * grille servie : la ligne `Olympus Mons (325 m)` se lisait comme une mesure à 325 m, alors
+     * que MOLA est à 128 pixels par degré, soit 462 m.
+     */
+    const sourcePitch = (
+      body: string,
+      area: { level: number; sourcePixelsPerDegree?: number },
+      matrix: TileMatrixShape
     ): string => {
-      const radiusKm = flat.get(body)?.realData?.radiusKm ?? 0;
-      const value = groundResolutionKm(level, radiusKm, matrix) * 1000;
-      return value >= 1000
-        ? `${(value / 1000).toFixed(2).replace('.', DECIMAL[locale])} km`
-        : `${Math.round(value)} m`;
+      if (!area.sourcePixelsPerDegree) return '';
+      const sourceM =
+        ((2 * Math.PI * radiusOf(body)) / 360 / area.sourcePixelsPerDegree) *
+        1000;
+      const gridM =
+        groundResolutionKm(area.level, radiusOf(body), matrix) * 1000;
+      return sourceM > gridM * 1.05
+        ? `, ${L({ en: 'source', fr: 'source', es: 'fuente', 'pt-BR': 'fonte' })} ${format(sourceM)}`
+        : '';
     };
     const reliefRows = input.heightfields.map((set) => [
       escapeHtml(name(set.body, locale)),
@@ -1018,7 +1050,7 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
             set.areas
               .map(
                 (area) =>
-                  `${area.name} (${metres(set.body, area.level, set.matrix)})`
+                  `${area.name} (${metres(set.body, area.level, set.matrix)}${sourcePitch(set.body, area, set.matrix)})`
               )
               .join(', ')
           ),
