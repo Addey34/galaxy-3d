@@ -39,6 +39,38 @@ function stripProductionHtmlComments() {
 }
 
 /**
+ * LA BALISE D'AUDIENCE N'EXISTE QUE DANS LE BUILD (2026-10-20). Écrite dans `index.html`, elle
+ * partait aussi du serveur de développement et de chaque test de navigateur, avec le MÊME jeton
+ * que la production : sur 30 jours le tableau de bord comptait 305 k pages vues, presque toutes
+ * `localhost/`, contre 340 réelles. Cloudflare Web Analytics est sans cookie et son jeton est
+ * public (visible dans la source de toute page servie) ; il n'est pas un secret.
+ */
+const ANALYTICS_BEACON = {
+  src: 'https://static.cloudflareinsights.com/beacon.min.js',
+  token: '0e30fd8b340b406889644940b0fdfceb',
+};
+
+function analyticsBeacon() {
+  return {
+    name: 'analytics-beacon',
+    apply: 'build' as const,
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'script',
+          attrs: {
+            type: 'module',
+            src: ANALYTICS_BEACON.src,
+            'data-cf-beacon': JSON.stringify({ token: ANALYTICS_BEACON.token }),
+          },
+          injectTo: 'head' as const,
+        },
+      ];
+    },
+  };
+}
+
+/**
  * Retire les COMMENTAIRES et l'indentation des shaders GLSL écrits en gabarits
  * (`src/build/glslComments.ts`) : le minifieur ne touche jamais au contenu d'une chaîne, et
  * 14,5 Ko de commentaires partaient au démarrage (2026-10-11). Actif en dev AUSSI, pour que la
@@ -1381,6 +1413,7 @@ export default defineConfig({
     clientFactSnapshot(),
     deriveRegistryText(),
     stripProductionHtmlComments(),
+    analyticsBeacon(),
     bodyLandingPages(),
     // PWA installable + hors-ligne. Pensé pour l'usage en classe (wifi d'école saturé) :
     // au 2e chargement, l'app boote sans réseau et les corps déjà visités restent

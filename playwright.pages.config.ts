@@ -34,7 +34,22 @@ export default defineConfig({
     trace: 'on-first-retry',
     reducedMotion: 'reduce',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  /**
+   * Ces scénarios servent le BUILD, donc la balise d'audience de la production : sans ce blocage,
+   * chaque passage de la suite (en CI à chaque poussée) compterait des centaines de visites de
+   * `localhost` sous le jeton du site réel. Le nom est rendu introuvable ; un scénario le vérifie.
+   */
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: ['--host-resolver-rules=MAP static.cloudflareinsights.com ~NOTFOUND'],
+        },
+      },
+    },
+  ],
   /**
    * Port dédié (5275), distinct de celui du serveur de dev (5273) : les deux suites doivent
    * pouvoir tourner l'une après l'autre sans qu'un `reuseExistingServer` attrape le mauvais.

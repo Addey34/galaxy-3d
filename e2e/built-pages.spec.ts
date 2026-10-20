@@ -258,6 +258,27 @@ test.describe('pages générées, à 390 px', () => {
    * où ils tiennent sur une seule, que le défaut se voyait. Une page documentaire suffit : les
    * trois familles partagent le même en-tête (`documentPage.ts`).
    */
+  /**
+   * LA BALISE D'AUDIENCE (2026-10-20) : le build la porte (une fois), et cette suite ne l'atteint
+   * pas. Sans le blocage de `playwright.pages.config.ts`, chaque passage compterait des visites
+   * de `localhost` sous le jeton de la production (305 k pages vues en 30 jours, presque toutes
+   * de nos tests). Falsifié en retirant l'argument de lancement : la requête n'échoue plus.
+   */
+  test('la balise d’audience est dans le build, et ces tests ne l’atteignent pas', async ({
+    page,
+  }) => {
+    const html = readFileSync(join(DIST, 'index.html'), 'utf-8');
+    expect(html.match(/data-cf-beacon/g)?.length).toBe(1);
+    const failed: string[] = [];
+    page.on('requestfailed', (request) => {
+      if (request.url().includes('static.cloudflareinsights.com'))
+        failed.push(request.failure()?.errorText ?? '');
+    });
+    await page.goto('/', { waitUntil: 'load' });
+    await expect.poll(() => failed.length).toBeGreaterThan(0);
+    expect(failed[0]).toContain('ERR_NAME_NOT_RESOLVED');
+  });
+
   test('les liens de langue restent séparés sur un écran large', async ({
     page,
   }) => {
