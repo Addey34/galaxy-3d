@@ -5380,6 +5380,17 @@ fiche ne devinerait pas :
   visite y a touché : les autres visites ne ralentissent pas.
 - **Il faut replonger après chaque saut de date** : la Terre tourne sous une caméra fixe, et la
   visée dérivait de 0,3° (36 km) entre 2016 et 2025 au même instant de la journée.
+- **Un saut de date n'est PAS appliqué tant que ses éphémérides ne sont pas arrivées**
+  (`OrbitalMechanics.jumpToDate`, décision D3) : le champ de date affiche déjà la cible, mais la
+  scène, rotation de la Terre comprise, montre encore l'ANCIENNE date. Une plongée lancée dans
+  l'intervalle visait le delta dans l'orientation ancienne, puis, à l'arrivée des octets, la Terre
+  sautait de 123° sous la caméra : écran presque NOIR (luminance 3 à 6 sur 255, côté nuit) pendant
+  12 à 20 s sur le vrai GPU, la visée à 35,9° N, 154,3° E au lieu de 30,87° N, 31,16° E. Signalé sur
+  téléphone (« tout noir »), reproduit le 2026-10-20 par le relevé `?debug-surface`. Le moteur
+  attend maintenant `TourRuntimeHost.isDatePending` après `jumpToDate` et `jumpToEvent`, bornée par
+  `DATE_SETTLE_TIMEOUT_MS` comme la surface ; mesuré après, la visée reste sur le delta dès la
+  première seconde et l'étape 5 arrive à 15 s au lieu d'environ 40. Garde : `tourEngine.test.ts`
+  (« ne plonge pas tant que la date demandée attend ses octets », falsifiée).
 - **Les deux éditions n'ont pas la même radiométrie** (celle de 2025 est bien plus sombre). La
   légende le DIT et demande de comparer les formes, pas les couleurs.
 - **La plongée referme les panneaux** : la fiche du corps, ouverte par le vol, couvrait le centre

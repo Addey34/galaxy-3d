@@ -250,7 +250,15 @@ test.describe('mobile scripted tour', () => {
     const badge = await rect('#surface-imagery');
     const card = await rect('.stour-card');
     const topDock = await rect('.dock--top-left');
-    const button = await rect('.dock--top-right button');
+    // Le premier bouton VISIBLE : « Fiche du corps » reste masqué tant que la visite n'a
+    // sélectionné aucun corps (elle attend sa date avant de voler), et son rectangle vaut zéro.
+    const button = await page.evaluate(() => {
+      for (const b of document.querySelectorAll('.dock--top-right button')) {
+        const r = b.getBoundingClientRect();
+        if (r.width > 0) return { left: r.left };
+      }
+      throw new Error('aucun bouton visible dans la colonne de droite');
+    });
     expect(badge.bottom, 'above the card').toBeLessThanOrEqual(card.top);
     expect(badge.top, 'under the top bar').toBeGreaterThanOrEqual(
       topDock.bottom
