@@ -122,8 +122,12 @@ const PLACE_PAGES = DOCUMENTS.filter((d) => d.endsWith('places')).map(
  * Une fiche d'activité (lot 58), la dixième famille, dans les quatre langues : la seule dont la
  * fiche élève imprime une adresse EN CLAIR, sans espace, donc le pire cas de coupure à 390 px.
  */
-const ACTIVITY_PAGES = DOCUMENTS.filter((d) => d.endsWith('activities')).map(
-  (index) => `${index}/seasons`
+const ACTIVITY_PAGES = DOCUMENTS.filter((d) =>
+  d.endsWith('activities')
+).flatMap((index) =>
+  readdirSync(join(DIST, index), { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => `${index}/${e.name}`)
 );
 
 async function settleAnimations(page: Page): Promise<void> {
@@ -197,7 +201,7 @@ test.describe('pages générées, à 390 px', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
     expect(DOCUMENTS.length).toBe(32);
     expect(PLACE_PAGES.length).toBe(4);
-    expect(ACTIVITY_PAGES.length).toBe(4);
+    expect(ACTIVITY_PAGES.length).toBe(8);
     expect(DOCUMENTS).toContain('pt-br/activities');
     expect(DOCUMENTS).toContain('fr/places');
     expect(MISSION_PAGES.length).toBe(4);
@@ -281,7 +285,7 @@ test.describe('pages générées, à 390 px', () => {
           .evaluate((h) => getComputedStyle(h).breakBefore)
       ).toBe('page');
       await expect(page.locator('.activity-url')).toContainText(
-        '?tour=seasons'
+        `?tour=${path.split('/').pop()}`
       );
     });
 
