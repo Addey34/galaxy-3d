@@ -545,7 +545,7 @@ function wireChrome(): {
     // Imagerie de surface streamée (lot 9, phase 9C) : une bascule de réglage, un bandeau de
     // provenance, et un `import()` dynamique du moteur à l'approche. Rien n'est demandé au
     // démarrage, ni tant qu'aucun corps n'est approché de près.
-    setupSurfacePanel(api);
+    const surfacePanel = setupSurfacePanel(api);
 
     // Ancres invisibles des sondes et des interstellaires : ce qui les rend CIBLABLES par la
     // commande de navigation partagée, sans leur donner le moindre pixel (cf.
@@ -812,7 +812,10 @@ function wireChrome(): {
       planetNav,
       TOUR_SCRIPTS,
       permalink,
-      modeSwitcher
+      modeSwitcher,
+      surfacePanel,
+      placeDive,
+      overlayCoordinator
     );
     hideLoader();
     // La visite demandée remplace la découverte de premier passage, qui se superposerait à elle.

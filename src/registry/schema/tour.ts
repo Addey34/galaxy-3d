@@ -13,6 +13,7 @@
  */
 import { z } from 'zod';
 import { ASTRONOMICAL_EVENT_KINDS } from '@/core/astronomicalEvents';
+import { SURFACE_CHOICES } from '@/ui/surfaceChoices';
 
 /**
  * Un texte localisé : les QUATRE langues sont obligatoires, comme partout dans le registre depuis
@@ -50,7 +51,7 @@ const timeScale = z
   );
 
 /**
- * LES CINQ FORMES D'ÉTAPE, une par capacité du moteur.
+ * LES FORMES D'ÉTAPE, une par capacité du moteur.
  *
  * `jumpToEvent` est la seule qui n'existait pas avant le lot 21, et elle remplace l'exception qui
  * clochait sur un identifiant (`id === 'eclipse'` dans `ui/tourPlayer.ts`) : la date de l'éclipse
@@ -103,6 +104,24 @@ const step = z.discriminatedUnion('kind', [
    */
   z
     .object({ kind: z.literal('setMode'), mode: z.enum(['educ', 'explo']) })
+    .strict(),
+  /**
+   * `diveTo` et `setSurface` : ajoutées avec « Le delta du Nil dans le temps », qui montre un MÊME
+   * lieu à deux dates. La plongée existait (clic sur un nom, lot 63) sans commande ; le fond
+   * d'imagerie existait sans que la visite puisse le choisir. Ni l'une ni l'autre ne porte de
+   * contenu propre à un lieu : le nom est celui du gazetteer ou de Natural Earth, vérifié par
+   * `tourPlaces.test.ts`.
+   */
+  z
+    .object({
+      kind: z.literal('diveTo'),
+      place: z.string().min(1),
+      /** Largeur du cadrage en km ; absent, la taille connue du nom (la Terre n'en a pas). */
+      frameKm: z.number().positive().optional(),
+    })
+    .strict(),
+  z
+    .object({ kind: z.literal('setSurface'), base: z.enum(SURFACE_CHOICES) })
     .strict(),
   z
     .object({

@@ -399,3 +399,40 @@ test.describe('une visite ouverte par son adresse', () => {
     await expect(page.locator('.stour-card')).toBeHidden();
   });
 });
+
+/**
+ * « LE DELTA DU NIL DANS LE TEMPS » : la fiche choisit le fond Sentinel-2, plonge sur un NOM, et
+ * REND le fond qu'elle a emprunté. L'imagerie d'EOX est coupée : la visite doit aller à son bout
+ * sans réseau (l'attente d'une surface calme est bornée), le bandeau disant ce qui est affiché.
+ */
+test.describe('nile-delta tour', () => {
+  test('dives onto the named place, borrows the base, gives it back', async ({
+    page,
+  }) => {
+    // La première plongée rejoue jusqu'à cinq fois sans imagerie : mesuré 1,4 min en local et plus de
+    // 2 min sur le coureur, au-delà du délai par défaut de 120 s.
+    test.setTimeout(300_000);
+    await page.route('**eox.at/**', (route) => route.abort());
+    await page.goto('/?tour=nile-delta');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+    const next = page.locator('.stour-next');
+    await expect(next).toBeEnabled({ timeout: 120_000 });
+    await expect(page.locator('canvas').first()).toHaveAttribute(
+      'data-place-dive',
+      /^Nile Delta\|/
+    );
+    await expect(page.locator('#surface-earth-base')).toHaveValue('sentinel-2');
+    // `?tour=` est une ouverture : l'adresse ne la garde pas, un rechargement ne la rejouerait pas.
+    expect(page.url()).not.toContain('tour=');
+
+    // La visite s'ARRÊTE ici, sans la jouer jusqu'au bout : chaque plongée est rejouée jusqu'à son
+    // cadrage, et sans imagerie qui l'affine (coupée plus haut) la fin prend plus de deux minutes
+    // sur le coureur de CI (shard 3, run 39367700824, délai de test dépassé), sans rien prouver de
+    // plus. Que la visite aille à son bout sans réseau est tenu par `core/tourEngine.test.ts`
+    // (attente de surface bornée, plongées en nombre borné).
+    await clickWhenCalm(page, page.locator('.stour-close'));
+    await expect(page.locator('.stour-card')).toBeHidden();
+    await expect(page.locator('#surface-earth-base')).toHaveValue('mosaic');
+  });
+});

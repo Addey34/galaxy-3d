@@ -26,6 +26,10 @@ import {
 } from '@/core/tourEngine';
 import { resolveEventDate } from '@/config/tourScripts';
 import { trapFocus } from './surfaceFocus';
+import type { SurfaceChoiceId } from './surfaceChoices';
+import type { SurfacePanelHandle } from './surfacePanel';
+import type { setupPlaceDive } from './placeDive';
+import type { OverlayCoordinator } from './overlayCoordinator';
 
 export interface TourPlayer {
   /** Lance une visite par son identifiant ; `false` si aucune ne le porte (`?tour=`, lot 58). */
@@ -54,7 +58,19 @@ export function setupTourPlayer(
    * boutons, `aria-pressed`, la classe du `<body>`, la caméra et le HUD « Voyage ». Une visite
    * qui appellerait `om.setMode` laisserait tout cela dire le contraire de la scène.
    */
-  modeSwitcher: ModeSwitcher
+  modeSwitcher: ModeSwitcher,
+  /**
+   * Le fond d'imagerie et la plongée sur un nom : les deux réglages qu'une visite emprunte pour
+   * montrer un même lieu à deux dates (`diveTo`, `setSurface`). Le panneau de surface reste leur
+   * propriétaire, la visite ne touche à aucun de ses éléments.
+   */
+  surface: Pick<SurfacePanelHandle, 'base' | 'setBase'>,
+  placeDive: ReturnType<typeof setupPlaceDive>,
+  /**
+   * Plonger sur un lieu, c'est le REGARDER : la fiche du corps, ouverte par le vol, couvrait le
+   * centre d'un écran de téléphone et cachait l'imagerie que la visite montre (mesuré à 390 px).
+   */
+  overlays: Pick<OverlayCoordinator, 'closeAll'>
 ): TourPlayer {
   const helpPopover = document.getElementById('help-popover');
   if (!helpPopover) return { start: () => false, dispose: () => {} };
@@ -138,6 +154,8 @@ export function setupTourPlayer(
    * pouvait déjà être en Explo, et le ramener de force serait un autre réglage volé.
    */
   let modeBeforeTour: 'educ' | 'explo' | null = null;
+  /** Le fond d'imagerie d'AVANT la visite, rendu à la fin : même raison que le mode. */
+  let baseBeforeTour: SurfaceChoiceId | null = null;
   let advanceResolve: (() => void) | null = null;
   let currentScript: TourScript | null = null;
 
@@ -215,6 +233,8 @@ export function setupTourPlayer(
         caption.textContent = t('tours.status.speeding');
         nextButton.disabled = true;
         break;
+      case 'diveTo':
+      case 'setSurface':
       case 'wait':
         caption.textContent = lastCaptionText;
         nextButton.disabled = true;
@@ -249,6 +269,7 @@ export function setupTourPlayer(
     hideOverlay();
     if (speedChanged) om.setSimulationSpeed(1);
     if (modeBeforeTour !== null) modeSwitcher.setMode(modeBeforeTour);
+    if (baseBeforeTour !== null) surface.setBase(baseBeforeTour);
     navigation.selectBody('overview');
     permalink.setSuspended(false);
     permalink.sync();
@@ -263,6 +284,7 @@ export function setupTourPlayer(
     signal = { cancelled: false, paused: false };
     speedChanged = false;
     modeBeforeTour = null;
+    baseBeforeTour = null;
     active = true;
     stepIndex = 0;
     currentStep = null;
@@ -299,6 +321,21 @@ export function setupTourPlayer(
       isMorphing: () =>
         Math.abs(om.scaleMorph - (modeSwitcher.getMode() === 'explo' ? 1 : 0)) >
         0.001,
+      diveTo: (place, frameKm) => {
+        overlays.closeAll();
+        const body = camera.targetName;
+        return body
+          ? placeDive.diveToName(body, place, frameKm)
+          : Promise.resolve(false);
+      },
+      isDiving: () => placeDive.isDiving(),
+      diveReached: () => placeDive.reached(),
+      isSurfaceBusy: () =>
+        (camera.renderer.domElement.dataset['surfaceBusy'] ?? '0') !== '0',
+      setSurface: (base) => {
+        baseBeforeTour ??= surface.base();
+        return surface.setBase(base as SurfaceChoiceId);
+      },
       waitForAdvance,
     };
 

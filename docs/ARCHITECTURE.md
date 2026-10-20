@@ -5333,7 +5333,7 @@ donc il annonçait encore cinq noms après qu'on se soit éloigné.
 
 ### Le vocabulaire des étapes est FERMÉ
 
-Une fiche ne porte aucune expression : elle choisit parmi sept formes nommées, exactement comme les
+Une fiche ne porte aucune expression : elle choisit parmi neuf formes nommées, exactement comme les
 formes déclarées du registre d'entités (`{"$deg": …}`). C'est cette fermeture qui permet à la
 donnée de décrire un comportement sans devenir du code.
 
@@ -5344,6 +5344,8 @@ donnée de décrire un comportement sans devenir du code.
 | `jumpToEvent` | saute à la prochaine occurrence RÉELLE d'un événement, depuis la date courante |
 | `setTimeScale` | accélère (ou renverse) le temps, plafonné à ce que le curseur sait représenter |
 | `setMode` | bascule l'échelle, `educ` ou `explo` (lot 35) |
+| `diveTo` | plonge sur un lieu NOMMÉ du corps suivi, cadré sur `frameKm` (lot 63, § « La visite qui montre un lieu à deux dates ») |
+| `setSurface` | choisit le fond d'imagerie du sol, un des `SURFACE_CHOICES` ; la visite rend le fond de DÉPART |
 | `caption` | une légende localisée ; sans `durationMs` elle attend un geste |
 | `wait` | laisse la scène tourner |
 
@@ -5356,6 +5358,38 @@ DÉPART, comme il remettait déjà la vitesse, et jamais « éduc » en dur — 
 Explo ne doit pas en être sorti par une visite. La preuve qu'une forme n'est pas spéculative est
 qu'une fiche s'en serve : « Voyage aux confins » passe en Explo juste avant Sedna, là où la
 ceinture cesse d'être une file de points bien rangés.
+
+**La visite qui montre un lieu à deux dates (« Le delta du Nil dans le temps », 2026-10-20).** Deux
+formes de plus, `diveTo` et `setSurface`, pour qu'une fiche puisse montrer le MÊME cadrage à deux
+dates sans qu'aucun module ne connaisse le Nil. Ce que la mesure a imposé, et qu'un lecteur de la
+fiche ne devinerait pas :
+
+- **Le cadrage se dit en km (`frameKm`), pas par le nom.** « Nile Delta » ne porte qu'un niveau de
+  zoom d'apparition (Natural Earth), soit environ 1 000 km, trop large pour voir ce qui change. À 150 km on voit le delta entier et AUCUN changement net ; à 40 km autour du
+  Caire, le désert à l'ouest de la ville passe de presque vide (2016) à des dizaines de champs ronds
+  (2025), mesuré sur les captures des deux éditions, même visée, même altitude.
+- **La plongée se REJOUE jusqu'à son cadrage (`DIVE_ATTEMPTS`).** Les bornes d'approche de la caméra
+  suivent la finesse de l'imagerie DÉJÀ servie, qui ne s'affine qu'en approchant : la première
+  plongée s'arrêtait à 471 km là où la cible en demandait 96. `placeDive.reached()` compare la
+  distance obtenue à la distance voulue ; le moteur rejoue, borné.
+- **L'attente d'une surface calme est BORNÉE (`SURFACE_SETTLE_TIMEOUT_MS`)** : une visite ne reste
+  jamais suspendue au réseau, la légende paraît et le bandeau de provenance dit ce qui est
+  affiché. Le moteur laisse d'abord `SURFACE_NOTICE_MS` à la surface pour NOTER un changement
+  (elle ne réévalue ses carreaux qu'à l'image suivante, et un compte lu avant vaut zéro sans que
+  rien soit arrivé), puis attend `data-surface-busy`. Un saut de date n'attend la surface QUE si la
+  visite y a touché : les autres visites ne ralentissent pas.
+- **Il faut replonger après chaque saut de date** : la Terre tourne sous une caméra fixe, et la
+  visée dérivait de 0,3° (36 km) entre 2016 et 2025 au même instant de la journée.
+- **Les deux éditions n'ont pas la même radiométrie** (celle de 2025 est bien plus sombre). La
+  légende le DIT et demande de comparer les formes, pas les couleurs.
+- **La plongée referme les panneaux** : la fiche du corps, ouverte par le vol, couvrait le centre
+  d'un écran de 390 px et cachait l'imagerie.
+- Gardes : `src/config/tourSurface.test.ts` (un lieu cité existe, `frameKm` requis sur la Terre, une
+  légende ne dit que l'année de la date affichée, pour les visites qui choisissent un fond), et
+  `e2e/tourPlayer.spec.ts` (le fond est rendu, la visite va à son bout imagerie coupée).
+- Piège de dev : une fiche de visite AJOUTÉE pendant que `pnpm dev` tourne n'entre pas dans la
+  carte des traductions (module virtuel mis en cache) ; ses légendes restent en anglais jusqu'au
+  redémarrage du serveur. Le build de production est juste.
 
 **L'angle d'une visite est un CORPS, pas trois nombres (lot 57, 2026-10-18).** `flyTo` accepte un
 `from` facultatif : une fois le vol fini, et pas avant (l'arrivée du vol écraserait la pose), le

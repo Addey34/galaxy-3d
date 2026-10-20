@@ -91,7 +91,16 @@ function debugTileBudget(): {
     : null;
 }
 
-export function setupSurfacePanel(api: PublicAPI): () => void {
+/** Ce que le panneau laisse à ses voisins : se défaire, et choisir le fond (une visite guidée). */
+export interface SurfacePanelHandle {
+  dispose: () => void;
+  /** Le fond du sol de la Terre en vigueur. */
+  base: () => SurfaceChoiceId;
+  /** Choisit un fond comme le ferait le réglage ; `false` si le panneau ne le propose pas. */
+  setBase: (id: SurfaceChoiceId) => boolean;
+}
+
+export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   const radiiKm = new Map<string, number>();
   for (const [name, cfg] of flattenBodies(CELESTIAL_CONFIG)) {
     const km = cfg.realData?.radiusKm;
@@ -544,17 +553,27 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   window.addEventListener(NOTICE_CHANGED, placeBadge);
   const unsubscribe = api.animationSystem.onFrame(tick);
 
-  return () => {
-    unsubscribe();
-    window.removeEventListener('resize', placeBadge);
-    engine?.dispose();
-    engine = null;
-    curtain?.dispose();
-    curtain = null;
-    badge.remove();
-    wrapper.remove();
-    baseWrapper.remove();
-    compareWrapper.remove();
+  return {
+    dispose: () => {
+      unsubscribe();
+      window.removeEventListener('resize', placeBadge);
+      engine?.dispose();
+      engine = null;
+      curtain?.dispose();
+      curtain = null;
+      badge.remove();
+      wrapper.remove();
+      baseWrapper.remove();
+      compareWrapper.remove();
+    },
+    base: () => choice,
+    setBase: (id) => {
+      baseSelect.value = id;
+      if (baseSelect.value !== id) return false;
+      choice = id;
+      compareWrapper.hidden = choice !== 'sentinel-2';
+      return true;
+    },
   };
 }
 
