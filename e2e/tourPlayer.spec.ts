@@ -212,6 +212,68 @@ test.describe('mobile scripted tour', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   /**
+   * LE BANDEAU DE PROVENANCE NE PASSE PAS SOUS LA CARTE (2026-10-20). Vu sur le delta du Nil à
+   * 390 px : la carte de la visite, au-dessus de lui dans la pile, cachait ses lignes de crédit,
+   * que la licence de l'imagerie exige à l'écran. Pendant une visite il se place sous la barre du
+   * haut, à gauche de la colonne de boutons. L'imagerie est coupée dans cette suite : le bandeau
+   * est rendu visible à la main, avec un crédit aussi long que celui d'EOX.
+   */
+  test('keeps the imagery credit clear of the tour card and the buttons', async ({
+    page,
+  }) => {
+    await openPicker(page);
+    await page.locator('.stour-picker-item').nth(0).click();
+    await expect(page.locator('.stour-card')).toBeVisible();
+    await page.evaluate(() => {
+      const badge = document.querySelector<HTMLElement>('#surface-imagery')!;
+      badge.hidden = false;
+      for (const [cls, text] of [
+        [
+          'si-headline',
+          'EOxCloudless Sentinel-2 cloudless 2016 (s2cloudless) à 611 m/pixel',
+        ],
+        ['si-detail', 'images de janvier 2016 à décembre 2017 · observé'],
+        [
+          'si-credit',
+          'EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017) · NOAA National Centers for Environmental Information (ETOPO 2022) · Copernicus DEM GLO-30, produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved · Water mask: NASA GIBS (MODIS/SRTM)',
+        ],
+      ] as const)
+        badge.querySelector(`.${cls}`)!.textContent = text;
+      // Le bandeau se replace sur cet événement, comme à la publication de la carte.
+      window.dispatchEvent(new Event('galaxy:tour-clearance'));
+    });
+    const rect = (selector: string) =>
+      page.evaluate((sel) => {
+        const r = document.querySelector(sel)!.getBoundingClientRect();
+        return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+      }, selector);
+    const badge = await rect('#surface-imagery');
+    const card = await rect('.stour-card');
+    const topDock = await rect('.dock--top-left');
+    const button = await rect('.dock--top-right button');
+    expect(badge.bottom, 'above the card').toBeLessThanOrEqual(card.top);
+    expect(badge.top, 'under the top bar').toBeGreaterThanOrEqual(
+      topDock.bottom
+    );
+    expect(badge.right, 'left of the button column').toBeLessThanOrEqual(
+      button.left
+    );
+    // Fermée, la visite rend le bandeau à sa place du bas.
+    await clickWhenCalm(page, page.locator('.stour-close'));
+    await expect(page.locator('.stour-card')).toBeHidden();
+    // Sans imagerie, la fermeture a masqué le bandeau : on le remontre pour lire où il se pose.
+    await page.evaluate(() => {
+      document.querySelector<HTMLElement>('#surface-imagery')!.hidden = false;
+      window.dispatchEvent(new Event('resize'));
+    });
+    const after = await rect('#surface-imagery');
+    expect(after.top, 'back at the bottom').toBeGreaterThan(badge.top + 100);
+    expect(
+      await page.evaluate(() => document.documentElement.dataset['tour'])
+    ).toBeUndefined();
+  });
+
+  /**
    * LA PLUS LONGUE LÉGENDE DU REGISTRE, et non la première visite venue.
    *
    * Ce test mesurait la carte sur `nth(0)`, dont la première étape n'affiche aucune prose : il ne
