@@ -2506,6 +2506,22 @@ button {
 .surface-imagery-badge .si-credit {
   opacity: 0.8;
 }
+/* PENDANT UNE VISITE (2026-10-20) : la carte de la visite occupe le bas de l'écran et cachait le
+   bandeau, donc les lignes de crédit que la licence exige. Le bandeau passe EN HAUT, sous la barre
+   du haut (`surfacePanel.placeBadge`, qui lit `--stour-clear`, publiée par `ui/tourPlayer.ts`),
+   à gauche de la colonne de boutons : empilé au-dessus de la carte il recouvrait le sujet. Il ne
+   garde que ce qui DIT d'où vient l'image et à qui elle appartient : titre, intervalle, crédit.
+   Les lignes du relief et du rideau reviennent à la fermeture de la visite. */
+:root[data-tour='on'] .surface-imagery-badge {
+  right: auto;
+  left: var(--edge-x);
+  box-sizing: border-box;
+  max-width: calc(100vw - 2 * var(--edge-x) - 4.25rem);
+}
+:root[data-tour='on'] .surface-imagery-badge .si-relief,
+:root[data-tour='on'] .surface-imagery-badge .si-compare {
+  display: none;
+}
 /* RIDEAU AVANT/APRÈS (lot 50, pas 2) : la ligne n'est qu'un repère, le shader des carreaux
    sépare les deux années. Seule la poignée reçoit le pointeur : la scène reste manipulable de
    part et d'autre de la ligne. */

@@ -25,6 +25,7 @@ import { loadDeferredMessages } from '@/i18n/deferredMessages';
 import { isSoftwareRenderer } from '@/components/systems/rendererKind';
 import Logger from '@/utils/Logger';
 import { NOTICE_CHANGED } from './ephemerisNotice';
+import { TOUR_CLEARANCE_CHANGED, tourClearancePx } from './tourClearance';
 import { SURFACE_CHOICES, type SurfaceChoiceId } from './surfaceChoices';
 import EDITION_YEARS from '@/config/eoxEditionYears.json';
 import type {
@@ -349,6 +350,16 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       ? notice.getBoundingClientRect().height + gapPx
       : 0;
     const top = dock.getBoundingClientRect().top;
+    // Pendant une visite, la carte occupe le bas de l'écran : s'empiler au-dessus d'elle recouvrait
+    // le sujet (le centre de l'écran), donc le bandeau passe EN HAUT, sous la barre du haut, où la
+    // scène est vide. Les lignes de crédit y restent lisibles, et rien ne les cache.
+    const topDock = document.querySelector('.dock--top-left');
+    if (tourClearancePx() > 0 && topDock) {
+      badge.style.top = `${topDock.getBoundingClientRect().bottom + gapPx}px`;
+      badge.style.bottom = 'auto';
+      return;
+    }
+    badge.style.top = '';
     badge.style.bottom = `${Math.max(0, window.innerHeight - top + gapPx + noticeHeight)}px`;
   }
 
@@ -551,12 +562,14 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   // Le bandeau des éphémérides manquantes occupe la même bande : quand il paraît, change de
   // taille ou disparaît, on relit sa position réelle (cf. `ui/ephemerisNotice`).
   window.addEventListener(NOTICE_CHANGED, placeBadge);
+  window.addEventListener(TOUR_CLEARANCE_CHANGED, placeBadge);
   const unsubscribe = api.animationSystem.onFrame(tick);
 
   return {
     dispose: () => {
       unsubscribe();
       window.removeEventListener('resize', placeBadge);
+      window.removeEventListener(TOUR_CLEARANCE_CHANGED, placeBadge);
       engine?.dispose();
       engine = null;
       curtain?.dispose();

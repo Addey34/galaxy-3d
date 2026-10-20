@@ -9,6 +9,7 @@
  * caméra passe par `PlanetNavigation.selectBody`, jamais par `CameraSystem` en direct, pour que
  * fiche d'info et permalien restent cohérents.
  */
+import { TOUR_CLEARANCE_CHANGED } from './tourClearance';
 import './tourPlayer.css';
 import type { ModeSwitcher } from './modeSwitcher';
 import { onLocaleChange, t, getLocale } from '@/i18n';
@@ -245,9 +246,39 @@ export function setupTourPlayer(
   /** Libère le piège à focus du dialogue modal ; `null` quand la carte est fermée. */
   let releaseTrap: (() => void) | null = null;
 
+  /**
+   * Ce que la carte occupe, publié pour les autres bandeaux (2026-10-20). Le bandeau de provenance
+   * de l'imagerie est posé en bas à droite et la carte, au-dessus de lui dans la pile, en cachait
+   * les lignes de crédit à 390 px : l'attribution exigée par la licence disparaissait pendant la
+   * visite. Il se place désormais AU-DESSUS de la carte (`styles.css`, `[data-tour]`).
+   */
+  const root = document.documentElement;
+  const publishClearance = (): void => {
+    root.style.setProperty(
+      '--stour-clear',
+      `${Math.max(0, window.innerHeight - card.getBoundingClientRect().top)}px`
+    );
+    window.dispatchEvent(new Event(TOUR_CLEARANCE_CHANGED));
+  };
+  const clearanceObserver =
+    typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(publishClearance);
+  const releaseClearance = (): void => {
+    clearanceObserver?.disconnect();
+    window.removeEventListener('resize', publishClearance);
+    root.style.removeProperty('--stour-clear');
+    delete root.dataset['tour'];
+    window.dispatchEvent(new Event(TOUR_CLEARANCE_CHANGED));
+  };
+
   const showOverlay = (): void => {
     backdrop.hidden = false;
     card.hidden = false;
+    root.dataset['tour'] = 'on';
+    publishClearance();
+    clearanceObserver?.observe(card);
+    window.addEventListener('resize', publishClearance);
     pauseButton.focus();
     // `aria-modal="true"` déclare le reste de la page inerte : il faut le tenir (défaut D9).
     releaseTrap?.();
@@ -258,6 +289,7 @@ export function setupTourPlayer(
     releaseTrap = null;
     backdrop.hidden = true;
     card.hidden = true;
+    releaseClearance();
     startButton.focus();
   };
   const closePicker = (): void => {
@@ -391,6 +423,7 @@ export function setupTourPlayer(
     start,
     dispose: () => {
       close();
+      releaseClearance();
       startButton.remove();
       picker.remove();
       backdrop.remove();
