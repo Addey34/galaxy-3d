@@ -31,8 +31,9 @@ test('le bouton Partager écrit les écarts du tableau et les couches actives', 
   await page.goto('/?body=jupiter&date=2026-09-23T00:00:00Z');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
 
-  // Rien n'a changé dans le tableau : le lien ne porte pas `scene`.
-  await page.locator('#share-btn').click();
+  // Rien n'a changé dans le tableau : le lien ne porte pas `scene`. Juste après le démarrage le
+  // thread principal est encore saturé (`e2e/mainThread.ts`) : un clic nu y dépasse ses 15 s.
+  await clickWhenCalm(page, page.locator('#share-btn'));
   let shared = new URL(
     await page.evaluate(() => navigator.clipboard.readText())
   );
@@ -45,8 +46,21 @@ test('le bouton Partager écrit les écarts du tableau et les couches actives', 
   await clickWhenCalm(page, page.locator('#weather-trigger'));
   // Quel que soit le démarrage de l'appareil, on part de nuages éteints puis on les allume.
   const clouds = page.getByRole('checkbox', { name: en['weather.clouds'] });
-  await clouds.uncheck();
-  await clouds.check();
+  // La case d'une couche ACTIVE qui charge est VERROUILLÉE exprès (`disabled`, voir `syncLoading`
+  // de `ui/weatherLayers.ts`), et un clic qui tombe dans ce verrou est ignoré : pointerdown et
+  // pointerup arrivent sur la case, aucun `click` ne suit, et `uncheck()` conclut « did not change
+  // its state » (journal d'événements de 192 rejeux, 4 échecs, trois réessais sur `main`).
+  // Sans réseau les nuages recommencent de charger, donc le verrou revient. Le geste se REJOUE
+  // jusqu'à ce que la case ait pris l'état voulu, au lieu d'espérer tomber hors du verrou.
+  const setClouds = async (on: boolean): Promise<void> => {
+    await expect(async () => {
+      if ((await clouds.isChecked()) !== on)
+        await clouds.click({ timeout: 3_000 });
+      await expect(clouds).toBeChecked({ checked: on, timeout: 1_000 });
+    }).toPass({ timeout: 30_000 });
+  };
+  await setClouds(false);
+  await setClouds(true);
   await page.locator('#weather-layers .surface-close').click();
 
   await page.locator('#share-btn').click();
