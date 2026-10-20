@@ -161,6 +161,7 @@ export function createBuildingsOverlay(mount: HTMLElement): BuildingsOverlay {
       return item;
     });
     const credit = document.createElement('span');
+    credit.className = 'si-buildings-credit';
     credit.textContent = st.attribution ?? '';
     mount.replaceChildren(head, ...items, credit);
   };
