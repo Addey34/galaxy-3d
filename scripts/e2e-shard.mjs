@@ -25,10 +25,15 @@ import { pathToFileURL } from 'node:url';
 const ROOT = resolve(import.meta.dirname, '..');
 export const DURATIONS_PATH = resolve(ROOT, 'e2e/durations.json');
 
-/** Les specs de la suite e2e, comme `playwright.config.ts` les voit (`built-*` à part). */
+/** Les specs de la suite e2e, comme `playwright.config.ts` les voit (`built-*` et `device-*` à part). */
 export function e2eSpecFiles(root = ROOT) {
   return readdirSync(resolve(root, 'e2e'))
-    .filter((name) => name.endsWith('.spec.ts') && !name.startsWith('built-'))
+    .filter(
+      (name) =>
+        name.endsWith('.spec.ts') &&
+        !name.startsWith('built-') &&
+        !name.startsWith('device-')
+    )
     .map((name) => `e2e/${name}`)
     .sort();
 }

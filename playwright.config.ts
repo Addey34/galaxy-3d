@@ -33,7 +33,7 @@ export default defineConfig({
    * Ils sont joués par `pnpm test:pages` (`playwright.pages.config.ts`), depuis le job `verify`
    * qui construit déjà. Le partage se fait par motif de nom, jamais par un dossier à part.
    */
-  testIgnore: '**/built-*.spec.ts',
+  testIgnore: ['**/built-*.spec.ts', '**/device-*.spec.ts'],
   // Un seul worker : toute la suite partage un serveur Vite unique (une seule app WebGL) ;
   // le parallélisme provoquait des timeouts de chargement sous contention.
   fullyParallel: false,

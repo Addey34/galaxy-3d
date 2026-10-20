@@ -10,6 +10,7 @@
 | `pnpm verify`     | typecheck + lint + `format:check` + Vitest | gate local rapide |
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
 | `pnpm test:e2e`   | scénarios Playwright Chromium/WebGL     | long              |
+| `pnpm test:mobile` | matrice Pixel 7 (Chromium, vrai GPU) et iPhone 15 (WebKit) : démarrage, débordement, luminance du canvas, visite du Nil ; captures dans `reports/mobile/`, hors CI ; `MOBILE_SOFTWARE=1` pour le rendu logiciel | moyen |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
 | `pnpm budget:startup` | budget du démarrage, famille JavaScript (exige un build) | court |
 | `pnpm budget:measure` | le démarrage mesuré par famille dans un vrai navigateur | moyen |
