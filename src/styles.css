@@ -622,6 +622,8 @@ button {
   color: var(--ink);
   font-family: 'SF Mono', 'Cascadia Code', ui-monospace, 'Fira Mono', monospace;
   padding: 0.18rem 0.4rem;
+  /* Cible tactile d'au moins 24 px (WCAG 2.5.8) : le champ de date mesurait 22 à 24 px. */
+  min-height: 1.75rem;
   transition:
     background 0.15s,
     border-color 0.15s;
@@ -2306,6 +2308,8 @@ button {
 }
 .lang-btn {
   padding: 0.2rem 0.6rem;
+  /* 23 px de haut mesurés sur Pixel 7 et iPhone 15 : sous la cible de 24 px (WCAG 2.5.8). */
+  min-height: 1.75rem;
   border-radius: var(--r-sm);
   background: rgba(var(--accent), 0.1);
   border: 1px solid rgba(var(--accent), 0.24);
@@ -2796,6 +2800,15 @@ body.is-capturing #loader {
   .surface--events .surface-body,
   .surface--help .surface-body {
     min-height: 0;
+  }
+  /* Les boutons de visite sont des enfants directs de l'aide, hors de son corps : à hauteur fixe,
+     ils laissaient aux conseils 2,5 lignes sur 46 vh. Sur téléphone la popover entière défile. */
+  .surface--help {
+    overflow-y: auto;
+  }
+  .surface--help .surface-body {
+    flex: none;
+    overflow: visible;
   }
 }
 
