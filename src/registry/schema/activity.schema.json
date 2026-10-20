@@ -384,6 +384,38 @@
               "decimals"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "imageryEdition"
+              },
+              "body": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "edition": {
+                "type": "integer",
+                "minimum": 2000,
+                "maximum": 2100
+              },
+              "bound": {
+                "type": "string",
+                "enum": [
+                  "from",
+                  "to"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "body",
+              "edition",
+              "bound"
+            ],
+            "additionalProperties": false
           }
         ]
       }
@@ -596,7 +628,6 @@
     "subjects",
     "objectives",
     "material",
-    "years",
     "values",
     "parts"
   ],

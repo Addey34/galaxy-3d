@@ -23,7 +23,9 @@ import {
 } from '@/core/activityValues';
 import {
   catalogueFactProvenance,
+  catalogueEditionReader,
   catalogueFactReader,
+  editionTileset,
 } from '@/config/activityFacts';
 import { factSource } from '@/config/factSources';
 import { flattenBodies } from '@/config/catalog';
@@ -155,6 +157,19 @@ const TEXT = {
     'pt-BR':
       '{body}, inclinação axial: {publisher}, {title}, consultado em {date}.',
   },
+  editionLine: {
+    en: '{title}: {credit}; product sheet read on {date}.',
+    fr: '{title} : {credit} ; fiche du produit relue le {date}.',
+    es: '{title}: {credit}; ficha del producto consultada el {date}.',
+    'pt-BR': '{title}: {credit}; ficha do produto consultada em {date}.',
+  },
+  editionNote: {
+    en: 'Image dates quoted from the product sheets of the imagery editions, not computed. Sources:',
+    fr: 'Dates des images citées depuis les fiches de produit des éditions d’imagerie, et non calculées. Sources :',
+    es: 'Fechas de las imágenes citadas de las fichas de producto de las ediciones de imágenes, no calculadas. Fuentes:',
+    'pt-BR':
+      'Datas das imagens citadas das fichas de produto das edições de imagens, não calculadas. Fontes:',
+  },
   pupilSheet: {
     en: 'Pupil sheet',
     fr: 'Fiche élève',
@@ -271,6 +286,25 @@ function factLines(
   const lines: string[] = [];
   let latest = '';
   for (const value of Object.values(activity.values)) {
+    if (value.kind === 'imageryEdition') {
+      const key = `${value.body}.edition.${value.edition}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const tileset = editionTileset(value.body, value.edition);
+      if (!tileset?.verified)
+        throw new Error(`activité ${activity.id} : ${key} sans fiche relue`);
+      lines.push(
+        escapeHtml(
+          fill(TEXT.editionLine[locale], {
+            title: tileset.title,
+            credit: tileset.credit,
+            date: longDay(tileset.verified, locale),
+          })
+        )
+      );
+      if (tileset.verified > latest) latest = tileset.verified;
+      continue;
+    }
     if (value.kind !== 'fact') continue;
     const key = `${value.body}.${value.fact}`;
     if (seen.has(key)) continue;
@@ -305,7 +339,8 @@ function activityPage(
   const { config, origin } = inputs;
   const values: Record<string, EvaluatedValue> = evaluateActivityValues(
     activity,
-    catalogueFactReader(config)
+    catalogueFactReader(config),
+    catalogueEditionReader
   );
   const text = (t: DocText | Record<Locale, string>): string =>
     escapeHtml(t[locale]);
@@ -363,10 +398,12 @@ function activityPage(
     .join('');
   const computed =
     `<p class="activity-note">${escapeHtml(
-      fill(TEXT.computedNote[locale], {
-        from: String(activity.years.from),
-        to: String(activity.years.to),
-      })
+      activity.years
+        ? fill(TEXT.computedNote[locale], {
+            from: String(activity.years.from),
+            to: String(activity.years.to),
+          })
+        : TEXT.editionNote[locale]
     )}</p>` + list(facts.lines);
 
   const pupil =

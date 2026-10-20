@@ -57,6 +57,8 @@ export interface SurfaceTileset {
   acquired: TimeInterval;
   /** Crédit à afficher, tiré des `providers[]` STAC de la fiche. */
   credit: string;
+  /** Jour (`AAAA-MM-JJ`) où la fiche a été relue à sa source : ce que cite une fiche d'activité. */
+  verified?: string;
   /**
    * Couche DATÉE (lot 48) : gabarit de la réponse DescribeDomains, jeton `{TileMatrixSet}`
    * résolu. Absent pour une mosaïque. Une couche datée n'est jamais attachée telle quelle :
@@ -97,6 +99,7 @@ function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
       to: to === null ? Number.POSITIVE_INFINITY : Date.parse(to!),
     },
     credit: fiche.providers.map((provider) => provider.name).join(' · '),
+    verified: fiche.verified,
     ...(fiche.edition !== undefined ? { edition: fiche.edition } : {}),
     ...(fiche.oceanMatch ? { oceanMatch: fiche.oceanMatch } : {}),
     ...(time

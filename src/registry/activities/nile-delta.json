@@ -1,0 +1,271 @@
+{
+  "$schema": "../schema/activity.schema.json",
+  "id": "nile-delta",
+  "title": {
+    "en": "Does the Nile Delta change?",
+    "fr": "Le delta du Nil change-t-il ?",
+    "es": "¿Cambia el delta del Nilo?",
+    "pt-BR": "O delta do Nilo muda?"
+  },
+  "summary": {
+    "en": "Pupils compare two editions of the same satellite mosaic over the same place, west of Cairo, and learn to tell what a satellite observed from what the scene only computes.",
+    "fr": "Les élèves comparent deux éditions d’une même mosaïque satellite au même endroit, à l’ouest du Caire, et apprennent à distinguer ce qu’un satellite a observé de ce que la scène ne fait que calculer.",
+    "es": "Los alumnos comparan dos ediciones de un mismo mosaico de satélite sobre el mismo lugar, al oeste de El Cairo, y aprenden a distinguir lo que un satélite observó de lo que la escena solo calcula.",
+    "pt-BR": "Os alunos comparam duas edições de um mesmo mosaico de satélite sobre o mesmo lugar, a oeste do Cairo, e aprendem a distinguir o que um satélite observou do que a cena apenas calcula."
+  },
+  "tour": "nile-delta",
+  "ages": { "from": 12, "to": 16 },
+  "durationMinutes": 45,
+  "difficulty": "medium",
+  "subjects": ["geography", "earthScience"],
+  "objectives": [
+    {
+      "en": "Read the dates and the source of a satellite image before drawing a conclusion from it.",
+      "fr": "Lire les dates et la source d’une image satellite avant d’en tirer une conclusion.",
+      "es": "Leer las fechas y la fuente de una imagen de satélite antes de sacar una conclusión.",
+      "pt-BR": "Ler as datas e a fonte de uma imagem de satélite antes de tirar uma conclusão."
+    },
+    {
+      "en": "Compare two images of the same place by their shapes, not by their colours.",
+      "fr": "Comparer deux images d’un même lieu par leurs formes, et non par leurs couleurs.",
+      "es": "Comparar dos imágenes de un mismo lugar por sus formas, y no por sus colores.",
+      "pt-BR": "Comparar duas imagens de um mesmo lugar pelas suas formas, e não pelas suas cores."
+    },
+    {
+      "en": "Tell an observation from a computation: what a satellite saw, and what the scene calculates.",
+      "fr": "Distinguer une observation d’un calcul : ce qu’un satellite a vu, et ce que la scène calcule.",
+      "es": "Distinguir una observación de un cálculo: lo que un satélite vio y lo que la escena calcula.",
+      "pt-BR": "Distinguir uma observação de um cálculo: o que um satélite viu e o que a cena calcula."
+    }
+  ],
+  "material": [
+    {
+      "en": "A computer or tablet per group, with a recent web browser (the scene uses WebGL).",
+      "fr": "Un ordinateur ou une tablette par groupe, avec un navigateur récent (la scène utilise WebGL).",
+      "es": "Un ordenador o una tableta por grupo, con un navegador reciente (la escena usa WebGL).",
+      "pt-BR": "Um computador ou tablet por grupo, com um navegador recente (a cena usa WebGL)."
+    },
+    {
+      "en": "An internet connection: the satellite images are streamed while the scene runs.",
+      "fr": "Une connexion à internet : les images satellite arrivent pendant que la scène tourne.",
+      "es": "Una conexión a internet: las imágenes de satélite llegan mientras la escena funciona.",
+      "pt-BR": "Uma conexão à internet: as imagens de satélite chegam enquanto a cena funciona."
+    },
+    {
+      "en": "The printed pupil sheet below.",
+      "fr": "La fiche élève ci-dessous, imprimée.",
+      "es": "La ficha del alumno de abajo, impresa.",
+      "pt-BR": "A ficha do aluno abaixo, impressa."
+    }
+  ],
+  "values": {
+    "ed2016From": {
+      "kind": "imageryEdition",
+      "body": "earth",
+      "edition": 2016,
+      "bound": "from"
+    },
+    "ed2016To": {
+      "kind": "imageryEdition",
+      "body": "earth",
+      "edition": 2016,
+      "bound": "to"
+    },
+    "ed2025From": {
+      "kind": "imageryEdition",
+      "body": "earth",
+      "edition": 2025,
+      "bound": "from"
+    },
+    "ed2025To": {
+      "kind": "imageryEdition",
+      "body": "earth",
+      "edition": 2025,
+      "bound": "to"
+    }
+  },
+  "parts": [
+    {
+      "title": {
+        "en": "Predict, then look",
+        "fr": "Prédire, puis regarder",
+        "es": "Predecir y luego mirar",
+        "pt-BR": "Prever e depois olhar"
+      },
+      "teacher": {
+        "en": "Ask the class what can change in a landscape between two satellite images: a river, a coast, a field, a city. Have them write a prediction for the Nile Delta, a green fan in the middle of the desert. Then start the tour: it shows the whole delta with one edition of a satellite mosaic, then zooms on the western edge of Cairo.",
+        "fr": "Demandez à la classe ce qui peut changer dans un paysage entre deux images satellite : un fleuve, une côte, un champ, une ville. Faites écrire une prédiction pour le delta du Nil, un éventail vert au milieu du désert. Lancez ensuite la visite : elle montre le delta entier avec une édition d’une mosaïque satellite, puis zoome sur le bord ouest du Caire.",
+        "es": "Pregunte a la clase qué puede cambiar en un paisaje entre dos imágenes de satélite: un río, una costa, un campo, una ciudad. Pida que escriban una predicción para el delta del Nilo, un abanico verde en medio del desierto. Después inicie la visita: muestra el delta entero con una edición de un mosaico de satélite y luego se acerca al borde occidental de El Cairo.",
+        "pt-BR": "Pergunte à turma o que pode mudar numa paisagem entre duas imagens de satélite: um rio, uma costa, um campo, uma cidade. Peça que escrevam uma previsão para o delta do Nilo, um leque verde no meio do deserto. Em seguida, inicie a visita: ela mostra o delta inteiro com uma edição de um mosaico de satélite e depois aproxima a borda oeste do Cairo."
+      },
+      "steps": [
+        {
+          "en": "Open the address of the scene, written above. Read the first text, then look at the banner at the bottom of the screen.",
+          "fr": "Ouvrez l’adresse de la scène, écrite plus haut. Lisez le premier texte, puis regardez le bandeau en bas de l’écran.",
+          "es": "Abra la dirección de la escena, escrita arriba. Lea el primer texto y luego mire el banner en la parte inferior de la pantalla.",
+          "pt-BR": "Abra o endereço da cena, escrito acima. Leia o primeiro texto e depois olhe o banner na parte inferior da tela."
+        },
+        {
+          "en": "Write down which edition of the images is shown, and the months the banner gives for them.",
+          "fr": "Notez quelle édition des images est affichée, et les mois que le bandeau donne pour elle.",
+          "es": "Anote qué edición de las imágenes se muestra y los meses que indica el banner.",
+          "pt-BR": "Anote qual edição das imagens é mostrada e os meses que o banner indica."
+        }
+      ],
+      "questions": [
+        {
+          "id": "first-edition",
+          "prompt": {
+            "en": "Which edition of the images is shown at the first step, and from which months are the images made?",
+            "fr": "Quelle édition des images est affichée à la première étape, et de quels mois sont faites ces images ?",
+            "es": "¿Qué edición de las imágenes se muestra en el primer paso y de qué meses son esas imágenes?",
+            "pt-BR": "Qual edição das imagens é mostrada na primeira etapa e de quais meses são essas imagens?"
+          },
+          "answer": {
+            "en": "The 2016 edition of the Sentinel-2 cloudless mosaic, made of images taken from {ed2016From} to {ed2016To}. A mosaic is built from images taken over those months: it does not show one day.",
+            "fr": "L’édition 2016 de la mosaïque Sentinel-2 sans nuages, faite d’images prises de {ed2016From} à {ed2016To}. Une mosaïque est construite à partir d’images prises pendant ces mois : elle ne montre pas un jour précis.",
+            "es": "La edición 2016 del mosaico Sentinel-2 sin nubes, hecha con imágenes tomadas de {ed2016From} a {ed2016To}. Un mosaico se construye con imágenes tomadas durante esos meses: no muestra un día concreto.",
+            "pt-BR": "A edição 2016 do mosaico Sentinel-2 sem nuvens, feita com imagens tiradas de {ed2016From} a {ed2016To}. Um mosaico é construído com imagens tiradas durante esses meses: ele não mostra um dia específico."
+          },
+          "evidence": ["ed2016From", "ed2016To"]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "Compare two dates",
+        "fr": "Comparer deux dates",
+        "es": "Comparar dos fechas",
+        "pt-BR": "Comparar duas datas"
+      },
+      "teacher": {
+        "en": "The tour then frames Cairo in the first edition, jumps to the second edition and frames the same place again: only the date, and the edition that goes with it, change. Let the pupils look at the left of the image, the desert west of the city, before and after. The second question prepares the last part: the two editions do not have the same tone, which is visible on screen.",
+        "fr": "La visite cadre ensuite le Caire dans la première édition, saute à la seconde et recadre le même lieu : seuls la date, et l’édition qui va avec, changent. Laissez les élèves regarder la gauche de l’image, le désert à l’ouest de la ville, avant et après. La seconde question prépare la dernière partie : les deux éditions n’ont pas la même teinte, ce qui se voit à l’écran.",
+        "es": "La visita encuadra después El Cairo en la primera edición, salta a la segunda y vuelve a encuadrar el mismo lugar: solo cambian la fecha y la edición que le corresponde. Deje que los alumnos miren la izquierda de la imagen, el desierto al oeste de la ciudad, antes y después. La segunda pregunta prepara la última parte: las dos ediciones no tienen el mismo tono, algo que se ve en la pantalla.",
+        "pt-BR": "A visita enquadra então o Cairo na primeira edição, salta para a segunda e enquadra o mesmo lugar de novo: só mudam a data e a edição que a acompanha. Deixe os alunos olharem a esquerda da imagem, o deserto a oeste da cidade, antes e depois. A segunda pergunta prepara a última parte: as duas edições não têm o mesmo tom, o que se vê na tela."
+      },
+      "steps": [
+        {
+          "en": "At the second text (Cairo, still in the first edition), look at the left of the image, the desert west of the city. Describe or draw what you see: fields, roads, buildings.",
+          "fr": "Au deuxième texte (le Caire, toujours dans la première édition), regardez la gauche de l’image, le désert à l’ouest de la ville. Décrivez ou dessinez ce que vous voyez : champs, routes, bâtiments.",
+          "es": "En el segundo texto (El Cairo, todavía en la primera edición), mire la izquierda de la imagen, el desierto al oeste de la ciudad. Describa o dibuje lo que ve: campos, carreteras, edificios.",
+          "pt-BR": "No segundo texto (o Cairo, ainda na primeira edição), olhe a esquerda da imagem, o deserto a oeste da cidade. Descreva ou desenhe o que vê: campos, estradas, edifícios."
+        },
+        {
+          "en": "Go to the next text. The camera does not move: only the date changes, and the edition with it. Describe or draw what is different.",
+          "fr": "Passez au texte suivant. La caméra ne bouge pas : seule la date change, et l’édition avec elle. Décrivez ou dessinez ce qui est différent.",
+          "es": "Pase al texto siguiente. La cámara no se mueve: solo cambia la fecha, y con ella la edición. Describa o dibuje lo que es diferente.",
+          "pt-BR": "Passe ao texto seguinte. A câmera não se mexe: só muda a data, e com ela a edição. Descreva ou desenhe o que é diferente."
+        }
+      ],
+      "questions": [
+        {
+          "id": "what-appeared",
+          "prompt": {
+            "en": "What has appeared west of Cairo between the two images?",
+            "fr": "Qu’est-ce qui est apparu à l’ouest du Caire entre les deux images ?",
+            "es": "¿Qué ha aparecido al oeste de El Cairo entre las dos imágenes?",
+            "pt-BR": "O que apareceu a oeste do Cairo entre as duas imagens?"
+          },
+          "answer": {
+            "en": "Many round fields appear in the desert west of the city; the first image shows almost none. The second image is the 2025 edition, made of images taken from {ed2025From} to {ed2025To}.",
+            "fr": "De nombreux champs ronds apparaissent dans le désert à l’ouest de la ville ; la première image n’en montre presque aucun. La seconde image est l’édition 2025, faite d’images prises de {ed2025From} à {ed2025To}.",
+            "es": "Aparecen muchos campos redondos en el desierto al oeste de la ciudad; la primera imagen casi no muestra ninguno. La segunda imagen es la edición 2025, hecha con imágenes tomadas de {ed2025From} a {ed2025To}.",
+            "pt-BR": "Aparecem muitos campos redondos no deserto a oeste da cidade; a primeira imagem quase não mostra nenhum. A segunda imagem é a edição 2025, feita com imagens tiradas de {ed2025From} a {ed2025To}."
+          },
+          "evidence": ["ed2025From", "ed2025To"]
+        },
+        {
+          "id": "shapes-not-colours",
+          "prompt": {
+            "en": "Why should you compare the shapes in the two images, and not their colours?",
+            "fr": "Pourquoi faut-il comparer les formes des deux images, et non leurs couleurs ?",
+            "es": "¿Por qué hay que comparar las formas de las dos imágenes y no sus colores?",
+            "pt-BR": "Por que é preciso comparar as formas das duas imagens, e não as suas cores?"
+          },
+          "answer": {
+            "en": "The two editions do not have the same tone: the 2025 image is darker overall. A difference of tone alone therefore proves nothing about the land. A new shape, such as a field or a road, does.",
+            "fr": "Les deux éditions n’ont pas la même teinte : l’image de 2025 est globalement plus sombre. Une différence de teinte seule ne prouve donc rien sur le terrain. Une forme nouvelle, comme un champ ou une route, si.",
+            "es": "Las dos ediciones no tienen el mismo tono: la imagen de 2025 es más oscura en conjunto. Una diferencia de tono por sí sola no prueba nada sobre el terreno. Una forma nueva, como un campo o una carretera, sí.",
+            "pt-BR": "As duas edições não têm o mesmo tom: a imagem de 2025 é mais escura no conjunto. Uma diferença de tom sozinha não prova nada sobre o terreno. Uma forma nova, como um campo ou uma estrada, prova."
+          },
+          "evidence": ["ed2016From", "ed2025From"]
+        },
+        {
+          "id": "when-did-it-change",
+          "level": "advanced",
+          "prompt": {
+            "en": "Can you say in which year the round fields appeared? Explain.",
+            "fr": "Peut-on dire en quelle année les champs ronds sont apparus ? Expliquez.",
+            "es": "¿Se puede decir en qué año aparecieron los campos redondos? Explique.",
+            "pt-BR": "É possível dizer em que ano os campos redondos apareceram? Explique."
+          },
+          "answer": {
+            "en": "No. Each edition describes a span of months, {ed2016From} to {ed2016To} for the first and {ed2025From} to {ed2025To} for the second. Two editions give a before and an after, not the date of the change, which happened at some point between them.",
+            "fr": "Non. Chaque édition décrit une période de plusieurs mois, de {ed2016From} à {ed2016To} pour la première et de {ed2025From} à {ed2025To} pour la seconde. Deux éditions donnent un avant et un après, pas la date du changement, qui a eu lieu à un moment entre les deux.",
+            "es": "No. Cada edición describe un periodo de varios meses, de {ed2016From} a {ed2016To} la primera y de {ed2025From} a {ed2025To} la segunda. Dos ediciones dan un antes y un después, no la fecha del cambio, que ocurrió en algún momento entre ambas.",
+            "pt-BR": "Não. Cada edição descreve um período de vários meses, de {ed2016From} a {ed2016To} a primeira e de {ed2025From} a {ed2025To} a segunda. Duas edições dão um antes e um depois, não a data da mudança, que aconteceu em algum momento entre as duas."
+          },
+          "evidence": ["ed2016From", "ed2016To", "ed2025From", "ed2025To"]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "Observed or calculated?",
+        "fr": "Observé ou calculé ?",
+        "es": "¿Observado o calculado?",
+        "pt-BR": "Observado ou calculado?"
+      },
+      "teacher": {
+        "en": "The last text jumps to a date no satellite has seen yet. The image stays the latest edition and the banner says so, while the lighting follows the computed position of the Sun. This is the habit to keep: always ask whether what is on screen was observed, or calculated.",
+        "fr": "Le dernier texte saute à une date qu’aucun satellite n’a encore vue. L’image reste la dernière édition et le bandeau le dit, tandis que l’éclairage suit la position calculée du Soleil. C’est l’habitude à garder : toujours demander si ce qui est à l’écran a été observé, ou calculé.",
+        "es": "El último texto salta a una fecha que ningún satélite ha visto todavía. La imagen sigue siendo la última edición y el banner lo dice, mientras que la iluminación sigue la posición calculada del Sol. Es el hábito que hay que conservar: preguntar siempre si lo que se ve en pantalla fue observado o calculado.",
+        "pt-BR": "O último texto salta para uma data que nenhum satélite viu ainda. A imagem continua sendo a última edição e o banner diz isso, enquanto a iluminação segue a posição calculada do Sol. É o hábito a manter: perguntar sempre se o que está na tela foi observado ou calculado."
+      },
+      "steps": [
+        {
+          "en": "Go to the last text. Read it and the banner, then note what changed on the screen and what did not.",
+          "fr": "Passez au dernier texte. Lisez-le et lisez le bandeau, puis notez ce qui a changé à l’écran et ce qui n’a pas changé.",
+          "es": "Pase al último texto. Léalo junto con el banner y anote qué cambió en la pantalla y qué no.",
+          "pt-BR": "Passe ao último texto. Leia-o junto com o banner e anote o que mudou na tela e o que não mudou."
+        }
+      ],
+      "questions": [
+        {
+          "id": "future-image",
+          "prompt": {
+            "en": "A pupil says: “the last image is a satellite photo of the future”. Is that right?",
+            "fr": "Un élève dit : « la dernière image est une photo satellite du futur ». A-t-il raison ?",
+            "es": "Un alumno dice: «la última imagen es una foto de satélite del futuro». ¿Tiene razón?",
+            "pt-BR": "Um aluno diz: “a última imagem é uma foto de satélite do futuro”. Ele tem razão?"
+          },
+          "answer": {
+            "en": "No. No satellite has seen that date: the image is still the 2025 edition, whose images end in {ed2025To}, and the banner says so. What the date changes is computed, not observed: the position of the Sun, taken from the ephemerides, and so the lighting.",
+            "fr": "Non. Aucun satellite n’a vu cette date : l’image est encore l’édition 2025, dont les images s’arrêtent en {ed2025To}, et le bandeau le dit. Ce que la date change est calculé, non observé : la position du Soleil, tirée des éphémérides, donc l’éclairage.",
+            "es": "No. Ningún satélite ha visto esa fecha: la imagen sigue siendo la edición 2025, cuyas imágenes terminan en {ed2025To}, y el banner lo dice. Lo que la fecha cambia se calcula, no se observa: la posición del Sol, tomada de las efemérides, y por tanto la iluminación.",
+            "pt-BR": "Não. Nenhum satélite viu essa data: a imagem continua sendo a edição 2025, cujas imagens terminam em {ed2025To}, e o banner diz isso. O que a data muda é calculado, não observado: a posição do Sol, tirada das efemérides, e portanto a iluminação."
+          },
+          "evidence": ["ed2025To"]
+        },
+        {
+          "id": "image-or-cause",
+          "level": "high",
+          "prompt": {
+            "en": "A classmate says: “the round fields prove that the land is now irrigated”. What can the image prove, and what would you need to check somewhere else?",
+            "fr": "Un camarade dit : « les champs ronds prouvent que le terrain est maintenant irrigué ». Que peut prouver l’image, et que faudrait-il vérifier ailleurs ?",
+            "es": "Un compañero dice: «los campos redondos prueban que el terreno ahora está irrigado». ¿Qué puede probar la imagen y qué habría que comprobar en otra parte?",
+            "pt-BR": "Um colega diz: “os campos redondos provam que o terreno agora é irrigado”. O que a imagem pode provar e o que seria preciso verificar em outro lugar?"
+          },
+          "answer": {
+            "en": "The image proves a shape: round fields exist in the edition made of images from {ed2025From} to {ed2025To}, and almost none in the first one. It does not give the cause. For that you need another source, such as a farming or water-use record. Telling what is observed from what is concluded is the first rule of reading a satellite image.",
+            "fr": "L’image prouve une forme : des champs ronds existent dans l’édition faite d’images de {ed2025From} à {ed2025To}, et presque aucun dans la première. Elle ne donne pas la cause. Pour cela il faut une autre source, comme un relevé agricole ou de consommation d’eau. Distinguer ce qui est observé de ce qui est conclu est la première règle de lecture d’une image satellite.",
+            "es": "La imagen prueba una forma: existen campos redondos en la edición hecha con imágenes de {ed2025From} a {ed2025To}, y casi ninguno en la primera. No da la causa. Para eso hace falta otra fuente, como un registro agrícola o de consumo de agua. Distinguir lo observado de lo concluido es la primera regla para leer una imagen de satélite.",
+            "pt-BR": "A imagem prova uma forma: existem campos redondos na edição feita com imagens de {ed2025From} a {ed2025To}, e quase nenhum na primeira. Ela não dá a causa. Para isso é preciso outra fonte, como um registro agrícola ou de consumo de água. Distinguir o que é observado do que é concluído é a primeira regra para ler uma imagem de satélite."
+          },
+          "evidence": ["ed2025From", "ed2025To"]
+        }
+      ]
+    }
+  ]
+}
