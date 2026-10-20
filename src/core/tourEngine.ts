@@ -93,6 +93,12 @@ export interface TourRuntimeHost {
   diveReached(): boolean;
   /** Vrai tant que des carreaux de surface sont en vol, en file ou en fondu (`data-surface-busy`). */
   isSurfaceBusy(): boolean;
+  /**
+   * Une date demandée attend-elle encore ses octets d'éphémérides ? Un saut ne s'applique que
+   * sur des données arrivées : tant qu'il est en attente, la scène (rotation de la Terre comprise)
+   * montre l'ANCIENNE date, et une plongée visée dessus tombe, à l'arrivée des octets, côté nuit.
+   */
+  isDatePending(): boolean;
   /** Choisit le fond d'imagerie ; `false` si le panneau ne le propose pas. */
   setSurface(base: string): boolean;
   /** Résout quand l'utilisateur avance manuellement une légende sans durée, ou ferme le tour. */
@@ -112,6 +118,12 @@ const POLL_MS = 50;
  * provenance dit ce qui est réellement affiché.
  */
 export const SURFACE_SETTLE_TIMEOUT_MS = 25_000;
+
+/**
+ * Plafond de l'attente d'une date appliquée : même règle qu'ailleurs, une visite ne reste jamais
+ * suspendue au réseau (les octets d'un saut en coûtent moins d'une seconde à 10 Mbit/s).
+ */
+export const DATE_SETTLE_TIMEOUT_MS = 25_000;
 
 /**
  * Délai laissé à la surface pour NOTICER un changement (date, fond, cible) avant qu'on lise son
@@ -195,10 +207,20 @@ export async function runTour(
         break;
       case 'jumpToDate':
         host.jumpToDate(step.date);
+        await waitUntil(
+          () => !host.isDatePending(),
+          signal,
+          DATE_SETTLE_TIMEOUT_MS
+        );
         if (surfaceInUse) await settleSurface();
         break;
       case 'jumpToEvent':
         host.jumpToEvent(step.event, step.body);
+        await waitUntil(
+          () => !host.isDatePending(),
+          signal,
+          DATE_SETTLE_TIMEOUT_MS
+        );
         break;
       case 'setTimeScale':
         host.setTimeScale(step.scale);

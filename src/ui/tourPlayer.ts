@@ -362,6 +362,7 @@ export function setupTourPlayer(
       },
       isDiving: () => placeDive.isDiving(),
       diveReached: () => placeDive.reached(),
+      isDatePending: () => om.pendingJumpDate !== null,
       isSurfaceBusy: () =>
         (camera.renderer.domElement.dataset['surfaceBusy'] ?? '0') !== '0',
       setSurface: (base) => {

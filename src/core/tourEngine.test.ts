@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  DATE_SETTLE_TIMEOUT_MS,
   DIVE_ATTEMPTS,
   SURFACE_SETTLE_TIMEOUT_MS,
   runTour,
@@ -23,6 +24,7 @@ function makeHost(overrides: Partial<TourRuntimeHost> = {}): TourRuntimeHost {
     isDiving: vi.fn(() => false),
     diveReached: vi.fn(() => true),
     isSurfaceBusy: vi.fn(() => false),
+    isDatePending: vi.fn(() => false),
     setSurface: vi.fn(() => true),
     waitForAdvance: vi.fn(() => Promise.resolve()),
     ...overrides,
@@ -455,6 +457,55 @@ describe('runTour : la surface (diveTo, setSurface)', () => {
     await vi.advanceTimersByTimeAsync(3000);
     await run;
     expect(withSurface.setSurface).toHaveBeenCalledWith('sentinel-2');
+    vi.useRealTimers();
+  });
+});
+
+describe('runTour : un saut de date attend d’être appliqué', () => {
+  const jump = {
+    kind: 'jumpToDate',
+    date: new Date('2016-07-01T10:00:00Z'),
+  } as const;
+  const dive = { kind: 'diveTo', place: 'Nile Delta' } as const;
+
+  it('ne plonge pas tant que la date demandée attend ses octets', async () => {
+    vi.useFakeTimers();
+    let pending = true;
+    const order: string[] = [];
+    const host = makeHost({
+      isDatePending: () => pending,
+      diveTo: vi.fn(() => {
+        order.push(pending ? 'plonge AVANT la date' : 'plonge après la date');
+        return Promise.resolve(true);
+      }),
+    });
+    const run = runTour(
+      { id: 't', title: text, steps: [jump, dive] },
+      host,
+      () => {},
+      makeSignal()
+    );
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(host.diveTo, 'la plongée attend la date').not.toHaveBeenCalled();
+    pending = false;
+    await vi.advanceTimersByTimeAsync(2000);
+    await run;
+    expect(order).toEqual(['plonge après la date']);
+    vi.useRealTimers();
+  });
+
+  it('se débloque sans réseau, après son plafond', async () => {
+    vi.useFakeTimers();
+    const host = makeHost({ isDatePending: () => true });
+    const run = runTour(
+      { id: 't', title: text, steps: [jump, dive] },
+      host,
+      () => {},
+      makeSignal()
+    );
+    await vi.advanceTimersByTimeAsync(DATE_SETTLE_TIMEOUT_MS + 2000);
+    await run;
+    expect(host.diveTo).toHaveBeenCalled();
     vi.useRealTimers();
   });
 });
