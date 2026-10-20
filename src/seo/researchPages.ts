@@ -12,6 +12,7 @@
 import { formatPermalinkDate } from '@/core/permalink';
 import type { Locale } from '@/i18n/locales';
 import { bodyPagePath, escapeHtml } from './bodyLandingPage';
+import { HOW_TO_CITE } from './citation';
 import {
   ACTIVITIES_SLUG,
   CONTACTS_SLUG,
@@ -202,11 +203,10 @@ const TEXT = {
     'pt-BR': 'Citar',
   },
   cite: {
-    en: 'The permanent identifier and a ready-made reference are in the citation section of the methodology page.',
-    fr: 'L’identifiant permanent et une référence toute prête sont dans la section de citation de la page de méthodologie.',
-    es: 'El identificador permanente y una referencia lista para usar están en la sección de citación de la página de metodología.',
-    'pt-BR':
-      'O identificador permanente e uma referência pronta estão na seção de citação da página de metodologia.',
+    en: 'The permanent identifier and a ready-made reference:',
+    fr: 'L’identifiant permanent et une référence toute prête :',
+    es: 'El identificador permanente y una referencia lista para usar:',
+    'pt-BR': 'O identificador permanente e uma referência pronta:',
   },
   eventsHeading: {
     en: 'Dated events',
@@ -290,7 +290,7 @@ export function researchPage(
       docSection(
         'cite',
         TEXT.citeHeading[locale],
-        `<p>${escapeHtml(TEXT.cite[locale])} ${link('methodology', TEXT.methodologyName[locale], '#citation')}.</p>`
+        `<p>${escapeHtml(TEXT.cite[locale])} ${link('methodology', `${TEXT.methodologyName[locale]}, ${HOW_TO_CITE[locale]}`, '#citation')}</p>`
       ),
       docSection(
         'events',
