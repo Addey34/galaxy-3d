@@ -93,7 +93,30 @@ const value = z.discriminatedUnion('kind', [
       decimals,
     })
     .strict(),
+  /**
+   * Un bord de l'intervalle que décrit une ÉDITION annuelle d'imagerie (« Le delta du Nil »), lu
+   * dans la fiche de tuiles de l'édition, jamais recopié : un mois et une année, parce que c'est
+   * la précision d'une mosaïque (elle assemble des mois de passages, pas un jour).
+   */
+  z
+    .object({
+      kind: z.literal('imageryEdition'),
+      body: kebab,
+      edition: z.number().int().min(2000).max(2100),
+      bound: z.enum(['from', 'to']),
+    })
+    .strict(),
 ]);
+
+/** Les mesures de la SCÈNE : celles qui se calculent année par année, donc qui exigent `years`. */
+const SCENE_MEASURES: readonly string[] = [
+  'subsolarLatitude',
+  'polarDayLatitude',
+  'dayLength',
+  'apsisDate',
+  'apsisGapPercent',
+  'apsisFluxGainPercent',
+];
 
 const question = z
   .object({
@@ -150,13 +173,15 @@ export const activitySchema = z
     /**
      * Les années sur lesquelles les mesures de la scène sont calculées, et que la fiche
      * imprimée annonce. Une activité ne dépend donc pas du jour où elle est construite.
+     * Absent seulement pour une activité sans mesure de la scène (aucune ne dépend d'une année).
      */
     years: z
       .object({
         from: z.number().int().min(1900),
         to: z.number().int().max(2100),
       })
-      .strict(),
+      .strict()
+      .optional(),
     values: z.record(slotName, value),
     parts: z.array(part).min(1),
   })
@@ -168,11 +193,21 @@ export const activitySchema = z
         path: ['ages'],
         message: 'âges inversés',
       });
-    if (record.years.from > record.years.to)
+    if (record.years && record.years.from > record.years.to)
       ctx.addIssue({
         code: 'custom',
         path: ['years'],
         message: 'années inversées',
+      });
+    if (
+      !record.years &&
+      Object.values(record.values).some((v) => SCENE_MEASURES.includes(v.kind))
+    )
+      ctx.addIssue({
+        code: 'custom',
+        path: ['years'],
+        message:
+          'une mesure de la scène se calcule sur un domaine d’années : `years` est requis',
       });
     const declared = new Set(Object.keys(record.values));
     const used = new Set<string>();

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from './bodies';
-import { catalogueFactProvenance, catalogueFactReader } from './activityFacts';
+import {
+  catalogueEditionReader,
+  catalogueFactProvenance,
+  catalogueFactReader,
+} from './activityFacts';
 import { TOUR_ORDER } from '@/registry/tours';
 import {
   ACTIVITY_ORDER,
@@ -31,7 +35,11 @@ const readFact = catalogueFactReader(CELESTIAL_CONFIG);
 describe.each(activities.map((a) => [a.id, a] as const))(
   'activité %s',
   (_id, activity) => {
-    const values = evaluateActivityValues(activity, readFact);
+    const values = evaluateActivityValues(
+      activity,
+      readFact,
+      catalogueEditionReader
+    );
 
     it('chaque fait cité est sourcé dans le catalogue', () => {
       for (const value of Object.values(activity.values))
@@ -59,7 +67,11 @@ describe.each(activities.map((a) => [a.id, a] as const))(
 
 describe('saisons : ce que le corrigé affirme', () => {
   const seasons = activities.find((a) => a.id === 'seasons')!;
-  const values = evaluateActivityValues(seasons, readFact);
+  const values = evaluateActivityValues(
+    seasons,
+    readFact,
+    catalogueEditionReader
+  );
   const fr = (name: string): string => fillSlots(`{${name}}`, values, 'fr');
 
   it('lit les valeurs mesurées le 2026-10-18 (une régression les ferait bouger)', () => {
@@ -87,15 +99,15 @@ describe('saisons : ce que le corrigé affirme', () => {
 
   it('refuse l’inclinaison arrondie de la fiche PR45 de l’ESA (23,5°) : la scène la dément', () => {
     const rounded: FactReader = () => 23.5;
-    expect(() => evaluateActivityValues(seasons, rounded)).toThrow(
-      /s'écarte de « (tilt|polarCircle) »/
-    );
+    expect(() =>
+      evaluateActivityValues(seasons, rounded, catalogueEditionReader)
+    ).toThrow(/s'écarte de « (tilt|polarCircle) »/);
   });
 
   it('refuse un fait que le catalogue ne publie pas', () => {
-    expect(() => evaluateActivityValues(seasons, () => undefined)).toThrow(
-      /n'est pas publié/
-    );
+    expect(() =>
+      evaluateActivityValues(seasons, () => undefined, catalogueEditionReader)
+    ).toThrow(/n'est pas publié/);
   });
 
   it('refuse une précision que le domaine d’années ne tient pas', () => {
@@ -105,14 +117,42 @@ describe('saisons : ce que le corrigé affirme', () => {
       event: 'june-solstice',
       decimals: 3,
     };
-    expect(() => evaluateActivityValues(tooPrecise, readFact)).toThrow(
-      /précision déclarée n'est pas tenue/
-    );
+    expect(() =>
+      evaluateActivityValues(tooPrecise, readFact, catalogueEditionReader)
+    ).toThrow(/précision déclarée n'est pas tenue/);
   });
 
   it('refuse une activité dont la visite n’existe pas', () => {
     expect(() =>
       loadActivities(ACTIVITY_RECORDS, ACTIVITY_ORDER, ['eclipse'])
     ).toThrow(/visite « seasons » inconnue/);
+  });
+});
+
+describe('delta du Nil : ce que le corrigé affirme', () => {
+  const delta = activities.find((a) => a.id === 'nile-delta')!;
+  const values = evaluateActivityValues(
+    delta,
+    readFact,
+    catalogueEditionReader
+  );
+  const fr = (name: string): string => fillSlots(`{${name}}`, values, 'fr');
+
+  it('lit les mois des éditions dans les fiches de tuiles', () => {
+    expect(fr('ed2016From')).toMatch(/2016/);
+    expect(fr('ed2025To')).toMatch(/2025|2026/);
+  });
+
+  it('refuse une édition que le catalogue ne sert pas', () => {
+    const unknown = structuredClone(delta) as ActivityRecord;
+    unknown.values['ed2016From'] = {
+      kind: 'imageryEdition',
+      body: 'earth',
+      edition: 2017,
+      bound: 'from',
+    };
+    expect(() =>
+      evaluateActivityValues(unknown, readFact, catalogueEditionReader)
+    ).toThrow(/n'a pas d'édition/);
   });
 });

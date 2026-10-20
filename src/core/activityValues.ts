@@ -32,17 +32,27 @@ export type FactReader = (
   fact: 'axialTilt'
 ) => number | undefined;
 
+/** Lit l'intervalle (ms UTC) que décrit l'édition `edition` de l'imagerie d'un corps. */
+export type EditionReader = (
+  body: string,
+  edition: number
+) => { from: number; to: number } | undefined;
+
 export type EvaluatedValue =
   | { kind: 'degrees'; value: number; decimals: number }
   | { kind: 'percent'; value: number; decimals: number }
   | { kind: 'hours'; value: number }
-  | { kind: 'date'; date: Date };
+  | { kind: 'date'; date: Date }
+  /** Un mois et une année : la précision d'une mosaïque, qui décrit des mois de passages. */
+  | { kind: 'month'; date: Date };
 
 const years = (record: ActivityRecord): number[] =>
-  Array.from(
-    { length: record.years.to - record.years.from + 1 },
-    (_, i) => record.years.from + i
-  );
+  record.years
+    ? Array.from(
+        { length: record.years.to - record.years.from + 1 },
+        (_, i) => record.years!.from + i
+      )
+    : [];
 
 /** Une seule valeur à la précision déclarée, ou une erreur qui nomme les années en désaccord. */
 function constant(
@@ -93,7 +103,8 @@ function perYearMeasure(value: ActivityValue, year: number): number {
  */
 export function evaluateActivityValues(
   record: ActivityRecord,
-  readFact: FactReader
+  readFact: FactReader,
+  readEdition: EditionReader
 ): Record<string, EvaluatedValue> {
   const out: Record<string, EvaluatedValue> = {};
   const span = years(record);
@@ -111,6 +122,18 @@ export function evaluateActivityValues(
           kind: 'degrees',
           value: value.form === 'complement90' ? 90 - fact : fact,
           decimals: value.decimals,
+        };
+        break;
+      }
+      case 'imageryEdition': {
+        const interval = readEdition(value.body, value.edition);
+        if (!interval)
+          throw new Error(
+            `valeur « ${name} » : ${value.body} n'a pas d'édition ${value.edition}`
+          );
+        out[name] = {
+          kind: 'month',
+          date: new Date(value.bound === 'from' ? interval.from : interval.to),
         };
         break;
       }
@@ -189,6 +212,13 @@ function formatActivityValue(value: EvaluatedValue, locale: Locale): string {
       const total = Math.round(value.value * 60);
       return `${Math.floor(total / 60)} h ${String(total % 60).padStart(2, '0')} min`;
     }
+    case 'month':
+      return formatDateText(
+        value.date,
+        { month: 'long', year: 'numeric', timeZone: 'UTC' },
+        locale,
+        INTL_LOCALE[locale]
+      );
     case 'date':
       // Par la règle de l'ordinal du dépôt : « 1er juillet » en français, jamais « 1 juillet ».
       return formatDateText(

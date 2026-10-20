@@ -5,8 +5,9 @@
  * `config/factProvenance.test.ts` confronte déjà au relevé des faits.
  */
 import type { CelestialConfig, FactProvenance } from '@/types';
-import type { FactReader } from '@/core/activityValues';
+import type { EditionReader, FactReader } from '@/core/activityValues';
 import { flattenBodies } from './catalog';
+import { SURFACE_VARIANTS, type SurfaceTileset } from './surfaceTilesets';
 
 export function catalogueFactReader(config: CelestialConfig): FactReader {
   const bodies = flattenBodies(config);
@@ -25,3 +26,22 @@ export function catalogueFactProvenance(
 ): FactProvenance | undefined {
   return flattenBodies(config).get(body)?.realData?.sources?.[fact];
 }
+
+/** L'édition annuelle `edition` de l'imagerie d'un corps, quel que soit le fond qui la porte. */
+export function editionTileset(
+  body: string,
+  edition: number
+): SurfaceTileset | undefined {
+  for (const editions of SURFACE_VARIANTS.get(body)?.values() ?? [])
+    for (const tileset of editions)
+      if (tileset.edition === edition) return tileset;
+  return undefined;
+}
+
+/** Lit l'intervalle de l'édition dans sa fiche de tuiles : rien n'est recopié dans l'activité. */
+export const catalogueEditionReader: EditionReader = (body, edition) => {
+  const tileset = editionTileset(body, edition);
+  return tileset
+    ? { from: tileset.acquired.from, to: tileset.acquired.to }
+    : undefined;
+};
