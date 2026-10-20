@@ -194,7 +194,12 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   compareLine.hidden = true;
   const credit = document.createElement('span');
   credit.className = 'si-credit';
-  badge.append(headline, detail, compareLine, relief, credit);
+  // Ligne des BÂTIMENTS 3D (lot 63) : légende des origines de hauteur et attribution de la
+  // licence du jeu ; elle est remplie par le module `buildingsOverlay`, chargé à la demande.
+  const buildingsLine = document.createElement('span');
+  buildingsLine.className = 'si-buildings';
+  buildingsLine.hidden = true;
+  badge.append(headline, detail, compareLine, relief, buildingsLine, credit);
   document.body.append(badge);
 
   let enabled = readStored();
@@ -501,7 +506,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       buildingsLoading = true;
       void import('./buildingsOverlay')
         .then((m) => {
-          buildings = m.createBuildingsOverlay();
+          buildings = m.createBuildingsOverlay(buildingsLine);
         })
         .catch((error: unknown) =>
           Logger.warn(`[Bâtiments] module indisponible : ${String(error)}`)

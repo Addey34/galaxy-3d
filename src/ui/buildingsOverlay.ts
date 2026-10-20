@@ -20,6 +20,9 @@ import {
   type BuildingSetManifest,
 } from '@/config/buildingSets';
 import { isMobile } from '@/config/engine';
+import { HEIGHT_ORIGIN } from '@/core/buildingTile';
+import { originColour } from '@/core/buildingOriginStyle';
+import { getLocale, intlLocale, t } from '@/i18n';
 import { GALAXY_DATA_ORIGIN } from '@/core/galaxyData';
 import { readQualityMode, resolveQualityTier } from '@/core/qualityTier';
 import Logger from '@/utils/Logger';
@@ -49,10 +52,26 @@ export interface BuildingsOverlay {
   /** Retire tout (caméra remontée, corps quitté). */
   suspend(): void;
   /** Ce que la couche publie, pour la sonde et les tests navigateur. */
-  readonly state: { setId: string | null; loaded: number; buildings: number };
+  readonly state: {
+    setId: string | null;
+    loaded: number;
+    buildings: number;
+    origins: number[];
+    /** Attribution exigée par la licence du jeu servi, à afficher tant que ses bâtiments le sont. */
+    attribution: string | null;
+  };
 }
 
-export function createBuildingsOverlay(): BuildingsOverlay {
+/** Clé de légende de chaque origine de hauteur (`HEIGHT_ORIGIN`), dans l'ordre d'affichage. */
+const ORIGIN_KEYS = [
+  [HEIGHT_ORIGIN.measured, 'measured'],
+  [HEIGHT_ORIGIN.interpolated, 'interpolated'],
+  [HEIGHT_ORIGIN.derivedFromFloors, 'derivedFromFloors'],
+  [HEIGHT_ORIGIN.unspecified, 'unspecified'],
+  [HEIGHT_ORIGIN.absent, 'absent'],
+] as const;
+
+export function createBuildingsOverlay(mount: HTMLElement): BuildingsOverlay {
   let index: BuildingSetIndex | null = null;
   let indexState: 'idle' | 'loading' | 'failed' = 'idle';
   const manifests = new Map<
@@ -103,6 +122,58 @@ export function createBuildingsOverlay(): BuildingsOverlay {
     layer?.dispose();
     layer = null;
     layerHost = null;
+    renderLegend();
+  };
+
+  /**
+   * La légende et l'attribution, sous les yeux tant que des bâtiments sont dessinés : la hauteur
+   * d'un bâtiment n'a pas la même origine partout (mesurée, interpolée, absente), et la licence du
+   * jeu EXIGE sa mention. Redessinée seulement quand ce qu'elle dit change, langue comprise.
+   */
+  let drawn = '';
+  const renderLegend = (): void => {
+    const st = currentState();
+    const visible = st.setId !== null && st.buildings > 0;
+    const key = visible
+      ? `${st.setId}|${st.buildings}|${st.origins.join(',')}|${st.attribution}|${getLocale()}`
+      : '';
+    if (key === drawn) return;
+    drawn = key;
+    mount.hidden = !visible;
+    if (!visible) {
+      mount.replaceChildren();
+      return;
+    }
+    const head = document.createElement('span');
+    head.textContent = t('surface.buildings.headline', {
+      count: st.buildings.toLocaleString(intlLocale()),
+    });
+    const items = ORIGIN_KEYS.filter(([origin]) =>
+      st.origins.includes(origin)
+    ).map(([origin, name]) => {
+      const item = document.createElement('span');
+      item.className = 'si-legend-item';
+      const swatch = document.createElement('span');
+      swatch.className = 'si-swatch';
+      swatch.setAttribute('aria-hidden', 'true');
+      swatch.style.background = `#${originColour(origin).toString(16).padStart(6, '0')}`;
+      item.append(swatch, t(`surface.buildings.origin.${name}`));
+      return item;
+    });
+    const credit = document.createElement('span');
+    credit.textContent = st.attribution ?? '';
+    mount.replaceChildren(head, ...items, credit);
+  };
+
+  const currentState = () => {
+    const s = layer?.state;
+    return {
+      setId: layer?.setId ?? null,
+      loaded: s?.loaded ?? 0,
+      buildings: s?.buildings ?? 0,
+      origins: s?.origins ?? [],
+      attribution: layer?.set.source.attribution ?? null,
+    };
   };
 
   return {
@@ -138,15 +209,11 @@ export function createBuildingsOverlay(): BuildingsOverlay {
         layerHost = host;
       }
       layer.update(aim);
+      renderLegend();
     },
     suspend: drop,
     get state() {
-      const s = layer?.state;
-      return {
-        setId: layer?.setId ?? null,
-        loaded: s?.loaded ?? 0,
-        buildings: s?.buildings ?? 0,
-      };
+      return currentState();
     },
   };
 }

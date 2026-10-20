@@ -363,6 +363,13 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relevo {title} a {resolution}/pixel',
   'surface.relief.area': 'área nomeada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} e {to}',
+  'surface.buildings.headline':
+    'Edifícios 3D: {count}. A cor da altura indica sua origem.',
+  'surface.buildings.origin.measured': 'medida',
+  'surface.buildings.origin.interpolated': 'interpolada',
+  'surface.buildings.origin.derivedFromFloors': 'deduzida dos andares',
+  'surface.buildings.origin.unspecified': 'não especificada',
+  'surface.buildings.origin.absent': 'ausente: laje plana',
   'settings.surfaceCompare': 'Comparar com o ano',
   'settings.surfaceCompare.none': 'Sem comparação',
   'surface.compare.badge':

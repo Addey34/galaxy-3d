@@ -77,12 +77,15 @@ export interface BuildingLayerState {
   waitingForGround: number;
   /** Bâtiments visibles, toutes tuiles posées sur le sol confondues. */
   buildings: number;
+  /** Origines de hauteur présentes parmi les bâtiments visibles (la légende n'affiche que celles-là). */
+  origins: number[];
 }
 
 interface Entry {
   id: BuildingTileIdentity;
   mesh: THREE.Mesh;
   buildings: number;
+  origins: number[];
   centre: { latitudeDeg: number; longitudeDeg: number };
   grounded: boolean;
   lastGroundedAt: number;
@@ -149,6 +152,11 @@ export class BuildingLayer {
     this._host.attachSpinningChild(this._root);
   }
 
+  /** Le jeu servi : sa source, sa licence et son attribution, que l'écran doit montrer. */
+  get set(): BuildingSetManifest {
+    return this._set;
+  }
+
   get setId(): string {
     return this._set.id;
   }
@@ -156,9 +164,12 @@ export class BuildingLayer {
   get state(): BuildingLayerState {
     let waitingForGround = 0;
     let buildings = 0;
+    const origins = new Set<number>();
     for (const entry of this._tiles.values()) {
-      if (entry.grounded) buildings += entry.buildings;
-      else waitingForGround++;
+      if (entry.grounded) {
+        buildings += entry.buildings;
+        for (const o of entry.origins) origins.add(o);
+      } else waitingForGround++;
     }
     return {
       loaded: this._tiles.size,
@@ -166,6 +177,7 @@ export class BuildingLayer {
       failed: this._failed.size,
       waitingForGround,
       buildings,
+      origins: [...origins].sort((a, b) => a - b),
     };
   }
 
@@ -291,6 +303,7 @@ export class BuildingLayer {
       id,
       mesh,
       buildings: geometryData.stats.buildings,
+      origins: [...new Set<number>(geometryData.origins)],
       centre: {
         latitudeDeg: geometryData.centre.latitudeDeg,
         longitudeDeg: geometryData.centre.longitudeDeg,
