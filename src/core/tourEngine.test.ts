@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  DIVE_ATTEMPTS,
+  SURFACE_SETTLE_TIMEOUT_MS,
   runTour,
   type TourRuntimeHost,
   type TourScript,
@@ -17,6 +19,11 @@ function makeHost(overrides: Partial<TourRuntimeHost> = {}): TourRuntimeHost {
     setTimeScale: vi.fn(),
     setMode: vi.fn(),
     isMorphing: vi.fn(() => false),
+    diveTo: vi.fn(() => Promise.resolve(true)),
+    isDiving: vi.fn(() => false),
+    diveReached: vi.fn(() => true),
+    isSurfaceBusy: vi.fn(() => false),
+    setSurface: vi.fn(() => true),
     waitForAdvance: vi.fn(() => Promise.resolve()),
     ...overrides,
   };
@@ -329,5 +336,158 @@ describe('setMode', () => {
     signal.cancelled = true;
     await expect(run).resolves.toBeUndefined();
     expect(host.waitForAdvance).not.toHaveBeenCalled();
+  });
+});
+
+describe('runTour : la surface (diveTo, setSurface)', () => {
+  const caption = { kind: 'caption', text, durationMs: 1 } as const;
+
+  it('attend la fin de la plongée PUIS la surface calme avant la légende', async () => {
+    vi.useFakeTimers();
+    let diving = true;
+    let busy = true;
+    const order: string[] = [];
+    const host = makeHost({
+      diveTo: vi.fn(() => {
+        order.push('dive');
+        return Promise.resolve(true);
+      }),
+      isDiving: () => diving,
+      isSurfaceBusy: () => busy,
+    });
+    const script: TourScript = {
+      id: 't',
+      title: text,
+      steps: [{ kind: 'diveTo', place: 'Nile Delta', frameKm: 150 }, caption],
+    };
+    const run = runTour(
+      script,
+      host,
+      (_, step) => order.push(step.kind),
+      makeSignal()
+    );
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(order, 'la légende attend la plongée').toEqual(['diveTo', 'dive']);
+    diving = false;
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(order, 'la légende attend les carreaux').toEqual(['diveTo', 'dive']);
+    busy = false;
+    await vi.advanceTimersByTimeAsync(2000);
+    await run;
+    expect(order).toEqual(['diveTo', 'dive', 'caption']);
+    expect(host.diveTo).toHaveBeenCalledWith('Nile Delta', 150);
+    vi.useRealTimers();
+  });
+
+  it('ne reste JAMAIS suspendue au réseau : la surface occupée est bornée dans le temps', async () => {
+    vi.useFakeTimers();
+    const host = makeHost({ isSurfaceBusy: () => true });
+    const script: TourScript = {
+      id: 't',
+      title: text,
+      steps: [{ kind: 'diveTo', place: 'Nile Delta' }, caption],
+    };
+    let reached = false;
+    const run = runTour(
+      script,
+      host,
+      (_, step) => {
+        if (step.kind === 'caption') reached = true;
+      },
+      makeSignal()
+    );
+    await vi.advanceTimersByTimeAsync(SURFACE_SETTLE_TIMEOUT_MS / 2);
+    expect(reached).toBe(false);
+    await vi.advanceTimersByTimeAsync(SURFACE_SETTLE_TIMEOUT_MS);
+    await run;
+    expect(reached).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('saute une plongée refusée au lieu de s’y bloquer', async () => {
+    vi.useFakeTimers();
+    const host = makeHost({
+      diveTo: vi.fn(() => Promise.resolve(false)),
+      isDiving: () => true,
+      isSurfaceBusy: () => true,
+    });
+    const script: TourScript = {
+      id: 't',
+      title: text,
+      steps: [{ kind: 'diveTo', place: 'Nulle part' }, caption],
+    };
+    const run = runTour(script, host, () => {}, makeSignal());
+    await vi.advanceTimersByTimeAsync(500);
+    await run;
+    vi.useRealTimers();
+  });
+
+  it('un saut de date n’attend la surface QUE si la visite y a touché', async () => {
+    vi.useFakeTimers();
+    const busy = vi.fn(() => true);
+    const jump = {
+      kind: 'jumpToDate',
+      date: new Date('2025-07-01T10:00:00Z'),
+    } as const;
+    const without = makeHost({ isSurfaceBusy: busy });
+    await runTour(
+      { id: 't', title: text, steps: [jump] },
+      without,
+      () => {},
+      makeSignal()
+    );
+    expect(
+      busy,
+      'les autres visites ne ralentissent pas'
+    ).not.toHaveBeenCalled();
+
+    const withSurface = makeHost({ isSurfaceBusy: () => false });
+    const run = runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [{ kind: 'setSurface', base: 'sentinel-2' }, jump],
+      },
+      withSurface,
+      () => {},
+      makeSignal()
+    );
+    await vi.advanceTimersByTimeAsync(3000);
+    await run;
+    expect(withSurface.setSurface).toHaveBeenCalledWith('sentinel-2');
+    vi.useRealTimers();
+  });
+});
+
+describe('runTour : la plongée est rejouée jusqu’à son cadrage', () => {
+  const text4 = { en: 'c', fr: 'c', es: 'c', 'pt-BR': 'c' };
+  const script: TourScript = {
+    id: 't',
+    title: text4,
+    steps: [{ kind: 'diveTo', place: 'Cairo', frameKm: 40 }],
+  };
+
+  it('plonge de nouveau tant que la caméra n’est pas arrivée, puis s’arrête', async () => {
+    vi.useFakeTimers();
+    let arrivals = 0;
+    const host = makeHost({
+      // Les bornes d'approche suivent l'imagerie servie : la caméra n'arrive qu'au 3e essai.
+      diveReached: () => ++arrivals >= 3,
+    });
+    const run = runTour(script, host, () => {}, makeSignal());
+    await vi.advanceTimersByTimeAsync(10_000);
+    await run;
+    expect(host.diveTo).toHaveBeenCalledTimes(3);
+    vi.useRealTimers();
+  });
+
+  it('s’arrête après un nombre borné d’essais si l’imagerie n’arrive jamais', async () => {
+    vi.useFakeTimers();
+    const host = makeHost({ diveReached: () => false });
+    const run = runTour(script, host, () => {}, makeSignal());
+    await vi.advanceTimersByTimeAsync(60_000);
+    await run;
+    expect(host.diveTo).toHaveBeenCalledTimes(DIVE_ATTEMPTS);
+    vi.useRealTimers();
   });
 });

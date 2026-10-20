@@ -183,6 +183,52 @@
             "properties": {
               "kind": {
                 "type": "string",
+                "const": "diveTo"
+              },
+              "place": {
+                "type": "string",
+                "minLength": 1
+              },
+              "frameKm": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "place"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "setSurface"
+              },
+              "base": {
+                "type": "string",
+                "enum": [
+                  "mosaic",
+                  "sentinel-2",
+                  "daily",
+                  "shaded-relief",
+                  "night-lights"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "base"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
                 "const": "caption"
               },
               "text": {

@@ -46,6 +46,12 @@ function toStep(step: TourStepRecord, where: string): TourStep {
       return { kind: 'setTimeScale', scale: step.scale };
     case 'setMode':
       return { kind: 'setMode', mode: step.mode };
+    case 'diveTo':
+      return step.frameKm === undefined
+        ? { kind: 'diveTo', place: step.place }
+        : { kind: 'diveTo', place: step.place, frameKm: step.frameKm };
+    case 'setSurface':
+      return { kind: 'setSurface', base: step.base };
     case 'caption':
       return step.durationMs === undefined
         ? { kind: 'caption', text: step.text }

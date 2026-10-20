@@ -1,0 +1,56 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "nile-delta",
+  "title": {
+    "en": "The Nile Delta through time",
+    "fr": "Le delta du Nil dans le temps",
+    "es": "El delta del Nilo a través del tiempo",
+    "pt-BR": "O delta do Nilo ao longo do tempo"
+  },
+  "steps": [
+    { "kind": "flyTo", "body": "earth" },
+    { "kind": "setSurface", "base": "sentinel-2" },
+    { "kind": "jumpToDate", "date": { "$date": "2016-07-01T10:00:00Z" } },
+    { "kind": "diveTo", "place": "Nile Delta", "frameKm": 150 },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "The Nile Delta, framed about 150 km wide, with the 2016 edition of the Sentinel-2 cloudless mosaic: real images, observed by the satellites. The river fixes the shape of the delta; the changes we can see are at its edges. Next, the western edge of Cairo.",
+        "fr": "Le delta du Nil, cadré sur environ 150 km de large, avec l’édition 2016 de la mosaïque Sentinel-2 sans nuages : de vraies images, observées par les satellites. Le fleuve fixe la forme du delta ; les changements que l’on voit sont sur ses bords. Ensuite, le bord ouest du Caire.",
+        "es": "El delta del Nilo, encuadrado en unos 150 km de ancho, con la edición 2016 del mosaico Sentinel-2 sin nubes: imágenes reales, observadas por los satélites. El río fija la forma del delta; los cambios que se ven están en sus bordes. A continuación, el borde occidental de El Cairo.",
+        "pt-BR": "O delta do Nilo, enquadrado em cerca de 150 km de largura, com a edição 2016 do mosaico Sentinel-2 sem nuvens: imagens reais, observadas pelos satélites. O rio fixa a forma do delta; as mudanças que se veem estão em suas bordas. A seguir, a borda oeste do Cairo."
+      }
+    },
+    { "kind": "diveTo", "place": "Cairo", "frameKm": 40 },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Cairo, framed about 40 km wide, still in 2016. West of the city, the desert is almost empty. Keep this image in mind: the next one has exactly the same framing.",
+        "fr": "Le Caire, cadré sur environ 40 km de large, toujours en 2016. À l’ouest de la ville, le désert est presque vide. Gardez cette image en tête : la suivante a exactement le même cadrage.",
+        "es": "El Cairo, encuadrado en unos 40 km de ancho, todavía en 2016. Al oeste de la ciudad, el desierto está casi vacío. Recuerda esta imagen: la siguiente tiene exactamente el mismo encuadre.",
+        "pt-BR": "O Cairo, enquadrado em cerca de 40 km de largura, ainda em 2016. A oeste da cidade, o deserto está quase vazio. Guarde esta imagem: a próxima tem exatamente o mesmo enquadramento."
+      }
+    },
+    { "kind": "jumpToDate", "date": { "$date": "2025-07-01T10:00:00Z" } },
+    { "kind": "diveTo", "place": "Cairo", "frameKm": 40 },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "The same framing, now with the 2025 edition. West of the city, many round fields have appeared. The tones of the two editions differ, so compare shapes, not colours.",
+        "fr": "Le même cadrage, cette fois avec l’édition 2025. À l’ouest de la ville, de nombreux champs ronds sont apparus. Les teintes des deux éditions diffèrent : comparez les formes, pas les couleurs.",
+        "es": "El mismo encuadre, ahora con la edición 2025. Al oeste de la ciudad han aparecido muchos campos redondos. Los tonos de las dos ediciones difieren: compara las formas, no los colores.",
+        "pt-BR": "O mesmo enquadramento, agora com a edição 2025. A oeste da cidade surgiram muitos campos redondos. Os tons das duas edições diferem: compare as formas, não as cores."
+      }
+    },
+    { "kind": "jumpToDate", "date": { "$date": "2030-07-01T10:00:00Z" } },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "2030: no satellite has seen this date. The image is still the latest edition, and the banner says so. What this date changes is computed, not observed: the position of the Sun from the ephemerides, so the lighting.",
+        "fr": "2030 : aucun satellite n’a vu cette date. L’image est encore la dernière édition, et le bandeau le dit. Ce que cette date change est calculé, non observé : la position du Soleil, d’après les éphémérides, donc l’éclairage.",
+        "es": "2030: ningún satélite ha visto esta fecha. La imagen sigue siendo la última edición, y el banner lo dice. Lo que esta fecha cambia se calcula, no se observa: la posición del Sol según las efemérides, es decir, la iluminación.",
+        "pt-BR": "2030: nenhum satélite viu esta data. A imagem continua sendo a última edição, e o banner diz isso. O que esta data muda é calculado, não observado: a posição do Sol segundo as efemérides, ou seja, a iluminação."
+      }
+    }
+  ]
+}

@@ -19,8 +19,17 @@ import type { SceneSystem } from '@/components/systems/SceneSystem';
 import { getAnnouncer } from './announcer';
 import type { DrawnPlace } from './gazetteerOverlay';
 
+/** Ce dont la plongée a besoin d'un lieu : un nom dessiné en porte plus, un nom cherché moins. */
+export type DivePlace = Pick<
+  DrawnPlace,
+  'body' | 'name' | 'lat' | 'lon' | 'diameterKm'
+>;
+
 /** Durée du vol de la dernière approche, en ms (nulle sous `prefers-reduced-motion`). */
 const DIVE_DURATION_MS = 1600;
+
+/** Écart toléré entre la distance voulue et la distance obtenue, avant de dire « arrivée ». */
+const REACHED_TOLERANCE = 1.05;
 
 /** Plus court chemin entre deux azimuts, en degrés. */
 export function shortestAzimuthDelta(from: number, to: number): number {
@@ -34,8 +43,31 @@ export function setupPlaceDive(
   cameraSystem: CameraSystem,
   sceneSystem: SceneSystem,
   radiusKm: (body: string) => number | undefined
-): { dive: (place: DrawnPlace) => boolean } {
+): {
+  dive: (place: DivePlace) => boolean;
+  /**
+   * Plonge sur un lieu NOMMÉ, sans l'avoir sous les yeux (une visite guidée). `frameKm` remplace
+   * la taille qu'on lui connaît : la Terre n'en a pas (le niveau de zoom d'un nom de Natural
+   * Earth n'est pas un diamètre), et un delta se cadre à l'échelle où l'on voit ce qui change.
+   */
+  diveToName: (
+    body: string,
+    name: string,
+    frameKm?: number
+  ) => Promise<boolean>;
+  /** Vrai tant que l'animation d'approche court : le fait qu'une visite attend. */
+  isDiving: () => boolean;
+  /**
+   * La caméra est-elle arrivée à la distance voulue ? Pas toujours : ses bornes d'approche suivent
+   * la finesse de l'imagerie DÉJÀ servie, qui ne s'affine qu'en approchant. La première plongée
+   * s'arrête donc à 470 km là où la cible en demandait 100 ; il faut la rejouer à mesure que les
+   * carreaux arrivent.
+   */
+  reached: () => boolean;
+} {
   let frame = 0;
+  /** Distance (unités de scène) de la dernière plongée lancée, `0` avant la première. */
+  let wanted = 0;
 
   const cancel = (): void => {
     if (frame) cancelAnimationFrame(frame);
@@ -47,7 +79,7 @@ export function setupPlaceDive(
   canvas.addEventListener('pointerdown', cancel);
   canvas.addEventListener('wheel', cancel, { passive: true });
 
-  const dive = (place: DrawnPlace): boolean => {
+  const dive = (place: DivePlace): boolean => {
     const object = sceneSystem.getBody(place.body);
     const km = radiusKm(place.body);
     const sceneRadius =
@@ -76,6 +108,7 @@ export function setupPlaceDive(
     if (!(distance > 0)) return false;
 
     cancel();
+    wanted = distance;
     // Les noms sont sur un canevas : sans cette annonce, la plongée serait muette pour un
     // lecteur d'écran, qui n'a de toute façon aucun moyen de cliquer un nom.
     getAnnouncer().announce(
@@ -120,5 +153,29 @@ export function setupPlaceDive(
     return true;
   };
 
-  return { dive };
+  const diveToName = async (
+    body: string,
+    name: string,
+    frameKm?: number
+  ): Promise<boolean> => {
+    // À la demande : `placeObservations` n'entre pas dans le démarrage (`NON_BOOT_CHUNKS`), et
+    // seule une visite guidée passe ici.
+    const { loadFormations } = await import('@/config/placeObservations');
+    const feature = (await loadFormations(body))?.find((f) => f.name === name);
+    if (!feature) return false;
+    return dive({
+      body,
+      name,
+      lat: feature.lat,
+      lon: feature.lon,
+      diameterKm: frameKm ?? feature.diameterKm,
+    });
+  };
+
+  const reached = (): boolean => {
+    const view = cameraSystem.getViewAngles();
+    return wanted > 0 && !!view && view.distance <= wanted * REACHED_TOLERANCE;
+  };
+
+  return { dive, diveToName, isDiving: () => frame !== 0, reached };
 }

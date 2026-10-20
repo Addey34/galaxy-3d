@@ -399,3 +399,38 @@ test.describe('une visite ouverte par son adresse', () => {
     await expect(page.locator('.stour-card')).toBeHidden();
   });
 });
+
+/**
+ * « LE DELTA DU NIL DANS LE TEMPS » : la fiche choisit le fond Sentinel-2, plonge sur un NOM, et
+ * REND le fond qu'elle a emprunté. L'imagerie d'EOX est coupée : la visite doit aller à son bout
+ * sans réseau (l'attente d'une surface calme est bornée), le bandeau disant ce qui est affiché.
+ */
+test.describe('nile-delta tour', () => {
+  test('dives onto the named place, borrows the base, gives it back', async ({
+    page,
+  }) => {
+    await page.route('**eox.at/**', (route) => route.abort());
+    await page.goto('/?tour=nile-delta');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+    const next = page.locator('.stour-next');
+    await expect(next).toBeEnabled({ timeout: 120_000 });
+    await expect(page.locator('canvas').first()).toHaveAttribute(
+      'data-place-dive',
+      /^Nile Delta\|/
+    );
+    await expect(page.locator('#surface-earth-base')).toHaveValue('sentinel-2');
+    // `?tour=` est une ouverture : l'adresse ne la garde pas, un rechargement ne la rejouerait pas.
+    expect(page.url()).not.toContain('tour=');
+
+    // Chaque plongée est rejouée jusqu'à son cadrage, sans imagerie qui l'affine : `advanceToEnd`
+    // (vingt tours de 200 ms) abandonnerait avant la fin, le délai est donc écrit ici.
+    const card = page.locator('.stour-card');
+    await expect(async () => {
+      if ((await card.isVisible()) && (await next.isEnabled()))
+        await next.click();
+      await expect(card).toBeHidden({ timeout: 1_000 });
+    }).toPass({ timeout: 120_000 });
+    await expect(page.locator('#surface-earth-base')).toHaveValue('mosaic');
+  });
+});

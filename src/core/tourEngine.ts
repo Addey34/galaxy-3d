@@ -36,6 +36,18 @@ export type TourStep =
    * de mode lui-même, au milieu de son récit.
    */
   | { kind: 'setMode'; mode: ScaleMode }
+  /**
+   * Plonger sur un lieu NOMMÉ du corps suivi (lot 63, pas A, rendu commandable). `frameKm` est la
+   * taille que le cadrage doit embrasser : absent, celle qu'on connaît au nom (la Terre n'en a pas
+   * et la visite doit donc la dire). Le moteur attend la fin du vol, puis que les carreaux
+   * demandés par l'approche soient posés (cf. `TourRuntimeHost.isSurfaceBusy`).
+   */
+  | { kind: 'diveTo'; place: string; frameKm?: number }
+  /**
+   * Choisit le fond d'imagerie du sol (Sentinel-2, mosaïque…). Une visite emprunte ce réglage
+   * comme elle emprunte le mode : l'hôte rend le fond de DÉPART à la fin.
+   */
+  | { kind: 'setSurface'; base: string }
   // Sans `durationMs` : la légende attend un geste utilisateur (host.waitForAdvance()).
   | { kind: 'caption'; text: LocalizedText; durationMs?: number }
   | { kind: 'wait'; ms: number };
@@ -69,6 +81,20 @@ export interface TourRuntimeHost {
    * s'afficherait sur une scène en plein morphing, c'est-à-dire sur aucune des deux échelles.
    */
   isMorphing(): boolean;
+  /**
+   * Lance la plongée sur ce lieu du corps suivi ; résout `true` une fois l'animation partie,
+   * `false` si le lieu est introuvable ou si la caméra ne peut pas plonger (l'étape est alors
+   * sautée, une visite ne reste jamais bloquée sur un nom).
+   */
+  diveTo(place: string, frameKm?: number): Promise<boolean>;
+  /** Vrai tant que l'animation d'approche court. Même patron que `isFlying`. */
+  isDiving(): boolean;
+  /** La caméra a-t-elle atteint la distance de la dernière plongée (ses bornes suivent l'imagerie) ? */
+  diveReached(): boolean;
+  /** Vrai tant que des carreaux de surface sont en vol, en file ou en fondu (`data-surface-busy`). */
+  isSurfaceBusy(): boolean;
+  /** Choisit le fond d'imagerie ; `false` si le panneau ne le propose pas. */
+  setSurface(base: string): boolean;
   /** Résout quand l'utilisateur avance manuellement une légende sans durée, ou ferme le tour. */
   waitForAdvance(): Promise<void>;
 }
@@ -80,16 +106,40 @@ export interface TourSignal {
 
 const POLL_MS = 50;
 
+/**
+ * Plafond de l'attente d'une surface calme. Une visite ne doit JAMAIS rester suspendue au réseau :
+ * sans imagerie (hors ligne, service lent) la légende paraît quand même, et le bandeau de
+ * provenance dit ce qui est réellement affiché.
+ */
+export const SURFACE_SETTLE_TIMEOUT_MS = 25_000;
+
+/**
+ * Délai laissé à la surface pour NOTICER un changement (date, fond, cible) avant qu'on lise son
+ * compte de carreaux en vol : elle ne réévalue son jeu de carreaux qu'à l'image suivante, et un
+ * compte lu avant vaut zéro sans que rien soit arrivé.
+ */
+export const SURFACE_NOTICE_MS = 500;
+
+/**
+ * Plongées successives pour atteindre le cadrage voulu. La caméra ne descend que jusqu'où
+ * l'imagerie déjà servie le permet, et celle-ci ne s'affine qu'en approchant : chaque essai gagne
+ * un niveau. Borné, pour qu'une imagerie qui n'arrive pas ne bloque pas la visite.
+ */
+export const DIVE_ATTEMPTS = 5;
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function waitUntil(
   predicate: () => boolean,
-  signal: TourSignal
+  signal: TourSignal,
+  timeoutMs = Infinity
 ): Promise<void> {
-  while (!predicate() && !signal.cancelled) {
+  let waited = 0;
+  while (!predicate() && !signal.cancelled && waited < timeoutMs) {
     await sleep(POLL_MS);
+    if (!signal.paused) waited += POLL_MS;
   }
 }
 
@@ -114,6 +164,17 @@ export async function runTour(
   onStepChange: (index: number, step: TourStep) => void,
   signal: TourSignal
 ): Promise<void> {
+  /** Vrai dès que la visite a touché à la surface : ses sauts de date en attendent alors l'imagerie. */
+  let surfaceInUse = false;
+  const settleSurface = async (): Promise<void> => {
+    await delay(SURFACE_NOTICE_MS, signal);
+    await waitUntil(
+      () => !host.isSurfaceBusy(),
+      signal,
+      SURFACE_SETTLE_TIMEOUT_MS
+    );
+  };
+
   for (let i = 0; i < script.steps.length; i++) {
     if (signal.cancelled) return;
     while (signal.paused && !signal.cancelled) {
@@ -134,6 +195,7 @@ export async function runTour(
         break;
       case 'jumpToDate':
         host.jumpToDate(step.date);
+        if (surfaceInUse) await settleSurface();
         break;
       case 'jumpToEvent':
         host.jumpToEvent(step.event, step.body);
@@ -144,6 +206,23 @@ export async function runTour(
       case 'setMode':
         host.setMode(step.mode);
         await waitUntil(() => !host.isMorphing(), signal);
+        break;
+      case 'diveTo':
+        surfaceInUse = true;
+        for (let attempt = 0; attempt < DIVE_ATTEMPTS; attempt++) {
+          if (
+            signal.cancelled ||
+            !(await host.diveTo(step.place, step.frameKm))
+          )
+            break;
+          await waitUntil(() => !host.isDiving(), signal);
+          await settleSurface();
+          if (host.diveReached()) break;
+        }
+        break;
+      case 'setSurface':
+        surfaceInUse = true;
+        if (host.setSurface(step.base)) await settleSurface();
         break;
       case 'wait':
         await delay(step.ms, signal);
