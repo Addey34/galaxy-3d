@@ -14,6 +14,32 @@
       "tileSizePx": 256,
       "maxLevel": 6,
       "jpegQuality": 85
+    },
+    "charon-newhorizons-global-300m": {
+      "body": "charon",
+      "source": {
+        "url": "https://planetarymaps.usgs.gov/mosaic/Charon_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif",
+        "bytes": 80613890,
+        "width": 12693,
+        "height": 6347,
+        "channels": 1
+      },
+      "tileSizePx": 256,
+      "maxLevel": 5,
+      "jpegQuality": 85
+    },
+    "triton-voyager2-global-600m": {
+      "body": "triton",
+      "source": {
+        "url": "https://planetarymaps.usgs.gov/mosaic/Triton_Voyager2_ClrMosaic_GlobalFill_600m.tif",
+        "bytes": 299994887,
+        "width": 14138,
+        "height": 7069,
+        "channels": 3
+      },
+      "tileSizePx": 256,
+      "maxLevel": 5,
+      "jpegQuality": 85
     }
   }
 }

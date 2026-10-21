@@ -1,0 +1,25 @@
+{
+  "id": "triton-voyager2-global-600m",
+  "body": "triton",
+  "source": {
+    "url": "https://planetarymaps.usgs.gov/mosaic/Triton_Voyager2_ClrMosaic_GlobalFill_600m.tif",
+    "bytes": 299994887,
+    "sha256": "f20ed332e85df469725629b81d3a73ad026897fe561ec59d6245d249a09507db",
+    "width": 14138,
+    "height": 7069,
+    "channels": 3,
+    "centerLongitude": 0
+  },
+  "matrix": {
+    "columnsAtLevelZero": 2,
+    "rowsAtLevelZero": 1,
+    "tileSizePx": 256
+  },
+  "maxLevel": 5,
+  "format": "image/jpeg",
+  "jpegQuality": 85,
+  "path": "default/galaxy-eq2x1",
+  "hash": "ae97f4fa2ba8",
+  "tileCount": 2730,
+  "totalBytes": 7180374
+}
