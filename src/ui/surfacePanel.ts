@@ -253,10 +253,14 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
         ? t('surface.imagery.day', {
             day: formatIsoDay(state.day, getLocale(), intlLocale()),
           })
-        : t('surface.imagery.acquired', {
-            from: formatMonth(state.acquired.from),
-            to: formatMonth(state.acquired.to),
-          }),
+        : formatMonth(state.acquired.from) === formatMonth(state.acquired.to)
+          ? t('surface.imagery.acquiredOneMonth', {
+              month: formatMonth(state.acquired.from),
+            })
+          : t('surface.imagery.acquired', {
+              from: formatMonth(state.acquired.from),
+              to: formatMonth(state.acquired.to),
+            }),
       t(temporalCategoryLabelKey(stamp.category)),
     ];
     if (state.oversampling > 1) {

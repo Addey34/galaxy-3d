@@ -361,6 +361,7 @@ export const es: Record<MessageKey, string> = {
   'surface.imagery.headline': '{title} a {resolution}/píxel',
   'surface.imagery.day': 'imagen del {day}',
   'surface.imagery.acquired': 'imágenes de {from} a {to}',
+  'surface.imagery.acquiredOneMonth': 'imágenes de {month}',
   'surface.imagery.oversampled':
     'mostrada {factor} veces más grande que el mosaico publicado ({published} px/grado)',
   'surface.imagery.oceanMatched':

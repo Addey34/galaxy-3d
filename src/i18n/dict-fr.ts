@@ -349,6 +349,7 @@ export const fr: Record<MessageKey, string> = {
   'surface.imagery.headline': '{title} à {resolution}/pixel',
   'surface.imagery.day': 'image du {day}',
   'surface.imagery.acquired': 'images de {from} à {to}',
+  'surface.imagery.acquiredOneMonth': 'images de {month}',
   'surface.imagery.oversampled':
     'affichée {factor} fois plus grande que la mosaïque publiée ({published} px/degré)',
   'surface.imagery.oceanMatched':

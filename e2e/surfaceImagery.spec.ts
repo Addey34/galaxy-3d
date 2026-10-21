@@ -783,3 +783,21 @@ for (const { body, id } of [
     expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
   });
 }
+
+/**
+ * Un jeu dont l'intervalle tient dans UN mois (Charon, juillet 2015) ne s'écrit pas « de juillet
+ * 2015 à juillet 2015 » : le bandeau nomme le mois une fois. Falsifié en retirant la branche de
+ * `surfacePanel.ts`, le texte redevient « from July 2015 to July 2015 ».
+ */
+test('names a single month once in the imagery badge', async ({ page }) => {
+  await serveTiles(page);
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=charon&date=2015-07-14T12:00:00Z'
+  );
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  await expect(badge).toContainText('images from July 2015');
+  await expect(badge).not.toContainText('July 2015 to July 2015');
+});
