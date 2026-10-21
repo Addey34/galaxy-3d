@@ -381,7 +381,7 @@ export const en = {
   'surface.relief.area': 'named area {name}',
   'surface.relief.acquired': 'heights measured from {from} to {to}',
   'surface.buildings.headline':
-    '3D buildings: {count}. Height colour shows where it comes from.',
+    '3D buildings: {count}. Height colour shows where it comes from. Roofs are drawn flat.',
   'surface.buildings.origin.measured': 'measured',
   'surface.buildings.origin.interpolated': 'interpolated',
   'surface.buildings.origin.derivedFromFloors': 'derived from floors',

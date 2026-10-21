@@ -27,6 +27,7 @@
     "sourceFeatures": 11819,
     "polygons": 11819,
     "skippedNonPolygon": 0,
+    "skippedNoFootprint": 0,
     "verticesAtMarginEdge": 0,
     "heightAboveRange": 0,
     "byOrigin": {

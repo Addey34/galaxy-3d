@@ -10,6 +10,17 @@
         48.87
       ],
       "manifest": "assets/buildings/paris-bdtopo/manifest.json"
+    },
+    {
+      "id": "berlin-lod2",
+      "body": "earth",
+      "bboxLonLat": [
+        13.34901,
+        52.50062,
+        13.3942,
+        52.52818
+      ],
+      "manifest": "assets/buildings/berlin-lod2/manifest.json"
     }
   ]
 }
