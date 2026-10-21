@@ -26,7 +26,13 @@ const RECIPE = JSON.parse(
     string,
     {
       body: string;
-      source: { url: string; bytes: number; width: number; height: number };
+      source: {
+        url: string;
+        bytes: number;
+        width: number;
+        height: number;
+        channels: number;
+      };
       centerLongitude?: 180;
       tileSizePx: number;
       maxLevel: number;
@@ -43,6 +49,7 @@ interface Manifest {
     sha256: string;
     width: number;
     height: number;
+    channels: number;
     centerLongitude: number;
   };
   matrix: {
@@ -84,6 +91,7 @@ describe('mosaïques cuites : recette, manifeste, fiche', () => {
       expect(manifest.source.bytes, id).toBe(target.source.bytes);
       expect(manifest.source.width, id).toBe(target.source.width);
       expect(manifest.source.height, id).toBe(target.source.height);
+      expect(manifest.source.channels, id).toBe(target.source.channels);
       expect(manifest.source.centerLongitude, id).toBe(
         target.centerLongitude ?? 0
       );

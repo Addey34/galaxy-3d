@@ -7,6 +7,7 @@
     "sha256": "592b7fb0f88cafa0bedf9f33bb71e983952a250ee8577edf2abfe814b473356b",
     "width": 24888,
     "height": 12444,
+    "channels": 1,
     "centerLongitude": 180
   },
   "matrix": {

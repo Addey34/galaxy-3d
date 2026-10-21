@@ -66,12 +66,13 @@ async function download(url, bytes) {
 }
 
 /** Roule la carte d'une demi-largeur : la colonne 0 de la source est a 0 degre, pas a -180. */
-function rollHalf(raw, width, height) {
-  const half = width / 2;
+function rollHalf(raw, width, height, channels) {
+  const half = (width / 2) * channels;
+  const stride = width * channels;
   const out = Buffer.allocUnsafe(raw.length);
   for (let y = 0; y < height; y++) {
-    const row = y * width;
-    raw.copy(out, row, row + half, row + width);
+    const row = y * stride;
+    raw.copy(out, row, row + half, row + stride);
     raw.copy(out, row + half, row, row + half);
   }
   return out;
@@ -79,7 +80,12 @@ function rollHalf(raw, width, height) {
 
 async function bake(id, target) {
   const { source, tileSizePx, maxLevel, jpegQuality } = target;
-  if (source.width % 2 !== 0) throw new Error(`${id} : largeur impaire`);
+  // Le demi-tour exige une largeur paire ; une source deja a l'orientation de l'application (Charon,
+  // Triton) n'est pas roulee et peut avoir n'importe quelle largeur.
+  if (target.centerLongitude === 180 && source.width % 2 !== 0)
+    throw new Error(
+      `${id} : largeur impaire, impossible de la rouler d'une demi-largeur`
+    );
   const file = await download(source.url, source.bytes);
   const sourceSha256 = createHash('sha256')
     .update(readFileSync(file))
@@ -96,18 +102,22 @@ async function bake(id, target) {
         `la recette ${source.width}x${source.height}x${source.channels}`
     );
 
-  // Une image a UNE bande sort de sharp en TROIS canaux des qu'elle est brute (piege mesure au lot
-  // 61) : `extractChannel(0)` apres le controle `channels === 1` ci-dessus.
-  let raw = await sharp(file, { limitInputPixels: false })
-    .extractChannel(0)
+  // Une bande (niveaux de gris) ou trois (couleur) ; aucune autre. Une image a UNE bande sort de
+  // sharp en TROIS canaux des qu'elle est brute (piege mesure au lot 61) : on garde alors la
+  // premiere (`extractChannel(0)`), apres le controle `channels` ci-dessus.
+  const ch = source.channels;
+  if (ch !== 1 && ch !== 3)
+    throw new Error(`${id} : ${ch} bandes, 1 ou 3 attendues`);
+  const only = (pipeline) => (ch === 1 ? pipeline.extractChannel(0) : pipeline);
+  let raw = await only(sharp(file, { limitInputPixels: false }))
     .raw()
     .toBuffer();
-  if (raw.length !== source.width * source.height)
+  if (raw.length !== source.width * source.height * ch)
     throw new Error(
-      `${id} : ${raw.length} octets lus pour ${source.width * source.height} pixels`
+      `${id} : ${raw.length} octets lus pour ${source.width * source.height * ch} attendus`
     );
   if (target.centerLongitude === 180)
-    raw = rollHalf(raw, source.width, source.height);
+    raw = rollHalf(raw, source.width, source.height, ch);
 
   const staging = join(TILE_OUT, id, '.baking');
   rmSync(staging, { recursive: true, force: true });
@@ -122,17 +132,18 @@ async function bake(id, target) {
     const height = tileSizePx * rows;
     // Chaque niveau est reduit (ou, au plus fin, etire) DEPUIS la source entiere, jamais du niveau
     // precedent : un niveau ne porte pas l'erreur de ceux qu'il surmonte.
-    const level_ = await sharp(raw, {
-      raw: { width: source.width, height: source.height, channels: 1 },
+    const levelInput = sharp(raw, {
+      raw: { width: source.width, height: source.height, channels: ch },
       limitInputPixels: false,
-    })
-      .resize(width, height, { fit: 'fill' })
-      .extractChannel(0)
+    });
+    const levelBuffer = await only(
+      levelInput.resize(width, height, { fit: 'fill' })
+    )
       .raw()
       .toBuffer();
-    if (level_.length !== width * height)
+    if (levelBuffer.length !== width * height * ch)
       throw new Error(
-        `${id} niveau ${level} : ${level_.length} octets pour ${width * height} pixels`
+        `${id} niveau ${level} : ${levelBuffer.length} octets pour ${width * height * ch} attendus`
       );
 
     const jobs = [];
@@ -142,13 +153,15 @@ async function bake(id, target) {
     for (let i = 0; i < jobs.length; i += 64) {
       const batch = await Promise.all(
         jobs.slice(i, i + 64).map(async ([row, column]) => {
-          const tile = Buffer.allocUnsafe(tileSizePx * tileSizePx);
+          const line = tileSizePx * ch;
+          const tile = Buffer.allocUnsafe(line * tileSizePx);
           for (let y = 0; y < tileSizePx; y++) {
-            const start = (row * tileSizePx + y) * width + column * tileSizePx;
-            level_.copy(tile, y * tileSizePx, start, start + tileSizePx);
+            const start =
+              ((row * tileSizePx + y) * width + column * tileSizePx) * ch;
+            levelBuffer.copy(tile, y * line, start, start + line);
           }
           const jpeg = await sharp(tile, {
-            raw: { width: tileSizePx, height: tileSizePx, channels: 1 },
+            raw: { width: tileSizePx, height: tileSizePx, channels: ch },
           })
             .jpeg({ quality: jpegQuality, mozjpeg: true })
             .toBuffer();
@@ -180,6 +193,7 @@ async function bake(id, target) {
       sha256: sourceSha256,
       width: source.width,
       height: source.height,
+      channels: ch,
       centerLongitude: target.centerLongitude ?? 0,
     },
     matrix: { columnsAtLevelZero: 2, rowsAtLevelZero: 1, tileSizePx },

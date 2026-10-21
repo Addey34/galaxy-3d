@@ -2565,6 +2565,15 @@ déclare un gabarit RESTful comme les autres, dont l'hôte est `galaxy-data.adri
 - **Ce que la fiche ne sait pas** : l'intervalle d'acquisition est l'ENVELOPPE des images dont la
   cible est Pluton dans les index PDS de LORRI et MVIC, pas la liste des images de la mosaïque,
   que l'USGS ne publie pas (« nearly all of the highest-resolution images »).
+- **Charon et Triton (lot 67)** passent par le même cuiseur : Charon (12 693 × 6 347, une bande)
+  et Triton (14 138 × 7 069, TROIS bandes, d'où `source.channels` dans la recette et le manifeste),
+  tous deux au niveau 5 (le plus petit niveau dont la pyramide est au moins aussi large que la
+  source). Leurs sources sont déjà centrées sur 0° : aucun demi-tour, vérifié par corrélation
+  (niveau 3 recomposé contre texture livrée, décalage 0 : Charon 0,9967, Triton 0,9988). Triton
+  porte un témoin d'orientation nommé (Cipango Planum, clair, falsifié) ; Charon n'en porte pas,
+  faute de repère indépendant (le choisir sur la texture serait circulaire). La région nord de
+  Triton, que Voyager 2 n'a pas vue, est NOIRE dans la source : ce n'est pas un défaut de tuile.
+  Les intervalles d'acquisition sont, là aussi, des enveloppes tirées des index PDS.
 
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 

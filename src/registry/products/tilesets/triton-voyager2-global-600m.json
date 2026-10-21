@@ -1,0 +1,76 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "triton-voyager2-global-600m",
+  "type": "tileset",
+  "body": "triton",
+  "title": "Triton Voyager 2 Global Color Mosaic 600m (Triton_Voyager2_ClrMosaic_GlobalFill_600m)",
+  "providerId": "galaxy-data-tiles",
+  "mission": "Voyager 2",
+  "instrument": "Imaging Science Subsystem (ISS)",
+  "service": {
+    "template": "https://galaxy-data.adrianguichard.dev/assets/imagery/triton-voyager2-global-600m/ae97f4fa2ba8/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "galaxy-eq2x1",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 5
+  },
+  "publishedPixelsPerDegree": 39.27,
+  "acquired": {
+    "interval": [["1989-06-07T18:39:36Z", "1989-09-05T09:01:32Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://galaxy.adrianguichard.dev/assets/imagery/triton-voyager2-global-600m/manifest.json"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/triton_voyager_2_global_color_mosaic_600m"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-imaging.jpl.nasa.gov/data/vg2-n-iss-2-edr-v1.0/vg_0009/index/imgindex.tab"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-imaging.jpl.nasa.gov/data/vg2-n-iss-2-edr-v1.0/vg_0010/index/imgindex.tab"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-imaging.jpl.nasa.gov/data/vg2-n-iss-2-edr-v1.0/vg_0011/index/imgindex.tab"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-imaging.jpl.nasa.gov/data/vg2-n-iss-2-edr-v1.0/vg_0012/index/imgindex.tab"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Galaxy",
+      "roles": ["host"],
+      "url": "https://galaxy.adrianguichard.dev/"
+    },
+    {
+      "name": "NASA, Jet Propulsion Laboratory, Dr. Paul Schenk (Lunar and Planetary Institute)",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/triton_voyager_2_global_color_mosaic_600m"
+    }
+  ],
+  "verified": "2026-10-21"
+}
