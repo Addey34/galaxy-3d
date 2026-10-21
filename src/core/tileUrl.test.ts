@@ -32,6 +32,22 @@ describe('adresse d’une tuile', () => {
     expect(url.endsWith('/3/2/7.jpg')).toBe(true);
   });
 
+  it('décale la colonne d’une demi-matrice pour une carte servie centrée sur 180°', () => {
+    // Enceladus_Cassini_mosaic_global_110m est centrée sur 180° (CENTER_LONGITUDE de son étiquette
+    // PDS3) : mesuré le 2026-10-21, ses tuiles recouvrent la texture livrée à r = 0,970 avec un
+    // décalage de 180°, et à r = 0,028 sans décalage. La colonne 0 de l'application (−180°) est
+    // donc la colonne du service à mi-matrice.
+    const centred: TileService = { ...TREK, centerLongitude: 180 };
+    const col = (level: number, column: number) =>
+      tileUrl(centred, { level, row: 0, column }).split('/').pop();
+    expect(col(0, 0)).toBe('1.jpg');
+    expect(col(0, 1)).toBe('0.jpg');
+    expect(col(2, 0)).toBe('4.jpg');
+    expect(col(2, 5)).toBe('1.jpg');
+    // Sans la déclaration, la colonne passe telle quelle.
+    expect(tileUrl(TREK, { level: 2, row: 0, column: 5 })).toMatch(/\/5\.jpg$/);
+  });
+
   it('garde le double « / » du gabarit publié', () => {
     expect(tileUrl(TREK, { level: 0, row: 0, column: 0 })).toContain(
       '/1.0.0//default/'

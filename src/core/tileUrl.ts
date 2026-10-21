@@ -32,6 +32,11 @@ export interface TileService {
   tileMatrixSet: string;
   /** Forme de la matrice ; par défaut celle que Trek publie. */
   matrix?: TileMatrixShape;
+  /**
+   * Longitude du centre de la carte servie. 180 : la colonne 0 du service est à 0° et non à −180°,
+   * donc la colonne de l'application se décale d'une demi-matrice. Absent = 0.
+   */
+  centerLongitude?: 180;
 }
 
 /**
@@ -54,6 +59,17 @@ const TOKENS = [
   'East',
   'North',
 ];
+
+/** Colonne que le SERVICE connaît pour la colonne `index.column` de l'application. */
+function serviceColumn(
+  service: TileService,
+  index: TileIndex,
+  shape: TileMatrixShape
+): number {
+  if (service.centerLongitude !== 180) return index.column;
+  const { columns } = tileMatrix(index.level, shape);
+  return (index.column + columns / 2) % columns;
+}
 
 /**
  * Adresse d'une tuile, ou une exception si l'indice sort de la matrice de son niveau.
@@ -79,7 +95,7 @@ export function tileUrl(service: TileService, index: TileIndex): string {
     TileMatrixSet: service.tileMatrixSet,
     TileMatrix: String(index.level),
     TileRow: String(index.row),
-    TileCol: String(index.column),
+    TileCol: String(serviceColumn(service, index, shape)),
     West: String(bounds.west),
     South: String(bounds.south),
     East: String(bounds.east),

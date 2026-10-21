@@ -571,6 +571,26 @@ for (const { body, layer, extension } of [
     layer: 'Europa_Voyager_GalileoSSI_global_mosaic_500m',
     extension: 'png',
   },
+  {
+    body: 'callisto',
+    layer: 'Callisto_Voyager_GalileoSSI_global_mosaic_1km',
+    extension: 'png',
+  },
+  {
+    body: 'vesta',
+    layer: 'Vesta_Dawn_FC_HAMO_Mosaic_Global_74ppd',
+    extension: 'jpg',
+  },
+  {
+    body: 'enceladus',
+    layer: 'Enceladus_Cassini_mosaic_global_110m',
+    extension: 'jpg',
+  },
+  {
+    body: 'dione',
+    layer: 'Dione_Cassini_Voyageglobal_154m',
+    extension: 'jpg',
+  },
 ])
   test(`paints ${body} from its tile set record alone`, async ({ page }) => {
     const errors: string[] = [];

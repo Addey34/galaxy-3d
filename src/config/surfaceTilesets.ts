@@ -88,6 +88,9 @@ function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
       style: fiche.service.style,
       tileMatrixSet: fiche.service.tileMatrixSet,
       matrix: fiche.service.matrix,
+      ...(fiche.service.centerLongitude && {
+        centerLongitude: fiche.service.centerLongitude,
+      }),
     },
     matrix: fiche.service.matrix,
     minLevel: fiche.service.minLevel,

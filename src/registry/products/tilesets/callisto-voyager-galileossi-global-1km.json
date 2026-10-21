@@ -1,0 +1,60 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "callisto-voyager-galileossi-global-1km",
+  "type": "tileset",
+  "body": "callisto",
+  "title": "Callisto Voyager - Galileo SSI global mosaic, 1 km (Callisto_Voyager_GalileoSSI_global_mosaic_1km)",
+  "providerId": "nasa-trek",
+  "mission": "Voyager 1, Voyager 2, Galileo",
+  "instrument": "ISS (Voyager) and Solid State Imaging (Galileo)",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Callisto/EQ/Callisto_Voyager_GalileoSSI_global_mosaic_1km/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/png",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 5
+  },
+  "publishedPixelsPerDegree": 42.05,
+  "acquired": {
+    "interval": [["1979-01-05T08:09:22Z", "2001-10-10T12:25:11Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Callisto/EQ/Callisto_Voyager_GalileoSSI_global_mosaic_1km/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/callisto_galileo_voyager_global_mosaic_1km"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/callisto/"
+    },
+    {
+      "name": "Voyager Imaging Science and Galileo SSI Teams",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/callisto_galileo_voyager_global_mosaic_1km"
+    }
+  ],
+  "verified": "2026-10-21"
+}
