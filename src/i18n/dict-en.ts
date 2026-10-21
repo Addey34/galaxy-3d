@@ -373,6 +373,7 @@ export const en = {
   'surface.imagery.headline': '{title} at {resolution}/pixel',
   'surface.imagery.day': 'image of {day}',
   'surface.imagery.acquired': 'images from {from} to {to}',
+  'surface.imagery.acquiredOneMonth': 'images from {month}',
   'surface.imagery.oversampled':
     'shown {factor}x larger than the published mosaic ({published} px/degree)',
   'surface.imagery.oceanMatched':

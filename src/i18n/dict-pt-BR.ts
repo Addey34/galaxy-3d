@@ -357,6 +357,7 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.imagery.headline': '{title} a {resolution}/pixel',
   'surface.imagery.day': 'imagem de {day}',
   'surface.imagery.acquired': 'imagens de {from} a {to}',
+  'surface.imagery.acquiredOneMonth': 'imagens de {month}',
   'surface.imagery.oversampled':
     'exibida {factor} vezes maior que o mosaico publicado ({published} px/grau)',
   'surface.imagery.oceanMatched': 'cor do oceano levada à da textura de base',
