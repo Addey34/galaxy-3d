@@ -364,7 +364,7 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.relief.area': 'área nomeada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} e {to}',
   'surface.buildings.headline':
-    'Edifícios 3D: {count}. A cor da altura indica sua origem.',
+    'Edifícios 3D: {count}. A cor da altura indica sua origem. Os telhados são desenhados planos.',
   'surface.buildings.origin.measured': 'medida',
   'surface.buildings.origin.interpolated': 'interpolada',
   'surface.buildings.origin.derivedFromFloors': 'deduzida dos andares',
