@@ -1070,6 +1070,17 @@ button {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  /* Indice de défilement sans script : une ombre en haut et en bas n'apparaît que s'il reste du
+     contenu au-delà (les dégradés « local » suivent le contenu et masquent l'ombre fixe au bout). */
+  background:
+    linear-gradient(var(--surface-solid), var(--surface-solid)) top / 100% 1rem
+      local no-repeat,
+    linear-gradient(var(--surface-solid), var(--surface-solid)) bottom / 100%
+      1rem local no-repeat,
+    linear-gradient(rgba(0, 0, 0, 0.5), transparent) top / 100% 0.9rem scroll
+      no-repeat,
+    linear-gradient(transparent, rgba(0, 0, 0, 0.5)) bottom / 100% 0.9rem scroll
+      no-repeat;
 }
 .bi-subtitle {
   margin: 0;
@@ -2509,6 +2520,24 @@ button {
 }
 .surface-imagery-badge .si-credit {
   opacity: 0.8;
+}
+/* BÂTIMENTS 3D (lot 63) : légende des origines de hauteur, puis attribution de la licence du jeu.
+   Une pastille ne porte JAMAIS seule l'information : chaque couleur est suivie de son libellé. */
+.surface-imagery-badge .si-buildings:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.6rem;
+}
+.surface-imagery-badge .si-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.surface-imagery-badge .si-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  border: 1px solid var(--hairline);
 }
 /* PENDANT UNE VISITE (2026-10-20) : la carte de la visite occupe le bas de l'écran et cachait le
    bandeau, donc les lignes de crédit que la licence exige. Le bandeau passe EN HAUT, sous la barre

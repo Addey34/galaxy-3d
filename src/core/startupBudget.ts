@@ -397,6 +397,16 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'buildingsOverlay',
+    reason:
+      'les bâtiments 3D (lot 63, C.3b) : le fil vers la couche, importé par `surfacePanel` quand la caméra est BASSE sur un corps (sous 300 km), jamais au démarrage.',
+  },
+  {
+    chunk: 'galaxyData',
+    reason:
+      "les adresses et le décodage du service de données (`core/galaxyData`), partagés par le client météo (`galaxyDataClient`) et par les bâtiments (`buildingsOverlay`) : Vite l'en a sorti en morceau commun au lot 63, et il n'est chargé qu'avec l'un des deux.",
+  },
+  {
     chunk: 'galaxyDataClient',
     reason:
       "le client du service de données de Galaxy (lot 46) n'est importé qu'au premier chargement d'une couche météo de modèle, toutes éteintes au démarrage. Il y entrait avec le service et faisait dépasser le plafond de 1 039 octets (mesuré le 2026-10-12).",

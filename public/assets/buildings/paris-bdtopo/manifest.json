@@ -1,0 +1,96 @@
+{
+  "id": "paris-bdtopo",
+  "title": "Bâtiments de Paris, BD TOPO (IGN)",
+  "body": "earth",
+  "format": "GXBD",
+  "version": 1,
+  "zoom": 14,
+  "directory": "assets/buildings/paris-bdtopo/60ce984a74",
+  "source": {
+    "name": "BD TOPO, Institut national de l'information géographique et forestière",
+    "typeName": "BDTOPO_V3:batiment",
+    "license": "Licence Ouverte 2.0",
+    "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+    "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+    "readFrom": "2026-10-20",
+    "readTo": "2026-10-20"
+  },
+  "bboxLonLat": [
+    2.32,
+    48.85,
+    2.36,
+    48.87
+  ],
+  "totals": {
+    "tiles": 9,
+    "bytes": 657517,
+    "sourceFeatures": 11819,
+    "polygons": 11819,
+    "skippedNonPolygon": 0,
+    "verticesAtMarginEdge": 0,
+    "heightAboveRange": 0,
+    "byOrigin": {
+      "absent": 694,
+      "measured": 124,
+      "interpolated": 10893,
+      "derivedFromFloors": 0,
+      "unspecified": 108
+    }
+  },
+  "tiles": [
+    {
+      "column": 8297,
+      "row": 5635,
+      "buildings": 390,
+      "bytes": 24410
+    },
+    {
+      "column": 8297,
+      "row": 5636,
+      "buildings": 1224,
+      "bytes": 79284
+    },
+    {
+      "column": 8297,
+      "row": 5637,
+      "buildings": 39,
+      "bytes": 2649
+    },
+    {
+      "column": 8298,
+      "row": 5635,
+      "buildings": 2357,
+      "bytes": 121459
+    },
+    {
+      "column": 8298,
+      "row": 5636,
+      "buildings": 4367,
+      "bytes": 245849
+    },
+    {
+      "column": 8298,
+      "row": 5637,
+      "buildings": 137,
+      "bytes": 8319
+    },
+    {
+      "column": 8299,
+      "row": 5635,
+      "buildings": 1030,
+      "bytes": 51238
+    },
+    {
+      "column": 8299,
+      "row": 5636,
+      "buildings": 2242,
+      "bytes": 122626
+    },
+    {
+      "column": 8299,
+      "row": 5637,
+      "buildings": 33,
+      "bytes": 1683
+    }
+  ]
+}
