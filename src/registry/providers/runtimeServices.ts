@@ -26,6 +26,7 @@ import nasaTrek from './nasa-trek.json';
 import nasaGibs from './nasa-gibs.json';
 import eoxCloudless from './eox-cloudless.json';
 import ignGeoplateforme from './ign-geoplateforme.json';
+import galaxyDataTiles from './galaxy-data-tiles.json';
 
 /**
  * Même raison que les deux fonctions d'assertion d'`index.ts` : un import JSON élargit
@@ -71,4 +72,5 @@ export const TILE_PROVIDERS = {
   'nasa-trek': asTileSource(nasaTrek),
   'eox-cloudless': asTileSource(eoxCloudless),
   'ign-geoplateforme': asTileSource(ignGeoplateforme),
+  'galaxy-data-tiles': asTileSource(galaxyDataTiles),
 };

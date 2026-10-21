@@ -1,0 +1,32 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "galaxy-data-tiles",
+  "role": "tile-source",
+  "publisher": "USGS Astrogeology Science Center, NASA mission teams",
+  "title": "Galaxy data service, USGS mosaic tiles",
+  "url": "https://astrogeology.usgs.gov/",
+  "kind": "measurement",
+  "host": "galaxy-data.adrianguichard.dev",
+  "license": "other",
+  "rights": "public-domain",
+  "licenseUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+  "attribution": "USGS Astrogeology / NASA; each mosaic credits its own producers, listed in its tile set record",
+  "accessed": "2026-10-21",
+  "extent": {
+    "temporal": {
+      "interval": [["2015-01-25T02:01:00Z", "2015-11-01T23:32:56Z"]]
+    }
+  },
+  "use": {
+    "en": "Published mosaic tiles streamed on approach to a surface, only while the camera is close to a body that declares a tile set, and only for the patch of ground actually in view. Unlike the NASA Trek services, no public tile service exists for these mosaics: Galaxy cooks the file the USGS publishes into tiles (`pnpm imagery:bake`) and serves them itself.",
+    "fr": "Tuiles d’une mosaïque publiée, streamées à l’approche d’une surface, seulement quand la caméra est proche d’un corps qui déclare un jeu de tuiles, et seulement pour la portion de sol réellement visible. À la différence des services Trek de la NASA, aucun service de tuiles public n’existe pour ces mosaïques : Galaxy cuit le fichier que publie l’USGS en tuiles (`pnpm imagery:bake`) et les sert lui-même.",
+    "es": "Teselas de un mosaico publicado, transmitidas al acercarse a una superficie, solo cuando la cámara está cerca de un cuerpo que declara un conjunto de teselas, y solo para la porción de suelo realmente visible. A diferencia de los servicios Trek de la NASA, no existe un servicio público de teselas para estos mosaicos: Galaxy cuece el archivo que publica el USGS en teselas (`pnpm imagery:bake`) y las sirve él mismo.",
+    "pt-BR": "Blocos de um mosaico publicado, transmitidos na aproximação de uma superfície, somente quando a câmera está perto de um corpo que declara um conjunto de blocos, e somente para a porção de solo realmente visível. Ao contrário dos serviços Trek da NASA, não existe um serviço público de blocos para esses mosaicos: a Galaxy cozinha o arquivo que o USGS publica em blocos (`pnpm imagery:bake`) e os serve ela mesma."
+  },
+  "terms": {
+    "en": "USGS Copyrights and Credits: USGS-authored or produced data and information are considered to be in the U.S. Public Domain, and the USGS asks that proper credit be given when using information from its products. Read at the source on 2026-10-21. The same page warns that not all content on USGS sites is in the Public Domain; each mosaic of this service is a USGS Astrogeology product built from NASA mission images, and its tile set record names the page it was read from. The service is Galaxy's own (galaxy-data.adrianguichard.dev), keeps no access log, and sends the tiles with cross-origin headers limited to the Galaxy site and local development.",
+    "fr": "Droits d’auteur et crédits de l’USGS : les données et informations produites par l’USGS sont considérées comme relevant du domaine public des États-Unis, et l’USGS demande qu’un crédit approprié soit donné quand on utilise l’information de ses produits. Lues à la source le 2026-10-21. La même page prévient que tout le contenu des sites de l’USGS n’est pas dans le domaine public ; chaque mosaïque de ce service est un produit de l’USGS Astrogeology construit à partir d’images de missions de la NASA, et la fiche de son jeu de tuiles nomme la page où elle a été lue. Le service est celui de Galaxy (galaxy-data.adrianguichard.dev), ne tient aucun journal des accès, et envoie les tuiles avec des en-têtes inter-origines limités au site de Galaxy et au développement local.",
+    "es": "Derechos de autor y créditos del USGS: los datos e información producidos por el USGS se consideran de dominio público de los Estados Unidos, y el USGS pide que se dé el crédito apropiado al usar la información de sus productos. Leídos en la fuente el 2026-10-21. La misma página advierte de que no todo el contenido de los sitios del USGS es de dominio público; cada mosaico de este servicio es un producto del USGS Astrogeology construido a partir de imágenes de misiones de la NASA, y el registro de su conjunto de teselas nombra la página donde se leyó. El servicio es propio de Galaxy (galaxy-data.adrianguichard.dev), no guarda ningún registro de accesos, y envía las teselas con encabezados de origen cruzado limitados al sitio de Galaxy y al desarrollo local.",
+    "pt-BR": "Direitos autorais e créditos do USGS: os dados e informações produzidos pelo USGS são considerados de domínio público dos Estados Unidos, e o USGS pede que se dê o crédito apropriado ao usar a informação de seus produtos. Lidos na fonte em 2026-10-21. A mesma página avisa que nem todo o conteúdo dos sites do USGS é de domínio público; cada mosaico deste serviço é um produto do USGS Astrogeology construído a partir de imagens de missões da NASA, e o registro do seu conjunto de blocos nomeia a página onde foi lido. O serviço é da própria Galaxy (galaxy-data.adrianguichard.dev), não guarda nenhum registro de acessos, e envia os blocos com cabeçalhos de origem cruzada limitados ao site da Galaxy e ao desenvolvimento local."
+  }
+}

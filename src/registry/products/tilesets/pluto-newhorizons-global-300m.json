@@ -1,0 +1,68 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "pluto-newhorizons-global-300m",
+  "type": "tileset",
+  "body": "pluto",
+  "title": "Pluto New Horizons LORRI - MVIC Global Mosaic 300m (Pluto_NewHorizons_Global_Mosaic_300m_Jul2017)",
+  "providerId": "galaxy-data-tiles",
+  "mission": "New Horizons",
+  "instrument": "Long Range Reconnaissance Imager (LORRI) and Multispectral Visible Imaging Camera (MVIC)",
+  "service": {
+    "template": "https://galaxy-data.adrianguichard.dev/assets/imagery/pluto-newhorizons-global-300m/9a709ebc02b1/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "galaxy-eq2x1",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 6
+  },
+  "publishedPixelsPerDegree": 69.13,
+  "acquired": {
+    "interval": [["2015-01-25T02:01:00Z", "2015-11-01T23:32:56Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://galaxy.adrianguichard.dev/assets/imagery/pluto-newhorizons-global-300m/manifest.json"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/pluto_new_horizons_lorri_mvic_global_mosaic_300m"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-smallbodies.astro.umd.edu/holdings/nh-p-lorri-3-pluto-v3.0/index/index.tab"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-smallbodies.astro.umd.edu/holdings/nh-p-mvic-3-pluto-v3.0/index/index.tab"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Galaxy",
+      "roles": ["host"],
+      "url": "https://galaxy.adrianguichard.dev/"
+    },
+    {
+      "name": "NASA, Johns Hopkins University Applied Physics Laboratory, Southwest Research Institute, New Horizons Team",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/pluto_new_horizons_lorri_mvic_global_mosaic_300m"
+    }
+  ],
+  "verified": "2026-10-21"
+}

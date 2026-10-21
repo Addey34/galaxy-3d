@@ -1,6 +1,6 @@
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, type Page, type Request } from '@playwright/test';
+import { expect, type Page, type Request, type Route } from '@playwright/test';
 import { waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
@@ -40,7 +40,7 @@ export const TILE_JPEG = Buffer.from(
 
 export async function serveTiles(page: Page): Promise<Request[]> {
   const seen: Request[] = [];
-  await page.route('**trek.nasa.gov/**', (route) => {
+  const fulfill = (route: Route) => {
     seen.push(route.request());
     return route.fulfill({
       status: 200,
@@ -48,7 +48,13 @@ export async function serveTiles(page: Page): Promise<Request[]> {
       headers: { 'access-control-allow-origin': '*' },
       body: TILE_JPEG,
     });
-  });
+  };
+  await page.route('**trek.nasa.gov/**', fulfill);
+  // Les mosaïques cuites par nous (lot 66) : le service de données de Galaxy, seulement ses tuiles.
+  await page.route(
+    '**galaxy-data.adrianguichard.dev/assets/imagery/**',
+    fulfill
+  );
   return seen;
 }
 

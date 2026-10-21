@@ -2535,6 +2535,37 @@ celle de la scène à DROITE ; le visiteur déplace la ligne à la souris, au do
   deux éditions, deux attributions, clavier, axe, poignée à l'écran ; falsifié sur l'attribution et
   sur la poignée). Vérifié contre le vrai service le 2026-10-15 au-dessus de Kakhovka, à 41 km.
 
+### Les mosaïques que nous cuisons nous-mêmes (lot 66)
+
+Un corps dont la mosaïque n'existe qu'en fichier à télécharger (Pluton : le GeoTIFF de l'USGS, une
+bande, `Pluto_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif`) n'a pas de service de tuiles à
+interroger. `pnpm imagery:bake` le cuit en pyramide JPEG sur la même matrice 2 × 1 que les services
+WMTS, et le service de données de Galaxy la sert. Le moteur d'imagerie ne change pas : la fiche
+déclare un gabarit RESTful comme les autres, dont l'hôte est `galaxy-data.adrianguichard.dev`.
+
+- **Trois documents, un seul propriétaire par fait.** La recette `scripts/imagery-tile-targets.json`
+  (source, taille attendue, niveaux), le manifeste `public/assets/imagery/<id>/manifest.json` écrit
+  par le cuiseur (SHA-256 de la source, hachage du répertoire, nombre de tuiles), la fiche
+  `src/registry/products/tilesets/`. L'adresse de la fiche NOMME le répertoire haché, et
+  `src/config/imageryManifest.test.ts` croise les trois ; la fiche cite le manifeste en
+  `describedby`, parce que c'est de lui que son gabarit est recopié.
+- **L'orientation se prouve, elle ne se lit pas.** La source de Pluton est centrée sur 180°
+  (`CenterLongitude`, mesuré le 2026-10-21 : réduite à 512 × 256, elle corrèle à 0,9964 avec la
+  texture livrée après un demi-tour, à 0,8362 sans). Le cuiseur la ROULE d'une demi-largeur, donc
+  les tuiles sont à l'orientation de l'application et la fiche ne déclare PAS `centerLongitude`
+  (qui les tournerait une seconde fois). Les tuiles recomposées au niveau 3 corrèlent à 0,9966 avec
+  la texture livrée, sans décalage.
+- **Piège payé** : une image à une bande sort de `sharp` en TROIS canaux dès qu'elle est lue brute.
+  La première cuisson sortait une mosaïque brouillée (corrélation −0,33), et le cuiseur ne le voyait
+  pas : il lit désormais par `extractChannel(0)` et refuse un tampon qui n'a pas `largeur × hauteur`
+  octets.
+- **Ordre de livraison** : les tuiles sur le service de données AVANT la fiche, sinon une tuile
+  absente répond 404 sans en-tête CORS et se lit comme un refus CORS (cf. `core/tileUrl.ts`). Le
+  Caddyfile pose un cache immuable sur `/assets/imagery/*`, ce que le répertoire haché permet.
+- **Ce que la fiche ne sait pas** : l'intervalle d'acquisition est l'ENVELOPPE des images dont la
+  cible est Pluton dans les index PDS de LORRI et MVIC, pas la liste des images de la mosaïque,
+  que l'USGS ne publie pas (« nearly all of the highest-resolution images »).
+
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 
 Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS
