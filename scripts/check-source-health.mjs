@@ -118,6 +118,16 @@ const MARKERS = [
     what: 'noyau PCK générique',
   },
   {
+    prefix: 'https://galaxy.adrianguichard.dev/assets/imagery/',
+    // DÉRIVÉ (lot 66) : le manifeste de cuisson d'une mosaïque porte l'identifiant du dossier qui
+    // le contient. Une réécriture SPA (la coquille, en HTTP 200) ne le porte jamais.
+    marker: (url) => {
+      const parts = new URL(url).pathname.split('/').filter(Boolean);
+      return `"id": "${parts[parts.length - 2] ?? ''}"`;
+    },
+    what: 'manifeste de mosaïque cuite',
+  },
+  {
     prefix: 'https://science.nasa.gov/',
     // DÉRIVÉ : le dernier segment du chemin est le sujet de la page.
     marker: (url) => {

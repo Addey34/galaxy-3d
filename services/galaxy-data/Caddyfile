@@ -32,6 +32,11 @@
 	header @heights Cache-Control "public, max-age=31536000, immutable"
 	header @heights Content-Type application/octet-stream
 
+	# Les mosaïques cuites en tuiles (lot 66) : le RÉPERTOIRE porte le hachage de la cuisson
+	# (`assets/imagery/<id>/<hachage>/…`), donc une adresse ne change jamais d'octets.
+	@imagery path /assets/imagery/*
+	header @imagery Cache-Control "public, max-age=31536000, immutable"
+
 	# Rien d'autre n'est servi : ni liste de dossier, ni fichier en cours d'écriture.
 	@hidden path */.* *.part
 	respond @hidden 404

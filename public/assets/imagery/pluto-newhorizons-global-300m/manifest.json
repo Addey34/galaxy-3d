@@ -1,0 +1,24 @@
+{
+  "id": "pluto-newhorizons-global-300m",
+  "body": "pluto",
+  "source": {
+    "url": "https://planetarymaps.usgs.gov/mosaic/Pluto_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif",
+    "bytes": 309806463,
+    "sha256": "592b7fb0f88cafa0bedf9f33bb71e983952a250ee8577edf2abfe814b473356b",
+    "width": 24888,
+    "height": 12444,
+    "centerLongitude": 180
+  },
+  "matrix": {
+    "columnsAtLevelZero": 2,
+    "rowsAtLevelZero": 1,
+    "tileSizePx": 256
+  },
+  "maxLevel": 6,
+  "format": "image/jpeg",
+  "jpegQuality": 85,
+  "path": "default/galaxy-eq2x1",
+  "hash": "9a709ebc02b1",
+  "tileCount": 10922,
+  "totalBytes": 36863003
+}

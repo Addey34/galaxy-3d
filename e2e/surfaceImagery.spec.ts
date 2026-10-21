@@ -739,3 +739,43 @@ test('displaces Ceres with the Dawn terrain model, on its fitted ellipsoid', asy
   await expectAltitudeInManifestRange(page, probe, 'ceres');
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
+
+/**
+ * PLUTON (lot 66) : ses tuiles ne viennent pas d'un Trek mais du service de données de Galaxy,
+ * cuites depuis la mosaïque de l'USGS. L'adresse porte le HACHAGE de la cuisson, donc une adresse
+ * ne change jamais d'octets (cache immuable) ; le test lit ce hachage dans le manifeste livré, et
+ * non dans la fiche, pour que les deux soient croisés ici comme dans `imageryManifest.test.ts`.
+ */
+test('paints Pluto from the baked tiles of the Galaxy data service', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const seen = await serveTiles(page);
+  const manifest = JSON.parse(
+    readFileSync(
+      resolve(
+        HERE,
+        '../public/assets/imagery/pluto-newhorizons-global-300m/manifest.json'
+      ),
+      'utf8'
+    )
+  ) as { hash: string };
+
+  await boot(page, '?debug-surface&mode=explo&body=pluto');
+  await expect(page.locator('#surface-probe')).toContainText('pluto', {
+    timeout: 30_000,
+  });
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  expect(seen.length, 'aucune tuile demandée en approche').toBeGreaterThan(0);
+  for (const request of seen) {
+    expect(request.url()).toContain(
+      `https://galaxy-data.adrianguichard.dev/assets/imagery/pluto-newhorizons-global-300m/${manifest.hash}/default/galaxy-eq2x1/`
+    );
+    expect(request.url()).toMatch(/\/\d+\/\d+\/\d+\.jpg$/);
+  }
+  await expect(badge.locator('.si-credit')).toContainText('NASA');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
