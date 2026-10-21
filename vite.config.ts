@@ -331,9 +331,8 @@ function bodyLandingPages() {
     apply: 'build' as const,
     async closeBundle(): Promise<void> {
       const { createServer } = await import('vite');
-      const { mkdir, readdir, readFile, stat, writeFile } = await import(
-        'fs/promises'
-      );
+      const { mkdir, readdir, readFile, stat, writeFile } =
+        await import('fs/promises');
       const sharp = (await import('sharp')).default;
       const loader = await createServer({
         configFile: false,
@@ -1547,7 +1546,10 @@ export default defineConfig({
               url.pathname.startsWith('/assets/discovery/') ||
               url.pathname.startsWith('/assets/place-observations/') ||
               url.pathname.startsWith('/assets/search/') ||
-              url.pathname.startsWith('/assets/atmosphere-profiles/'),
+              url.pathname.startsWith('/assets/atmosphere-profiles/') ||
+              // Lot 63 : l'index et les manifestes des bâtiments (les tuiles viennent du service
+              // de données, une autre origine que ce motif ne voit pas).
+              url.pathname.startsWith('/assets/buildings/'),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'ssv-stable-visual-assets',

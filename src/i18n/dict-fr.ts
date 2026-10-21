@@ -356,6 +356,13 @@ export const fr: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relief {title} à {resolution}/pixel',
   'surface.relief.area': 'aire nommée {name}',
   'surface.relief.acquired': 'hauteurs mesurées entre {from} et {to}',
+  'surface.buildings.headline':
+    "Bâtiments 3D : {count}. La couleur de la hauteur dit d'où elle vient.",
+  'surface.buildings.origin.measured': 'mesurée',
+  'surface.buildings.origin.interpolated': 'interpolée',
+  'surface.buildings.origin.derivedFromFloors': 'déduite des étages',
+  'surface.buildings.origin.unspecified': 'non précisée',
+  'surface.buildings.origin.absent': 'absente : dalle plate',
   'settings.surfaceCompare': 'Comparer avec l’année',
   'settings.surfaceCompare.none': 'Aucune comparaison',
   'surface.compare.badge':

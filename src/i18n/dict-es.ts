@@ -368,6 +368,13 @@ export const es: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relieve {title} a {resolution}/píxel',
   'surface.relief.area': 'área nombrada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} y {to}',
+  'surface.buildings.headline':
+    'Edificios 3D: {count}. El color de la altura indica su origen.',
+  'surface.buildings.origin.measured': 'medida',
+  'surface.buildings.origin.interpolated': 'interpolada',
+  'surface.buildings.origin.derivedFromFloors': 'deducida de las plantas',
+  'surface.buildings.origin.unspecified': 'no especificada',
+  'surface.buildings.origin.absent': 'ausente: losa plana',
   'settings.surfaceCompare': 'Comparar con el año',
   'settings.surfaceCompare.none': 'Sin comparación',
   'surface.compare.badge':

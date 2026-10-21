@@ -174,7 +174,7 @@
         ]
       },
       {
-        "source": "/assets/buildings/**/manifest.json",
+        "source": "/assets/buildings/**",
         "headers": [
           {
             "key": "Cache-Control",

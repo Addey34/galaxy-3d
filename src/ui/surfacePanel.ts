@@ -36,6 +36,12 @@ import type {
 /** Rayons apparents sous lesquels on daigne CHARGER le moteur. Au-delà : rien n'est demandé. */
 const ENGINE_LOAD_RADII = 8;
 
+/**
+ * Altitude sous laquelle les bâtiments sont préparés. PROVISOIRE : une tuile de zoom 14 mesure
+ * quelques kilomètres, et la valeur définitive vient de la mesure de l'étape C.5, pas d'un choix.
+ */
+const BUILDINGS_MAX_ALTITUDE_KM = 300;
+
 function readStored(): boolean {
   try {
     // Par défaut ACTIVÉE : c'est la fonctionnalité. Éteinte, elle ne demande rien du tout.
@@ -188,7 +194,12 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   compareLine.hidden = true;
   const credit = document.createElement('span');
   credit.className = 'si-credit';
-  badge.append(headline, detail, compareLine, relief, credit);
+  // Ligne des BÂTIMENTS 3D (lot 63) : légende des origines de hauteur et attribution de la
+  // licence du jeu ; elle est remplie par le module `buildingsOverlay`, chargé à la demande.
+  const buildingsLine = document.createElement('span');
+  buildingsLine.className = 'si-buildings';
+  buildingsLine.hidden = true;
+  badge.append(headline, detail, compareLine, relief, buildingsLine, credit);
   document.body.append(badge);
 
   let enabled = readStored();
@@ -375,6 +386,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
 
   const disable = (): void => {
     engine?.detach();
+    buildings?.suspend();
     state = null;
     renderBadge();
   };
@@ -452,6 +464,62 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       api.cameraSystem.camera,
       api.sceneSystem.renderer.domElement.clientHeight
     );
+    driveBuildings(name, body, radiusKm, distance / renderedRadius);
+  };
+
+  /**
+   * Les bâtiments 3D (lot 63, C.3b) : un module à part, chargé une fois, et seulement quand la
+   * caméra est BASSE. Au-dessus, rien n'est demandé, pas même l'index des jeux.
+   */
+  let buildings: import('./buildingsOverlay').BuildingsOverlay | null = null;
+  /** `data-buildings` du canvas : `jeu:tuiles:bâtiments`, écrit sur CHANGEMENT seulement. */
+  let publishedBuildings = '';
+  const publishBuildings = (state: {
+    setId: string | null;
+    loaded: number;
+    buildings: number;
+  }): void => {
+    const value = state.setId
+      ? `${state.setId}:${state.loaded}:${state.buildings}`
+      : '';
+    if (value === publishedBuildings) return;
+    publishedBuildings = value;
+    const canvas = api.sceneSystem.renderer.domElement;
+    if (value) canvas.dataset['buildings'] = value;
+    else delete canvas.dataset['buildings'];
+  };
+  let buildingsLoading = false;
+  const driveBuildings = (
+    bodyId: string,
+    body: import('./buildingsOverlay').BuildingTarget,
+    radiusKm: number,
+    radii: number
+  ): void => {
+    const altitudeKm = (radii - 1) * radiusKm;
+    if (altitudeKm > BUILDINGS_MAX_ALTITUDE_KM) {
+      buildings?.suspend();
+      if (buildings) publishBuildings(buildings.state);
+      return;
+    }
+    if (!buildings) {
+      if (buildingsLoading) return;
+      buildingsLoading = true;
+      void import('./buildingsOverlay')
+        .then((m) => {
+          buildings = m.createBuildingsOverlay(buildingsLine);
+        })
+        .catch((error: unknown) =>
+          Logger.warn(`[Bâtiments] module indisponible : ${String(error)}`)
+        );
+      return;
+    }
+    buildings.update({
+      bodyId,
+      host: body,
+      radiusKm,
+      cameraPosition: api.cameraSystem.camera.position,
+    });
+    publishBuildings(buildings.state);
   };
 
   /** Jeu à attacher (mosaïque ou couche datée), créé avec le moteur (`config/surfaceTilesets.ts`). */
