@@ -404,26 +404,22 @@ const ARTICLE_VALUES: Record<
       },
     },
   },
-  'nasa-didymos-dimorphos': {
-    dimorphos: {
-      radiusKm: {
-        value: 0.16 / 2,
-        quote:
-          'The moonlet, Dimorphos (Didymos B), is about 525 feet (160 meters) in diameter.',
-      },
-      orbitPeriodDays: {
-        value: (11 + 23 / 60) / 24,
-        quote:
-          'shortening the 11-hour and 55-minute orbit to 11 hours and 23 minutes',
-      },
-    },
-  },
   'richardson-2024-didymos': {
     dimorphos: {
       distanceAU: {
         value: 1.152 / KM_PER_AU,
         quote:
           'Mean Separation of Component Centerse [km] 1.20 ± 0.03 1.189 ± 0.017 1.152 ± 0.018',
+      },
+      radiusKm: {
+        value: 150.0 / 2 / 1000,
+        quote:
+          'Volume-Equivalent Diameter of Secondaryc [m] 164 ± 18 150.0 ± 2.5 assumed unchanged',
+      },
+      orbitPeriodDays: {
+        value: 11.3674 / 24,
+        quote:
+          'Mutual Orbital Periodh [h] 11.921629 ± 0.000003 11.921493 ± 0.000016 11.3674 ± 0.0004',
       },
     },
   },

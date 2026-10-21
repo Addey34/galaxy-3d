@@ -54,7 +54,6 @@ import margoti2026Quaoar from './margoti-2026-quaoar.json';
 import pal2012Sedna from './pal-2012-sedna.json';
 import kiss2016Nereid from './kiss-2016-nereid.json';
 import brown2010Orcus from './brown-2010-orcus.json';
-import nasaDidymosDimorphos from './nasa-didymos-dimorphos.json';
 import grundy2018Patroclus from './grundy-2018-patroclus.json';
 import richardson2024Didymos from './richardson-2024-didymos.json';
 
@@ -122,7 +121,6 @@ export const FACT_SOURCE_PROVIDERS = {
   'pal-2012-sedna': asFactSource(pal2012Sedna),
   'kiss-2016-nereid': asFactSource(kiss2016Nereid),
   'brown-2010-orcus': asFactSource(brown2010Orcus),
-  'nasa-didymos-dimorphos': asFactSource(nasaDidymosDimorphos),
   'grundy-2018-patroclus': asFactSource(grundy2018Patroclus),
   'richardson-2024-didymos': asFactSource(richardson2024Didymos),
 };

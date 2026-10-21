@@ -13,7 +13,7 @@
     },
     "radius": 0.03,
     "rotationSpeed": {
-      "$spinPeriodDays": 0.4743055556
+      "$spinPeriodDays": 0.4736416667
     },
     "orbitalColor": "0xe0a070",
     "fallbackColor": "0x6c6c6c",
@@ -24,7 +24,6 @@
         "1k"
       ],
       "extentRatio": 1.24,
-      "radiusMismatch": "Le rayon affiché, 0,08 km, vient des « environ 160 mètres » de la page de NASA Science. Le modèle SPC v004 de DART a un rayon équivalent-volume de 0,075 km, et Daly et al. 2023 publient 151 ± 5 m de diamètre équivalent. Deux grandeurs publiées différentes ; la forme vient du modèle, la taille de la fiche.",
       "albedo": 0.15,
       "albedoSource": "Daly et al. 2023, Nature 616, 443 (doi:10.1038/s41586-023-05810-5), geometric albedo of the Didymos system 0.15 +/- 0.02",
       "colourSource": null,
@@ -84,11 +83,12 @@
   "facts": {
     "radiusKm": {
       "value": {
-        "$diameterKm": 0.16
+        "$diameterKm": 0.15
       },
-      "source": "nasa-didymos-dimorphos",
+      "source": "richardson-2024-didymos",
       "method": "derived",
-      "detail": "radiusFromDiameter"
+      "uncertainty": 0.00125,
+      "detail": "radiusFromVolumeDiameter"
     },
     "massKg": {
       "published": false,
@@ -111,10 +111,10 @@
     "meanTempC": {
       "published": false,
       "reason": {
-        "en": "NASA’s page on the Didymos system, the source of its other figures, publishes no temperature.",
-        "fr": "La page de la NASA sur le système de Didymos, d’où viennent ses autres chiffres, ne publie aucune température.",
-        "es": "La página de la NASA sobre el sistema de Didymos, de donde proceden sus demás cifras, no publica ninguna temperatura.",
-        "pt-BR": "A página da NASA sobre o sistema de Didymos, de onde vêm os seus outros números, não publica nenhuma temperatura."
+        "en": "The DART dynamics synthesis (Richardson et al. 2024), the source of its figures, publishes no temperature.",
+        "fr": "La synthèse de la dynamique de DART (Richardson et al. 2024), d’où viennent ses chiffres, ne publie aucune température.",
+        "es": "La síntesis de la dinámica de DART (Richardson et al. 2024), de donde proceden sus cifras, no publica ninguna temperatura.",
+        "pt-BR": "A síntese da dinâmica da DART (Richardson et al. 2024), de onde vêm os seus números, não publica nenhuma temperatura."
       }
     },
     "axialTilt": {
@@ -141,10 +141,10 @@
       "detail": "separationAfterDartImpact"
     },
     "orbitPeriodDays": {
-      "value": 0.4743055556,
-      "source": "nasa-didymos-dimorphos",
+      "value": 0.4736416667,
+      "source": "richardson-2024-didymos",
       "method": "measured",
-      "uncertainty": 0.0013888889,
+      "uncertainty": 0.0000166667,
       "detail": "afterDartImpact"
     },
     "rotationPeriod": {
@@ -158,12 +158,13 @@
     }
   },
   "notes": {
-    "": "Satellite d'une cible de mission, ajouté au catalogue le 2026-10-04 (vague 2). Taille et période lues sur la page « Didymos & Dimorphos » de NASA Science, citée mot pour mot dans le relevé des faits.",
+    "": "Satellite d'une cible de mission, ajouté au catalogue le 2026-10-04 (vague 2). Taille et période lues dans le tableau 2 de Richardson et al. 2024 (PSJ 5, 182), cité mot pour mot dans le relevé des faits. Reprises le 2026-10-21 : la page « Didymos & Dimorphos » de NASA Science, qui les portait, dit désormais 170 m et ne donne plus de période orbitale.",
     "relativeOrbitalElements": "Elements MOYENS, mesures sur le binaire (node scripts/derive-relative-elements.mjs --mean dimorphos, epoque 2026-01-01) : plan et rayon moyens sur 400 jours, periode du catalogue. Le repli ne sert que hors de la couverture du binaire (2000-2030 ; avant 2000 il porte l'orbite d'APRES l'impact de DART, plus courte de 32 min, faute d'un second jeu d'elements).",
     "facts.axialTilt": "Valeur de TRAVAIL, non publiée (rendu seulement) : l'inclinaison sur l'écliptique de la normale de son orbite, mesurée sur le binaire (même nombre que `relativeOrbitalElements`). Une rotation synchrone se fait autour de cette normale ; à 0°, la lune tournait à l'endroit quand Didymos tourne à l'envers, et `spinDirection.test.ts` l'a vu.",
     "fallbackColor": "Gris de l'albédo du système de Didymos, 0,15 (Daly et al. 2023), même règle que les autres corps (puissance 1/2,2). Ce n'est pas une mesure de couleur.",
-    "rotationSpeed": "Rendu seulement : la rotation est prise synchrone de l'orbite, ce qu'elle était avant l'impact (période de 11,92177 h dans l'en-tête Horizons de la solution s547). Aucune période de rotation n'est publiée par la source citée, et la fiche ne l'affiche pas.",
-    "facts.orbitPeriodDays": "11 h 23 min ± 2 min, la période APRÈS l'impact de DART. Avant le 2022-09-26 elle était de 11 h 55 min ; le binaire Horizons porte les deux, et la fiche affiche la seule qui vaut aujourd'hui.",
+    "rotationSpeed": "Rendu seulement : la rotation est prise synchrone de l'orbite d'APRÈS l'impact (même période que `orbitPeriodDays`), faute de période de rotation publiée : Richardson et al. 2024 la notent « pending » depuis l'impact. Avant l'impact elle était synchrone à 11,92 h. La fiche ne l'affiche pas.",
+    "facts.orbitPeriodDays": "11,3674 ± 0,0004 h (11 h 22 min), la période APRÈS l'impact de DART (colonne « Post-impact » du tableau 2). Avant le 2022-09-26 elle était de 11 h 55 min ; le binaire Horizons porte les deux, et la fiche affiche la seule qui vaut aujourd'hui.",
+    "facts.radiusKm": "Diamètre équivalent en volume du secondaire, 150,0 ± 2,5 m : valeur « pre-impact » du tableau 2 (Daly et al. 2024), donnée comme inchangée après l'impact. Ce n'est pas le diamètre de la page de NASA Science (170 m au 2026-10-21), qui désigne une autre grandeur de ce corps non sphérique.",
     "radius": "Taille de rendu en mode éducatif, comme les autres petites lunes. En mode exploration, l'échelle vraie vient de `radiusKm`."
   }
 }

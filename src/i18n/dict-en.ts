@@ -617,6 +617,8 @@ export const en = {
   'detail.massFromGM': 'mass = GM / G, with G from CODATA 2018',
   'detail.gravityFromGM': 'g = GM / R², for a sphere without rotation',
   'detail.radiusFromDiameter': 'half the published diameter',
+  'detail.radiusFromVolumeDiameter':
+    'half the published volume-equivalent diameter (the pre-impact value, assumed unchanged by the impact)',
   'detail.equatorialRadiusFromDiameter':
     'half the published equatorial diameter',
   'detail.volumetricRadiusFromDiameter':
