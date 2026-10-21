@@ -611,6 +611,10 @@
               "minimum": 0,
               "maximum": 9007199254740991
             },
+            "centerLongitude": {
+              "type": "number",
+              "const": 180
+            },
             "time": {
               "type": "object",
               "properties": {

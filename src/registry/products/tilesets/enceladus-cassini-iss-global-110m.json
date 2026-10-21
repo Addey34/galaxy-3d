@@ -1,0 +1,65 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "enceladus-cassini-iss-global-110m",
+  "type": "tileset",
+  "body": "enceladus",
+  "title": "Enceladus Cassini ISS global mosaic, 110 m (Enceladus_Cassini_mosaic_global_110m)",
+  "providerId": "nasa-trek",
+  "mission": "Cassini-Huygens",
+  "instrument": "Imaging Science Subsystem (ISS)",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Enceladus/EQ/Enceladus_Cassini_mosaic_global_110m/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 5,
+    "centerLongitude": 180
+  },
+  "publishedPixelsPerDegree": 40,
+  "acquired": {
+    "interval": [["2004-02-06T03:12:06Z", "2009-11-23T07:16:00Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Enceladus/EQ/Enceladus_Cassini_mosaic_global_110m/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/enceladus_cassini_global_mosaic_110m"
+    },
+    {
+      "rel": "via",
+      "href": "https://opus.pds-rings.seti.org/opus/api/data.json?target=ENCELADUS&instrument=Cassini+ISS&time1=2004-01-01&time2=2009-12-01&cols=opusid,time1,time2&order=-time2&limit=1"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/enceladus/"
+    },
+    {
+      "name": "NASA/JPL-Caltech/Space Science Institute, Cassini ISS Team",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/enceladus_cassini_global_mosaic_110m"
+    }
+  ],
+  "verified": "2026-10-21"
+}

@@ -309,6 +309,13 @@ const imageryTileset = z
         minLevel: z.number().int().min(0),
         maxLevel: z.number().int().min(0),
         /**
+         * Longitude du CENTRE de la carte servie, quand ce n'est pas 0° : certaines mosaïques
+         * (Encelade) sont publiées centrées sur 180°, et le service place alors la colonne 0 à 0°
+         * et non à −180°. L'application pose la longitude 0 au centre ; `core/tileUrl.ts` décale
+         * donc la colonne demandée d'une demi-matrice. Absent = 0.
+         */
+        centerLongitude: z.literal(180).optional(),
+        /**
          * DIMENSION TEMPORELLE d'une couche datée (lot 48) : le gabarit porte alors un jeton
          * `{Time}`, un jour par image. Les jours publiés ne sont PAS recopiés ici : la couche
          * en gagne un chaque jour et ses trous changent, donc le client lit à l'exécution la
