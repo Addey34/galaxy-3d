@@ -219,7 +219,26 @@ export class SceneSystem {
 
   /** Expose l'exposition du tone mapping — réglage utilisateur (voir ui/renderExposure.ts). */
   setToneMappingExposure(value: number): void {
-    this.renderer.toneMappingExposure = value;
+    this._userExposure = value;
+    this._applyExposure();
+  }
+
+  /**
+   * Facteur d'exposition adaptative au corps suivi (`core/adaptiveExposure.ts`), posé par
+   * l'animation. Il MULTIPLIE le réglage de l'utilisateur au lieu de le remplacer : un curseur
+   * qui se ferait effacer par la caméra est le défaut que `ui/renderExposure.ts` raconte.
+   */
+  setAdaptiveExposure(multiplier: number): void {
+    this._adaptiveExposure = multiplier;
+    this._applyExposure();
+  }
+
+  private _userExposure = RENDER_SETTINGS.toneMappingExposure;
+  private _adaptiveExposure = 1;
+
+  private _applyExposure(): void {
+    this.renderer.toneMappingExposure =
+      this._userExposure * this._adaptiveExposure;
   }
 
   /**
