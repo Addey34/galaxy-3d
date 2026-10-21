@@ -1,4 +1,4 @@
-/* global console, process, fetch, URL, setTimeout */
+/* global console, process, fetch, URL, setTimeout, Buffer */
 /**
  * LE CUISEUR DE TUILES DE BÂTIMENTS (lot 63, étape C.2) : lit une source ouverte, UN jeu par
  * source, et écrit des tuiles `GXBD` que le client décodera. Cibles dans
@@ -15,6 +15,10 @@
  * en cache sur disque et DATÉE à son arrivée (`.at` à côté), donc `--offline` rejoue exactement
  * les mêmes octets et la date de lecture publiée est celle de la source.
  *
+ * Deux familles de source, choisies par `source.kind` : `wfs` (BD TOPO) et `citygml-zip` (modèle
+ * de ville en carreaux ZIP, Berlin LoD2). Les deux rendent la même forme intermédiaire, des
+ * objets GeoJSON (emprise extérieure, hauteur, méthode de la hauteur), et partagent tout le reste.
+ *
  * Écrit les tuiles dans `.cache/galaxy-data/assets/buildings/<id>/<hachage>/<z>/<x>/<y>.bin`
  * (à téléverser sur le service de données, cf. `services/galaxy-data/README.md`) et le manifeste
  * dans `public/assets/buildings/<id>/manifest.json`, qui nomme le répertoire haché : téléverser
@@ -30,6 +34,7 @@ import {
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { inflateRawSync } from 'node:zlib';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RECIPE = join(ROOT, 'scripts', 'building-targets.json');
@@ -60,6 +65,7 @@ const {
   quantizeToTile,
   tileOfLonLat,
 } = await loader.ssrLoadModule('/src/core/buildingTile.ts');
+const { utmToLonLat } = await loader.ssrLoadModule('/src/core/utm.ts');
 await loader.close();
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -114,7 +120,165 @@ function originOf(properties, height) {
   return origin;
 }
 
-async function bakeSet(set) {
+/** Un fichier de la source, depuis le cache ou le réseau, avec sa date de lecture. */
+async function fetchBinary(url, minIntervalMs) {
+  const key = createHash('sha1').update(url).digest('hex').slice(0, 16);
+  const body = join(RAW_CACHE, `${key}.bin`);
+  const stamp = `${body}.at`;
+  if (existsSync(body) && existsSync(stamp)) {
+    return {
+      bytes: readFileSync(body),
+      at: readFileSync(stamp, 'utf8').trim(),
+    };
+  }
+  if (OFFLINE) throw new Error(`--offline : fichier absent du cache (${url})`);
+  let wait = minIntervalMs;
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    await sleep(wait);
+    const res = await fetch(url);
+    if (res.ok) {
+      const bytes = Buffer.from(await res.arrayBuffer());
+      // Un témoin : l'hébergeur peut répondre 200 avec une page d'erreur, jamais un ZIP.
+      if (bytes.readUInt32LE(0) !== 0x04034b50)
+        throw new Error(`réponse qui n'est pas un ZIP (${url})`);
+      mkdirSync(RAW_CACHE, { recursive: true });
+      const at = new Date().toISOString();
+      writeFileSync(body, bytes);
+      writeFileSync(stamp, at);
+      return { bytes, at };
+    }
+    if (res.status === 429 || res.status >= 500) {
+      wait = Math.min(wait * 2, 30000);
+      continue;
+    }
+    throw new Error(`HTTP ${res.status} pour ${url}`);
+  }
+  throw new Error(`source muette après six essais (${url})`);
+}
+
+/** Les entrées d'un ZIP, lues par son répertoire CENTRAL (les en-têtes locaux peuvent mentir). */
+function readZipEntries(zip) {
+  let eocd = zip.length - 22;
+  while (eocd >= 0 && zip.readUInt32LE(eocd) !== 0x06054b50) eocd--;
+  if (eocd < 0) throw new Error('ZIP sans répertoire central');
+  const count = zip.readUInt16LE(eocd + 10);
+  let p = zip.readUInt32LE(eocd + 16);
+  const entries = [];
+  for (let i = 0; i < count; i++) {
+    if (zip.readUInt32LE(p) !== 0x02014b50)
+      throw new Error('répertoire central corrompu');
+    const method = zip.readUInt16LE(p + 10);
+    const compressed = zip.readUInt32LE(p + 20);
+    const size = zip.readUInt32LE(p + 24);
+    const nameLen = zip.readUInt16LE(p + 28);
+    const extraLen = zip.readUInt16LE(p + 30);
+    const commentLen = zip.readUInt16LE(p + 32);
+    const local = zip.readUInt32LE(p + 42);
+    const name = zip.toString('utf8', p + 46, p + 46 + nameLen);
+    const dataStart =
+      local + 30 + zip.readUInt16LE(local + 26) + zip.readUInt16LE(local + 28);
+    const raw = zip.subarray(dataStart, dataStart + compressed);
+    const data = method === 0 ? raw : inflateRawSync(raw);
+    if (data.length !== size)
+      throw new Error(
+        `entrée « ${name} » : taille lue ${data.length}, déclarée ${size}`
+      );
+    entries.push({ name, data });
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+
+const attr = (text, name) =>
+  text.match(
+    new RegExp(`name="${name}">\\s*<gen:value>([^<]*)</gen:value>`)
+  )?.[1] ?? null;
+
+/**
+ * Les bâtiments d'un carreau CityGML. L'emprise est le contour EXTÉRIEUR du `GroundSurface`
+ * (projeté en longitude, latitude), la hauteur le `measuredHeight` (toit moins sol, déclaré par la
+ * source), la méthode le code `DatenquelleDachhoehe`. Une construction en parties
+ * (`BuildingPart`) porte ses attributs sur chaque partie : chacune est un bâtiment.
+ */
+function parseCityGmlTile(xml, zone) {
+  const features = [];
+  let withoutGround = 0;
+  for (const member of xml.split('<core:cityObjectMember>').slice(1)) {
+    const units = member.split(/<bldg:BuildingPart[ >]/);
+    // units[0] est l'entête de l'objet entier : il ne porte une emprise que s'il n'a pas de parties.
+    for (const unit of units.length > 1 ? units.slice(1) : units) {
+      const ground = unit.match(
+        /<bldg:GroundSurface[\s\S]*?<gml:exterior>[\s\S]*?<gml:posList[^>]*>([^<]*)<\/gml:posList>/
+      );
+      if (!ground) {
+        withoutGround++;
+        continue;
+      }
+      const values = ground[1].trim().split(/\s+/).map(Number);
+      const ring = [];
+      for (let i = 0; i + 2 < values.length; i += 3)
+        ring.push(utmToLonLat(zone, values[i], values[i + 1]));
+      const height = unit.match(/<bldg:measuredHeight[^>]*>([^<]*)</)?.[1];
+      features.push({
+        geometry: { type: 'Polygon', coordinates: [ring] },
+        properties: {
+          hauteur: height === undefined ? null : Number(height),
+          methode: attr(unit, 'DatenquelleDachhoehe'),
+        },
+      });
+    }
+  }
+  return { features, withoutGround };
+}
+
+/** L'emprise d'un jeu : déclarée (WFS) ou DÉRIVÉE des carreaux qu'il lit (CityGML), jamais tapée. */
+function bboxOf(set) {
+  if (set.bboxLonLat) return set.bboxLonLat;
+  const { tiles, zone } = set.source;
+  const east = tiles.map((t) => t[0]);
+  const north = tiles.map((t) => t[1]);
+  const corners = [
+    [Math.min(...east) * 1000, Math.min(...north) * 1000],
+    [(Math.max(...east) + 1) * 1000, Math.min(...north) * 1000],
+    [Math.min(...east) * 1000, (Math.max(...north) + 1) * 1000],
+    [(Math.max(...east) + 1) * 1000, (Math.max(...north) + 1) * 1000],
+  ].map(([e, n]) => utmToLonLat(zone, e, n));
+  const r = (v) => Math.round(v * 1e5) / 1e5;
+  const lons = corners.map((c) => c[0]);
+  const lats = corners.map((c) => c[1]);
+  return [
+    r(Math.min(...lons)),
+    r(Math.min(...lats)),
+    r(Math.max(...lons)),
+    r(Math.max(...lats)),
+  ];
+}
+
+async function readCityGml(set) {
+  const { urlTemplate, tiles, zone, minIntervalMs } = set.source;
+  const features = [];
+  let oldest = null;
+  let newest = null;
+  let withoutGround = 0;
+  for (const [east, north] of tiles) {
+    const url = urlTemplate.replace('{east}', east).replace('{north}', north);
+    const { bytes, at } = await fetchBinary(url, minIntervalMs);
+    if (oldest === null || at < oldest) oldest = at;
+    if (newest === null || at > newest) newest = at;
+    const entries = readZipEntries(bytes);
+    if (entries.length !== 1)
+      throw new Error(`${url} : ${entries.length} entrées, une attendue`);
+    const parsed = parseCityGmlTile(entries[0].data.toString('utf8'), zone);
+    withoutGround += parsed.withoutGround;
+    for (const f of parsed.features) features.push(f);
+    console.log(
+      `  carreau ${east}_${north} : ${parsed.features.length} bâtiments (${parsed.withoutGround} objets sans emprise)`
+    );
+  }
+  return { features, oldest, newest, skippedNoFootprint: withoutGround };
+}
+
+async function readWfs(set) {
   const [lon0, lat0, lon1, lat1] = set.bboxLonLat;
   const base = new URL(set.source.endpoint);
   const params = {
@@ -153,6 +317,18 @@ async function bakeSet(set) {
     }
     if (json.features.length < set.source.pageSize) break;
   }
+  return { features, oldest, newest };
+}
+
+async function bakeSet(set) {
+  const {
+    features,
+    oldest,
+    newest,
+    skippedNoFootprint = 0,
+  } = set.source.kind === 'citygml-zip'
+    ? await readCityGml(set)
+    : await readWfs(set);
 
   // Rangement : un bâtiment va dans la tuile de son centre (moyenne des sommets de son anneau).
   const tiles = new Map();
@@ -160,6 +336,7 @@ async function bakeSet(set) {
     sourceFeatures: features.length,
     polygons: 0,
     skippedNonPolygon: 0,
+    skippedNoFootprint,
     verticesAtMarginEdge: 0,
     heightAboveRange: 0,
     byOrigin: {
@@ -255,7 +432,7 @@ async function bakeSet(set) {
     directory: `assets/buildings/${set.id}/${digest}`,
     source: {
       name: set.source.name,
-      typeName: set.source.typeName,
+      typeName: set.source.typeName ?? set.source.dataset,
       license: set.source.license,
       licenseUrl: set.source.licenseUrl,
       attribution: set.source.attribution,
@@ -263,7 +440,7 @@ async function bakeSet(set) {
       readFrom: day(oldest),
       readTo: day(newest),
     },
-    bboxLonLat: set.bboxLonLat,
+    bboxLonLat: bboxOf(set),
     totals: {
       tiles: encoded.length,
       bytes: encoded.reduce((s, e) => s + e.bytes.byteLength, 0),
@@ -282,7 +459,7 @@ async function bakeSet(set) {
       `${manifest.totals.bytes} octets (${digest})`
   );
   console.log(
-    `  origines des hauteurs : ${JSON.stringify(stats.byOrigin)} ; sommets au bord de la marge : ${stats.verticesAtMarginEdge} ; non polygones : ${stats.skippedNonPolygon}`
+    `  origines des hauteurs : ${JSON.stringify(stats.byOrigin)} ; sommets au bord de la marge : ${stats.verticesAtMarginEdge} ; non polygones : ${stats.skippedNonPolygon} ; sans emprise : ${stats.skippedNoFootprint}`
   );
   if (DRY_RUN) return;
 

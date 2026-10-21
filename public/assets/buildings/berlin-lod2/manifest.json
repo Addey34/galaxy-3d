@@ -1,0 +1,97 @@
+{
+  "id": "berlin-lod2",
+  "title": "Bâtiments de Berlin, modèle de ville LoD2 (Senatsverwaltung für Stadtentwicklung, Bauen und Wohnen)",
+  "body": "earth",
+  "format": "GXBD",
+  "version": 1,
+  "zoom": 14,
+  "directory": "assets/buildings/berlin-lod2/496f9999d2",
+  "source": {
+    "name": "3D-Gebäudemodelle im Level of Detail 2 (LoD 2), Land Berlin",
+    "typeName": "a_lod2",
+    "license": "Datenlizenz Deutschland, Zero, Version 2.0",
+    "licenseUrl": "https://www.govdata.de/dl-de/zero-2-0",
+    "attribution": "Land Berlin, Senatsverwaltung für Stadtentwicklung, Bauen und Wohnen, Datenlizenz Deutschland Zero 2.0",
+    "readFrom": "2026-10-21",
+    "readTo": "2026-10-21"
+  },
+  "bboxLonLat": [
+    13.34901,
+    52.50062,
+    13.3942,
+    52.52818
+  ],
+  "totals": {
+    "tiles": 9,
+    "bytes": 716918,
+    "sourceFeatures": 17022,
+    "polygons": 17022,
+    "skippedNonPolygon": 0,
+    "skippedNoFootprint": 58,
+    "verticesAtMarginEdge": 44,
+    "heightAboveRange": 0,
+    "byOrigin": {
+      "absent": 0,
+      "measured": 17022,
+      "interpolated": 0,
+      "derivedFromFloors": 0,
+      "unspecified": 0
+    }
+  },
+  "tiles": [
+    {
+      "column": 8799,
+      "row": 5372,
+      "buildings": 884,
+      "bytes": 37680
+    },
+    {
+      "column": 8799,
+      "row": 5373,
+      "buildings": 751,
+      "bytes": 34481
+    },
+    {
+      "column": 8799,
+      "row": 5374,
+      "buildings": 1413,
+      "bytes": 62899
+    },
+    {
+      "column": 8800,
+      "row": 5372,
+      "buildings": 1371,
+      "bytes": 58469
+    },
+    {
+      "column": 8800,
+      "row": 5373,
+      "buildings": 3969,
+      "bytes": 135783
+    },
+    {
+      "column": 8800,
+      "row": 5374,
+      "buildings": 2674,
+      "bytes": 121466
+    },
+    {
+      "column": 8801,
+      "row": 5372,
+      "buildings": 1546,
+      "bytes": 61786
+    },
+    {
+      "column": 8801,
+      "row": 5373,
+      "buildings": 2873,
+      "bytes": 134835
+    },
+    {
+      "column": 8801,
+      "row": 5374,
+      "buildings": 1541,
+      "bytes": 69519
+    }
+  ]
+}

@@ -28,6 +28,45 @@
         },
         "otherMethods": "unspecified"
       }
+    },
+    {
+      "id": "berlin-lod2",
+      "title": "Bâtiments de Berlin, modèle de ville LoD2 (Senatsverwaltung für Stadtentwicklung, Bauen und Wohnen)",
+      "body": "earth",
+      "source": {
+        "kind": "citygml-zip",
+        "name": "3D-Gebäudemodelle im Level of Detail 2 (LoD 2), Land Berlin",
+        "dataset": "a_lod2",
+        "urlTemplate": "https://gdi.berlin.de/data/a_lod2/atom/LoD2_{east}_{north}.zip",
+        "zone": 33,
+        "tiles": [
+          [388, 5818],
+          [388, 5819],
+          [388, 5820],
+          [389, 5818],
+          [389, 5819],
+          [389, 5820],
+          [390, 5818],
+          [390, 5819],
+          [390, 5820]
+        ],
+        "license": "Datenlizenz Deutschland, Zero, Version 2.0",
+        "licenseUrl": "https://www.govdata.de/dl-de/zero-2-0",
+        "attribution": "Land Berlin, Senatsverwaltung für Stadtentwicklung, Bauen und Wohnen, Datenlizenz Deutschland Zero 2.0",
+        "minIntervalMs": 1000
+      },
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "1000": "measured",
+          "2000": "derivedFromFloors",
+          "4000": "measured",
+          "5000": "measured"
+        },
+        "otherMethods": "unspecified"
+      }
     }
   ]
 }
