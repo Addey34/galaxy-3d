@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-11T14:15:46.035Z",
+ "generatedAt": "2026-10-21T18:18:50.671Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -15006,7 +15006,7 @@
    "windowClipped": false,
    "target": "120065803",
    "relative": true,
-   "radiusKm": 0.08,
+   "radiusKm": 0.075,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -15018,10 +15018,10 @@
     "max": 0.0231
    },
    "radii": {
-    "mean": 0.06572,
-    "median": 0.05052,
-    "p95": 0.1631,
-    "max": 0.2887
+    "mean": 0.0701,
+    "median": 0.05389,
+    "p95": 0.174,
+    "max": 0.308
    }
   },
   {
@@ -15033,22 +15033,22 @@
    "windowClipped": true,
    "target": "120065803",
    "relative": true,
-   "radiusKm": 0.08,
+   "radiusKm": 0.075,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1.437,
-    "median": 1.38,
-    "p95": 2.276,
-    "max": 2.309
+    "mean": 0.6833,
+    "median": 0.3165,
+    "p95": 2.304,
+    "max": 2.332
    },
    "radii": {
-    "mean": 17.97,
-    "median": 17.25,
-    "p95": 28.45,
-    "max": 28.86
+    "mean": 9.11,
+    "median": 4.22,
+    "p95": 30.73,
+    "max": 31.09
    }
   },
   {
@@ -15060,22 +15060,22 @@
    "windowClipped": true,
    "target": "120065803",
    "relative": true,
-   "radiusKm": 0.08,
+   "radiusKm": 0.075,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1.27,
-    "median": 1.191,
-    "p95": 2.321,
-    "max": 2.34
+    "mean": 1.17,
+    "median": 1.25,
+    "p95": 2.327,
+    "max": 2.341
    },
    "radii": {
-    "mean": 15.88,
-    "median": 14.89,
-    "p95": 29.02,
-    "max": 29.25
+    "mean": 15.61,
+    "median": 16.67,
+    "p95": 31.02,
+    "max": 31.21
    }
   },
   {
@@ -15087,22 +15087,22 @@
    "windowClipped": true,
    "target": "120065803",
    "relative": true,
-   "radiusKm": 0.08,
+   "radiusKm": 0.075,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1.449,
-    "median": 1.514,
-    "p95": 2.337,
+    "mean": 1.186,
+    "median": 1.089,
+    "p95": 2.339,
     "max": 2.342
    },
    "radii": {
-    "mean": 18.12,
-    "median": 18.92,
-    "p95": 29.21,
-    "max": 29.27
+    "mean": 15.82,
+    "median": 14.52,
+    "p95": 31.19,
+    "max": 31.22
    }
   },
   {
@@ -15114,7 +15114,7 @@
    "windowClipped": true,
    "target": "120065803",
    "relative": false,
-   "radiusKm": 0.08,
+   "radiusKm": 0.075,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -15128,10 +15128,10 @@
     "max": 0.08543
    },
    "radii": {
-    "mean": 0.2809,
-    "median": 0.2651,
-    "p95": 0.7231,
-    "max": 1.068
+    "mean": 0.2997,
+    "median": 0.2828,
+    "p95": 0.7713,
+    "max": 1.139
    }
   },
   {
@@ -17578,7 +17578,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "1997-10-18",
-   "windowTo": "2017-09-13",
+   "windowTo": "2017-09-14",
    "windowClipped": false,
    "target": "-82",
    "relative": false,
@@ -17588,10 +17588,10 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 2.611,
-    "median": 1.81,
-    "p95": 7.189,
-    "max": 9.667
+    "mean": 3.315,
+    "median": 1.615,
+    "p95": 10.75,
+    "max": 26.73
    },
    "radii": null
   },

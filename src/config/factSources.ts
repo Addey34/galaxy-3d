@@ -137,6 +137,7 @@ export const DETAIL = {
   massFromGM: { message: 'detail.massFromGM' },
   gravityFromGM: { message: 'detail.gravityFromGM' },
   radiusFromDiameter: { message: 'detail.radiusFromDiameter' },
+  radiusFromVolumeDiameter: { message: 'detail.radiusFromVolumeDiameter' },
   equatorialRadiusFromDiameter: {
     message: 'detail.equatorialRadiusFromDiameter',
   },

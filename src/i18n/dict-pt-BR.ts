@@ -588,6 +588,8 @@ export const ptBR: Record<MessageKey, string> = {
   'detail.massFromGM': 'massa = GM / G, com G de CODATA 2018',
   'detail.gravityFromGM': 'g = GM / R², para uma esfera sem rotação',
   'detail.radiusFromDiameter': 'metade do diâmetro publicado',
+  'detail.radiusFromVolumeDiameter':
+    'metade do diâmetro equivalente em volume publicado (o valor anterior ao impacto, dado como inalterado pelo impacto)',
   'detail.equatorialRadiusFromDiameter':
     'metade do diâmetro equatorial publicado',
   'detail.volumetricRadiusFromDiameter':
