@@ -380,6 +380,13 @@ export const en = {
   'surface.relief.headline': 'Relief {title} at {resolution}/pixel',
   'surface.relief.area': 'named area {name}',
   'surface.relief.acquired': 'heights measured from {from} to {to}',
+  'surface.buildings.headline':
+    '3D buildings: {count}. Height colour shows where it comes from.',
+  'surface.buildings.origin.measured': 'measured',
+  'surface.buildings.origin.interpolated': 'interpolated',
+  'surface.buildings.origin.derivedFromFloors': 'derived from floors',
+  'surface.buildings.origin.unspecified': 'not specified',
+  'surface.buildings.origin.absent': 'absent: flat slab',
   'settings.surfaceCompare': 'Compare with the year',
   'settings.surfaceCompare.none': 'No comparison',
   'surface.compare.badge':

@@ -495,6 +495,16 @@ export function setupPerfProbe(api: PublicAPI): () => void {
     shaderLinks,
     uploadTest,
     decodeEquivalence,
+    /** Montre ou masque les objets de ce nom (mesure d'un calque seul : même vue, avec et sans). */
+    setVisibleByName(name: string, visible: boolean): number {
+      let count = 0;
+      api.sceneSystem.scene.traverse((object) => {
+        if (object.name !== name) return;
+        object.visible = visible;
+        count++;
+      });
+      return count;
+    },
     /** Repart de zéro : les durées d'image et les blocages d'une scène, pas des précédentes. */
     reset(): void {
       frames = [];

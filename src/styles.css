@@ -2521,6 +2521,24 @@ button {
 .surface-imagery-badge .si-credit {
   opacity: 0.8;
 }
+/* BÂTIMENTS 3D (lot 63) : légende des origines de hauteur, puis attribution de la licence du jeu.
+   Une pastille ne porte JAMAIS seule l'information : chaque couleur est suivie de son libellé. */
+.surface-imagery-badge .si-buildings:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.6rem;
+}
+.surface-imagery-badge .si-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.surface-imagery-badge .si-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  border: 1px solid var(--hairline);
+}
 /* PENDANT UNE VISITE (2026-10-20) : la carte de la visite occupe le bas de l'écran et cachait le
    bandeau, donc les lignes de crédit que la licence exige. Le bandeau passe EN HAUT, sous la barre
    du haut (`surfacePanel.placeBadge`, qui lit `--stour-clear`, publiée par `ui/tourPlayer.ts`),

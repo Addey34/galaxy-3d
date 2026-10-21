@@ -61,12 +61,56 @@ export function buildCartoucheText(
 
 const SITE_NAME = 'Galaxy';
 
+/**
+ * Les crédits que le bandeau de provenance montre à l'écran (imagerie, relief, bâtiments), à
+ * reporter sur l'image : sans eux, une capture emportait l'image d'un tiers SANS la mention que sa
+ * licence exige, puisque le mode capture masque ce bandeau. Pur : les textes sont fournis.
+ */
+export function buildCreditText(parts: readonly string[]): string {
+  const seen = new Set<string>();
+  for (const part of parts) {
+    const text = part.replace(/\s+/g, ' ').trim();
+    if (text) seen.add(text);
+  }
+  return [...seen].join(' · ');
+}
+
+/** Coupe un texte en lignes de `maxWidth` au plus (mesure fournie) ; un mot trop long reste entier. */
+export function wrapText(
+  text: string,
+  maxWidth: number,
+  measure: (line: string) => number
+): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && measure(candidate) > maxWidth) {
+      lines.push(line);
+      line = word;
+    } else line = candidate;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/** Ce que le bandeau de provenance dit à l'écran, lu avant que le mode capture ne le masque. */
+function onScreenCredit(): string {
+  const badge = document.getElementById('surface-imagery');
+  if (!badge || badge.hidden) return '';
+  const parts = ['.si-credit', '.si-buildings-credit'].map(
+    (selector) => badge.querySelector(selector)?.textContent ?? ''
+  );
+  return buildCreditText(parts);
+}
+
 function drawCartouche(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
   title: string,
-  subtitle: string
+  subtitle: string,
+  credit: string
 ): void {
   const scale = w / 1600; // proportionnel à la résolution d'export, pas un nombre de px fixe
   const pad = 18 * scale;
@@ -107,6 +151,20 @@ function drawCartouche(
   ctx.fillStyle = 'rgba(220, 230, 250, 0.55)';
   ctx.textAlign = 'right';
   ctx.fillText(SITE_NAME, w - pad, h - pad);
+
+  // Crédits des données : au-dessus du filigrane, alignés à droite, sur au plus 60 % de la largeur
+  // (et jamais sur le cartouche, à gauche).
+  if (credit) {
+    const creditSize = Math.max(9, 11 * scale);
+    ctx.font = `400 ${creditSize}px ${fontStack}`;
+    ctx.fillStyle = 'rgba(220, 230, 250, 0.8)';
+    const lines = wrapText(credit, w * 0.6, (l) => ctx.measureText(l).width);
+    let baseline = h - pad - wmSize * 1.6;
+    for (const line of lines.reverse()) {
+      ctx.fillText(line, w - pad, baseline);
+      baseline -= creditSize * 1.25;
+    }
+  }
   ctx.textAlign = 'left';
 }
 
@@ -119,6 +177,8 @@ export function setupCapture(
   if (!btn) return;
 
   btn.addEventListener('click', async () => {
+    // Lu AVANT le masquage : c'est ce que la licence des données exige de voir.
+    const credit = onScreenCredit();
     document.body.classList.add('is-capturing');
     try {
       // La boucle de rendu tourne déjà en continu (AnimationSystem) : ce tick garantit
@@ -155,7 +215,7 @@ export function setupCapture(
         om.simulationDate,
         distanceKm
       );
-      drawCartouche(ctx, w, h, title, subtitle);
+      drawCartouche(ctx, w, h, title, subtitle, credit);
 
       const blob: Blob | null = await new Promise((resolve) =>
         canvas.toBlob(resolve, 'image/png')
