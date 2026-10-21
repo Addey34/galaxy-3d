@@ -25,6 +25,8 @@ import { LOD_UPDATE_INTERVAL } from '@/core/modelLod';
 import { RENDER_SETTINGS } from '@/config/engine';
 import { ATTACHED_SKIES } from '@/components/celestial/skyApproach';
 import { SQRT_K } from '@/core/ScaleService';
+import { adaptiveExposureFor, stepAdaptation } from '@/core/adaptiveExposure';
+import { publishedAlbedo } from '@/config/displayAlbedo';
 import type { CameraSystem } from './CameraSystem';
 import type { CelestialBodies } from './SceneSystem';
 
@@ -92,6 +94,27 @@ export class AnimationSystem {
     );
   }
   private readonly _subjectPos = new THREE.Vector3();
+  private _onAdaptiveExposure: ((multiplier: number) => void) | null = null;
+  private _adaptiveExposure = 1;
+
+  /**
+   * EXPOSITION ADAPTATIVE (lot 65) : le corps suivi, s'il est plus sombre que l'albédo de
+   * référence, relève l'exposition d'ensemble, en douceur. Sans corps suivi (vue d'ensemble) ou
+   * sur le Soleil, la cible est 1. Le temps écoulé est le temps RÉEL : l'adaptation d'un œil ne
+   * se fige pas parce que la simulation est en pause.
+   */
+  private _updateAdaptiveExposure(realDeltaSeconds: number): void {
+    if (!this._onAdaptiveExposure) return;
+    const target = this.cameraSystem?.targetName ?? null;
+    const goal =
+      target === null || target === 'sun'
+        ? 1
+        : adaptiveExposureFor(publishedAlbedo(target));
+    const next = stepAdaptation(this._adaptiveExposure, goal, realDeltaSeconds);
+    if (Math.abs(next - this._adaptiveExposure) < 1e-4) return;
+    this._adaptiveExposure = next;
+    this._onAdaptiveExposure(next);
+  }
   private celestialBodies!: CelestialBodies;
   private orbitalMechanics: OrbitalMechanics | null = null;
 
@@ -126,6 +149,8 @@ export class AnimationSystem {
     starfield?: Starfield | null;
     cameraSystem: CameraSystem;
     celestialBodies: CelestialBodies;
+    /** Reçoit le facteur d'exposition adaptative au corps suivi (`core/adaptiveExposure.ts`). */
+    onAdaptiveExposure?: (multiplier: number) => void;
   }): void {
     this.scene = params.scene;
     this.camera = params.camera;
@@ -134,6 +159,7 @@ export class AnimationSystem {
     this.starfield = params.starfield ?? null;
     this.cameraSystem = params.cameraSystem;
     this.celestialBodies = params.celestialBodies;
+    this._onAdaptiveExposure = params.onAdaptiveExposure ?? null;
 
     // Share tween group with camera system
     this.cameraSystem.tweenGroup = this.tweenGroup;
@@ -168,6 +194,7 @@ export class AnimationSystem {
   private _update(delta: number, rawDelta: number = delta): void {
     // delta = 0 si paused → positions Kepler figées ; rawDelta = vrai temps écoulé (non utilisé)
     this.orbitalMechanics?.update(delta, rawDelta);
+    this._updateAdaptiveExposure(rawDelta);
 
     const sunWorldPosition = this._getSunWorldPosition();
     this._updatePhysicalLighting(sunWorldPosition);
