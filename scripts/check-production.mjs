@@ -5,7 +5,7 @@
  * dépôt dépend, et celui de la CI (`check-ci-health.mjs`), qui regarde ce que le dépôt construit :
  * personne ne regardait ce que les visiteurs RECOIVENT.
  *
- * QUATRE familles de contrôles, chacune jugée sur ce qui la distingue d'une panne et jamais sur un
+ * CINQ familles de contrôles, chacune jugée sur ce qui la distingue d'une panne et jamais sur un
  * code HTTP, puisque Firebase réécrit tout chemin inconnu vers la coquille en HTTP 200 :
  *
  *   1. LE TÉMOIN : un chemin qui n'a jamais existé doit rendre la coquille (`canonical` vers la
@@ -19,6 +19,12 @@
  *   4. LE DÉMARRAGE, dans un vrai navigateur : une adresse localisée de grand lieu
  *      (`/fr/moon/?place=Mare%20Imbrium`) s'ouvre sur son corps, tournée vers la formation, garde
  *      sa langue et perd `place` ; et aucune erreur de console ni d'exécution au démarrage.
+ *   5. LES TUILES CUITES (lot 68) : pour chaque jeu de `public/assets/imagery/`, la première et la
+ *      dernière tuile de la pyramide, lues à l'ADRESSE de la fiche (donc au service de données, pas
+ *      à Firebase), avec l'`Origin` de la page : 200, `image/jpeg`, CORS vers cette origine, cache
+ *      immuable. Un TÉMOIN : la même tuile sous un hachage qui n'a jamais existé doit répondre 404,
+ *      sans quoi un 200 ne prouverait rien. Un téléversement oublié ou partiel (404 sans CORS, que le
+ *      navigateur lit comme un refus CORS) se voit ici avant un visiteur.
  *
  * Codes de sortie : 0 sain ; 1 un contrôle a échoué ; 2 un contrôle n'a pas pu être MESURÉ
  * (réseau, navigateur), ce qui n'est pas « tout va bien ».
@@ -29,7 +35,7 @@
  *   node scripts/check-production.mjs --markdown      (corps d'issue)
  *   node scripts/check-production.mjs --place "Mare Inexistentium"   (falsifie le démarrage)
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -152,6 +158,95 @@ export function judgeConsole(errors) {
   return errors.length === 0
     ? { ok: true, detail: 'aucune erreur de console ni d’exécution' }
     : { ok: false, detail: errors.slice(0, 5).join(' | ') };
+}
+
+/**
+ * Les adresses à sonder pour un jeu de tuiles cuit : la première (niveau 0) et la dernière tuile
+ * du dernier niveau, et la même première tuile sous un hachage qui n'a jamais existé (le témoin).
+ * L'adresse se DÉRIVE du gabarit de la fiche : le hachage et l'hôte ne sont écrits nulle part ici.
+ */
+export function bakedTileProbes({
+  id,
+  template,
+  style,
+  tileMatrixSet,
+  matrix,
+  maxLevel,
+}) {
+  const at = (url, level, row, col) =>
+    url
+      .replace('{Style}', style)
+      .replace('{TileMatrixSet}', tileMatrixSet)
+      .replace('{TileMatrix}', String(level))
+      .replace('{TileRow}', String(row))
+      .replace('{TileCol}', String(col));
+  const rows = matrix.rowsAtLevelZero * 2 ** maxLevel;
+  const cols = matrix.columnsAtLevelZero * 2 ** maxLevel;
+  const hash = /\/([0-9a-f]{12})\/\{Style\}/.exec(template)?.[1];
+  if (!hash) throw new Error(`${id} : pas de hachage dans le gabarit`);
+  return [
+    { id, kind: 'première', url: at(template, 0, 0, 0) },
+    { id, kind: 'dernière', url: at(template, maxLevel, rows - 1, cols - 1) },
+    {
+      id,
+      kind: 'témoin',
+      url: at(template.replace(hash, '0'.repeat(12)), 0, 0, 0),
+    },
+  ];
+}
+
+/** Une tuile cuite servie : 200, JPEG, CORS vers l'origine de la page, cache immuable. */
+export function judgeBakedTile(kind, response, origin) {
+  if (kind === 'témoin')
+    return response.status === 404
+      ? { ok: true, detail: 'hachage inconnu : 404, le témoin mord' }
+      : {
+          ok: false,
+          detail: `hachage inconnu servi en HTTP ${response.status} : un 200 ne prouve rien`,
+        };
+  const wrong = [];
+  if (response.status !== 200) wrong.push(`HTTP ${response.status}`);
+  if (!/^image\/jpeg/.test(response.contentType ?? ''))
+    wrong.push(`type ${response.contentType}`);
+  if (response.headers['access-control-allow-origin'] !== origin)
+    wrong.push('CORS absent ou autre origine');
+  if (!/immutable/.test(response.headers['cache-control'] ?? ''))
+    wrong.push('cache non immuable');
+  if (response.bytes === 0) wrong.push('corps vide');
+  return wrong.length === 0
+    ? { ok: true, detail: `${response.bytes} o, JPEG, CORS, immuable` }
+    : { ok: false, detail: wrong.join(', ') };
+}
+
+/** Les jeux cuits du dépôt : les fiches de tuiles qui ont un manifeste dans `public/assets/imagery/`. */
+function bakedTilesets() {
+  const imagery = resolve(ROOT, 'public/assets/imagery');
+  if (!existsSync(imagery)) return [];
+  return readdirSync(imagery)
+    .filter((id) => existsSync(resolve(imagery, id, 'manifest.json')))
+    .map((id) => {
+      const fiche = JSON.parse(
+        readFileSync(
+          resolve(ROOT, `src/registry/products/tilesets/${id}.json`),
+          'utf8'
+        )
+      );
+      const { template, style, tileMatrixSet, matrix, maxLevel } =
+        fiche.service;
+      return { id, template, style, tileMatrixSet, matrix, maxLevel };
+    });
+}
+
+async function getTile(url, origin) {
+  const response = await fetch(url, { headers: { Origin: origin } });
+  const headers = {};
+  response.headers.forEach((value, key) => (headers[key] = value));
+  return {
+    status: response.status,
+    contentType: response.headers.get('content-type'),
+    headers,
+    bytes: (await response.arrayBuffer()).byteLength,
+  };
 }
 
 async function get(origin, path) {
@@ -281,6 +376,25 @@ export async function run({ origin, browser = true, placeName = PLACE_NAME }) {
       });
     } catch (error) {
       unmeasured.push(`${path} : ${error.message}`);
+    }
+  }
+
+  // Les tuiles cuites, servies par le service de données (hôte lu dans la fiche).
+  for (const set of bakedTilesets()) {
+    for (const probe of bakedTileProbes(set)) {
+      try {
+        results.push({
+          group: 'tuiles cuites',
+          name: `${probe.id} ${probe.kind}`,
+          ...judgeBakedTile(
+            probe.kind,
+            await getTile(probe.url, origin),
+            origin
+          ),
+        });
+      } catch (error) {
+        unmeasured.push(`${probe.url} : ${error.message}`);
+      }
     }
   }
 
