@@ -26,39 +26,17 @@ import json
 import statistics
 from datetime import datetime, timezone
 
-import duckdb
-
 MIN_PAIRS = 30
 PARQUET = "s3://overturemaps-us-west-2/release/{release}/theme=buildings/type=building/*"
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--release", required=True)
-    ap.add_argument("--bbox", required=True, help="xmin,ymin,xmax,ymax en degrés")
-    ap.add_argument("--out", required=True)
-    args = ap.parse_args()
-    xmin, ymin, xmax, ymax = (float(v) for v in args.bbox.split(","))
-
-    con = duckdb.connect()
-    con.sql("INSTALL httpfs; LOAD httpfs; INSTALL spatial; LOAD spatial")
-    con.sql("SET s3_region='us-west-2'")
-    rows = con.execute(
-        f"""
-        SELECT id, height, num_floors, sources[1].dataset AS dataset,
-               ST_AsGeoJSON(geometry) AS geometry
-        FROM read_parquet('{PARQUET.format(release=args.release)}', hive_partitioning=1)
-        WHERE bbox.xmin >= ? AND bbox.xmax <= ? AND bbox.ymin >= ? AND bbox.ymax <= ?
-        ORDER BY id
-        """,
-        [xmin, xmax, ymin, ymax],
-    ).fetchall()
-
+def classify(rows):
+    """Range chaque ligne `(id, height, num_floors, dataset, geometry)` : renvoie les objets GeoJSON,
+    le facteur par étage mesuré (ou None) avec son nombre de paires, et le compte par méthode."""
     ratios = [
         h / n for (_id, h, n, _ds, _g) in rows if h is not None and h > 0 and n is not None and n > 0
     ]
     factor = statistics.median(ratios) if len(ratios) >= MIN_PAIRS else None
-
     features = []
     counts = {"lidar": 0, "tagged": 0, "floors": 0, "none": 0}
     for bid, height, floors, dataset, geometry in rows:
@@ -80,12 +58,70 @@ def main() -> None:
                 "properties": {"hauteur": value, "methode": method},
             }
         )
+    return features, factor, len(ratios), counts
+
+
+def self_test() -> None:
+    """Sans réseau ni DuckDB : les trois branches et le seuil de paires."""
+    assert MIN_PAIRS == 30, "le seuil de paires est une règle publiée, pas un réglage"
+    sq = '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}'
+    pairs = [(f"p{i}", 9.0, 2, "OpenStreetMap", sq) for i in range(MIN_PAIRS)]
+    others = [
+        ("lidar", 20.0, None, "USGS Lidar", sq),
+        ("tagged", 12.0, None, "OpenStreetMap", sq),
+        ("floors", None, 4, "OpenStreetMap", sq),
+        ("none", None, None, "OpenStreetMap", sq),
+    ]
+    features, factor, n, counts = classify(pairs + others)
+    by_id = {f["id"]: f["properties"] for f in features}
+    assert factor == 4.5 and n == MIN_PAIRS, (factor, n)
+    assert by_id["lidar"] == {"hauteur": 20.0, "methode": "lidar"}, by_id["lidar"]
+    assert by_id["tagged"]["methode"] == "tagged", by_id["tagged"]
+    assert by_id["floors"] == {"hauteur": 18.0, "methode": "floors"}, by_id["floors"]
+    assert by_id["none"] == {"hauteur": None, "methode": "none"}, by_id["none"]
+    assert counts == {"lidar": 1, "tagged": MIN_PAIRS + 1, "floors": 1, "none": 1}, counts
+    # Sous le seuil de paires, rien n'est déduit : la hauteur reste absente.
+    features, factor, n, counts = classify(pairs[: MIN_PAIRS - 1] + others)
+    assert factor is None and counts["floors"] == 0 and counts["none"] == 2, (factor, counts)
+    print("auto-contrôle ok")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--release")
+    ap.add_argument("--bbox", help="xmin,ymin,xmax,ymax en degrés")
+    ap.add_argument("--out")
+    args = ap.parse_args()
+    if args.self_test:
+        return self_test()
+    if not (args.release and args.bbox and args.out):
+        ap.error("--release, --bbox et --out sont obligatoires")
+    import duckdb  # importé ici : l'auto-contrôle n'en a pas besoin
+
+    xmin, ymin, xmax, ymax = (float(v) for v in args.bbox.split(","))
+
+    con = duckdb.connect()
+    con.sql("INSTALL httpfs; LOAD httpfs; INSTALL spatial; LOAD spatial")
+    con.sql("SET s3_region='us-west-2'")
+    rows = con.execute(
+        f"""
+        SELECT id, height, num_floors, sources[1].dataset AS dataset,
+               ST_AsGeoJSON(geometry) AS geometry
+        FROM read_parquet('{PARQUET.format(release=args.release)}', hive_partitioning=1)
+        WHERE bbox.xmin >= ? AND bbox.xmax <= ? AND bbox.ymin >= ? AND bbox.ymax <= ?
+        ORDER BY id
+        """,
+        [xmin, xmax, ymin, ymax],
+    ).fetchall()
+
+    features, factor, pairs, counts = classify(rows)
 
     out = {
         "type": "FeatureCollection",
         "release": args.release,
         "readAt": datetime.now(timezone.utc).isoformat(),
-        "floorsFactor": None if factor is None else {"metresPerFloor": factor, "pairs": len(ratios)},
+        "floorsFactor": None if factor is None else {"metresPerFloor": factor, "pairs": pairs},
         "counts": counts,
         "features": features,
     }
