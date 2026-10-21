@@ -15,15 +15,21 @@
  * en cache sur disque et DATÉE à son arrivée (`.at` à côté), donc `--offline` rejoue exactement
  * les mêmes octets et la date de lecture publiée est celle de la source.
  *
- * Deux familles de source, choisies par `source.kind` : `wfs` (BD TOPO) et `citygml-zip` (modèle
- * de ville en carreaux ZIP, Berlin LoD2). Les deux rendent la même forme intermédiaire, des
- * objets GeoJSON (emprise extérieure, hauteur, méthode de la hauteur), et partagent tout le reste.
+ * Trois familles de source, choisies par `source.kind` : `wfs` (BD TOPO), `citygml-zip` (modèle
+ * de ville en carreaux ZIP, Berlin LoD2) et `overture-parquet` (Overture Maps, lu par DuckDB dans
+ * `scripts/overture-buildings.py`). Toutes rendent la même forme intermédiaire, des objets GeoJSON
+ * (emprise extérieure, hauteur, méthode de la hauteur), et partagent tout le reste.
+ *
+ * Un jeu `unpublished: true` est cuit mais son manifeste reste dans `.cache/unpublished-buildings/` :
+ * il n'entre ni dans `public/` ni dans l'index, donc aucune version livrée ne l'annonce (Overture,
+ * tant que la relecture de l'ODbL n'est pas faite, docs/private/MICRO_LOT63.md § C.6).
  *
  * Écrit les tuiles dans `.cache/galaxy-data/assets/buildings/<id>/<hachage>/<z>/<x>/<y>.bin`
  * (à téléverser sur le service de données, cf. `services/galaxy-data/README.md`) et le manifeste
  * dans `public/assets/buildings/<id>/manifest.json`, qui nomme le répertoire haché : téléverser
  * les tuiles AVANT de livrer un manifeste qui les nomme.
  */
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   existsSync,
@@ -41,6 +47,7 @@ const RECIPE = join(ROOT, 'scripts', 'building-targets.json');
 const RAW_CACHE = join(ROOT, '.cache', 'building-bake');
 const TILE_OUT = join(ROOT, '.cache', 'galaxy-data', 'assets', 'buildings');
 const MANIFEST_OUT = join(ROOT, 'public', 'assets', 'buildings');
+const UNPUBLISHED_OUT = join(ROOT, '.cache', 'unpublished-buildings');
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -278,6 +285,53 @@ async function readCityGml(set) {
   return { features, oldest, newest, skippedNoFootprint: withoutGround };
 }
 
+/** Les faits que la lecture d'Overture publie au manifeste (facteur par étage mesuré, version). */
+const overtureFacts = new Map();
+
+async function readOverture(set) {
+  const { release } = set.source;
+  const [x0, y0, x1, y1] = set.bboxLonLat;
+  const key = createHash('sha1')
+    .update(`${release}:${set.bboxLonLat}`)
+    .digest('hex')
+    .slice(0, 16);
+  const file = join(RAW_CACHE, `overture-${key}.json`);
+  if (!existsSync(file)) {
+    if (OFFLINE)
+      throw new Error(`--offline : extrait Overture absent (${file})`);
+    mkdirSync(RAW_CACHE, { recursive: true });
+    const run = spawnSync(
+      'uv',
+      [
+        'run',
+        '--with',
+        'duckdb',
+        'python',
+        join(ROOT, 'scripts', 'overture-buildings.py'),
+        '--release',
+        release,
+        '--bbox',
+        `${x0},${y0},${x1},${y1}`,
+        '--out',
+        file,
+      ],
+      { stdio: 'inherit' }
+    );
+    if (run.status !== 0) throw new Error("lecture d'Overture échouée");
+  }
+  const json = JSON.parse(readFileSync(file, 'utf8'));
+  if (!Array.isArray(json.features))
+    throw new Error('extrait Overture sans « features »');
+  console.log(
+    `  Overture ${json.release} : ${json.features.length} bâtiments, facteur par étage ${JSON.stringify(json.floorsFactor)}, méthodes ${JSON.stringify(json.counts)}`
+  );
+  overtureFacts.set(set.id, {
+    floorsFactor: json.floorsFactor,
+    release: json.release,
+  });
+  return { features: json.features, oldest: json.readAt, newest: json.readAt };
+}
+
 async function readWfs(set) {
   const [lon0, lat0, lon1, lat1] = set.bboxLonLat;
   const base = new URL(set.source.endpoint);
@@ -328,7 +382,9 @@ async function bakeSet(set) {
     skippedNoFootprint = 0,
   } = set.source.kind === 'citygml-zip'
     ? await readCityGml(set)
-    : await readWfs(set);
+    : set.source.kind === 'overture-parquet'
+      ? await readOverture(set)
+      : await readWfs(set);
 
   // Rangement : un bâtiment va dans la tuile de son centre (moyenne des sommets de son anneau).
   const tiles = new Map();
@@ -433,6 +489,7 @@ async function bakeSet(set) {
     source: {
       name: set.source.name,
       typeName: set.source.typeName ?? set.source.dataset,
+      ...(overtureFacts.get(set.id) ?? {}),
       license: set.source.license,
       licenseUrl: set.source.licenseUrl,
       attribution: set.source.attribution,
@@ -475,9 +532,11 @@ async function bakeSet(set) {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, bytes);
   }
-  mkdirSync(join(MANIFEST_OUT, set.id), { recursive: true });
+  // Un jeu non publié garde son manifeste hors de `public/` : aucune version livrée ne l'annonce.
+  const manifestRoot = set.unpublished ? UNPUBLISHED_OUT : MANIFEST_OUT;
+  mkdirSync(join(manifestRoot, set.id), { recursive: true });
   writeFileSync(
-    join(MANIFEST_OUT, set.id, 'manifest.json'),
+    join(manifestRoot, set.id, 'manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`
   );
   console.log(`  tuiles : ${dir}`);
