@@ -2,56 +2,52 @@
   "generatedBy": "scripts/snapshot-fact-sources.mjs",
   "retrieved": {
     "nssdca": [
-      "2026-09-28"
+      "2026-10-22"
     ],
     "nssdcaSatellites": [
-      "2026-09-28"
+      "2026-10-22"
     ],
     "jplSatellites": [
-      "2026-09-28"
+      "2026-10-22"
     ],
     "naifRotation": [
-      "2026-09-28"
+      "2026-10-22"
     ],
     "nasaScienceBodies": [
-      "2026-09-28"
+      "2026-10-22"
     ],
     "nasaMoonCounts": [
-      "2026-09-28"
+      "2026-10-22"
     ],
     "sbdb": [
-      "2026-09-28",
-      "2026-10-04"
+      "2026-10-22"
     ],
     "sbdbInterstellar": [
-      "2026-09-28"
+      "2026-09-28",
+      "2026-10-22"
     ],
     "nssdcaMasterCatalog": [
-      "2026-09-28"
+      "2026-10-22"
     ],
     "horizonsObjectData": [
-      "2026-10-09",
-      "2026-10-11"
+      "2026-10-22"
     ],
     "articles": [
-      "2026-09-20",
-      "2026-09-28",
-      "2026-10-04",
-      "2026-10-07"
+      "2026-10-22"
     ],
     "nssdcaDefinitions": [
-      "2026-10-12"
+      "2026-10-22"
     ]
   },
   "nssdca": {
     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
-    "retrieved": "2026-09-28",
+    "retrieved": "2026-10-22",
     "mainTableUpdated": "2025-03-18",
     "bodies": {
       "mercury": {
         "updated": "2024-01-11",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/mercuryfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 0.3301,
         "equatorialRadiusKm": 2440.5,
         "volumetricMeanRadiusKm": 2439.7,
@@ -73,7 +69,7 @@
       "venus": {
         "updated": "2024-01-11",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 4.8673,
         "equatorialRadiusKm": 6051.8,
         "volumetricMeanRadiusKm": 6051.8,
@@ -95,7 +91,7 @@
       "earth": {
         "updated": "2024-11-15",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 5.9722,
         "equatorialRadiusKm": 6378.137,
         "volumetricMeanRadiusKm": 6371,
@@ -117,7 +113,7 @@
       "mars": {
         "updated": "2025-05-19",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 0.64169,
         "equatorialRadiusKm": 3396.2,
         "volumetricMeanRadiusKm": 3389.5,
@@ -139,7 +135,7 @@
       "jupiter": {
         "updated": "2024-10-02",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 1898.13,
         "equatorialRadiusKm": 71492,
         "volumetricMeanRadiusKm": 69911,
@@ -173,7 +169,7 @@
       "saturn": {
         "updated": "2025-03-18",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturnfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 568.32,
         "equatorialRadiusKm": 60268,
         "volumetricMeanRadiusKm": 58232,
@@ -207,7 +203,7 @@
       "uranus": {
         "updated": "2024-10-02",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uranusfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 86.811,
         "equatorialRadiusKm": 25559,
         "volumetricMeanRadiusKm": 25362,
@@ -240,7 +236,7 @@
       "neptune": {
         "updated": "2024-10-03",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptunefact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 102.409,
         "equatorialRadiusKm": 24764,
         "volumetricMeanRadiusKm": 24622,
@@ -279,7 +275,7 @@
       "pluto": {
         "updated": "2024-01-11",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 0.01303,
         "equatorialRadiusKm": 1188,
         "volumetricMeanRadiusKm": 1188,
@@ -300,7 +296,7 @@
       "charon": {
         "updated": "2024-01-11",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e21Kg": 1.586,
         "equatorialRadiusKm": 606,
         "surfaceGravity": 0.29,
@@ -311,7 +307,7 @@
       "moon": {
         "updated": "2024-01-11",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 0.07346,
         "volumetricMeanRadiusKm": 1737.4,
         "surfaceGravity": 1.62,
@@ -330,7 +326,7 @@
       "sun": {
         "updated": "2024-05-09",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html",
-        "retrieved": "2026-09-28",
+        "retrieved": "2026-10-22",
         "mass1e24Kg": 1988400,
         "volumetricMeanRadiusKm": 695700,
         "surfaceGravityEq": 274,
@@ -342,7 +338,7 @@
     "plutoSmallMoons": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html",
       "updated": "2024-01-11",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "columns": [
         "",
         "Semi-Major Axis (km)",
@@ -374,7 +370,7 @@
   "nssdcaSatellites": {
     "amalthea": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-12-06",
       "publishesTemperature": false,
       "semiMajorAxisKm": 181400,
@@ -387,7 +383,7 @@
     },
     "io": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-12-06",
       "publishesTemperature": false,
       "semiMajorAxisKm": 421800,
@@ -400,7 +396,7 @@
     },
     "europa": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-12-06",
       "publishesTemperature": false,
       "semiMajorAxisKm": 671100,
@@ -413,7 +409,7 @@
     },
     "ganymede": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-12-06",
       "publishesTemperature": false,
       "semiMajorAxisKm": 1070400,
@@ -426,7 +422,7 @@
     },
     "callisto": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-12-06",
       "publishesTemperature": false,
       "semiMajorAxisKm": 1882700,
@@ -439,7 +435,7 @@
     },
     "mimas": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-07-22",
       "publishesTemperature": false,
       "semiMajorAxisKm": 185520,
@@ -452,7 +448,7 @@
     },
     "enceladus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-07-22",
       "publishesTemperature": false,
       "semiMajorAxisKm": 238020,
@@ -465,7 +461,7 @@
     },
     "tethys": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-07-22",
       "publishesTemperature": false,
       "semiMajorAxisKm": 294660,
@@ -478,7 +474,7 @@
     },
     "dione": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-07-22",
       "publishesTemperature": false,
       "semiMajorAxisKm": 377400,
@@ -491,7 +487,7 @@
     },
     "rhea": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-07-22",
       "publishesTemperature": false,
       "semiMajorAxisKm": 527040,
@@ -504,7 +500,7 @@
     },
     "titan": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-07-22",
       "publishesTemperature": false,
       "semiMajorAxisKm": 1221870,
@@ -517,7 +513,7 @@
     },
     "hyperion": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-07-22",
       "publishesTemperature": false,
       "semiMajorAxisKm": 1500930,
@@ -530,7 +526,7 @@
     },
     "iapetus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-07-22",
       "publishesTemperature": false,
       "semiMajorAxisKm": 3560850,
@@ -543,7 +539,7 @@
     },
     "miranda": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-03-11",
       "publishesTemperature": false,
       "semiMajorAxisKm": 129900,
@@ -556,7 +552,7 @@
     },
     "ariel": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-03-11",
       "publishesTemperature": false,
       "semiMajorAxisKm": 190900,
@@ -569,7 +565,7 @@
     },
     "umbriel": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-03-11",
       "publishesTemperature": false,
       "semiMajorAxisKm": 266000,
@@ -582,7 +578,7 @@
     },
     "titania": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-03-11",
       "publishesTemperature": false,
       "semiMajorAxisKm": 436300,
@@ -595,7 +591,7 @@
     },
     "oberon": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2023-03-11",
       "publishesTemperature": false,
       "semiMajorAxisKm": 583500,
@@ -608,7 +604,7 @@
     },
     "triton": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2024-03-11",
       "publishesTemperature": false,
       "semiMajorAxisKm": 354760,
@@ -621,7 +617,7 @@
     },
     "proteus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2024-03-11",
       "publishesTemperature": false,
       "semiMajorAxisKm": 117647,
@@ -634,7 +630,7 @@
     },
     "nereid": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2024-03-11",
       "publishesTemperature": false,
       "semiMajorAxisKm": 5513400,
@@ -647,7 +643,7 @@
     },
     "phobos": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-05-19",
       "publishesTemperature": false,
       "semiMajorAxisKm": 9378,
@@ -660,7 +656,7 @@
     },
     "deimos": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "updated": "2025-05-19",
       "publishesTemperature": false,
       "semiMajorAxisKm": 23459,
@@ -675,7 +671,7 @@
   "jplSatellites": {
     "physicalParameters": {
       "url": "https://ssd.jpl.nasa.gov/sats/phys_par/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "columns": [
         "Planet",
         "Satellite",
@@ -892,7 +888,7 @@
     },
     "meanElements": {
       "url": "https://ssd.jpl.nasa.gov/sats/elem/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "bodies": {
         "moon": {
           "frame": "ecliptic",
@@ -1073,7 +1069,7 @@
   },
   "naifRotation": {
     "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
-    "retrieved": "2026-09-28",
+    "retrieved": "2026-10-22",
     "kernel": "pck00011.tpc",
     "dated": "Nat Bachman (NAIF)    2022 December 27",
     "systems": {
@@ -2949,7 +2945,7 @@
   "nasaScienceBodies": {
     "enceladus": {
       "url": "https://science.nasa.gov/saturn/moons/enceladus/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "sentence": "Because Enceladus reflects so much sunlight, the surface temperature is extremely cold, about minus 330 degrees Fahrenheit (minus 201 degrees Celsius).",
       "celsius": [
         -201
@@ -2957,7 +2953,7 @@
     },
     "tethys": {
       "url": "https://science.nasa.gov/saturn/moons/tethys/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "sentence": "Tethys has a high reflectivity (or visual albedo) of 1.229 in the visual range, again suggesting a composition largely of water ice, which would behave like rock in the Tethyan average temperature of -305 degrees Fahrenheit (-187 degrees Celsius).",
       "celsius": [
         -187
@@ -2965,7 +2961,7 @@
     },
     "dione": {
       "url": "https://science.nasa.gov/saturn/moons/dione/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "sentence": "At Dione's average temperature of -304 degrees Fahrenheit (-186 degrees Celsius or 87 kelvins), ice is very hard and behaves like rock.",
       "celsius": [
         -186
@@ -2973,7 +2969,7 @@
     },
     "hyperion": {
       "url": "https://science.nasa.gov/saturn/moons/hyperion/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "sentence": "This may be because the average temperature of roughly -300 degrees Fahrenheit (-180 degrees Celsius) might be close enough to a temperature that would cause volatiles to sublimate, leaving the darker materials accumulated on the crater floors.",
       "celsius": [
         -180
@@ -2981,7 +2977,7 @@
     },
     "triton": {
       "url": "https://science.nasa.gov/neptune/moons/triton/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "sentence": "NASA's Voyager 2―the only spacecraft to fly past Neptune and Triton―found surface temperatures of -391degrees Fahrenheit (-235 degrees Celsius).",
       "celsius": [
         -235
@@ -2989,7 +2985,7 @@
     },
     "rhea": {
       "url": "https://science.nasa.gov/saturn/moons/rhea/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "sentence": "Rhea's surface temperatures are also similar to Dione and Tethys, being roughly as warm as -281 degrees Fahrenheit (-174 degrees Celsius) in sunlit areas and ranging down to -364 degrees Fahrenheit (-220 degrees Celsius) in shaded areas.",
       "celsius": [
         -174,
@@ -2998,7 +2994,7 @@
     },
     "phobos": {
       "url": "https://science.nasa.gov/mars/moons/phobos/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "sentence": "High temperatures for Phobos were measured at 25 degrees Fahrenheit (-4 degrees Celsius) and lows at -170 degrees Fahrenheit (-112 degrees Celsius).",
       "celsius": [
         -4,
@@ -3007,7 +3003,7 @@
     },
     "eris": {
       "url": "https://science.nasa.gov/dwarf-planets/eris/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "sentence": "Scientists think surface temperatures vary from about -359 degrees Fahrenheit (-217 degrees Celsius) to -405 degrees Fahrenheit (-243 degrees Celsius).",
       "celsius": [
         -217,
@@ -3018,35 +3014,35 @@
   "nasaMoonCounts": {
     "jupiter": {
       "url": "https://science.nasa.gov/jupiter/moons/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "moonCount": 115,
       "asOf": null,
       "sentence": "has 115 moons"
     },
     "saturn": {
       "url": "https://science.nasa.gov/saturn/moons/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "moonCount": 293,
       "asOf": "2026-08",
       "sentence": "has 293 confirmed moons in its orbit as of August 2026"
     },
     "uranus": {
       "url": "https://science.nasa.gov/uranus/moons/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "moonCount": 29,
       "asOf": "2026-08",
       "sentence": "has 29 officially recognized moons, as of August 2026"
     },
     "neptune": {
       "url": "https://science.nasa.gov/neptune/moons/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "moonCount": 16,
       "asOf": null,
       "sentence": "has 16 known moons"
     },
     "mars": {
       "url": "https://science.nasa.gov/mars/moons/",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "moonCount": 2,
       "asOf": null,
       "sentence": "has two moons"
@@ -3055,7 +3051,7 @@
   "sbdb": {
     "ceres": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "1 Ceres (A801 AA)",
       "diameterKm": {
         "value": 939.4,
@@ -3121,7 +3117,7 @@
     },
     "pallas": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "2 Pallas (A802 FA)",
       "diameterKm": {
         "value": 513,
@@ -3187,7 +3183,7 @@
     },
     "vesta": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=4",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "4 Vesta (A807 FA)",
       "diameterKm": {
         "value": 522.77,
@@ -3253,7 +3249,7 @@
     },
     "hygiea": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=10",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "10 Hygiea (A849 GA)",
       "diameterKm": {
         "value": 407.12,
@@ -3300,7 +3296,7 @@
     },
     "ida": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=243",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "243 Ida (A884 SB)",
       "diameterKm": {
         "value": 32,
@@ -3355,7 +3351,7 @@
     },
     "eros": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=433",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "433 Eros (A898 PA)",
       "diameterKm": {
         "value": 16.84,
@@ -3421,7 +3417,7 @@
     },
     "itokawa": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=25143",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "25143 Itokawa (1998 SF36)",
       "diameterKm": {
         "value": 0.33,
@@ -3477,7 +3473,7 @@
     },
     "ryugu": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=162173",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "162173 Ryugu (1999 JU3)",
       "diameterKm": {
         "value": 0.896,
@@ -3539,7 +3535,7 @@
     },
     "bennu": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=101955",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "101955 Bennu (1999 RQ36)",
       "diameterKm": {
         "value": 0.48444,
@@ -3607,7 +3603,7 @@
     },
     "halley": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1P",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "1P/Halley",
       "diameterKm": {
         "value": 11,
@@ -3641,7 +3637,7 @@
     },
     "pluto": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=134340",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "134340 Pluto (1930 BM)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -3663,7 +3659,7 @@
     },
     "eris": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136199",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "136199 Eris (2003 UB313)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -3685,7 +3681,7 @@
     },
     "haumea": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136108",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "136108 Haumea (2003 EL61)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -3707,7 +3703,7 @@
     },
     "makemake": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136472",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "136472 Makemake (2005 FY9)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -3729,7 +3725,7 @@
     },
     "orcus": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90482",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "90482 Orcus (2004 DW)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -3751,7 +3747,7 @@
     },
     "quaoar": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=50000",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "50000 Quaoar (2002 LM60)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -3773,7 +3769,7 @@
     },
     "gonggong": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=225088",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "225088 Gonggong (2007 OR10)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -3795,7 +3791,7 @@
     },
     "sedna": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90377",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "90377 Sedna (2003 VB12)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -3817,7 +3813,7 @@
     },
     "psyche": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=16",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "16 Psyche (A852 FA)",
       "diameterKm": {
         "value": 222,
@@ -3873,7 +3869,7 @@
     },
     "lutetia": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "21 Lutetia (A852 VA)",
       "diameterKm": {
         "value": 98,
@@ -3939,7 +3935,7 @@
     },
     "gaspra": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=951",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "951 Gaspra (A916 OJ)",
       "diameterKm": {
         "value": 12.2,
@@ -3980,7 +3976,7 @@
     },
     "mathilde": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=253",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "253 Mathilde (A885 VA)",
       "diameterKm": {
         "value": 52.8,
@@ -4031,7 +4027,7 @@
     },
     "steins": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2867",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "2867 Steins (1969 VC)",
       "diameterKm": {
         "value": 5.16,
@@ -4067,7 +4063,7 @@
     },
     "annefrank": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=5535",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "5535 Annefrank (1942 EM)",
       "diameterKm": {
         "value": 4.8,
@@ -4104,7 +4100,7 @@
     },
     "masursky": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2685",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "2685 Masursky (1981 JN)",
       "diameterKm": {
         "value": 10.744,
@@ -4140,7 +4136,7 @@
     },
     "didymos": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=65803",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "65803 Didymos (1996 GT)",
       "diameterKm": {
         "value": 0.78,
@@ -4188,7 +4184,7 @@
     },
     "dinkinesh": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=152830",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "152830 Dinkinesh (1999 VD57)",
       "diameterKm": {
         "value": 0.719,
@@ -4231,7 +4227,7 @@
     },
     "donaldjohanson": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=52246",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "52246 Donaldjohanson (1981 EQ5)",
       "diameterKm": {
         "value": 3.895,
@@ -4260,7 +4256,7 @@
     },
     "eurybates": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=3548",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "3548 Eurybates (1973 SO)",
       "diameterKm": {
         "value": 63.885,
@@ -4296,7 +4292,7 @@
     },
     "polymele": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=15094",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "15094 Polymele (1999 WB2)",
       "diameterKm": {
         "value": 21.075,
@@ -4333,7 +4329,7 @@
     },
     "leucus": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=11351",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "11351 Leucus (1997 TS25)",
       "diameterKm": {
         "value": 34.155,
@@ -4369,7 +4365,7 @@
     },
     "orus": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21900",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "21900 Orus (1999 VQ10)",
       "diameterKm": {
         "value": 50.81,
@@ -4405,7 +4401,7 @@
     },
     "patroclus": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=617",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "617 Patroclus (A906 UL)",
       "diameterKm": {
         "value": 140.362,
@@ -4444,7 +4440,7 @@
     },
     "apophis": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=99942",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "99942 Apophis (2004 MN4)",
       "diameterKm": {
         "value": 0.34,
@@ -4483,7 +4479,7 @@
     },
     "arrokoth": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=486958",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "486958 Arrokoth (2014 MU69)",
       "diameterKm": null,
       "gmKm3s2": null,
@@ -4505,7 +4501,7 @@
     },
     "tempel-1": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=9P",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "9P/Tempel 1",
       "diameterKm": {
         "value": 6,
@@ -4543,7 +4539,7 @@
     },
     "borrelly": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=19P",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "19P/Borrelly",
       "diameterKm": {
         "value": 4.8,
@@ -4576,7 +4572,7 @@
     },
     "wild-2": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=81P",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "81P/Wild 2",
       "diameterKm": {
         "value": 4,
@@ -4602,7 +4598,7 @@
     },
     "hartley-2": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=103P",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "103P/Hartley 2",
       "diameterKm": {
         "value": 1.6,
@@ -4632,7 +4628,7 @@
     },
     "churyumov-gerasimenko": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=67P",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "67P/Churyumov-Gerasimenko",
       "diameterKm": {
         "value": 3.4,
@@ -4686,7 +4682,7 @@
     },
     "giacobini-zinner": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21P",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "21P/Giacobini-Zinner",
       "diameterKm": {
         "value": 2,
@@ -4709,7 +4705,7 @@
     },
     "grigg-skjellerup": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=26P",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "fullname": "26P/Grigg-Skjellerup",
       "diameterKm": {
         "value": 2.6,
@@ -4734,7 +4730,7 @@
   "sbdbInterstellar": {
     "oumuamua": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1I%2F2017%20U1",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "'Oumuamua (A/2017 U1)",
       "orbitClass": "Hyperbolic Asteroid",
       "eccentricity": {
@@ -4761,7 +4757,7 @@
     },
     "borisov": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=C%2F2019%20Q4",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "fullname": "C/2019 Q4 (Borisov)",
       "orbitClass": "Hyperbolic Comet",
       "eccentricity": {
@@ -4811,13 +4807,23 @@
       "firstObservation": "2025-05-15",
       "lastObservation": "2026-02-19",
       "observationsUsed": 782,
-      "solutionDate": "2026-02-19 09:10:47"
+      "solutionDate": "2026-02-19 09:10:47",
+      "pinned": {
+        "reason": "Le 2026-10-21 la SBDB a remplacé la solution complète (782 observations depuis le 2025-05-15) par une solution TEMPORAIRE « to support JWST Program 13145 » (117 observations depuis le 2025-10-03, termes non gravitationnels) : une autre modélisation, non retenue tant que la SBDB ne republie pas une solution complète.",
+        "liveSeen": {
+          "retrieved": "2026-10-22",
+          "comment": "Temporary solution to support JWST Program 13145",
+          "solutionDate": "2026-10-21 09:51:09",
+          "firstObservation": "2025-10-03",
+          "observationsUsed": 117
+        }
+      }
     }
   },
   "nssdcaMasterCatalog": {
     "voyager1": {
       "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1977-084A",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "cosparId": "1977-084A",
       "name": "Voyager 1",
       "launchDate": "1977-09-05",
@@ -4829,7 +4835,7 @@
     },
     "voyager2": {
       "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1977-076A",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "cosparId": "1977-076A",
       "name": "Voyager 2",
       "launchDate": "1977-08-20",
@@ -4841,7 +4847,7 @@
     },
     "parker-solar-probe": {
       "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2018-065A",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "cosparId": "2018-065A",
       "name": "Parker Solar Probe",
       "launchDate": "2018-08-12",
@@ -4853,7 +4859,7 @@
     },
     "jwst": {
       "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2021-130A",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "cosparId": "2021-130A",
       "name": "James Webb Space Telescope",
       "launchDate": "2021-12-25",
@@ -4865,7 +4871,7 @@
     },
     "new-horizons": {
       "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2006-001A",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "cosparId": "2006-001A",
       "name": "New Horizons Pluto Kuiper Belt Flyby",
       "launchDate": "2006-01-19",
@@ -4892,7 +4898,7 @@
     },
     "juno": {
       "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2011-040A",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "cosparId": "2011-040A",
       "name": "Juno",
       "launchDate": "2011-08-05",
@@ -4935,7 +4941,7 @@
     },
     "osiris-rex": {
       "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2016-055A",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "cosparId": "2016-055A",
       "name": "OSIRIS-REx",
       "launchDate": "2016-09-08",
@@ -4964,35 +4970,35 @@
   "horizonsObjectData": {
     "solar-orbiter": {
       "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='-144'&OBJ_DATA=YES&MAKE_EPHEM=NO",
-      "retrieved": "2026-10-09",
+      "retrieved": "2026-10-22",
       "command": "-144",
       "name": "Solar Orbiter",
       "text": "Revised: Sep 30, 2026 Solar Orbiter Spacecraft / Sun -144 https://sci.esa.int/web/solar-orbiter https://www.nasaspaceflight.com/2020/02/esa-solar-orbiter-atlas-v-study-sun/ Solar Orbiter (\"Solo\"), an ESA/NASA mission, was launched 2020-Feb-10@4:03 UTC from Cape Canaveral, Florida (SLC-41) on an Atlas V 411 launch vehicle. NOTE: Earth flyby November 27, 2021 @ 4:30:31 UTC, about 454 km over 347.624 E, 31.1103 N (Atlantic Ocean, about 420 km west of Marrakesh, Morocco) BACKGROUND: The 7-year mission will provide close-up, high-latitude observations of the Sun from a highly elliptic orbit that ranges between 0.28 au at perihelion (~60 solar radii, inside Mercury's orbit) and 1.2 au at aphelion. It will reach its operational orbit ~22 months after launch by using gravity assist maneuvers (GAMs) at Earth and Venus. From a Venus resonant orbit, subsequent GAMs at Venus will increase its inclination with respect to the solar equator over time, reaching up to 24 deg. (with an orbit period of 168 days) at the end of the nominal mission (7 years after launch) and up to 33 deg. in a potential extended mission phase. During closest approach (every ~5 months), Solar Orbiter will be positioned for several days over roughly the same region of the solar atmosphere, as the Sun rotates on its axis beneath the spacecraft. The spacecraft will thus effectively \"hover\" over the rotating surface, and therefore able to watch developing magnetic activity that can lead to flares and eruptions. The view of the solar poles from higher latitudes will help understand how dynamo processes generate the Sun's magnetic field. Observations will be coordinated as appropriate between Solar Orbiter and the Parker Solar Probe. Flybys: 2020-Dec-26: Venus 2021-Aug-08: Venus 2021-Nov-27: Earth (end of cruise phase) November 27 @ 4:30:31 UTC, ~454 km above the surface over 347.624 E, 31.1103 N (Atlantic Ocean, ~420 km west of Marrakesh, Morocco) 2022-Sep-04: Venus (12498.5 km from Venus center @ 01:26:27 UTC) 2025-Feb-18: Venus 2026-Dec-24: Venus 2028-Mar-17: Venus 2029-Jun-10: Venus 2030-Sep-02: Venus PHYSICAL CHARACTERISTICS: * Sun-pointed three-axis stabilised platform * Heat shield * Two adjustable solar arrays (adopted from BepiColombo mission) Dimensions : 2.5 x 3.0 x 2.5 meters (launch configuration) Communications: Dual X-band at 150 kbps (at 1 au) Tracking from Malargue 35-m antenna (Argentina), 4-8 hours/day Backup: New Norcia (Australia) and Cebreros (Spain) Power : 180 Watts Launch mass : 1800 kg Payload mass : 209 kg SCIENCE INSTRUMENTS: In-situ instruments (operate throughout orbit): EPD : Energetic Particle Detector MAG : Magnetometer RPW : Radio and Plasma Waves SWA : Solar Wind Plasma Analyser Remote-sensing instruments (30 days per orbit, near close-approach) EUI : Extreme Ultraviolet Imager METIS : Coronagraph PHI : Polarimetric and Helioseismic Imager SoloHI: Heliospheric Imager (US-NRL) SPICE : Spectral Imaging of the Coronal Environment STIX : X-ray Spectrometer/Telescope TRAJECTORY: Post-launch trajectory from ESA: Trajectory data begins after upper-stage separation in LEO. Tracking data fit up to 2026-Sep-17, prediction thereafter. Name Start (TDB) Stop (TDB) ------------------------------------------------------ ----------- ----------- solo_ANC_soc-orbit-stp_20200210-20301120_431_V1_00582 2020-Feb-10 2030-Nov-20"
     },
     "juice": {
       "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='-28'&OBJ_DATA=YES&MAKE_EPHEM=NO",
-      "retrieved": "2026-10-09",
+      "retrieved": "2026-10-22",
       "command": "-28",
       "name": "JUICE",
       "text": "Revised: Sep 27, 2026 JUICE Spacecraft / Sun-Jupiter-Ganymede -28 https://sci.esa.int/web/juice The Jupiter Icy moons Explorer (\"JUICE\") is an ESA mission launched April 14, 2023 @ 12:14 UTC from French Guiana (ELA-3) on an Ariane 5. Its period and area of operations will overlap with NASA's Europa Clipper mission launching in 2024. PURPOSE The JUICE orbiter will investigate Ganymede and evaluate its potential to support life. Investigations of Europa and Callisto will compare these Galilean moons. The three moons are thought to have internal liquid water oceans, and are thought key to understanding the habitability of icy worlds. Main science objectives for Ganymede (and Callisto to lesser extent): * Characterize ocean layers & detect detect any subsurface water reservoirs * Topographical, geological and compositional mapping of surface * Study the physical properties of the icy crusts * Characterisation of internal mass distribution and dynamics * Investigate Ganymede's tenuous atmosphere * Study Ganymede's magnetic field and interactions with Jovian magnetosphere For Europa, the focus is on the chemistry essential to life. JUICE will also provide the first subsurface sounding of the moon, and determination of icy crust thickness over the most recently active regions. TRAJECTORY OVERVIEW: JUICE will have four gravity assist flybys of Venus and Earth and pass through the asteroid Main-Belt twice before arriving at Jupiter in July, 2031. There will be a Ganymede flyby 7.5 hours prior to Jupiter orbit insertion. The first Europa flyby will be in July 2032. The spacecraft will be placed in a high inclination orbit to allow exploration of Jupiter's polar regions and to study Jupiter's magnetosphere. In December 2034, the spacecraft will enter orbit around Ganymede, becoming the first spacecraft to orbit a moon other than Earth's. FLYBYS: 2024-Aug-20: Earth-Moon system (gravity-assist, 21:56:13.5 UTC @ 13209.3 km) 2025-Aug-31: Venus (gravity assist, 05:28:51 UTC @ 11141.1 km) 2026-Sep-28: Earth #2 (gravity assist, 11:45:11.5 UTC @ 15018.3 km) 2029 Jan : Earth #3 (gravity assist) 2029 Oct : Asteroid 223 Rosa [PROPOSED] 2031+ : more then 25 gravity assists, two Europa flybys PHYSICAL CHARACTERISTICS: * 3-axis stabilized * Power: solar panels, 85 m^2, 820W (EOM) * High-gain antenna: 2.5 m, body fixed * X- and Ka bands, downlink > 1.4 Gbit/day * Propulsion: bi-propellant main engine plus 10 thrusters Delta-V capability (2700 m/s, ~3000 kg of chemical propellant) * Radiation level: 240 krad /10 mm Al solid sphere * Dry mass at launch: ~1800 kg * Deployable appendages: 10.6 meter boom for JMAG and RPWI 16-meter antenna for radar Steerable medium gain antenna for comm and radio science SCIENCE INSTRUMENTS (11): * Jovis, Amorum ac Natorum Undique Scrutator (JANUS, camera system) * Moons and Jupiter Imaging Spectrometer (MAJIS, VIS/IR imaging spectrograph) * UV Imaging Spectrograph (UVS, UV imaging spectrograph) * Sub-millimeter Wave Instrument (SWI, spectrometer) * Ganymede Laser Altimeter (GALA) * Radar for Icy Moons Exploration (RIME, ice-penetrating 9 GHz, w/16m antenna) * JUICE-Magnetometer (J-MAG) * Particle Environment Package (PEP, suite of six sensors) * Radio and Plasma Wave Investigation (RPWI) * Gravity and Geophysics of Jupiter and Galilean Moons (3GM, Ka transponder) * Planetary Radio Interferometer and Doppler Experiment (PRIDE) TRAJECTORY: Post-launch trajectory from ESA based on tracking data through September 22, prediction after that. Name Start (TDB) Stop (TDB) -------------------------------------------------- ----------- ----------- juice_orbc_000114_230414_310721_v01 2023-Apr-14 2031-Jul-21"
     },
     "hera": {
       "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='-91'&OBJ_DATA=YES&MAKE_EPHEM=NO",
-      "retrieved": "2026-10-09",
+      "retrieved": "2026-10-22",
       "command": "-91",
       "name": "Hera",
-      "text": "Revised: Sep 30, 2026 Hera / (Sun) -91 https://www.dlr.de/en/ar/topics-missions/space-safety/hera https://esamultimedia.esa.int/docs/HERA_Launch_Kit.pdf Launch Date: Didymos Arrival Date: 2024-Oct-07 14:52 UTC Late 2026 Launch Vehicle: Launch Site: SpaceX Falcon 9 Cape Canaveral, SFS MILESTONES 2024-Nov : DSM-1 2025-Mar : Mars flyby (~6000 km from Mars, ~1000 km from Deimos) 2026-Feb : DSM-2 2026-Oct : Rendevous maneuver Late 2026 : Didymos/Dimorphos system arrival OBJECTIVES: Assess the size and depth of the crater on the 151-m diameter asteroidal moon Dimorphos, created by NASA's DART (Double Asteroid Redirection Test) spacecraft 2022-Sep-26, and determine whether the impact reshaped the rubble pile object that orbits 65803 Didymos at a distance of 1.1 km every 11h 22m, as preliminary results indicate. Once deployed, two CubeSats (\"Milani\" and \"Juventas\") will be used to assess Dimorphos' internal structure, surface minerals, as well as gravity. The data will help correctly reproduce the asteroid's final structure and inform future planetary defense missions. SPACECRAFT PHYSICAL PROPERTIES: 1.6 x 1.6 x 1.7 m box Two 5-m solar panel arms (deployed) 1801 kg fully fueled (hydrazine bipropellant) 3-axis stabilization 4 reaction wheels, gyroscopes, star trackers, solar sensors SCIENCE INSTRUMENTS Asteroid Framing Camera (AFC) Thermal Infrared Imager (TIRI) HyperScout-H camera Spacecraft Monitoring Camera (SMC) Laser Rangefinder X-band antenna radio science Gravimeter for the Investigation of Small Solar System Two deployable CubeSats (eventual landing) Juventas: Radar Juventas: Narrow Angle Camera Milani : Narrow Angle Camera Milani : Asteroid Spectral Imager Milani : Volatile In-Situ Thermogravimetre Analyser SPACECRAFT TRAJECTORY: Post-launch tracking-data based trajectory from ESA 2026-Sep-28. Prediction thereafter. Name Start (TDB) Stop (TDB) --------------------------------------- ----------------- ----------------- hera_fcp_000093_241007_261104_v01 2024-Oct-07 16:10 2026-Nov-04 01:00"
+      "text": "Revised: Oct 18, 2026 Hera / (Sun) -91 https://www.dlr.de/en/ar/topics-missions/space-safety/hera https://esamultimedia.esa.int/docs/HERA_Launch_Kit.pdf Launch Date: Didymos Arrival Date: 2024-Oct-07 14:52 UTC Late 2026 Launch Vehicle: Launch Site: SpaceX Falcon 9 Cape Canaveral, SFS MILESTONES 2024-Nov : DSM-1 2025-Mar : Mars flyby (~6000 km from Mars, ~1000 km from Deimos) 2026-Feb : DSM-2 2026-Oct : Rendevous maneuver Late 2026 : Didymos/Dimorphos system arrival OBJECTIVES: Assess the size and depth of the crater on the 151-m diameter asteroidal moon Dimorphos, created by NASA's DART (Double Asteroid Redirection Test) spacecraft 2022-Sep-26, and determine whether the impact reshaped the rubble pile object that orbits 65803 Didymos at a distance of 1.1 km every 11h 22m, as preliminary results indicate. Once deployed, two CubeSats (\"Milani\" and \"Juventas\") will be used to assess Dimorphos' internal structure, surface minerals, as well as gravity. The data will help correctly reproduce the asteroid's final structure and inform future planetary defense missions. SPACECRAFT PHYSICAL PROPERTIES: 1.6 x 1.6 x 1.7 m box Two 5-m solar panel arms (deployed) 1801 kg fully fueled (hydrazine bipropellant) 3-axis stabilization 4 reaction wheels, gyroscopes, star trackers, solar sensors SPACECRAFT TRAJECTORY: Post-launch tracking-data based trajectory from ESA 2026-Oct-17. Prediction thereafter. NOTE: To generate ephemerides of destination asteroid Didymos as a target, look-up with integer code \"20065803\" (pre-computed) or \"DES=20065803;\" (numerically integrate with uncertainties). To instead use asteroid Didymos as an observing point (produce ephemerides relative TO Didymos), set the coordinate center to \"@ 20065803\". Similarly for satellite Dimorphos, use object code is \"120065803\", though a numeric integration option is not available here for that object. Name Start (TDB) Stop (TDB) --------------------------------------- ----------------- ----------------- hera_fcp_000099_241007_261104_v01 2024-Oct-07 16:10 2026-Nov-04 01:00"
     },
     "mars-express": {
       "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='-41'&OBJ_DATA=YES&MAKE_EPHEM=NO",
-      "retrieved": "2026-10-11",
+      "retrieved": "2026-10-22",
       "command": "-41",
       "name": "Mars Express",
       "text": "Revised: Sep 30, 2026 Mars Express / (Sun) -41 http://sci.esa.int/marsexpress/ http://space.about.com/od/spacemissions/p/beagle2.htm LAUNCH DATE: MARS ARRIVAL DATE: June 02, 2003 December, 2003 LAUNCH VEHICLE: This European Space Agency (ESA) mission was launched on a Soyuz-Fregat launch vehicle from Baikonur, Kazakhstan. BACKGROUND: Mars Express will remain in orbit around Mars for at least one martian year (687 Earth days). During this time, the pericenter will move to give the scientific instruments coverage of the entire martian surface from different viewing angles. After a 5 day descent, Beagle 2 will land on Isidis Planitia, a large, flat sedimentary basin straddling the relatively young northern plains and ancient southern highlands, where traces of life could have been preserved. The landing site (10.6N, 270W) is at low latitude to minimise the amount of insulation (and thus mass) needed to protect the lander from the cold martian night. The nominal lander life-time is 180 days. UPDATE: The Beagle 2 lander was lost. No signals were received after separation from Mars Express 2003-Dec-19. It would have entered the Martian atmosphere at 20,000 km/hr on 2003-Dec-25, but it is not known if any part of the landing sequence executed. SPACECRAFT PHYSICAL PROPERTIES: Orbiter mass = 113 kg Lander mass = 60 kg Total launch mass = 1223 kg BASIC ORBIT PARAMETERS: Inclination: 86.3 deg pericentre = 258 km Period : 6h 43m apocentre = 11 560 km SPACECRAFT TRAJECTORY (from ESA): Reconstructed trajectory based on tracking data through 2026-Sep-23. The trajectory thereafter is a prediction. Name Start (TDB) Stop (TDB) ---------------------------- ----------------- ----------------- ORHM_______________00030 2003-Jun-02 19:13 2003-Dec-22 18:09 ORMM_031222180906-261001 2003-Dec-22 18:09 2026-Oct-20 12:19 ORMF_______________01965 2026-Oct-20 12:19 2032-Dec-31 23:59"
     },
     "exomars-tgo": {
       "url": "https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='-143'&OBJ_DATA=YES&MAKE_EPHEM=NO",
-      "retrieved": "2026-10-11",
+      "retrieved": "2026-10-22",
       "command": "-143",
       "name": "ExoMars16 TGO",
       "text": "Revised: Jan 13, 2026 ExoMars16 TGO Spacecraft / (Sun & Mars) -143 http://exploration.esa.int/mars/46475-trace-gas-orbiter/ http://gizmodo.com/the-exomars-launch-was-a-resounding-success-1764722159 ExoMars was successfully launched March 14, 2016 @ 09:31 UTC from the Baikonur Cosmodrome in Kazakhstan. BACKGROUND Mission objective is to search for evidence of methane and other trace atmospheric gases that could be signatures of active biological or geological processes, and to test technologies for future ESA contributions to Mars missions. The Trace Gas Orbiter (TGO) and Schiaparelli lander will be launched together in March 2016 on a Roscosmos Proton rocket. Cruise phase will be 7 months, with arrival at Mars on 2016-Oct-19. Three days before reaching the atmosphere of Mars, Schiaparelli will be ejected from TGO. Schiaparelli will then coast towards Mars, enter the Martian atmosphere at 21,000 km/h, decelerate using atmospheric drag and a parachute, then brake with a thruster system before landing. Schiaparelli surface communications will be supported by Mars Express (ESA) and relay through NASA's MRO, Maven, and Odyssey spacecraft. NOTE: 2016-Oct-19 The Schiaparelli lander was destroyed on impact due to malfunction during the landing phase and is not functional. The ExoMars-2016 orbiter was inserted into an elliptical Martian orbit and will later aerobrake to a circular ~400-km altitude, 74 degree inclination orbit during Jan-Dec 2017, from which it will conduct its science mission from December 2017-2022. PHYSICAL CHARACTERISTICS Orbiter 3.2 x 2 x 2 meters, with solar panels 17.5 m tip-to-tip Launch mass 4332 kg (includes 112 kg science payload, 600 kg Schiaparelli lander) Propulsion Bipropellant, 424 N main engine Power * 2000 Watts from solar panels * Two lithium-ion batteries for eclipses * 5100 Wh total capacity. Communications * 65 W X-band 2.2-m high-gain antenna, * 3 low-gain antennas * Electra UHF band transceivers (NASA) * One helix antenna for Mars surface communications SCIENCE INSTRUMENTS * Atmospheric Chemistry Suite (ACS); * Colour and Stereo Surface Imaging System (CaSSIS); * Fine Resolution Epithermal Neutron Detector (FREND); * Nadir and Occultation for Mars Discovery (NOMAD) TRAJECTORY From ESA (data-fit through 2025-Jun-21, short-term predicts, then reference trajectory after 2025-Oct-21): Name Start (TDB) Stop (TDB) ------------------------------------ ----------------- ----------------- fsp_048_01_20160314_20181231_v02 2016-Mar-14 08:14 2018-Nov-20 23:38 fsp_065_01_20181120_20190429_v02 2018-Nov-20 23:38 2019-Mar-18 18:41 fsp_082_01_20190318_20190903_v02 2019-Mar-18 18:41 2019-Jul-16 23:51 fsp_099_01_20190716_20191228_v01 2019-Jul-16 23:51 2019-Nov-11 23:53 fsp_116_01_20191111_20200425_v01 2019-Nov-11 23:53 2020-Mar-09 23:48 fsp_133_01_20200309_20200822_v01 2020-Mar-09 23:48 2020-Jul-06 23:33 fsp_150_01_20200706_20201219_v01 2020-Jul-06 23:33 2020-Nov-02 22:29 fsp_167_01_20201102_20210417_v01 2020-Nov-02 22:29 2021-Mar-01 23:55 fsp_184_01_20210301_20211002_v01 2021-Mar-01 23:55 2021-Apr-27 23:52 fsp_201_01_20210628_20211211_v01 2021-Jun-28 23:59 2021-Oct-25 23:54 fsp_218_01_20211025_20220409_v01 2021-Oct-25 23:54 2022-Feb-21 23:50 fsp_235_01_20220221_20220806_v01 2022-Feb-21 23:50 2022-May-28 00:00 fsp_252_01_20220620_20221203_v01 2022-Jun-20 23:59 2022-Sep-26 22:57 fsp_267_01_20221004_20230318_v01 2022-Oct-04 21:48 2023-Jan-24 12:26 fsp_284_01_20230124_20230805_v01 2023-Jan-24 12:26 2023-May-27 00:00 fsp_301_01_20230527_20231111_v01 2023-May-27 00:00 2023-Sep-25 12:37 fsp_318_01_20230925_20240309_v01 2023-Sep-25 12:37 2023-Jan-13 00:00 fsp_335_01_20240113_20240706_v01 2024-Jan-13 00:00 2024-May-20 22:46 fsp_352_01_20240520_20241102_v01 2024-May-20 22:46 2024-Sep-16 22:51 fsp_369_01_20240916_20250301_v01 2024-Sep-16 22:51 2024-Dec-30 23:36 fsp_384_01_20241230_20250621_v01 2024-Dec-30 23:36 2025-Jun-21 16:14 long-term predicts: flp_011_01_20250203_20390104_v01 2025-Jun-21 16:14 2039-Jan-04 06:29"
@@ -5001,7 +5007,7 @@
   "articles": {
     "sicardy-2011-eris": {
       "url": "https://www.nature.com/articles/nature10550",
-      "retrieved": "2026-09-20",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "radius 1,163 ± 6 kilometres",
         "density 2.52 ± 0.05 grams per cm3"
@@ -5009,7 +5015,7 @@
     },
     "szakats-2023-eris": {
       "url": "https://arxiv.org/abs/2211.07987",
-      "retrieved": "2026-09-20",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "P = 15.8 d",
         "the rotation of Eris is tidally locked"
@@ -5017,14 +5023,14 @@
     },
     "ragozzine-brown-2009-haumea": {
       "url": "https://arxiv.org/abs/0903.4213",
-      "retrieved": "2026-09-20",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "Haumea Mass 4.006 ± 0.040 1021 kg"
       ]
     },
     "brown-2013-makemake": {
       "url": "https://arxiv.org/abs/1304.1041",
-      "retrieved": "2026-09-20",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "measured equatorial diameter of 1434 +/- 14 km",
         "yielding an albedo of 0.81+0.01/-0.02"
@@ -5039,7 +5045,7 @@
     },
     "kiss-2019-gonggong": {
       "url": "https://arxiv.org/abs/1903.05439",
-      "retrieved": "2026-09-20",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "system mass of 1.75x10$^{21}$ kg",
         "a size of 1230$\\pm$50 km"
@@ -5047,7 +5053,7 @@
     },
     "margoti-2026-quaoar": {
       "url": "https://arxiv.org/abs/2607.06450",
-      "retrieved": "2026-09-20",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "equivalent volumetric diameter of 1094.4 +/- 4.6 km",
         "density of 1.760 +/- 0.109 g/cm3",
@@ -5064,7 +5070,7 @@
     },
     "pal-2012-sedna": {
       "url": "https://arxiv.org/abs/1204.0899",
-      "retrieved": "2026-09-20",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "995 +/- 80 km",
         "the respective geometric albedos are pV 0.32 +/- 0.06"
@@ -5079,14 +5085,14 @@
     },
     "kiss-2016-nereid": {
       "url": "https://arxiv.org/abs/1601.02395",
-      "retrieved": "2026-09-20",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "rotation period of P=11.594(+/-)0.017 h"
       ]
     },
     "brown-2010-orcus": {
       "url": "https://arxiv.org/abs/0910.4784",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "system mass of 6.32+- 0.01 X 10^20 kg",
         "diameter 940+-70 km",
@@ -5104,7 +5110,7 @@
     },
     "nasa-titan": {
       "url": "https://science.nasa.gov/saturn/moons/titan/",
-      "retrieved": "2026-10-07",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "Titan is Saturn's largest moon, and the only moon in our solar system known to have a substantial atmosphere."
       ],
@@ -5112,7 +5118,7 @@
     },
     "richardson-2024-didymos": {
       "url": "https://arxiv.org/abs/2502.14990",
-      "retrieved": "2026-10-07",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "Mean Separation of Component Centerse [km] 1.20 ± 0.03 1.189 ± 0.017 1.152 ± 0.018",
         "Mutual Orbital Periodh [h] 11.921629 ± 0.000003 11.921493 ± 0.000016 11.3674 ± 0.0004",
@@ -5124,7 +5130,7 @@
     },
     "grundy-2018-patroclus": {
       "url": "https://arxiv.org/abs/1903.03729",
-      "retrieved": "2026-10-04",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "Period (days) P 4.282680 ± 0.000063",
         "Semimajor axis (km) a 688.5 ± 4.7",
@@ -5134,7 +5140,7 @@
     },
     "ortiz-2017-haumea": {
       "url": "https://arxiv.org/abs/2006.03113",
-      "retrieved": "2026-09-28",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "elliptical limb with axes 1,704 $\\pm$ 4 km x 1,138 $\\pm$ 26 km",
         "largest axis is at least 2,322 $\\pm$ 60 km",
@@ -5150,7 +5156,7 @@
     },
     "kiss-2019-gonggong-table3": {
       "url": "https://arxiv.org/abs/1903.05439",
-      "retrieved": "2026-10-07",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "3a 306.0 26.4 51 44.8 pg/s 1224±55 0.14±0.01"
       ],
@@ -5164,7 +5170,7 @@
     },
     "santos-sanz-2012-eris": {
       "url": "https://arxiv.org/abs/1202.1481",
-      "retrieved": "2026-10-07",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "D = 2326 ± 12 km, pV = 96+9 -4 % (Sicardy et al. 2011)"
       ],
@@ -5178,7 +5184,7 @@
     },
     "muller-2014-itokawa": {
       "url": "https://arxiv.org/abs/1404.5842",
-      "retrieved": "2026-10-07",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "we assign a geometric albedo of 0.29±0.02 for"
       ],
@@ -5192,7 +5198,7 @@
     },
     "fornasier-2015-67p": {
       "url": "https://arxiv.org/abs/1505.06888",
-      "retrieved": "2026-10-07",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "The geometric albedo of the comet is 6.5$\\pm$0.2\\% at 649 nm"
       ],
@@ -5208,7 +5214,7 @@
   "nssdcaDefinitions": {
     "hemisphereAverage": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/planetfact_notes.html",
-      "retrieved": "2026-10-12",
+      "retrieved": "2026-10-22",
       "verifiedQuotes": [
         "For Mercury and the Moon, for example, this is an average over the sunlit (very hot) and dark (very cold) hemispheres and so is not representative of any given region on the planet"
       ]

@@ -1513,6 +1513,44 @@ async function sbdbInterstellar() {
       throw new Error(
         `SBDB ${target.sstr} : « ${json.object.fullname} » au lieu de « ${target.expect} »`
       );
+    // SOLUTION ÉPINGLÉE. La SBDB ne sert que sa solution COURANTE, et elle peut la remplacer par
+    // une solution temporaire d'un autre arc (3I/ATLAS, 2026-10-21 : 117 observations contre 782,
+    // éléments à plusieurs sigma). On ne reprend alors PAS la neuve, on garde l'entrée précédente
+    // avec sa vraie date de lecture et on écrit ce que la source sert à présent. Une solution neuve
+    // qui n'est PAS déclarée temporaire n'est jamais épinglée : c'est une décision, le relevé échoue.
+    if (target.pinSolution) {
+      const live = json.orbit ?? {};
+      if (String(live.soln_date ?? '').startsWith(target.pinSolution)) {
+        // La solution épinglée est de nouveau servie : lecture normale.
+      } else {
+        const kept = PREVIOUS.sbdbInterstellar?.[body];
+        if (!/temporary/i.test(live.comment ?? ''))
+          throw new Error(
+            `SBDB ${target.sstr} : solution du ${live.soln_date} au lieu de ${target.pinSolution}, et non déclarée temporaire : à adopter ou à épingler en connaissance de cause`
+          );
+        if (!kept || !String(kept.solutionDate).startsWith(target.pinSolution))
+          throw new Error(
+            `SBDB ${target.sstr} : aucune entrée du ${target.pinSolution} à reprendre dans le relevé précédent`
+          );
+        console.warn(
+          `solution épinglée : sbdbInterstellar.${body} reste au ${target.pinSolution} (la SBDB sert « ${live.comment} », ${live.n_obs_used} observations)`
+        );
+        out[body] = {
+          ...kept,
+          pinned: {
+            reason: target.pinReason,
+            liveSeen: {
+              retrieved: response.retrieved,
+              comment: live.comment,
+              solutionDate: live.soln_date ?? null,
+              firstObservation: live.first_obs ?? null,
+              observationsUsed: live.n_obs_used ?? null,
+            },
+          },
+        };
+        continue;
+      }
+    }
     const element = (name) => {
       const el = (json.orbit?.elements ?? []).find((e) => e.name === name);
       if (!el) throw new Error(`SBDB ${target.sstr} : élément ${name} absent`);
