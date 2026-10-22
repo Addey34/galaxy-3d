@@ -83,7 +83,14 @@ jobs:
       # ajoute 11 scenarios en 16 s en local, plus l'installation de Chromium.
       #
       # Bloquant, parce qu'une page publiee illisible est un defaut visible par un visiteur.
-      - run: pnpm exec playwright install --with-deps chromium
+      # SANS `--with-deps` depuis le 2026-10-22. Mesure sur les journaux : le navigateur se
+      # telecharge en 8 s, et c'est l'`apt` de `--with-deps` qui traine sur le miroir tiers
+      # azure.archive.ubuntu.com ("Fetched 25.9 MB in 8min 39s (50.0 kB/s)" sur le shard 1 de
+      # `main`, run 39843244000), de 0 a 2 min le plus souvent et de 8 a 12 min par
+      # intermittence : trois jobs coupes ce jour-la, aux tests sains. Hypothese a confirmer par
+      # les runs : l'image ubuntu-24.04 porte deja les bibliotheques ; si une manquait, Chromium
+      # refuserait de demarrer, ce qui se voit tout de suite (voir la PR qui a fait ce retrait).
+      - run: pnpm exec playwright install chromium
       - name: Check the generated pages in a browser
         run: pnpm test:pages
 
@@ -147,7 +154,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install chromium
       - run: pnpm exec playwright test e2e/smoke.spec.ts
       - name: Upload Playwright diagnostics
         if: failure()
@@ -283,7 +290,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install chromium
         timeout-minutes: 12
       # LE PROCESSEUR DE LA MACHINE, imprime avant les tests (ligne 44.3, 2026-10-02). GitHub ne
       # sert pas toujours le meme : mesure ce jour-la sur la vue Terre, en rendu logiciel, une
