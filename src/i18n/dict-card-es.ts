@@ -9,6 +9,7 @@ export const cardEs: Record<CardMessageKey, string> = {
   'search.group.discovery': 'Descubrimientos',
   'search.group.flyby': 'Sobrevuelos',
   'search.group.orbitInsertion': 'Inserciones en órbita',
+  'search.group.perihelion': 'Perihelios',
   'search.group.contact': 'Contactos',
   'search.missionPage': 'página de la misión',
   'surface.compare.slider': 'Cortina antes y después',

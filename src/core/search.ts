@@ -4,7 +4,7 @@
  *
  * Six types en plus des corps (que la palette cherche déjà en mémoire) : les couches de données
  * de l'application (qu'un résultat ACTIVE), les formations nommées par l'UAI, les missions du
- * PDS, les instruments d'une sonde, les survols, les mises en orbite et les contacts mesurés
+ * PDS, les instruments d'une sonde, les survols, les mises en orbite, les périhélies et les contacts mesurés
  * (lot 49) et les découvertes (on cherche « Herschel »
  * et on trouve les lunes qu'il a vues).
  * Chaque résultat porte ce qu'il faut pour AGIR (le corps, la sonde, la date), pas seulement un
@@ -18,6 +18,7 @@ export type SearchKind =
   | 'instrument'
   | 'flyby'
   | 'orbitInsertion'
+  | 'perihelion'
   | 'contact'
   | 'discovery';
 
@@ -29,6 +30,7 @@ const SEARCH_KINDS: readonly SearchKind[] = [
   'instrument',
   'flyby',
   'orbitInsertion',
+  'perihelion',
   'contact',
   'discovery',
 ];
@@ -42,6 +44,8 @@ export interface SearchIndexFile {
   flybys: [string, string, string][];
   /** [sonde, corps, premier instant lié] (lot 49). */
   orbitInsertions?: [string, string, string][];
+  /** [sonde, Soleil, instant du périhélie] (lot 69), même forme que les mises en orbite. */
+  perihelia?: [string, string, string][];
   /** [sonde, corps, instant du contact] (lot 49, pas 3). */
   contacts?: [string, string, string][];
   /** [nom ou null (alors celui du corps), corps à montrer, jour ou année, découvreurs ou null] */
@@ -68,6 +72,13 @@ export type SearchHit =
     }
   | {
       kind: 'orbitInsertion';
+      label: string;
+      probe: string;
+      body: string;
+      at: string;
+    }
+  | {
+      kind: 'perihelion';
       label: string;
       probe: string;
       body: string;
@@ -137,6 +148,7 @@ export function prepareSearchIndex(
     instrument: [],
     flyby: [],
     orbitInsertion: [],
+    perihelion: [],
     contact: [],
     discovery: [],
   };
@@ -169,6 +181,15 @@ export function prepareSearchIndex(
   for (const [probe, body, at] of file.orbitInsertions ?? []) {
     const label = `${nameOf(probe)} · ${nameOf(body)} · ${at.slice(0, 10)}`;
     add({ kind: 'orbitInsertion', label, probe, body, at }, `${probe} ${body}`);
+  }
+  for (const [probe, body, at] of file.perihelia ?? []) {
+    const label = `${nameOf(probe)} · ${nameOf(body)} · ${at.slice(0, 10)}`;
+    // Le mot du type, dans les quatre langues : on cherche « périhélie » sans connaître le nom
+    // d'une sonde. Les accents sont repliés par `fold`, donc « perihelie » trouve « périhélie ».
+    add(
+      { kind: 'perihelion', label, probe, body, at },
+      `${probe} ${body} perihelion perihelie perihelio perielio`
+    );
   }
   for (const [probe, body, at] of file.contacts ?? []) {
     const label = `${nameOf(probe)} · ${nameOf(body)} · ${at.slice(0, 10)}`;

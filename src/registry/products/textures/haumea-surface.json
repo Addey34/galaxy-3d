@@ -30,9 +30,9 @@
     "projection": "unknown",
     "qualityClass": "illustrative",
     "note": "Distant rapidly rotating body; current map is illustrative. Revérifié le 2026-09-29 contre le catalogue USGS Astrogeology, avec témoin : l'identifiant de produit « haumea_image_mosaic » rend exactement les 12 012 octets d'un identifiant qui n'a jamais existé, là où deux contrôles positifs (rhea_image_mosaic, enceladus_image_mosaic) rendent 15 048 et 14 953. Aucune mosaïque photographique globale n'y est donc publiée pour ce corps.",
-    "license": "unconfirmed",
-    "credit": "unconfirmed",
+    "license": "CC-BY-4.0",
+    "credit": "Solar System Scope (solarsystemscope.com)",
     "attributionNeeded": true,
-    "provenanceNote": "No spacecraft map exists — texture is necessarily fictional. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
+    "provenanceNote": "Carte fictive (aucune sonde n'a cartographié ce corps), publiée par Solar System Scope dans son lot « Fictional » sous Attribution 4.0 : « You may use, adapt, and share these textures for any purpose, even commercially » (https://www.solarsystemscope.com/textures/, lu le 2026-10-22). Fichier livré identifié à la source le 2026-10-22 : corrélation de 1,000 avec 2k_haumea_fictional.jpg, et de -0,13 à 0,13 avec les deux cartes des autres corps du lot (témoins). L'hypothèse d'une source communautaire en CC BY-NC-SA, écrite ici avant, est réfutée."
   }
 }

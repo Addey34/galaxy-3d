@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "dione-cassini-voyager-global-154m",
+  "type": "tileset",
+  "body": "dione",
+  "title": "Dione Cassini - Voyager global mosaic, 154 m (Dione_Cassini_Voyageglobal_154m)",
+  "providerId": "nasa-trek",
+  "mission": "Cassini-Huygens, Voyager 1, Voyager 2",
+  "instrument": "Imaging Science Subsystem (Cassini) and ISS (Voyager)",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Dione/EQ/Dione_Cassini_Voyageglobal_154m/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 5
+  },
+  "publishedPixelsPerDegree": 64,
+  "acquired": {
+    "interval": [["1980-09-21T12:38:57Z", "2017-08-02T20:39:01Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Dione/EQ/Dione_Cassini_Voyageglobal_154m/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/dione_cassini_voyager_global_mosaic_154m"
+    },
+    {
+      "rel": "via",
+      "href": "https://opus.pds-rings.seti.org/opus/api/data.json?target=DIONE&cols=opusid,instrument,time1,time2&limit=1&order=time1"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/dione/"
+    },
+    {
+      "name": "NASA/JPL-Caltech/Space Science Institute, Cassini ISS Team; NASA Voyager Imaging Team",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/dione_cassini_voyager_global_mosaic_154m"
+    }
+  ],
+  "verified": "2026-10-21"
+}

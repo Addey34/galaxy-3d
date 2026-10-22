@@ -57,6 +57,21 @@ Un répertoire d'une cuisson précédente peut rester tant qu'un visiteur garde 
 il se retire à la main une fois le nouveau livré. L'ingestion GFS n'élague que `gfs/`, `era5/` et
 `era5t/`, jamais `assets/`.
 
+## Les mosaïques d'imagerie (lot 66)
+
+Pour un corps sans service de tuiles public (Pluton), `pnpm imagery:bake` cuit le fichier publié
+par l'USGS en tuiles JPEG dans `.cache/galaxy-data/assets/imagery/<id>/<hachage>/default/galaxy-eq2x1/`
+et écrit leur manifeste dans `public/assets/imagery/<id>/manifest.json`. Même téléversement que les
+tuiles de hauteurs, MÊME ORDRE : les tuiles AVANT la fiche et le manifeste qui les nomment, car une
+tuile absente répond 404 sans en-tête CORS et se lit comme un refus CORS. Le Caddyfile ajoute un
+cache immuable sur `/assets/imagery/*` : il se REDÉPLOIE (`scp` puis `docker compose up -d --build`).
+
+```bash
+tar cf imagery.tar -C .cache/galaxy-data assets/imagery
+scp imagery.tar ubuntu@82.70.233.45:/tmp/
+ssh ubuntu@82.70.233.45 'docker run --rm -v galaxy-data_galaxy_data:/srv -v /tmp/imagery.tar:/in.tar:ro alpine tar xf /in.tar -C /srv && rm /tmp/imagery.tar'
+```
+
 ## Vérifier
 
 ```bash

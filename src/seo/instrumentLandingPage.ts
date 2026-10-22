@@ -59,7 +59,7 @@ export interface InstrumentPageInputs {
    * un nom sans lien.
    */
   missionPages?: ReadonlyMap<string, string>;
-  /** Par langue, objet → fragment HTML de ses survols et mises en orbite. */
+  /** Par langue, objet → fragment HTML de ses survols, mises en orbite, périhélies et contacts. */
   events?: (locale: Locale) => ReadonlyMap<string, string>;
 }
 

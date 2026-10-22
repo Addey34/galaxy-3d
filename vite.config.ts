@@ -431,6 +431,13 @@ function bodyLandingPages() {
             'utf-8'
           )
         ) as import('./src/seo/orbitInsertionPages').OrbitInsertionRecord;
+        /** LES PÉRIHÉLIES (lot 69) : le relevé écrit par `pnpm perihelia:generate`, listé après les mises en orbite. */
+        const perihelionSeo = (await loader.ssrLoadModule(
+          '/src/seo/perihelionPages.ts'
+        )) as typeof import('./src/seo/perihelionPages');
+        const perihelionRecord = JSON.parse(
+          await readFile(resolve(__dirname, 'src/seo/perihelia.json'), 'utf-8')
+        ) as import('./src/seo/perihelionPages').PerihelionRecord;
         /** LES CONTACTS (lot 49, pas 3) : le relevé écrit par `pnpm contacts:generate`, listé après. */
         const contactSeo = (await loader.ssrLoadModule(
           '/src/seo/surfaceContactPages.ts'
@@ -453,6 +460,11 @@ function bodyLandingPages() {
           );
           for (const [id, html] of orbitSeo.orbitInsertionListsByObject(
             { ...inputs, record: orbitRecord },
+            locale
+          ))
+            lists.set(id, (lists.get(id) ?? '') + html);
+          for (const [id, html] of perihelionSeo.perihelionListsByObject(
+            { ...inputs, record: perihelionRecord },
             locale
           ))
             lists.set(id, (lists.get(id) ?? '') + html);
@@ -1137,6 +1149,27 @@ function bodyLandingPages() {
             `pages des mises en orbite : ${orbitDocPages.length} au lieu de ${(orbitRecord.insertions.length + 1) * DOC_LOCALE_COUNT}`
           );
         docPages.push(...orbitDocPages);
+        // Les périhélies : l'index plus une page par périhélie, dans chaque langue.
+        const perihelionDocPages = [undefined, ...OTHER_LOCALES].flatMap(
+          (locale) =>
+            perihelionSeo.perihelionPages(
+              {
+                record: perihelionRecord,
+                config: catalogue.CELESTIAL_CONFIG,
+                navigable: navigable.NAVIGABLE_TARGETS,
+                origin: SITE_ORIGIN,
+              },
+              locale ?? 'en'
+            )
+        );
+        if (
+          perihelionDocPages.length !==
+          (perihelionRecord.perihelia.length + 1) * DOC_LOCALE_COUNT
+        )
+          throw new Error(
+            `pages des périhélies : ${perihelionDocPages.length} au lieu de ${(perihelionRecord.perihelia.length + 1) * DOC_LOCALE_COUNT}`
+          );
+        docPages.push(...perihelionDocPages);
         // Les contacts : l'index plus une page par contact, dans chaque langue.
         const contactDocPages = [undefined, ...OTHER_LOCALES].flatMap(
           (locale) =>

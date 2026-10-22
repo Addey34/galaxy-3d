@@ -47,6 +47,8 @@ const WITNESSES: readonly {
 }[] = [
   { body: 'pluto', feature: 'Sputnik Planitia', tone: 'bright' },
   { body: 'pluto', feature: 'Belton Regio', tone: 'dark' },
+  { body: 'triton', feature: 'Cipango Planum', tone: 'bright' },
+  { body: 'io', feature: 'Loki Patera', tone: 'dark' },
   { body: 'ganymede', feature: 'Tros', tone: 'bright' },
   { body: 'callisto', feature: 'Valhalla', tone: 'bright' },
   { body: 'titan', feature: 'Xanadu', tone: 'bright' },

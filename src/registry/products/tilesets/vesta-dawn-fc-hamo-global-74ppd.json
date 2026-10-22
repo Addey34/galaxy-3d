@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "vesta-dawn-fc-hamo-global-74ppd",
+  "type": "tileset",
+  "body": "vesta",
+  "title": "Vesta Dawn FC HAMO global mosaic, 74 ppd (Vesta_Dawn_FC_HAMO_Mosaic_Global_74ppd)",
+  "providerId": "nasa-trek",
+  "mission": "Dawn",
+  "instrument": "Framing Camera (FC)",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Vesta/EQ/Vesta_Dawn_FC_HAMO_Mosaic_Global_74ppd/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 6
+  },
+  "publishedPixelsPerDegree": 74.1778,
+  "acquired": {
+    "interval": [["2011-10-06T14:28:08Z", "2011-10-16T01:20:42Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Vesta/EQ/Vesta_Dawn_FC_HAMO_Mosaic_Global_74ppd/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/vesta_dawn_fc_hamo_global_mosaic_60m"
+    },
+    {
+      "rel": "via",
+      "href": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNVFC2_1B/INDEX/INDEX.TAB"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/vesta/"
+    },
+    {
+      "name": "NASA/JPL-Caltech/UCLA/MPS/DLR/IDA, Dawn Team",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/vesta_dawn_fc_hamo_global_mosaic_60m"
+    }
+  ],
+  "verified": "2026-10-21"
+}

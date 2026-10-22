@@ -1146,14 +1146,6 @@ const ARTICLES = {
       "Titan is Saturn's largest moon, and the only moon in our solar system known to have a substantial atmosphere.",
     ],
   },
-  'nasa-didymos-dimorphos': {
-    url: 'https://science.nasa.gov/solar-system/asteroids/didymos/',
-    quotes: [
-      'The moonlet, Dimorphos (Didymos B), is about 525 feet (160 meters) in diameter.',
-      'shortening the 11-hour and 55-minute orbit to 11 hours and 23 minutes',
-      'margin of uncertainty of approximately plus or minus 2 minutes',
-    ],
-  },
   // LE SYSTÈME DE DIDYMOS APRÈS DART (2026-10-07) : la synthèse de l'équipe de dynamique de la
   // mission (Richardson et al. 2024, PSJ 5, 182), table 2 du PDF. Elle donne la distance des
   // centres APRÈS l'impact, et dit que la rotation de Dimorphos est « pending » et sa masse la
@@ -1162,6 +1154,8 @@ const ARTICLES = {
     arxivPdf: '2502.14990v1',
     quotes: [
       'Mean Separation of Component Centerse [km] 1.20 ± 0.03 1.189 ± 0.017 1.152 ± 0.018',
+      'Mutual Orbital Periodh [h] 11.921629 ± 0.000003 11.921493 ± 0.000016 11.3674 ± 0.0004',
+      'Volume-Equivalent Diameter of Secondaryc [m] 164 ± 18 150.0 ± 2.5 assumed unchanged',
       'Secondary Rotation Periodk [h] 11.921629 ± 0.000003 11.92149 ± 0.00002 pending',
       'The largest uncertainty in the momentum transfer enhancement factor of the DART impact remains the mass of Dimorphos, which will be resolved by the Hera mission.',
       'may have entered a tumbling rotation state',
@@ -1519,6 +1513,44 @@ async function sbdbInterstellar() {
       throw new Error(
         `SBDB ${target.sstr} : « ${json.object.fullname} » au lieu de « ${target.expect} »`
       );
+    // SOLUTION ÉPINGLÉE. La SBDB ne sert que sa solution COURANTE, et elle peut la remplacer par
+    // une solution temporaire d'un autre arc (3I/ATLAS, 2026-10-21 : 117 observations contre 782,
+    // éléments à plusieurs sigma). On ne reprend alors PAS la neuve, on garde l'entrée précédente
+    // avec sa vraie date de lecture et on écrit ce que la source sert à présent. Une solution neuve
+    // qui n'est PAS déclarée temporaire n'est jamais épinglée : c'est une décision, le relevé échoue.
+    if (target.pinSolution) {
+      const live = json.orbit ?? {};
+      if (String(live.soln_date ?? '').startsWith(target.pinSolution)) {
+        // La solution épinglée est de nouveau servie : lecture normale.
+      } else {
+        const kept = PREVIOUS.sbdbInterstellar?.[body];
+        if (!/temporary/i.test(live.comment ?? ''))
+          throw new Error(
+            `SBDB ${target.sstr} : solution du ${live.soln_date} au lieu de ${target.pinSolution}, et non déclarée temporaire : à adopter ou à épingler en connaissance de cause`
+          );
+        if (!kept || !String(kept.solutionDate).startsWith(target.pinSolution))
+          throw new Error(
+            `SBDB ${target.sstr} : aucune entrée du ${target.pinSolution} à reprendre dans le relevé précédent`
+          );
+        console.warn(
+          `solution épinglée : sbdbInterstellar.${body} reste au ${target.pinSolution} (la SBDB sert « ${live.comment} », ${live.n_obs_used} observations)`
+        );
+        out[body] = {
+          ...kept,
+          pinned: {
+            reason: target.pinReason,
+            liveSeen: {
+              retrieved: response.retrieved,
+              comment: live.comment,
+              solutionDate: live.soln_date ?? null,
+              firstObservation: live.first_obs ?? null,
+              observationsUsed: live.n_obs_used ?? null,
+            },
+          },
+        };
+        continue;
+      }
+    }
     const element = (name) => {
       const el = (json.orbit?.elements ?? []).find((e) => e.name === name);
       if (!el) throw new Error(`SBDB ${target.sstr} : élément ${name} absent`);

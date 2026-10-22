@@ -361,6 +361,7 @@ export const es: Record<MessageKey, string> = {
   'surface.imagery.headline': '{title} a {resolution}/píxel',
   'surface.imagery.day': 'imagen del {day}',
   'surface.imagery.acquired': 'imágenes de {from} a {to}',
+  'surface.imagery.acquiredOneMonth': 'imágenes de {month}',
   'surface.imagery.oversampled':
     'mostrada {factor} veces más grande que el mosaico publicado ({published} px/grado)',
   'surface.imagery.oceanMatched':
@@ -593,6 +594,8 @@ export const es: Record<MessageKey, string> = {
   'detail.massFromGM': 'masa = GM / G, con G de CODATA 2018',
   'detail.gravityFromGM': 'g = GM / R², para una esfera sin rotación',
   'detail.radiusFromDiameter': 'la mitad del diámetro publicado',
+  'detail.radiusFromVolumeDiameter':
+    'la mitad del diámetro equivalente en volumen publicado (el valor previo al impacto, que se da por inalterado por el impacto)',
   'detail.equatorialRadiusFromDiameter':
     'la mitad del diámetro ecuatorial publicado',
   'detail.volumetricRadiusFromDiameter':

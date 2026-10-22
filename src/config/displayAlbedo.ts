@@ -6,9 +6,10 @@
  * Import NOMMÉ de `gains` seul : Vite écarte du bundle les lignes détaillées (`rows`), avec leurs
  * raisons et leurs sources, que seuls le test et l'inventaire lisent.
  */
-import { gains } from './displayAlbedo.json';
+import { albedos, gains } from './displayAlbedo.json';
 
 const table: Readonly<Record<string, number>> = gains;
+const published: Readonly<Record<string, number>> = albedos;
 
 /**
  * Gain de luminosité de la surface d'un corps (texture drapée ou couleur cuite d'un modèle) : 1
@@ -16,4 +17,9 @@ const table: Readonly<Record<string, number>> = gains;
  */
 export function displayGain(body: string): number {
   return table[body] ?? 1;
+}
+
+/** Albédo géométrique publié d'un corps réglé par la règle, ou `undefined` hors de la règle. */
+export function publishedAlbedo(body: string): number | undefined {
+  return published[body];
 }

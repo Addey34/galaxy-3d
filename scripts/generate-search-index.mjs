@@ -15,6 +15,7 @@
  *   - instruments  public/assets/instruments/{sonde}.json        (pnpm instruments:generate)
  *   - survols      src/seo/flybyEvents.json                      (pnpm flybys:generate)
  *   - mises en orbite src/seo/orbitInsertions.json               (pnpm orbits:generate)
+ *   - périhélies      src/seo/perihelia.json                     (pnpm perihelia:generate)
  *   - contacts     src/seo/surfaceContacts.json                  (pnpm contacts:generate)
  *   - découvertes  public/assets/discovery/{parent}.json et src/config/discoveryIndex.json
  *                                                                (pnpm discovery:generate)
@@ -102,6 +103,13 @@ export function buildSearchIndex() {
     (i) => [i.probe, i.body, i.at]
   );
 
+  // [sonde, Soleil, instant] : les périhélies (lot 69), même forme et même geste.
+  const perihelia = read('src/seo/perihelia.json').perihelia.map((p) => [
+    p.probe,
+    'sun',
+    p.at,
+  ]);
+
   // [sonde, corps, instant où la scène s'ouvre] : les contacts (lot 49, pas 3). L'instant de la
   // SCÈNE et non celui du contact : sous le niveau de 1 bar, la sonde n'est plus dessinée.
   const contacts = read('src/seo/surfaceContacts.json').contacts.map((c) => [
@@ -152,6 +160,7 @@ export function buildSearchIndex() {
     instruments,
     flybys,
     orbitInsertions,
+    perihelia,
     contacts,
     discoveries,
   };
@@ -182,7 +191,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log(
       `index de recherche : ${Object.values(index.places).flat().length} lieux, ${index.missions.length} missions, ` +
         `${index.instruments.length} instruments, ${index.flybys.length} survols, ` +
-        `${index.orbitInsertions.length} mises en orbite, ${index.contacts.length} contacts, ` +
+        `${index.orbitInsertions.length} mises en orbite, ${index.perihelia.length} périhélies, ${index.contacts.length} contacts, ` +
         `${index.discoveries.length} découvertes, ${text.length} o`
     );
   }

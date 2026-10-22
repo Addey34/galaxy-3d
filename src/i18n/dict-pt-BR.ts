@@ -357,6 +357,7 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.imagery.headline': '{title} a {resolution}/pixel',
   'surface.imagery.day': 'imagem de {day}',
   'surface.imagery.acquired': 'imagens de {from} a {to}',
+  'surface.imagery.acquiredOneMonth': 'imagens de {month}',
   'surface.imagery.oversampled':
     'exibida {factor} vezes maior que o mosaico publicado ({published} px/grau)',
   'surface.imagery.oceanMatched': 'cor do oceano levada à da textura de base',
@@ -588,6 +589,8 @@ export const ptBR: Record<MessageKey, string> = {
   'detail.massFromGM': 'massa = GM / G, com G de CODATA 2018',
   'detail.gravityFromGM': 'g = GM / R², para uma esfera sem rotação',
   'detail.radiusFromDiameter': 'metade do diâmetro publicado',
+  'detail.radiusFromVolumeDiameter':
+    'metade do diâmetro equivalente em volume publicado (o valor anterior ao impacto, dado como inalterado pelo impacto)',
   'detail.equatorialRadiusFromDiameter':
     'metade do diâmetro equatorial publicado',
   'detail.volumetricRadiusFromDiameter':

@@ -73,7 +73,7 @@
       "value": 0,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-10-04",
+      "asOf": "2026-10-22",
       "detail": "confirmedSatellites"
     },
     "axialTilt": {

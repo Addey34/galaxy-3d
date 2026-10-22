@@ -571,6 +571,26 @@ for (const { body, layer, extension } of [
     layer: 'Europa_Voyager_GalileoSSI_global_mosaic_500m',
     extension: 'png',
   },
+  {
+    body: 'callisto',
+    layer: 'Callisto_Voyager_GalileoSSI_global_mosaic_1km',
+    extension: 'png',
+  },
+  {
+    body: 'vesta',
+    layer: 'Vesta_Dawn_FC_HAMO_Mosaic_Global_74ppd',
+    extension: 'jpg',
+  },
+  {
+    body: 'enceladus',
+    layer: 'Enceladus_Cassini_mosaic_global_110m',
+    extension: 'jpg',
+  },
+  {
+    body: 'dione',
+    layer: 'Dione_Cassini_Voyageglobal_154m',
+    extension: 'jpg',
+  },
 ])
   test(`paints ${body} from its tile set record alone`, async ({ page }) => {
     const errors: string[] = [];
@@ -718,4 +738,66 @@ test('displaces Ceres with the Dawn terrain model, on its fitted ellipsoid', asy
 
   await expectAltitudeInManifestRange(page, probe, 'ceres');
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
+ * PLUTON, CHARON, TRITON (lots 66 et 67) : leurs tuiles ne viennent pas d'un Trek mais du service de
+ * données de Galaxy, cuites depuis les mosaïques de l'USGS. L'adresse porte le HACHAGE de la
+ * cuisson, donc une adresse ne change jamais d'octets (cache immuable) ; le test lit ce hachage
+ * dans le manifeste livré, et non dans la fiche, pour que les deux soient croisés ici comme dans
+ * `imageryManifest.test.ts`.
+ */
+for (const { body, id } of [
+  { body: 'pluto', id: 'pluto-newhorizons-global-300m' },
+  { body: 'charon', id: 'charon-newhorizons-global-300m' },
+  { body: 'triton', id: 'triton-voyager2-global-600m' },
+]) {
+  test(`paints ${body} from the baked tiles of the Galaxy data service`, async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    const seen = await serveTiles(page);
+    const manifest = JSON.parse(
+      readFileSync(
+        resolve(HERE, `../public/assets/imagery/${id}/manifest.json`),
+        'utf8'
+      )
+    ) as { hash: string };
+
+    await boot(page, `?debug-surface&mode=explo&body=${body}`);
+    await expect(page.locator('#surface-probe')).toContainText(body, {
+      timeout: 30_000,
+    });
+    await zoomIn(page);
+    const badge = page.locator('#surface-imagery');
+    await expect(badge).toBeVisible({ timeout: 30_000 });
+    expect(seen.length, 'aucune tuile demandée en approche').toBeGreaterThan(0);
+    for (const request of seen) {
+      expect(request.url()).toContain(
+        `https://galaxy-data.adrianguichard.dev/assets/imagery/${id}/${manifest.hash}/default/galaxy-eq2x1/`
+      );
+      expect(request.url()).toMatch(/\/\d+\/\d+\/\d+\.jpg$/);
+    }
+    await expect(badge.locator('.si-credit')).toContainText('NASA');
+    expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+  });
+}
+
+/**
+ * Un jeu dont l'intervalle tient dans UN mois (Charon, juillet 2015) ne s'écrit pas « de juillet
+ * 2015 à juillet 2015 » : le bandeau nomme le mois une fois. Falsifié en retirant la branche de
+ * `surfacePanel.ts`, le texte redevient « from July 2015 to July 2015 ».
+ */
+test('names a single month once in the imagery badge', async ({ page }) => {
+  await serveTiles(page);
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=charon&date=2015-07-14T12:00:00Z'
+  );
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  await expect(badge).toContainText('images from July 2015');
+  await expect(badge).not.toContainText('July 2015 to July 2015');
 });

@@ -51,6 +51,8 @@ export const MISSIONS_SLUG = 'missions';
 export const FLYBYS_SLUG = 'flybys';
 /** Les mises en orbite (lot 49), même forme : `/orbit-insertions/juno-jupiter-2016-07-05/`. */
 export const ORBIT_INSERTIONS_SLUG = 'orbit-insertions';
+/** Les périhélies (lot 69), même forme : `/perihelia/parker-solar-probe-2024-12-24/`. */
+export const PERIHELIA_SLUG = 'perihelia';
 /** Les contacts avec un corps (lot 49, pas 3), même forme : `/contacts/rosetta-churyumov-gerasimenko-2016-09-30/`. */
 export const CONTACTS_SLUG = 'contacts';
 /** Les grands lieux nommés (lot 55), même forme : `/places/` et `/places/moon/tycho/`. */
@@ -64,6 +66,7 @@ const NAV_SLUGS: readonly string[] = [
   MISSIONS_SLUG,
   FLYBYS_SLUG,
   ORBIT_INSERTIONS_SLUG,
+  PERIHELIA_SLUG,
   CONTACTS_SLUG,
   PLACES_SLUG,
   ACTIVITIES_SLUG,
@@ -136,6 +139,12 @@ const NAV: Record<string, DocText> = {
     fr: 'Mises en orbite',
     es: 'Inserciones en órbita',
     'pt-BR': 'Inserções em órbita',
+  },
+  perihelia: {
+    en: 'Perihelia',
+    fr: 'Périhélies',
+    es: 'Perihelios',
+    'pt-BR': 'Periélios',
   },
   contacts: {
     en: 'Contacts',

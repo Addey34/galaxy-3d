@@ -37,3 +37,25 @@ export function judgeHeaders(
   served: Record<string, string>
 ): Verdict;
 export function judgeConsole(errors: string[]): Verdict;
+
+export interface BakedTileset {
+  id: string;
+  template: string;
+  style: string;
+  tileMatrixSet: string;
+  matrix: { columnsAtLevelZero: number; rowsAtLevelZero: number };
+  maxLevel: number;
+}
+export function bakedTileProbes(
+  set: BakedTileset
+): { id: string; kind: string; url: string }[];
+export function judgeBakedTile(
+  kind: string,
+  response: {
+    status: number;
+    contentType: string | null;
+    headers: Record<string, string>;
+    bytes: number;
+  },
+  origin: string
+): Verdict;

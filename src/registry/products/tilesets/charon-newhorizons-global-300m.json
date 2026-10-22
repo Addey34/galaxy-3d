@@ -1,0 +1,68 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "charon-newhorizons-global-300m",
+  "type": "tileset",
+  "body": "charon",
+  "title": "Charon New Horizons LORRI - MVIC Global Mosaic 300m (Charon_NewHorizons_Global_Mosaic_300m_Jul2017)",
+  "providerId": "galaxy-data-tiles",
+  "mission": "New Horizons",
+  "instrument": "Long Range Reconnaissance Imager (LORRI) and Multispectral Visible Imaging Camera (MVIC)",
+  "service": {
+    "template": "https://galaxy-data.adrianguichard.dev/assets/imagery/charon-newhorizons-global-300m/6235b0f0c504/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "galaxy-eq2x1",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 5
+  },
+  "publishedPixelsPerDegree": 35.26,
+  "acquired": {
+    "interval": [["2015-07-07T22:46:05Z", "2015-07-18T00:38:30Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://galaxy.adrianguichard.dev/assets/imagery/charon-newhorizons-global-300m/manifest.json"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/charon_new_horizons_lorri_mvic_global_mosaic_300m"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-smallbodies.astro.umd.edu/holdings/nh-p-lorri-3-pluto-v3.0/index/index.tab"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-smallbodies.astro.umd.edu/holdings/nh-p-mvic-3-pluto-v3.0/index/index.tab"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Galaxy",
+      "roles": ["host"],
+      "url": "https://galaxy.adrianguichard.dev/"
+    },
+    {
+      "name": "NASA, Johns Hopkins University Applied Physics Laboratory, Southwest Research Institute, New Horizons Team",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/charon_new_horizons_lorri_mvic_global_mosaic_300m"
+    }
+  ],
+  "verified": "2026-10-21"
+}

@@ -404,26 +404,22 @@ const ARTICLE_VALUES: Record<
       },
     },
   },
-  'nasa-didymos-dimorphos': {
-    dimorphos: {
-      radiusKm: {
-        value: 0.16 / 2,
-        quote:
-          'The moonlet, Dimorphos (Didymos B), is about 525 feet (160 meters) in diameter.',
-      },
-      orbitPeriodDays: {
-        value: (11 + 23 / 60) / 24,
-        quote:
-          'shortening the 11-hour and 55-minute orbit to 11 hours and 23 minutes',
-      },
-    },
-  },
   'richardson-2024-didymos': {
     dimorphos: {
       distanceAU: {
         value: 1.152 / KM_PER_AU,
         quote:
           'Mean Separation of Component Centerse [km] 1.20 ± 0.03 1.189 ± 0.017 1.152 ± 0.018',
+      },
+      radiusKm: {
+        value: 150.0 / 2 / 1000,
+        quote:
+          'Volume-Equivalent Diameter of Secondaryc [m] 164 ± 18 150.0 ± 2.5 assumed unchanged',
+      },
+      orbitPeriodDays: {
+        value: 11.3674 / 24,
+        quote:
+          'Mutual Orbital Periodh [h] 11.921629 ± 0.000003 11.921493 ± 0.000016 11.3674 ± 0.0004',
       },
     },
   },
@@ -1118,6 +1114,35 @@ describe('faits nommés : recopiés de leur source', () => {
     expect(text, `${name}.${field}`).toBe(
       field === 'launchVehicle' ? row.launchVehicle : row.launchSite
     );
+  });
+});
+
+/**
+ * SOLUTION ÉPINGLÉE. Quand la SBDB remplace une solution complète par une solution temporaire,
+ * le relevé garde l'ancienne et écrit ce que la source sert (`pinned`). Deux choses se tiennent :
+ * la solution gardée est bien celle que la fiche du registre cite, et ce que la source sert est
+ * déclaré temporaire. Sans la seconde, une vraie nouvelle solution serait ignorée en silence.
+ */
+describe('solution SBDB épinglée', () => {
+  it('garde la solution que la fiche cite, face à une solution temporaire', () => {
+    const pinned = Object.entries(sbdbInterstellar).filter(
+      ([, row]) => 'pinned' in row
+    );
+    expect(pinned.map(([name]) => name)).toEqual(['atlas']);
+    for (const [name, row] of pinned) {
+      const kept = row as unknown as {
+        solutionDate: string;
+        pinned: { liveSeen: { comment: string; solutionDate: string } };
+      };
+      const cfg = bodies.find((b) => b.name === name)!.cfg;
+      expect(cfg.realData?.sources?.eccentricity?.citation, name).toContain(
+        `orbit solution ${kept.solutionDate.slice(0, 10)}`
+      );
+      expect(kept.pinned.liveSeen.comment, name).toMatch(/temporary/i);
+      expect(kept.pinned.liveSeen.solutionDate, name).not.toBe(
+        kept.solutionDate
+      );
+    }
   });
 });
 

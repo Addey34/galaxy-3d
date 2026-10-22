@@ -221,6 +221,11 @@ const table = {
   gains: Object.fromEntries(
     rows.filter((r) => r.gain !== undefined).map((r) => [r.body, r.gain])
   ),
+  // L'albédo PUBLIÉ de chaque corps réglé par la règle : ce que lit l'exposition adaptative
+  // (`core/adaptiveExposure.ts`), qui n'a pas besoin des sources ni des textures.
+  albedos: Object.fromEntries(
+    rows.filter((r) => r.albedo !== undefined).map((r) => [r.body, r.albedo])
+  ),
   rows,
 };
 const text = `${JSON.stringify(table, null, 2)}\n`;

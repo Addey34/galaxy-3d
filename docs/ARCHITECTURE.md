@@ -2535,6 +2535,46 @@ celle de la scène à DROITE ; le visiteur déplace la ligne à la souris, au do
   deux éditions, deux attributions, clavier, axe, poignée à l'écran ; falsifié sur l'attribution et
   sur la poignée). Vérifié contre le vrai service le 2026-10-15 au-dessus de Kakhovka, à 41 km.
 
+### Les mosaïques que nous cuisons nous-mêmes (lot 66)
+
+Un corps dont la mosaïque n'existe qu'en fichier à télécharger (Pluton : le GeoTIFF de l'USGS, une
+bande, `Pluto_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif`) n'a pas de service de tuiles à
+interroger. `pnpm imagery:bake` le cuit en pyramide JPEG sur la même matrice 2 × 1 que les services
+WMTS, et le service de données de Galaxy la sert. Le moteur d'imagerie ne change pas : la fiche
+déclare un gabarit RESTful comme les autres, dont l'hôte est `galaxy-data.adrianguichard.dev`.
+
+- **Trois documents, un seul propriétaire par fait.** La recette `scripts/imagery-tile-targets.json`
+  (source, taille attendue, niveaux), le manifeste `public/assets/imagery/<id>/manifest.json` écrit
+  par le cuiseur (SHA-256 de la source, hachage du répertoire, nombre de tuiles), la fiche
+  `src/registry/products/tilesets/`. L'adresse de la fiche NOMME le répertoire haché, et
+  `src/config/imageryManifest.test.ts` croise les trois ; la fiche cite le manifeste en
+  `describedby`, parce que c'est de lui que son gabarit est recopié.
+- **L'orientation se prouve, elle ne se lit pas.** La source de Pluton est centrée sur 180°
+  (`CenterLongitude`, mesuré le 2026-10-21 : réduite à 512 × 256, elle corrèle à 0,9964 avec la
+  texture livrée après un demi-tour, à 0,8362 sans). Le cuiseur la ROULE d'une demi-largeur, donc
+  les tuiles sont à l'orientation de l'application et la fiche ne déclare PAS `centerLongitude`
+  (qui les tournerait une seconde fois). Les tuiles recomposées au niveau 3 corrèlent à 0,9966 avec
+  la texture livrée, sans décalage.
+- **Piège payé** : une image à une bande sort de `sharp` en TROIS canaux dès qu'elle est lue brute.
+  La première cuisson sortait une mosaïque brouillée (corrélation −0,33), et le cuiseur ne le voyait
+  pas : il lit désormais par `extractChannel(0)` et refuse un tampon qui n'a pas `largeur × hauteur`
+  octets.
+- **Ordre de livraison** : les tuiles sur le service de données AVANT la fiche, sinon une tuile
+  absente répond 404 sans en-tête CORS et se lit comme un refus CORS (cf. `core/tileUrl.ts`). Le
+  Caddyfile pose un cache immuable sur `/assets/imagery/*`, ce que le répertoire haché permet.
+- **Ce que la fiche ne sait pas** : l'intervalle d'acquisition est l'ENVELOPPE des images dont la
+  cible est Pluton dans les index PDS de LORRI et MVIC, pas la liste des images de la mosaïque,
+  que l'USGS ne publie pas (« nearly all of the highest-resolution images »).
+- **Charon et Triton (lot 67)** passent par le même cuiseur : Charon (12 693 × 6 347, une bande)
+  et Triton (14 138 × 7 069, TROIS bandes, d'où `source.channels` dans la recette et le manifeste),
+  tous deux au niveau 5 (le plus petit niveau dont la pyramide est au moins aussi large que la
+  source). Leurs sources sont déjà centrées sur 0° : aucun demi-tour, vérifié par corrélation
+  (niveau 3 recomposé contre texture livrée, décalage 0 : Charon 0,9967, Triton 0,9988). Triton
+  porte un témoin d'orientation nommé (Cipango Planum, clair, falsifié) ; Charon n'en porte pas,
+  faute de repère indépendant (le choisir sur la texture serait circulaire). La région nord de
+  Triton, que Voyager 2 n'a pas vue, est NOIRE dans la source : ce n'est pas un défaut de tuile.
+  Les intervalles d'acquisition sont, là aussi, des enveloppes tirées des index PDS.
+
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 
 Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS
@@ -6302,6 +6342,55 @@ Falsifiées : la manœuvre de Juno retirée, puis l'exclusion de Hayabusa2, roug
 `pnpm orbits:generate --check` sort en code 1 sur une dérive ; à rejouer après tout
 `pnpm ephemeris:flybys --write`.
 
+## Pages des périhélies (`/perihelia/`, lot 69, 2026-10-22)
+
+L'index `/perihelia/` et une page par périhélie de Parker Solar Probe ou de Solar Orbiter
+(`/perihelia/parker-solar-probe-2024-12-24/`), dans les quatre langues, même rendu et même
+routage que les survols (`NESTED_SEGMENTS`). Générateur pur : `src/seo/perihelionPages.ts`, qui
+importe de `flybyPages.ts` les noms, les nombres et l'heure au lieu de les recopier.
+
+- **Ce qui est mesuré** : `pnpm perihelia:generate` (`scripts/generate-perihelia.mjs`) lit dans
+  Horizons la position de la sonde par rapport au centre du Soleil (`CENTER 500@10`, écliptique
+  J2000, UT) sur la fenêtre que le manifeste d'éphémérides livre pour elle, à l'heure, puis garde
+  chaque minimum LOCAL (le plus petit de `halfWindowDays` jours de chaque côté, valeur écrite dans
+  le relevé et lue par les pages) et le relit à la minute puis à la seconde. Écrit
+  `src/seo/perihelia.json`. Un minimum au bord de la fenêtre n'est pas listé.
+- **La fenêtre est plafonnée** à 400 jours après la date de lecture de la réponse : Horizons sert
+  ces trajectoires jusqu'en 2030, et une prédiction à quatre ans n'est pas une information. Un
+  périhélie postérieur à sa date de lecture est une PRÉDICTION, publiée comme telle. Le plafond
+  vient de la date de lecture portée par le cache, pas de l'horloge : `--offline --check` ne
+  dérive pas d'un jour à l'autre.
+- **Témoins lus à la source avant d'écrire une ligne** (NASA Science, « NASA's Parker Solar Probe
+  Makes History With Closest Pass to Sun » ; NASA Scientific Visualization Studio 14741), le
+  2026-10-22 : le 2024-12-24, « 3.8 million miles above the surface of the Sun », « 430,000 miles
+  per hour », « 6:53 a.m. ET ». Mesuré : 6 166 860 km d'altitude (3,83 millions de milles), 190,77
+  km/s (426 700 mph), et les deux records ÉGALÉS que la NASA date des 2025-03-22 et 2025-06-19 sont
+  retrouvés aux mêmes dates, à 0,01 % d'altitude près.
+- **Un écart OUVERT, publié et non expliqué** : le minimum de distance au centre tombe à 11:40:57
+  UTC, et le SVS donne 11:53 UTC, soit 12 minutes. La distance est si plate au minimum (1,4 km à
+  12 minutes) que l'instant du minimum ne se lit que par la précision des positions d'Horizons,
+  et le temps de périhélie d'une mission peut se définir sur des éléments osculateurs. La cause
+  n'est pas établie ; la garde borne l'écart à 15 minutes.
+- **Aucun record n'est proclamé, aucun numéro de mission n'est donné.** La NASA dit que Parker a
+  ÉGALÉ son record à chaque passage depuis le 2024-12-24, alors que les distances diffèrent de
+  quelques centaines de km (une dérive réelle de l'orbite) : décider ce qui est « égal » est un
+  jugement de la mission. Le rang affiché compte les minima de la trajectoire servie à partir du
+  premier, et la page dit que ce n'est pas forcément la numérotation de la mission. L'index nomme
+  le passage MESURÉ le plus proche et le plus rapide, jamais une prédiction.
+- **Altitude** : distance au centre moins le rayon de la fiche du Soleil (695 700 km). Le Soleil
+  n'a pas de surface solide, et la page le dit.
+- **Les liens retour** : les pages de chaque sonde et du Soleil portent la liste de leurs
+  périhélies après leurs autres événements (`perihelionListsByObject`).
+
+Gardes : `src/seo/perihelionPages.test.ts` (les témoins ci-dessus ; les deux records égalés ;
+aucun périhélie de Parker plus proche avant le 2024-12-24 ; séparation d'au moins 80 jours,
+puisque la plus courte période est de 88 ; chaque minimum dans la fenêtre lue ; relevé vide,
+hors d'ordre, à chemin double ou à altitude incohérente refusé ; aucun mot « record » dans les
+pages anglaises ; prédiction marquée exactement quand elle suit la date de lecture ; voisins liés
+dans les quatre langues), falsifiée deux fois (vitesse fausse de 5 %, record égalé retiré) avant
+d'être livrée. `e2e/built-pages.spec.ts` : la famille passe axe et le débordement à 390 px dans
+les quatre langues.
+
 ## Pages des grands lieux nommés (lot 55)
 
 L'index `/places/` et une page par grande formation nommée par l'UAI, `/places/moon/mare-imbrium/`,
@@ -6463,7 +6552,7 @@ du site, fiche élève sur sa feuille).
 
 Une page d'entrée par langue (`src/seo/researchPages.ts`, module pur), sans sous-pages et SANS
 nombre : elle dit où vérifier (`/methodology/`, `/sources/`), citer (l'ancre `#citation` de la
-méthodologie), parcourir les événements datés (missions, survols, mises en orbite, contacts, grands
+méthodologie), parcourir les événements datés (missions, survols, mises en orbite, périhélies, contacts, grands
 lieux, activités) et reproduire une vue. L'adresse d'exemple est écrite par `formatPermalinkDate`,
 la fonction des liens partagés. Son slug est dans la navigation de tous les documents
 (`documentPage.ts`), donc l'empreinte des documents générés bouge d'un coup. Garde :
@@ -6866,13 +6955,13 @@ clé `STORAGE_KEYS` nouvelle à déclarer.
 La palette (`#body-palette`) ne cherchait que des noms de corps. Elle cherche désormais aussi des
 **couches de données** (les couches météo de l'application), des **lieux** (les formations
 nommées par l'UAI), des **missions** (le registre du PDS), des **instruments** (ceux qu'une sonde
-embarque), des **survols** (mesurés à la seconde) et des **découvertes** (« Herschel » trouve
+embarque), des **survols**, des **mises en orbite**, des **périhélies** et des **contacts** (tous mesurés à la seconde) et des **découvertes** (« Herschel » trouve
 Uranus, Titania, Obéron, Mimas et Encelade). Chaque
 résultat AGIT : la recherche est une navigation, pas un annuaire.
 
 **L'index se DÉRIVE.** `pnpm search:generate` (`scripts/generate-search-index.mjs`) le lit dans
 les fichiers déjà livrés (gazetteer, `missionCatalogue.json`, fichiers d'instruments,
-`flybyEvents.json`, fichiers de découverte et `discoveryIndex.json`) et écrit `public/assets/search/index.json` ; aucune entrée n'est écrite à la
+`flybyEvents.json`, `orbitInsertions.json`, `perihelia.json`, `surfaceContacts.json`, fichiers de découverte et `discoveryIndex.json`) et écrit `public/assets/search/index.json` ; aucune entrée n'est écrite à la
 main. `src/config/searchIndex.test.ts` exige que le fichier livré soit exactement ce que le
 générateur rend (falsifié par un octet), et que chaque cible nommée soit sélectionnable. À rejouer
 après tout générateur de ces sources ; `--check` sort en code 1 sur une dérive.

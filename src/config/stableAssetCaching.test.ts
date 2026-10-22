@@ -58,6 +58,8 @@ describe('actifs au nom stable : cache Firebase et service worker d’accord', (
       'non déployé (exclu par `ignore` dans firebase.json), et absent de git : posé en local par `pnpm spk:stage`',
     social:
       'jamais demandé par l’application, donc pas de règle de service worker ; Firebase le revalide',
+    imagery:
+      'seul le manifeste de cuisson est ici, jamais demandé par l’application (les tuiles hachées sont sur galaxy-data) ; Firebase le revalide',
   };
   it('classe chaque dossier livré sous public/assets, lu sur le disque', () => {
     const shipped = readdirSync(resolve(ROOT, 'public/assets'), {

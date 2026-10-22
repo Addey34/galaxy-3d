@@ -301,6 +301,8 @@ export class SolarSystemApp {
       starfield: this.systems.scene!.starfield,
       cameraSystem: this.systems.camera,
       celestialBodies: bodies,
+      onAdaptiveExposure: (multiplier) =>
+        this.systems.scene!.setAdaptiveExposure(multiplier),
     });
     progressCallback(93, t('loader.finalize'));
 

@@ -1,0 +1,45 @@
+{
+  "_doc": "LES MOSAIQUES CUITES EN TUILES PAR NOUS (lot 66, 2026-10-21), la ou aucun service de tuiles public n'existe : la source est un fichier a telecharger (USGS Astrogeology), cuit en pyramide equirectangulaire 2 x 1 par `pnpm imagery:bake` puis servi par `galaxy-data`. Une entree par jeu, jamais de valeur recopiee ailleurs : la fiche `src/registry/products/tilesets/` et `public/assets/imagery/<id>/manifest.json` s'en deduisent et un test les croise. `centerLongitude: 180` : la source est centree sur 180 degres (la colonne 0 est a 0 degre) et le cuiseur la ROULE d'une demi-largeur, donc les tuiles sont, elles, a l'orientation de l'application. Mesure du 2026-10-21 : la source reduite correle a 0,9964 avec la texture livree apres ce demi-tour, a 0,8362 sans.",
+  "targets": {
+    "pluto-newhorizons-global-300m": {
+      "body": "pluto",
+      "source": {
+        "url": "https://planetarymaps.usgs.gov/mosaic/Pluto_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif",
+        "bytes": 309806463,
+        "width": 24888,
+        "height": 12444,
+        "channels": 1
+      },
+      "centerLongitude": 180,
+      "tileSizePx": 256,
+      "maxLevel": 6,
+      "jpegQuality": 85
+    },
+    "charon-newhorizons-global-300m": {
+      "body": "charon",
+      "source": {
+        "url": "https://planetarymaps.usgs.gov/mosaic/Charon_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif",
+        "bytes": 80613890,
+        "width": 12693,
+        "height": 6347,
+        "channels": 1
+      },
+      "tileSizePx": 256,
+      "maxLevel": 5,
+      "jpegQuality": 85
+    },
+    "triton-voyager2-global-600m": {
+      "body": "triton",
+      "source": {
+        "url": "https://planetarymaps.usgs.gov/mosaic/Triton_Voyager2_ClrMosaic_GlobalFill_600m.tif",
+        "bytes": 299994887,
+        "width": 14138,
+        "height": 7069,
+        "channels": 3
+      },
+      "tileSizePx": 256,
+      "maxLevel": 5,
+      "jpegQuality": 85
+    }
+  }
+}
