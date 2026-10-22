@@ -106,7 +106,7 @@ describe('fiche d’information : faits sourcés', () => {
     // donne toujours la sienne, garde celle de la SOURCE : les deux règles sont ici côte à côte.
     const moons = stat('jupiter', 'Lunes connues');
     expect(moons?.value).toBe('115');
-    expect(moons?.asOf).toBe('septembre 2026');
+    expect(moons?.asOf).toBe('octobre 2026');
     const saturn = stat('saturn', 'Lunes connues');
     expect(saturn?.value).toBe('293');
     expect(saturn?.asOf).toBe('août 2026');

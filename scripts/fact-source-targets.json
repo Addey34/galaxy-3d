@@ -109,7 +109,9 @@
     },
     "atlas": {
       "sstr": "C/2025 N1",
-      "expect": "C/2025 N1 (ATLAS)"
+      "expect": "C/2025 N1 (ATLAS)",
+      "pinSolution": "2026-02-19",
+      "pinReason": "Le 2026-10-21 la SBDB a remplacé la solution complète (782 observations depuis le 2025-05-15) par une solution TEMPORAIRE « to support JWST Program 13145 » (117 observations depuis le 2025-10-03, termes non gravitationnels) : une autre modélisation, non retenue tant que la SBDB ne republie pas une solution complète."
     }
   },
   "naifRotation": {

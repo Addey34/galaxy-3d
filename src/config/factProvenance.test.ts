@@ -1118,6 +1118,35 @@ describe('faits nommés : recopiés de leur source', () => {
 });
 
 /**
+ * SOLUTION ÉPINGLÉE. Quand la SBDB remplace une solution complète par une solution temporaire,
+ * le relevé garde l'ancienne et écrit ce que la source sert (`pinned`). Deux choses se tiennent :
+ * la solution gardée est bien celle que la fiche du registre cite, et ce que la source sert est
+ * déclaré temporaire. Sans la seconde, une vraie nouvelle solution serait ignorée en silence.
+ */
+describe('solution SBDB épinglée', () => {
+  it('garde la solution que la fiche cite, face à une solution temporaire', () => {
+    const pinned = Object.entries(sbdbInterstellar).filter(
+      ([, row]) => 'pinned' in row
+    );
+    expect(pinned.map(([name]) => name)).toEqual(['atlas']);
+    for (const [name, row] of pinned) {
+      const kept = row as unknown as {
+        solutionDate: string;
+        pinned: { liveSeen: { comment: string; solutionDate: string } };
+      };
+      const cfg = bodies.find((b) => b.name === name)!.cfg;
+      expect(cfg.realData?.sources?.eccentricity?.citation, name).toContain(
+        `orbit solution ${kept.solutionDate.slice(0, 10)}`
+      );
+      expect(kept.pinned.liveSeen.comment, name).toMatch(/temporary/i);
+      expect(kept.pinned.liveSeen.solutionDate, name).not.toBe(
+        kept.solutionDate
+      );
+    }
+  });
+});
+
+/**
  * MAGNITUDE ABSOLUE. La raison affichée pour les deux comètes AFFIRME quelque chose de la
  * source : qu'elle ne publie pas H, et qu'elle publie M1 à la place. Les deux moitiés sont
  * confrontées au relevé, et dans l'autre sens aussi : un objet pour lequel la SBDB publie H
