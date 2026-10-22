@@ -6552,7 +6552,7 @@ du site, fiche élève sur sa feuille).
 
 Une page d'entrée par langue (`src/seo/researchPages.ts`, module pur), sans sous-pages et SANS
 nombre : elle dit où vérifier (`/methodology/`, `/sources/`), citer (l'ancre `#citation` de la
-méthodologie), parcourir les événements datés (missions, survols, mises en orbite, contacts, grands
+méthodologie), parcourir les événements datés (missions, survols, mises en orbite, périhélies, contacts, grands
 lieux, activités) et reproduire une vue. L'adresse d'exemple est écrite par `formatPermalinkDate`,
 la fonction des liens partagés. Son slug est dans la navigation de tous les documents
 (`documentPage.ts`), donc l'empreinte des documents générés bouge d'un coup. Garde :
@@ -6955,13 +6955,13 @@ clé `STORAGE_KEYS` nouvelle à déclarer.
 La palette (`#body-palette`) ne cherchait que des noms de corps. Elle cherche désormais aussi des
 **couches de données** (les couches météo de l'application), des **lieux** (les formations
 nommées par l'UAI), des **missions** (le registre du PDS), des **instruments** (ceux qu'une sonde
-embarque), des **survols** (mesurés à la seconde) et des **découvertes** (« Herschel » trouve
+embarque), des **survols**, des **mises en orbite**, des **périhélies** et des **contacts** (tous mesurés à la seconde) et des **découvertes** (« Herschel » trouve
 Uranus, Titania, Obéron, Mimas et Encelade). Chaque
 résultat AGIT : la recherche est une navigation, pas un annuaire.
 
 **L'index se DÉRIVE.** `pnpm search:generate` (`scripts/generate-search-index.mjs`) le lit dans
 les fichiers déjà livrés (gazetteer, `missionCatalogue.json`, fichiers d'instruments,
-`flybyEvents.json`, fichiers de découverte et `discoveryIndex.json`) et écrit `public/assets/search/index.json` ; aucune entrée n'est écrite à la
+`flybyEvents.json`, `orbitInsertions.json`, `perihelia.json`, `surfaceContacts.json`, fichiers de découverte et `discoveryIndex.json`) et écrit `public/assets/search/index.json` ; aucune entrée n'est écrite à la
 main. `src/config/searchIndex.test.ts` exige que le fichier livré soit exactement ce que le
 générateur rend (falsifié par un octet), et que chaque cible nommée soit sélectionnable. À rejouer
 après tout générateur de ces sources ; `--check` sort en code 1 sur une dérive.
