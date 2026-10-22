@@ -21,6 +21,17 @@
         52.52818
       ],
       "manifest": "assets/buildings/berlin-lod2/manifest.json"
+    },
+    {
+      "id": "nairobi-overture",
+      "body": "earth",
+      "bboxLonLat": [
+        36.8,
+        -1.3,
+        36.84,
+        -1.27
+      ],
+      "manifest": "assets/buildings/nairobi-overture/manifest.json"
     }
   ]
 }

@@ -70,9 +70,8 @@
     },
     {
       "id": "nairobi-overture",
-      "title": "Bâtiments de Nairobi, Overture Maps (non publié)",
+      "title": "Bâtiments de Nairobi, Overture Maps",
       "body": "earth",
-      "unpublished": true,
       "source": {
         "kind": "overture-parquet",
         "name": "Overture Maps Foundation, thème buildings",
