@@ -42,7 +42,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install chromium
 
       # Code de sortie capture SANS pipe (un pipe rend celui du dernier maillon).
       - name: Read what production serves
