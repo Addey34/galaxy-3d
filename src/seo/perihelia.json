@@ -1,0 +1,454 @@
+{
+  "$comment": "Écrit par `pnpm perihelia:generate` (scripts/generate-perihelia.mjs), jamais à la main. Chaque minimum local de la distance au centre du Soleil de Parker Solar Probe et de Solar Orbiter, lu dans Horizons à l’heure, à la minute puis à la seconde ; altitude = distance au centre moins le rayon solaire de la fiche du Soleil ; un périhélie postérieur à sa date de lecture est une prédiction. `bounds` : la fenêtre réellement lue pour chaque sonde.",
+  "source": "NASA/JPL Horizons, CENTER 500@10, ECLIPTIC J2000, VEC_CORR NONE, UT ; rayon du Soleil de la fiche de Galaxy",
+  "sunRadiusKm": 695700,
+  "halfWindowDays": 20,
+  "bounds": [
+    {
+      "probe": "parker-solar-probe",
+      "from": "2018-08-13T00:00:00Z",
+      "to": "2027-11-26T00:00:00Z",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "from": "2020-02-11T00:00:00Z",
+      "to": "2027-11-26T00:00:00Z",
+      "retrieved": "2026-10-22"
+    }
+  ],
+  "perihelia": [
+    {
+      "probe": "parker-solar-probe",
+      "at": "2018-11-06T03:27:51Z",
+      "distanceKm": 24818593.852,
+      "altitudeKm": 24122893.852,
+      "speedKmS": 95.327724,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2019-04-04T22:39:56Z",
+      "distanceKm": 24818980.231,
+      "altitudeKm": 24123280.231,
+      "speedKmS": 95.326964,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2019-09-01T17:50:18Z",
+      "distanceKm": 24817842.815,
+      "altitudeKm": 24122142.815,
+      "speedKmS": 95.329518,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2020-01-29T09:37:42Z",
+      "distanceKm": 19392522.757,
+      "altitudeKm": 18696822.757,
+      "speedKmS": 109.178582,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2020-06-07T08:23:04Z",
+      "distanceKm": 19391854.054,
+      "altitudeKm": 18696154.054,
+      "speedKmS": 109.180758,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2020-06-15T07:36:38Z",
+      "distanceKm": 77170642.164,
+      "altitudeKm": 76474942.164,
+      "speedKmS": 47.542038,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2020-09-27T09:16:02Z",
+      "distanceKm": 14159390.683,
+      "altitudeKm": 13463690.683,
+      "speedKmS": 129.608795,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2021-01-17T17:39:18Z",
+      "distanceKm": 14158950.075,
+      "altitudeKm": 13463250.075,
+      "speedKmS": 129.611051,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2021-02-10T09:43:26Z",
+      "distanceKm": 73980861.047,
+      "altitudeKm": 73285161.047,
+      "speedKmS": 48.593259,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2021-04-29T08:46:52Z",
+      "distanceKm": 11114015.634,
+      "altitudeKm": 10418315.634,
+      "speedKmS": 147.685988,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2021-08-09T19:10:32Z",
+      "distanceKm": 11114009.761,
+      "altitudeKm": 10418309.761,
+      "speedKmS": 147.686083,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2021-09-12T08:15:08Z",
+      "distanceKm": 87751138.142,
+      "altitudeKm": 87055438.142,
+      "speedKmS": 45.105583,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2021-11-21T08:25:24Z",
+      "distanceKm": 9237743.933,
+      "altitudeKm": 8542043.933,
+      "speedKmS": 163.01767,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2022-02-25T15:35:52Z",
+      "distanceKm": 9237702.144,
+      "altitudeKm": 8542002.144,
+      "speedKmS": 163.018023,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2022-03-26T11:49:55Z",
+      "distanceKm": 48262556.229,
+      "altitudeKm": 47566856.229,
+      "speedKmS": 64.600428,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2022-06-01T22:50:06Z",
+      "distanceKm": 9238222.73,
+      "altitudeKm": 8542522.73,
+      "speedKmS": 163.013207,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2022-09-06T06:03:35Z",
+      "distanceKm": 9238151.726,
+      "altitudeKm": 8542451.726,
+      "speedKmS": 163.013841,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2022-10-12T19:12:23Z",
+      "distanceKm": 43775150.733,
+      "altitudeKm": 43079450.733,
+      "speedKmS": 68.118334,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2022-12-11T13:15:48Z",
+      "distanceKm": 9238758.504,
+      "altitudeKm": 8543058.504,
+      "speedKmS": 163.008073,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2023-03-17T20:30:34Z",
+      "distanceKm": 9239724.794,
+      "altitudeKm": 8544024.794,
+      "speedKmS": 162.998936,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2023-04-10T13:16:24Z",
+      "distanceKm": 43770570.244,
+      "altitudeKm": 43074870.244,
+      "speedKmS": 68.122999,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2023-06-22T03:45:55Z",
+      "distanceKm": 9240228.73,
+      "altitudeKm": 8544528.73,
+      "speedKmS": 162.994163,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2023-09-27T23:28:26Z",
+      "distanceKm": 7955708.451,
+      "altitudeKm": 7260008.451,
+      "speedKmS": 176.462942,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2023-10-07T07:24:45Z",
+      "distanceKm": 43768978.562,
+      "altitudeKm": 43073278.562,
+      "speedKmS": 68.124654,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2023-12-29T00:55:05Z",
+      "distanceKm": 7955627.41,
+      "altitudeKm": 7259927.41,
+      "speedKmS": 176.46387,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2024-03-30T02:21:23Z",
+      "distanceKm": 7955694.476,
+      "altitudeKm": 7259994.476,
+      "speedKmS": 176.463066,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2024-04-04T01:48:21Z",
+      "distanceKm": 43773472.085,
+      "altitudeKm": 43077772.085,
+      "speedKmS": 68.120582,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2024-06-30T03:47:14Z",
+      "distanceKm": 7955712.358,
+      "altitudeKm": 7260012.358,
+      "speedKmS": 176.462844,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2024-09-30T05:14:49Z",
+      "distanceKm": 7955924.269,
+      "altitudeKm": 7260224.269,
+      "speedKmS": 176.460289,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2024-09-30T20:02:55Z",
+      "distanceKm": 43769666.235,
+      "altitudeKm": 43073966.235,
+      "speedKmS": 68.124177,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2024-12-24T11:40:57Z",
+      "distanceKm": 6862559.917,
+      "altitudeKm": 6166859.917,
+      "speedKmS": 190.77046,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2025-03-22T22:24:55Z",
+      "distanceKm": 6862291.579,
+      "altitudeKm": 6166591.579,
+      "speedKmS": 190.774424,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2025-03-31T13:54:10Z",
+      "distanceKm": 44012551.786,
+      "altitudeKm": 43316851.786,
+      "speedKmS": 67.4165,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2025-06-19T09:08:09Z",
+      "distanceKm": 6862151.197,
+      "altitudeKm": 6166451.197,
+      "speedKmS": 190.776501,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2025-09-15T20:16:13Z",
+      "distanceKm": 6862509.832,
+      "altitudeKm": 6166809.832,
+      "speedKmS": 190.771269,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2025-09-16T03:04:46Z",
+      "distanceKm": 44013438.793,
+      "altitudeKm": 43317738.793,
+      "speedKmS": 67.415699,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2025-12-13T07:02:02Z",
+      "distanceKm": 6862386.09,
+      "altitudeKm": 6166686.09,
+      "speedKmS": 190.77309,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2026-03-03T15:42:17Z",
+      "distanceKm": 44006043.338,
+      "altitudeKm": 43310343.338,
+      "speedKmS": 67.421761,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2026-03-11T18:03:58Z",
+      "distanceKm": 6855835.153,
+      "altitudeKm": 6160135.153,
+      "speedKmS": 190.868998,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2026-06-08T04:18:11Z",
+      "distanceKm": 6855663.824,
+      "altitudeKm": 6159963.824,
+      "speedKmS": 190.871449,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2026-08-19T04:05:29Z",
+      "distanceKm": 44007014.203,
+      "altitudeKm": 43311314.203,
+      "speedKmS": 67.420793,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2026-09-04T14:31:32Z",
+      "distanceKm": 6855302.081,
+      "altitudeKm": 6159602.081,
+      "speedKmS": 190.876765,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2026-12-02T00:44:22Z",
+      "distanceKm": 6855385.655,
+      "altitudeKm": 6159685.655,
+      "speedKmS": 190.87555,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2027-02-06T21:45:40Z",
+      "distanceKm": 42009940.401,
+      "altitudeKm": 41314240.401,
+      "speedKmS": 68.636727,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2027-02-28T10:59:50Z",
+      "distanceKm": 6855307.913,
+      "altitudeKm": 6159607.913,
+      "speedKmS": 190.876706,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2027-05-27T21:12:26Z",
+      "distanceKm": 6853481.289,
+      "altitudeKm": 6157781.289,
+      "speedKmS": 190.903443,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "solar-orbiter",
+      "at": "2027-07-06T16:59:48Z",
+      "distanceKm": 42011129.53,
+      "altitudeKm": 41315429.53,
+      "speedKmS": 68.635494,
+      "solution": "SOLO_ESA",
+      "retrieved": "2026-10-22"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "at": "2027-08-24T07:15:34Z",
+      "distanceKm": 6853211.942,
+      "altitudeKm": 6157511.942,
+      "speedKmS": 190.90737,
+      "solution": "psp_merged",
+      "retrieved": "2026-10-22"
+    }
+  ]
+}

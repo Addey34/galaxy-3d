@@ -19,6 +19,7 @@ import {
   FLYBYS_SLUG,
   MISSIONS_SLUG,
   ORBIT_INSERTIONS_SLUG,
+  PERIHELIA_SLUG,
   PLACES_SLUG,
   RESEARCH_SLUG,
   docPath,
@@ -91,6 +92,22 @@ const FAMILIES: readonly Family[] = [
       fr: 'le premier instant où une sonde devient liée à un corps.',
       es: 'el primer instante en que una sonda queda ligada a un cuerpo.',
       'pt-BR': 'o primeiro instante em que uma sonda fica ligada a um corpo.',
+    },
+  },
+  {
+    slug: PERIHELIA_SLUG,
+    name: {
+      en: 'Perihelia',
+      fr: 'Périhélies',
+      es: 'Perihelios',
+      'pt-BR': 'Periélios',
+    },
+    what: {
+      en: 'the closest pass of Parker Solar Probe and Solar Orbiter to the Sun, read on their trajectories.',
+      fr: 'le passage de Parker Solar Probe et de Solar Orbiter au plus près du Soleil, lu sur leurs trajectoires.',
+      es: 'el paso de Parker Solar Probe y de Solar Orbiter más cerca del Sol, leído en sus trayectorias.',
+      'pt-BR':
+        'a passagem da Parker Solar Probe e da Solar Orbiter mais perto do Sol, lida em suas trajetórias.',
     },
   },
   {

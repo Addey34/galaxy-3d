@@ -34,6 +34,9 @@ const FLYBYS_SEGMENT = 'flybys';
 /** Segment des mises en orbite (`/orbit-insertions/juno-jupiter-2016-07-05/`), `documentPage.ts::ORBIT_INSERTIONS_SLUG`. */
 const ORBIT_INSERTIONS_SEGMENT = 'orbit-insertions';
 
+/** Segment des périhélies (`/perihelia/parker-solar-probe-2024-12-24/`), `documentPage.ts::PERIHELIA_SLUG`. */
+const PERIHELIA_SEGMENT = 'perihelia';
+
 /** Segment des contacts avec un corps (`/contacts/rosetta-churyumov-gerasimenko-2016-09-30/`), `documentPage.ts::CONTACTS_SLUG`. */
 const CONTACTS_SEGMENT = 'contacts';
 
@@ -43,6 +46,7 @@ const NESTED_SEGMENTS = [
   MISSIONS_SEGMENT,
   FLYBYS_SEGMENT,
   ORBIT_INSERTIONS_SEGMENT,
+  PERIHELIA_SEGMENT,
   CONTACTS_SEGMENT,
 ];
 

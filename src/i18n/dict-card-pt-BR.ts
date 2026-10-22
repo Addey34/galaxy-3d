@@ -9,6 +9,7 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'search.group.discovery': 'Descobertas',
   'search.group.flyby': 'Sobrevoos',
   'search.group.orbitInsertion': 'Inserções em órbita',
+  'search.group.perihelion': 'Periélios',
   'search.group.contact': 'Contatos',
   'search.missionPage': 'página da missão',
   'surface.compare.slider': 'Cortina antes e depois',

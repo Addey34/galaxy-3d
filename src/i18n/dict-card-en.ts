@@ -17,6 +17,7 @@ export const cardEn = {
   'search.group.discovery': 'Discoveries',
   'search.group.flyby': 'Flybys',
   'search.group.orbitInsertion': 'Orbit insertions',
+  'search.group.perihelion': 'Perihelia',
   'search.group.contact': 'Contacts',
   'search.missionPage': 'mission page',
   'surface.compare.slider': 'Before and after curtain',
