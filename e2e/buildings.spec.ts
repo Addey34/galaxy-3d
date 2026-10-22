@@ -38,6 +38,13 @@ const CITIES = [
     lat: 52.5163,
     credit: ['Land Berlin', 'Datenlizenz Deutschland Zero 2.0'],
   },
+  {
+    city: 'Nairobi',
+    set: 'nairobi-overture',
+    lon: 36.82,
+    lat: -1.285,
+    credit: ['Overture Maps Foundation', 'Open Database License (ODbL)'],
+  },
 ];
 
 for (const { city, set, lon, lat, credit } of CITIES) {
