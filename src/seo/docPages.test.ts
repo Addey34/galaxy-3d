@@ -50,6 +50,8 @@ import {
   missingTextureProvenance,
   shippedTextureLayers,
   sourcesPages,
+  type BuildingManifestSummary,
+  buildingSetProvenance,
   type HeightManifestSummary,
   type SourcesInput,
   type TextureProvenance,
@@ -145,6 +147,17 @@ function shippedHeightfields() {
   );
 }
 
+/** Jeux de bâtiments livrés, lus comme le plugin Vite les lit (l'index puis chaque manifeste). */
+function shippedBuildings() {
+  const read = <T>(path: string): T =>
+    JSON.parse(readFileSync(resolve(ROOT, 'public', path), 'utf-8')) as T;
+  return read<{ sets: { manifest: string }[] }>(
+    'assets/buildings/index.json'
+  ).sets.map((set) =>
+    buildingSetProvenance(read<BuildingManifestSummary>(set.manifest))
+  );
+}
+
 const sourcesInput: SourcesInput = {
   citation,
   config: CELESTIAL_CONFIG,
@@ -162,6 +175,7 @@ const sourcesInput: SourcesInput = {
   // valeur retapée ici ne prouverait rien de ce qui est publié.
   smallBodies: smallBodySnapshot(),
   heightfields: shippedHeightfields(),
+  buildings: shippedBuildings(),
 };
 const sources = sourcesPages(sourcesInput);
 const allPages = [...methodology, ...sources];
@@ -1134,6 +1148,35 @@ describe('/sources : le relief dit la finesse de la SOURCE quand la grille est p
       );
       expect(page.body).toContain('Tycho (83 m)');
       expect(page.body).not.toContain(`Tycho (83 m, ${label}`);
+    }
+  );
+});
+
+describe('/sources : les jeux de bâtiments livrés et la méthode de l’ODbL', () => {
+  /**
+   * Chaque jeu de l'index livré a sa ligne (titre, licence, lecture), et la page dit que la
+   * méthode est accessible (ODbL 4.6) avec la version d'Overture lue. Les jeux viennent de
+   * l'index, jamais d'une liste retapée ici : un jeu ajouté sans ligne rendrait ce test rouge.
+   */
+  const sets = shippedBuildings();
+
+  it('livre au moins un jeu sous ODbL, sinon la garde ne mord sur rien', () => {
+    expect(sets.some((set) => set.license.includes('Open Database'))).toBe(
+      true
+    );
+  });
+
+  it.each(sources.map((p) => [p.locale, p] as const))(
+    '%s : une ligne par jeu, sa licence, sa date de lecture et la phrase 4.6',
+    (_locale, page) => {
+      expect(page.body).toContain('id="buildings"');
+      for (const set of sets) {
+        expect(page.body).toContain(set.title);
+        expect(page.body).toContain(set.licenseUrl);
+        expect(page.body).toContain(set.read);
+        if (set.release) expect(page.body).toContain(set.release);
+      }
+      expect(page.body).toContain('4.6');
     }
   );
 });

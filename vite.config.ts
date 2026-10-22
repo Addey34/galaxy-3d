@@ -9,7 +9,10 @@ import {
 } from './src/seo/pwaRouting';
 import { stripGlslComments as stripGlslSource } from './src/build/glslComments';
 import { clientFactSnapshot as reduceFactSnapshot } from './src/build/clientFactSnapshot';
-import type { HeightManifestSummary } from './src/seo/sourcesPage';
+import type {
+  BuildingManifestSummary,
+  HeightManifestSummary,
+} from './src/seo/sourcesPage';
 import {
   collectTranslations,
   collectDeferredText,
@@ -1031,6 +1034,18 @@ function bodyLandingPages() {
             )
           )
         );
+        // Jeux de bâtiments livrés : l'index dit lesquels, chaque manifeste donne les MESURES.
+        const buildings = await Promise.all(
+          (
+            await readJson<{ sets: { manifest: string }[] }>(
+              'public/assets/buildings/index.json'
+            )
+          ).sets.map(async (set) =>
+            sourcesSeo.buildingSetProvenance(
+              await readJson<BuildingManifestSummary>(`public/${set.manifest}`)
+            )
+          )
+        );
         // Hôtes que la CSP de production autorise : la page /sources doit décrire exactement
         // ceux-là (voir `LIVE_DATA_SERVICES`).
         const connectHosts = sourcesSeo.connectHostsFromFirebase(
@@ -1071,6 +1086,7 @@ function bodyLandingPages() {
             origin: SITE_ORIGIN,
             smallBodies: smallBodySnapshot,
             heightfields,
+            buildings,
           }),
         ];
         /**

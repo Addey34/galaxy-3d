@@ -174,6 +174,68 @@ export function heightfieldProvenance(
   };
 }
 
+/** Le manifeste d'un jeu de bâtiments, dans ce que la page en lit. */
+export interface BuildingManifestSummary {
+  id: string;
+  title: string;
+  totals: {
+    tiles: number;
+    bytes: number;
+    sourceFeatures: number;
+    byOrigin: Record<string, number>;
+  };
+  source: {
+    name: string;
+    license: string;
+    licenseUrl: string;
+    release?: string;
+    readFrom: string;
+    readTo: string;
+  };
+}
+
+/** La ligne d'un jeu de bâtiments : tout vient du manifeste écrit par le cuiseur. */
+export interface BuildingSetProvenance {
+  id: string;
+  title: string;
+  source: string;
+  license: string;
+  licenseUrl: string;
+  /** Version de la source quand elle en a une (Overture publie par version datée). */
+  release: string | null;
+  read: string;
+  buildings: number;
+  withHeight: number;
+  tiles: number;
+  bytes: number;
+}
+
+export function buildingSetProvenance(
+  manifest: BuildingManifestSummary
+): BuildingSetProvenance {
+  const { totals, source } = manifest;
+  return {
+    id: manifest.id,
+    title: manifest.title,
+    source: source.name,
+    license: source.license,
+    licenseUrl: source.licenseUrl,
+    release: source.release ?? null,
+    read:
+      source.readFrom === source.readTo
+        ? source.readFrom
+        : `${source.readFrom} → ${source.readTo}`,
+    buildings: totals.sourceFeatures,
+    // Une hauteur « absente » est une emprise à plat : tout le reste porte une valeur, dont la
+    // méthode est dite à l'écran par la légende.
+    withHeight: Object.entries(totals.byOrigin)
+      .filter(([origin]) => origin !== 'absent')
+      .reduce((sum, [, n]) => sum + n, 0),
+    tiles: totals.tiles,
+    bytes: totals.bytes,
+  };
+}
+
 export interface SourcesInput {
   /** Lue dans `CITATION.cff`, seul endroit où le DOI est écrit (cf. `seo/citation.ts`). */
   citation: CitationMetadata;
@@ -181,6 +243,8 @@ export interface SourcesInput {
   textures: readonly TextureProvenance[];
   /** Jeux de hauteurs livrés, avec les mesures de leur manifeste. */
   heightfields: readonly HeightfieldProvenance[];
+  /** Jeux de bâtiments livrés, avec les mesures de leur manifeste. */
+  buildings: readonly BuildingSetProvenance[];
   manifest: EphemerisManifest;
   dependencies: readonly DependencyNotice[];
   /** Contenu de `THIRD_PARTY_NOTICES.md`. */
@@ -1123,6 +1187,86 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
               }),
             ],
             reliefRows
+          )
+      )
+    );
+  }
+
+  // ── Bâtiments ──
+  if (input.buildings.length > 0) {
+    const mb = (bytes: number): string =>
+      `${(bytes / 1e6).toFixed(2).replace('.', DECIMAL[locale])} ${L({ en: 'MB', fr: 'Mo', es: 'MB', 'pt-BR': 'MB' })}`;
+    const count = (n: number): string =>
+      String(n).replace(/\B(?=(\d{3})+(?!\d))/g, locale === 'en' ? ',' : ' ');
+    const buildingRows = input.buildings.map((set) => [
+      escapeHtml(set.title),
+      escapeHtml(set.source) +
+        (set.release ? ` (${escapeHtml(set.release)})` : ''),
+      link(set.licenseUrl, escapeHtml(set.license)),
+      escapeHtml(set.read),
+      escapeHtml(
+        `${count(set.buildings)} · ${Math.round((100 * set.withHeight) / set.buildings)} %`
+      ),
+      escapeHtml(`${set.tiles} · ${mb(set.bytes)}`),
+    ]);
+    sections.push(
+      docSection(
+        'buildings',
+        L({
+          en: 'Buildings',
+          fr: 'Bâtiments',
+          es: 'Edificios',
+          'pt-BR': 'Edifícios',
+        }),
+        `<p>${L({
+          en: 'Near the ground, building footprints are drawn from open datasets, one set per source and never merged: each set keeps its own licence. A footprint without a published height stays flat, and the legend says where each height comes from.',
+          fr: 'Près du sol, les emprises de bâtiments viennent de jeux ouverts, un jeu par source et jamais fusionnés : chaque jeu garde sa licence. Une emprise sans hauteur publiée reste à plat, et la légende dit d’où vient chaque hauteur.',
+          es: 'Cerca del suelo, las huellas de edificios proceden de conjuntos abiertos, uno por fuente y nunca fusionados: cada conjunto conserva su licencia. Una huella sin altura publicada queda plana, y la leyenda dice de dónde viene cada altura.',
+          'pt-BR':
+            'Perto do solo, as pegadas de edifícios vêm de conjuntos abertos, um por fonte e nunca mesclados: cada conjunto mantém a sua licença. Uma pegada sem altura publicada fica plana, e a legenda diz de onde vem cada altura.',
+        })}</p><p>${L({
+          en: 'The sets drawn from OpenStreetMap through Overture Maps are databases derived from an ODbL database, and they are served under the ODbL. As that licence requires (section 4.6), the method that produced them is available free of charge: the baking script is in this project’s public repository, and the Overture release it reads is named in the table. The other sets are served under their own licence.',
+          fr: 'Les jeux issus d’OpenStreetMap par Overture Maps sont des bases dérivées d’une base ODbL, et ils sont servis sous l’ODbL. Comme cette licence l’exige (section 4.6), la méthode qui les a produits est accessible gratuitement : le script de cuisson est dans le dépôt public du projet, et la version d’Overture qu’il lit est nommée dans le tableau. Les autres jeux sont servis sous leur propre licence.',
+          es: 'Los conjuntos procedentes de OpenStreetMap a través de Overture Maps son bases derivadas de una base ODbL, y se sirven bajo la ODbL. Como exige esa licencia (sección 4.6), el método que los produjo es accesible gratuitamente: el script de cocción está en el repositorio público del proyecto, y la versión de Overture que lee figura en la tabla. Los demás conjuntos se sirven bajo su propia licencia.',
+          'pt-BR':
+            'Os conjuntos vindos do OpenStreetMap por meio do Overture Maps são bases derivadas de uma base ODbL, e são servidos sob a ODbL. Como essa licença exige (seção 4.6), o método que os produziu está disponível gratuitamente: o script de geração está no repositório público do projeto, e a versão do Overture que ele lê consta na tabela. Os demais conjuntos são servidos sob a sua própria licença.',
+        })}</p>` +
+          docTable(
+            L({
+              en: 'Building sets',
+              fr: 'Jeux de bâtiments',
+              es: 'Conjuntos de edificios',
+              'pt-BR': 'Conjuntos de edifícios',
+            }),
+            [
+              L({ en: 'Set', fr: 'Jeu', es: 'Conjunto', 'pt-BR': 'Conjunto' }),
+              L({ en: 'Source', fr: 'Source', es: 'Fuente', 'pt-BR': 'Fonte' }),
+              L({
+                en: 'Licence',
+                fr: 'Licence',
+                es: 'Licencia',
+                'pt-BR': 'Licença',
+              }),
+              L({
+                en: 'Read on',
+                fr: 'Lu le',
+                es: 'Leído el',
+                'pt-BR': 'Lido em',
+              }),
+              L({
+                en: 'Buildings · with a height',
+                fr: 'Bâtiments · avec hauteur',
+                es: 'Edificios · con altura',
+                'pt-BR': 'Edifícios · com altura',
+              }),
+              L({
+                en: 'Tiles · size',
+                fr: 'Tuiles · poids',
+                es: 'Teselas · tamaño',
+                'pt-BR': 'Blocos · tamanho',
+              }),
+            ],
+            buildingRows
           )
       )
     );
