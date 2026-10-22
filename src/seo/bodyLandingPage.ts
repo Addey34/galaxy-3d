@@ -239,8 +239,9 @@ export interface BodyPage extends LandingPage {
   missions: { name: string; href: string }[];
   /**
    * Les événements de ce corps, fragment HTML déjà échappé : ses survols (`flybyPages.ts`,
-   * 2026-10-12) puis ses mises en orbite (`orbitInsertionPages.ts`, lot 49). Vide pour un corps
-   * qu'aucune sonde suivie n'a ni survolé ni mis en orbite.
+   * 2026-10-12) puis ses mises en orbite (`orbitInsertionPages.ts`, lot 49), ses périhélies
+   * (`perihelionPages.ts`, lot 69) et ses contacts (`surfaceContactPages.ts`). Vide pour un corps
+   * qu'aucune sonde suivie n'a survolé, ni mis en orbite, ni touché.
    */
   events: string;
   canonical: string;
@@ -828,7 +829,7 @@ export function bodyLandingPages(
     string,
     readonly { name: string; slug: string }[]
   > = new Map(),
-  /** Corps → fragment HTML de ses survols et mises en orbite, dans cette langue. */
+  /** Corps → fragment HTML de ses survols, mises en orbite, périhélies et contacts, dans cette langue. */
   events: ReadonlyMap<string, string> = new Map()
 ): BodyPage[] {
   const flat = flattenBodies(config);

@@ -19,6 +19,8 @@ const NAMES: Record<string, string> = {
   juno: 'Juno',
   jupiter: 'Jupiter',
   rosetta: 'Rosetta',
+  'parker-solar-probe': 'Parker Solar Probe',
+  sun: 'Sun',
   'churyumov-gerasimenko': '67P/Churyumov–Gerasimenko',
 };
 const nameOf = (id: string): string => NAMES[id] ?? id;
@@ -33,6 +35,7 @@ const file: SearchIndexFile = {
   instruments: [['Imaging Science Subsystem', 'cassini']],
   flybys: [['voyager2', 'neptune', '1989-08-25T03:56:36Z']],
   orbitInsertions: [['juno', 'jupiter', '2016-07-05T02:55:34Z']],
+  perihelia: [['parker-solar-probe', 'sun', '2024-12-24T11:40:57Z']],
   contacts: [['rosetta', 'churyumov-gerasimenko', '2016-09-30T10:39:34Z']],
   discoveries: [
     ['Titania', 'uranus', '1787', 'W. Herschel'],
@@ -88,6 +91,24 @@ describe('searchPrepared', () => {
       probe: 'juno',
       body: 'jupiter',
       at: '2016-07-05T02:55:34Z',
+    });
+  });
+
+  it('un périhélie se trouve par sa sonde ou par son nom, dans les quatre langues, et porte son instant', () => {
+    expect(labels('parker sun')).toEqual([
+      'perihelion:Parker Solar Probe · Sun · 2024-12-24',
+    ]);
+    // Le mot du type : « perihelion », « périhélie », « perihelio » (accents repliés).
+    for (const word of ['perihelion', 'périhélie', 'perihelio', 'periélio'])
+      expect(labels(word), word).toEqual([
+        'perihelion:Parker Solar Probe · Sun · 2024-12-24',
+      ]);
+    expect(searchPrepared(index, 'parker')[0]).toEqual({
+      kind: 'perihelion',
+      label: 'Parker Solar Probe · Sun · 2024-12-24',
+      probe: 'parker-solar-probe',
+      body: 'sun',
+      at: '2024-12-24T11:40:57Z',
     });
   });
 

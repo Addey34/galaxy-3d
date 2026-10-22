@@ -59,6 +59,7 @@ function generatedDocuments(): string[] {
       'missions',
       'flybys',
       'orbit-insertions',
+      'perihelia',
       'contacts',
       'places',
       'activities',
@@ -101,6 +102,14 @@ const FLYBY_PAGES = DOCUMENTS.filter((d) => d.endsWith('flybys')).map(
  */
 const ORBIT_PAGES = DOCUMENTS.filter((d) => d.endsWith('orbit-insertions')).map(
   (index) => `${index}/rosetta-churyumov-gerasimenko-2014-09-10`
+);
+
+/**
+ * Une page de périhélie (lot 69), dans les quatre langues : le passage du 2024-12-24 de Parker, le
+ * plus cité (la NASA l'appelle son record), mesuré et donc stable d'une lecture d'Horizons à l'autre.
+ */
+const PERIHELION_PAGES = DOCUMENTS.filter((d) => d.endsWith('perihelia')).map(
+  (index) => `${index}/parker-solar-probe-2024-12-24`
 );
 
 /**
@@ -200,7 +209,7 @@ test.describe('pages générées, à 390 px', () => {
 
   test('la dérivation trouve les sept documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(36);
+    expect(DOCUMENTS.length).toBe(40);
     expect(PLACE_PAGES.length).toBe(4);
     expect(ACTIVITY_PAGES.length).toBe(8);
     expect(DOCUMENTS).toContain('pt-br/activities');
@@ -209,6 +218,8 @@ test.describe('pages générées, à 390 px', () => {
     expect(FLYBY_PAGES.length).toBe(4);
     expect(ORBIT_PAGES.length).toBe(4);
     expect(CONTACT_PAGES.length).toBe(4);
+    expect(PERIHELION_PAGES.length).toBe(4);
+    expect(DOCUMENTS).toContain('fr/perihelia');
     expect(DOCUMENTS).toContain('pt-br/contacts');
     expect(DOCUMENTS).toContain('es/orbit-insertions');
     expect(DOCUMENTS).toContain('pt-br/flybys');
@@ -242,6 +253,7 @@ test.describe('pages générées, à 390 px', () => {
     ...MISSION_PAGES,
     ...FLYBY_PAGES,
     ...ORBIT_PAGES,
+    ...PERIHELION_PAGES,
     ...CONTACT_PAGES,
     ...PLACE_PAGES,
     ...ACTIVITY_PAGES,
@@ -333,6 +345,7 @@ test.describe('pages générées, à 390 px', () => {
       INSTRUMENT_PAGE,
       ...FLYBY_PAGES,
       ...ORBIT_PAGES,
+      ...PERIHELION_PAGES,
       ...CONTACT_PAGES,
       ...PLACE_PAGES,
       ...ACTIVITY_PAGES,
