@@ -22,6 +22,15 @@
 export const FAR_BASE_ENTER_RADII = 1.5;
 /** En dessous de cette distance on revient au fond fin. Plus bas que l'entrée, volontairement. */
 export const FAR_BASE_LEAVE_RADII = 1.3;
+/**
+ * Au-dessus de cette distance, rien : le moteur ne demande aucune tuile (la texture livrée suffit,
+ * mesuré : 0 tuile à 1,92 rayon, 18 à 1,66), et attacher le jeu du jour ferait lire pour rien le
+ * fichier de ses jours publiés, au démarrage de chaque visiteur. « Rien n'est demandé de loin » est
+ * un invariant du dépôt, un scénario e2e du démarrage mobile l'a fait respecter.
+ */
+export const FAR_BASE_CEILING_RADII = 1.8;
+/** Hystérésis du plafond : une fois dans la bande, on n'en sort qu'un peu plus haut. */
+export const FAR_BASE_CEILING_EXIT_RADII = 1.9;
 
 /**
  * Faut-il montrer l'image du jour ? `wasFar` est la réponse précédente, qui donne sa mémoire à
@@ -32,7 +41,7 @@ export function showsFarBase(
   wasFar: boolean
 ): boolean {
   if (!Number.isFinite(distanceInRadii)) return wasFar;
-  return wasFar
-    ? distanceInRadii > FAR_BASE_LEAVE_RADII
-    : distanceInRadii > FAR_BASE_ENTER_RADII;
+  const floor = wasFar ? FAR_BASE_LEAVE_RADII : FAR_BASE_ENTER_RADII;
+  const ceiling = wasFar ? FAR_BASE_CEILING_EXIT_RADII : FAR_BASE_CEILING_RADII;
+  return distanceInRadii > floor && distanceInRadii < ceiling;
 }
