@@ -32,6 +32,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # La ferme d'iPhone n'accepte Playwright que jusqu'à la 1.63 (documentation BrowserStack,
+      # mesuré le 2026-10-23 : en 1.64.1 toute connexion iOS échoue en 20 ms, « Failed to execute
+      # initialize »). La machine est jetable : on aligne ses paquets sans toucher au dépôt.
+      - name: Align Playwright with the iOS farm
+        run: pnpm add -D -w --no-lockfile --save-exact @playwright/test@1.63.0 playwright@1.63.0 playwright-core@1.63.0
+
       # Les identifiants passent par l'environnement, jamais par une interpolation dans le script.
       # Un secret unique est lu sous la forme « identifiant:clé » ou sur deux lignes ; la FORME
       # seule est dite en cas d'échec, jamais une valeur.
