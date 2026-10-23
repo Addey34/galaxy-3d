@@ -31,6 +31,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
     actionTimeout: 30_000,
     navigationTimeout: 120_000,
+    // Les scénarios touchent (`tap`) : sans cela Playwright refuse le geste sur une vraie page.
+    hasTouch: true,
   },
   // Un seul projet : le SDK le décline en un par appareil de `browserstack.yml`.
   projects: [{ name: 'real' }],
