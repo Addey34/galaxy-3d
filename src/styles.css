@@ -84,6 +84,27 @@ canvas {
   display: block;
 }
 
+/* PAS DE ZOOM DE PAGE PAR DOUBLE TAP, NI PAR FOCUS D'UN CHAMP (signalé le 2026-10-23, mesuré).
+   Le double tap sur un bouton ou une fenêtre zoomait la page entière, et un zoom ainsi obtenu ne
+   se défait pas sans recharger : la scène et ses commandes de déplacement sortent de l'écran.
+   `manipulation` retire le double tap et GARDE le pincement, donc le zoom d'accessibilité reste
+   (la balise de viewport ne l'interdit pas : c'est une violation WCAG, relevée par axe).
+   Safari iOS zoome aussi de lui-même sur tout champ dont la police est sous 16 px : la
+   recherche était à 14,4 px, la date à 11,5, l'heure à 14,7, les listes à 12,5 et 13. Sur un
+   pointeur grossier, un champ s'écrit donc à 16 px au moins ; `!important` parce que chaque
+   champ porte sa propre règle de classe. */
+html,
+body {
+  touch-action: manipulation;
+}
+@media (pointer: coarse) {
+  input:not([type='range']):not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: max(16px, 1em) !important;
+  }
+}
+
 /* La scene se manipule comme une camera orbitale : le curseur doit suggerer le glissement,
    sans transformer les corps 3D en boutons classiques. */
 canvas[data-engine] {
@@ -497,6 +518,16 @@ button {
   max-width: 100%;
   overflow-wrap: break-word;
   text-wrap: balance;
+}
+/* La hauteur de la barre ne doit PAS suivre le curseur de vitesse. Mesuré le 2026-10-23 sur un
+   téléphone étroit : de « 1 a/s » à « 1:1 · Tiempo real terrestre » le libellé passe de une à deux
+   lignes, la barre grandit de 5 à 22 px au passage du centre, et le curseur bouge sous le doigt.
+   Deux lignes sont donc RÉSERVÉES (le pire des libellés que le curseur produit lui-même ; le
+   libellé de débit limité, lui, ne dépend pas du geste). */
+@media (max-width: 520px) {
+  .tb-speed {
+    min-height: calc(1.2em * 2);
+  }
 }
 
 /* Retour au présent — discret, vert. */

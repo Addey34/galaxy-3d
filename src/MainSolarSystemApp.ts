@@ -29,6 +29,7 @@ import { setupShare } from './ui/share';
 import { setupCapture } from './ui/capture';
 import { setupWebXR } from './ui/webxr';
 import { setupHelp } from './ui/help';
+import { setupKeyboardShortcuts } from './ui/keyboardShortcuts';
 import { setupGuidedTour } from './ui/guidedTour';
 import { setupTourPlayer } from './ui/tourPlayer';
 import { TOUR_SCRIPTS } from './config/tourScripts';
@@ -185,6 +186,7 @@ function wireChrome(): {
   setupLangSwitch();
   clearRetiredStorage();
   setupFullscreen();
+  setupKeyboardShortcuts();
   const overlayCoordinator = setupOverlayCoordinator();
   setupHelp(overlayCoordinator);
   const guidedTour = setupGuidedTour();

@@ -89,6 +89,12 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'mode.explo': 'abréviation, identique dans les quatre langues',
   'time.histEra': 'le mot « era » est le même en espagnol et en portugais',
   'help.tip.mode.key': 'reprend les deux abréviations ci-dessus',
+  // Touches de raccourci : le caractère gravé sur la touche, le même dans les quatre langues.
+  'help.shortcut.search.key': 'la touche « / »',
+  'help.shortcut.today.key': 'la touche « T »',
+  'help.shortcut.fullscreen.key': 'la touche « F »',
+  'help.shortcut.mode.key': 'la touche « M »',
+  'help.shortcut.help.key': 'la touche « ? »',
   // Mots savants identiques d'une langue romane à l'autre.
   'events.kind.penumbral': 'même mot en espagnol et en portugais',
   'events.kind.total': 'même mot en espagnol et en portugais',
