@@ -12,7 +12,7 @@
   "rightsStatedAt": "https://planetarynames.wr.usgs.gov/Page/FAQ",
   "rightsQuote": "Everything in the Gazetteer of Planetary Nomenclature is in the public domain.",
   "citation": "International Astronomical Union Working Group for Planetary System Nomenclature. \"Gazetteer of Planetary Nomenclature.\" https://planetarynames.wr.usgs.gov/",
-  "accessed": "2026-09-29"
+  "accessed": "2026-10-23"
  },
  "bodies": {
   "amalthea": {
@@ -60,8 +60,8 @@
    "bytes": 19023
   },
   "donaldjohanson": {
-   "count": 11,
-   "bytes": 3005
+   "count": 12,
+   "bytes": 3320
   },
   "enceladus": {
    "count": 87,

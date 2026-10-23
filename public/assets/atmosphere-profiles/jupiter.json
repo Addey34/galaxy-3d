@@ -8,11 +8,11 @@
   "authors": "Huber, L.",
   "year": 2024,
   "doi": "10.17189/0hsp-bb78",
-  "retrieved": "2026-10-15"
+  "retrieved": "2026-10-23"
  },
  "reference": {
   "text": "Seiff, A., D. B. Kirk, T. C. D. Knight, R. E. Young, J. D. Mihalov, L. A. Young, F. S. Milos, G. Schubert, R. C. Blanchard and D. Atkinson, Thermal structure of Jupiter's atmosphere near the edge of a 5-um hot spot in the north equatorial belt. J. Geophys. Res. 103, pp. 22857-22889, 1998.",
-  "retrieved": "2026-10-15"
+  "retrieved": "2026-10-23"
  },
  "latitudeDeg": {
   "min": 6.42,
@@ -23,7 +23,7 @@
    "kind": "entry",
    "product": "urn:nasa:pds:gp:data_asi:upperatm",
    "url": "https://atmos.nmsu.edu/PDS/data/PDS4/galileo_probe_bundle/data_asi/upperatm.tab",
-   "retrieved": "2026-10-15",
+   "retrieved": "2026-10-23",
    "start": "1995-12-07T22:01:44Z",
    "stop": "1995-12-07T22:05:44Z",
    "samples": [
@@ -1963,11 +1963,11 @@
    "kind": "descent",
    "product": "urn:nasa:pds:gp:data_asi:descent",
    "url": "https://atmos.nmsu.edu/PDS/data/PDS4/galileo_probe_bundle/data_asi/descent.tab",
-   "retrieved": "2026-10-15",
+   "retrieved": "2026-10-23",
    "start": null,
    "stop": null,
    "method": "These profiles are not a list of measured points, but is derived using the dry adiabat which fits the data",
-   "methodSource": "2026-10-15",
+   "methodSource": "2026-10-23",
    "samples": [
     [
      17.291,
