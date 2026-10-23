@@ -64,6 +64,8 @@ test('paints the Earth from NASA GIBS, never below its reference level', async (
   await expect(page.locator('#surface-probe')).toContainText('earth', {
     timeout: 30_000,
   });
+  // Le fond d'arrivée est Sentinel-2 depuis le 2026-10-23 : ce scénario tient la Blue Marble.
+  await chooseEarthBase(page, 'mosaic');
   await zoomIn(page);
   const badge = page.locator('#surface-imagery');
   await expect(badge).toBeVisible({ timeout: 30_000 });
@@ -171,6 +173,8 @@ test('raises the Earth from ETOPO relief, asked of the data service on the GIBS 
   await expect(page.locator('#surface-probe')).toContainText('earth', {
     timeout: 30_000,
   });
+  // Le fond d'arrivée est Sentinel-2 depuis le 2026-10-23 : ce scénario tient la Blue Marble.
+  await chooseEarthBase(page, 'mosaic');
   await zoomIn(page);
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-relief', /\d+/, {
@@ -500,7 +504,10 @@ test('compares two Sentinel-2 editions across a curtain, with both attributions'
     timeout: 30_000,
   });
   await page.locator('#settings-trigger').click();
-  // Le choix d'année n'existe qu'avec le fond Sentinel-2, la seule série d'éditions.
+  // Le choix d'année n'existe qu'avec le fond Sentinel-2, la seule série d'éditions : il est là
+  // d'emblée puisque c'est le fond d'arrivée, et disparaît avec la Blue Marble.
+  await expect(page.locator('#surface-earth-compare')).toBeVisible();
+  await page.locator('#surface-earth-base').selectOption('mosaic');
   await expect(page.locator('#surface-earth-compare')).toBeHidden();
   await page.locator('#surface-earth-base').selectOption('sentinel-2');
   await page.locator('#surface-earth-compare').selectOption('2022');

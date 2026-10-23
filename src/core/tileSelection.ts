@@ -27,6 +27,28 @@ import {
   type TileMatrixShape,
 } from './tilePyramid';
 
+/** La taille de carreau (px) pour laquelle les budgets de carreaux sont exprimés : celle de GIBS. */
+export const BUDGET_REFERENCE_TILE_PX = 512;
+
+/**
+ * Le budget en CARREAUX, ramené à la taille du carreau servi. Le budget du moteur a été mesuré
+ * avec des carreaux de 512 px (GIBS, lot 54) ; Sentinel-2 en sert de 256 px, qui couvrent quatre
+ * fois moins de pixels : à 256 carreaux, Paris (niveau 13 sous la caméra) épuisait le budget et
+ * l'IGN n'était jamais demandée, la descente s'arrêtant à 458 m. Mesuré le 2026-10-23 : 512
+ * carreaux rendent l'IGN et un plancher de 229 m, 1024 n'apportent rien de plus (même plancher,
+ * 684 carreaux posés). Le facteur suit donc le côté du carreau et non sa surface. Jamais sous 1 :
+ * un carreau plus grand que la référence ne réduit pas le budget.
+ */
+export function tileBudgetForSize(
+  maxTiles: number,
+  tileSizePx: number
+): number {
+  if (tileSizePx <= 0) return maxTiles;
+  return Math.round(
+    maxTiles * Math.max(1, BUDGET_REFERENCE_TILE_PX / tileSizePx)
+  );
+}
+
 /** Ce que le moteur sait d'un carreau dans la vue courante. */
 export interface TileView {
   /** Le carreau a-t-il au moins un point dans le champ et au-dessus de l'horizon ? */
