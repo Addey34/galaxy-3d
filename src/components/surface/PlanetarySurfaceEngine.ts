@@ -46,7 +46,11 @@ import {
   tileMatrix,
   type TileIndex,
 } from '@/core/tilePyramid';
-import { selectTiles, type TileView } from '@/core/tileSelection';
+import {
+  selectTiles,
+  tileBudgetForSize,
+  type TileView,
+} from '@/core/tileSelection';
 import { geographicToLocalDirection } from '@/core/frames';
 import { tileUrl } from '@/core/tileUrl';
 import {
@@ -325,6 +329,8 @@ export class PlanetarySurfaceEngine {
   >();
 
   private readonly _budget: TileBudget;
+  /** Ramène le budget à la taille du carreau servi (`tileBudgetForSize`) : faux en rendu logiciel. */
+  private readonly _scaleBudgetToTileSize: boolean;
   private readonly _fetchTile: TileFetcher;
   private readonly _fetchHeights: HeightFetcher;
   private readonly _onState: (state: SurfaceImageryState | null) => void;
@@ -344,12 +350,14 @@ export class PlanetarySurfaceEngine {
 
   constructor(options: {
     budget: TileBudget;
+    scaleBudgetToTileSize?: boolean;
     onState?: (state: SurfaceImageryState | null) => void;
     onImageryWidthChanged?: () => void;
     fetchTile?: TileFetcher;
     fetchHeights?: HeightFetcher;
   }) {
     this._budget = options.budget;
+    this._scaleBudgetToTileSize = options.scaleBudgetToTileSize ?? false;
     this._fetchTile = options.fetchTile ?? defaultFetcher;
     this._fetchHeights = options.fetchHeights ?? defaultHeightFetcher;
     this._onState = options.onState ?? (() => undefined);
@@ -634,7 +642,9 @@ export class PlanetarySurfaceEngine {
         shape: tileset.matrix,
         maxLevel: Math.max(tileset.maxLevel, regionalMax),
         firstDrawableLevel,
-        maxTiles: this._budget.maxTiles,
+        maxTiles: this._scaleBudgetToTileSize
+          ? tileBudgetForSize(this._budget.maxTiles, tileset.matrix.tileSizePx)
+          : this._budget.maxTiles,
         ...(regional
           ? {
               maxLevelAt: (index: TileIndex) =>

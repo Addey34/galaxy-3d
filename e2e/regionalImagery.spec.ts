@@ -33,6 +33,13 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
   await page.route('**tiles.maps.eox.at/**', tile);
 
   await boot(page, '?debug-surface&mode=explo&date=2024-07-01T12:00:00Z');
+  // Le fond d'arrivée est Sentinel-2 depuis le 2026-10-23. Sur lui l'IGN demande 512 carreaux
+  // (mesuré sur GPU réel : 458 m sans, 229 m avec), ce que le rendu logiciel de la CI ne tient pas
+  // (3,6 i/s à 126 carreaux) : ce scénario tient donc la règle de la base, sur la Blue Marble.
+  await page.locator('#settings-trigger').click();
+  await page.locator('#surface-earth-base').selectOption('mosaic');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#orbit-options')).toBeHidden();
   await page.locator('#body-search-trigger').click();
   const input = page.locator('#palette-input');
   await input.pressSequentially('Paris');

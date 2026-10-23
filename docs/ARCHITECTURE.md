@@ -2093,9 +2093,27 @@ trois points n'a changé au lot 9C (2026-09-21), qui n'a touché ni la géométr
 les couches d'instrument, ni la direction d'approche ; le § suivant dit ce qu'il a changé.
 
 
+### Le fond d'arrivée de la Terre (2026-10-23)
+
+Le fond du sol de la Terre à l'arrivée est Sentinel-2, l'édition de l'année de la scène
+(`DEFAULT_SURFACE_CHOICE`, `ui/surfaceChoices.ts`), et non la Blue Marble. Mesuré au Mont Blanc, GPU
+réel : la Blue Marble (489 m par texel) arrête la descente à 47 km du sol sous le plafond
+d'agrandissement de `core/surfaceApproach.ts`, Sentinel-2 (10 m) à 0,9 km. De loin rien n'est
+demandé (la texture livrée reste affichée au-delà de 6 rayons apparents), donc ce choix ne coûte
+rien au démarrage. Le visiteur peut toujours choisir la Blue Marble dans le réglage.
+
+Ses carreaux font 256 px, ceux de GIBS 512 : à budget égal en carreaux ils couvrent quatre fois moins
+de pixels. À Paris, 256 carreaux étaient épuisés au niveau 13 et l'IGN n'était jamais demandée
+(plancher à 458 m). `core/tileSelection.ts::tileBudgetForSize` ramène donc le budget au côté du
+carreau servi (×2 à 256 px) : 512 carreaux rendent l'IGN et un plancher de 229 m, 1024 n'ajoutent
+rien. Le facteur ne s'applique ni à un budget forcé (`?debug-tiles`) ni au rendu logiciel, borné à
+64 carreaux (126 carreaux y coûtent 3,6 i/s). **Conséquence non couverte par la CI** : en rendu
+logiciel, Sentinel-2 n'atteint pas l'IGN ; le scénario `e2e/regionalImagery.spec.ts` tient la règle
+de la base sur la Blue Marble, et l'articulation Sentinel-2 plus IGN n'est mesurée que sur GPU.
+
 ### Les imageries régionales plus fines que la base (lot 53, pas 4)
 
-Sentinel-2 s'arrête à ~10 m par pixel et la mosaïque par défaut de la Terre (Blue Marble) à
+Sentinel-2 s'arrête à ~10 m par pixel et la mosaïque Blue Marble de la Terre à
 ~500 m. Une imagerie NATIONALE va bien plus loin : l'orthophoto de l'IGN (BD ORTHO®, 20 cm), que
 la Géoplateforme sert par WMS jusqu'à 0,2986 m par pixel (sa plus petite échelle déclarée,
 `MinScaleDenominator` 1 066,36). Un WMS rend N'IMPORTE quelle emprise : l'IGN se demande donc sur
@@ -2426,8 +2444,9 @@ poussière ce jour-là) : c'est le ciel du jour, pas un défaut de rendu.
 ### Les fonds de rechange de la Terre : un choix, pas une pile (lot 48)
 
 Depuis le 2026-10-12, le réglage « Sol de la Terre » (section Rendu, `#surface-earth-base`) remplace
-la case « Terre du jour ». Il choisit UN fond parmi la mosaïque Blue Marble (par défaut),
-Sentinel-2 sans nuages (EOX, § ci-dessous, depuis le 2026-10-13), le jour de la scène (VIIRS,
+la case « Terre du jour ». Il choisit UN fond parmi la mosaïque Blue Marble,
+Sentinel-2 sans nuages (EOX, § ci-dessous, depuis le 2026-10-13, et fond d'ARRIVÉE depuis le
+2026-10-23, § « Le fond d'arrivée de la Terre »), le jour de la scène (VIIRS,
 § ci-dessus), le relief ombré avec bathymétrie et les lumières nocturnes. Un
 seul fond est posé sur le globe à la fois, parce que tous recouvrent le même maillage ; les couches
 météo restent par-dessus.
@@ -2461,7 +2480,7 @@ qu'agrandir. Quatre choses lues à la source le 2026-10-13, qui décident :
   fiche dont le fournisseur n'est pas la NASA ;
 - **le service** : EOX permet d'employer ses points d'accès WMTS directement dans une application,
   les fournit en l'état, et limite le débit sous forte charge en REDIRIGEANT vers une page. Le
-  guetteur des sources l'en distingue par son marqueur ; Blue Marble reste le fond par défaut ;
+  guetteur des sources l'en distingue par son marqueur ; Blue Marble était le fond par défaut (SUPERSEDED le 2026-10-23 : voir § « Le fond d'arrivée de la Terre ») ;
 - **la grille n'est pas celle de GIBS** : c'est celle de Trek (2 × 1 au niveau 0, 256 px). D'où un
   second relief (§ « Le relief de la Terre »), et le plancher compté depuis le sol (§ « Relief
   mesuré »), que les 10 m ont rendu nécessaire.

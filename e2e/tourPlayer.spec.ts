@@ -503,6 +503,9 @@ test.describe('nile-delta tour', () => {
     // (attente de surface bornée, plongées en nombre borné).
     await clickWhenCalm(page, page.locator('.stour-close'));
     await expect(page.locator('.stour-card')).toBeHidden();
-    await expect(page.locator('#surface-earth-base')).toHaveValue('mosaic');
+    // Rendu : le fond d'avant la visite, qui est Sentinel-2 depuis le 2026-10-23, donc le même que
+    // celui qu'elle emprunte : ce contrôle ne distingue plus « rendu » de « jamais changé ». Le
+    // retour du fond n'est plus tenu que par la lecture du code de `tourPlayer.finish()`.
+    await expect(page.locator('#surface-earth-base')).toHaveValue('sentinel-2');
   });
 });

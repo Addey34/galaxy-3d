@@ -26,7 +26,11 @@ import { isSoftwareRenderer } from '@/components/systems/rendererKind';
 import Logger from '@/utils/Logger';
 import { NOTICE_CHANGED } from './ephemerisNotice';
 import { TOUR_CLEARANCE_CHANGED, tourClearancePx } from './tourClearance';
-import { SURFACE_CHOICES, type SurfaceChoiceId } from './surfaceChoices';
+import {
+  DEFAULT_SURFACE_CHOICE,
+  SURFACE_CHOICES,
+  type SurfaceChoiceId,
+} from './surfaceChoices';
 import EDITION_YEARS from '@/config/eoxEditionYears.json';
 import type {
   PlanetarySurfaceEngine,
@@ -147,7 +151,8 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   baseSelect.append(...baseOptions);
   baseWrapper.append(baseLabel, baseSelect);
   wrapper.after(baseWrapper);
-  let choice: SurfaceChoiceId = 'mosaic';
+  let choice: SurfaceChoiceId = DEFAULT_SURFACE_CHOICE;
+  baseSelect.value = choice;
 
   // RIDEAU AVANT/APRÈS (lot 50, pas 2) : une année à comparer à celle de la scène, proposée
   // seulement avec le fond Sentinel-2, le seul qui soit une série d'éditions. Les années viennent
@@ -155,7 +160,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   const compareWrapper = document.createElement('label');
   compareWrapper.id = 'surface-earth-compare-wrapper';
   compareWrapper.className = 'settings-switch';
-  compareWrapper.hidden = true;
+  compareWrapper.hidden = choice !== 'sentinel-2';
   const compareLabel = document.createElement('span');
   compareLabel.className = 'settings-switch-label';
   const compareSelect = document.createElement('select');
@@ -600,13 +605,15 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     curtain = createCompareCurtain(api.sceneSystem.renderer.domElement);
     loadHeights = loadBodyHeights;
     heightsFor = heightsForGrid;
+    const software = isSoftwareRenderer(api.sceneSystem.renderer);
+    const forcedBudget = debugTileBudget();
     engine = new PlanetarySurfaceEngine({
       budget:
-        debugTileBudget() ??
-        surfaceTileBudget(
-          BOOT_QUALITY_PROFILE.surfaceTiles,
-          isSoftwareRenderer(api.sceneSystem.renderer)
-        ),
+        forcedBudget ??
+        surfaceTileBudget(BOOT_QUALITY_PROFILE.surfaceTiles, software),
+      // Un budget forcé (`?debug-tiles`) ou borné en rendu logiciel reste ce qu'il est : le
+      // rendu logiciel de la CI tient 3,6 i/s à 126 carreaux (mesuré le 2026-10-23).
+      scaleBudgetToTileSize: forcedBudget === null && !software,
       onState,
       // La finesse servie a changé : `CameraSystem` ne repose ses bornes d'approche qu'à la
       // sélection, il faut donc le lui dire, sinon la descente reste plafonnée par la

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectTiles, type TileView } from './tileSelection';
+import { selectTiles, tileBudgetForSize, type TileView } from './tileSelection';
 import {
   groundResolutionKm,
   tileBounds,
@@ -113,5 +113,22 @@ describe('selectTiles', () => {
     expect(
       selectTiles({ visible: () => false, pixelsPerTexel: () => 100 }, options)
     ).toEqual([]);
+  });
+});
+
+describe('tileBudgetForSize', () => {
+  it('double le budget pour des carreaux de 256 px, mesuré sur Paris en Sentinel-2', () => {
+    // 256 carreaux épuisés au niveau 13 : l'IGN n'était jamais demandée (plancher 458 m) ;
+    // 512 la rendent (229 m), 1024 n'ajoutent rien.
+    expect(tileBudgetForSize(256, 256)).toBe(512);
+  });
+
+  it('laisse intact le budget de la taille de référence, et ne le réduit jamais', () => {
+    expect(tileBudgetForSize(256, 512)).toBe(256);
+    expect(tileBudgetForSize(256, 1024)).toBe(256);
+  });
+
+  it('refuse une taille absurde plutôt que de diviser par zéro', () => {
+    expect(tileBudgetForSize(256, 0)).toBe(256);
   });
 });

@@ -652,6 +652,18 @@ describe('les fonds de rechange de la Terre (lot 48)', () => {
     }
   );
 
+  it('arrive sur Sentinel-2, l’édition de l’année de la scène, et non sur la Blue Marble', async () => {
+    // Mesuré le 2026-10-23 : la Blue Marble (500 m par texel) arrête la descente à 47 km au Mont
+    // Blanc, Sentinel-2 (10 m) à 0,9 km. Le fond d'arrivée est donc un choix de produit, tenu ici.
+    const { DEFAULT_SURFACE_CHOICE, SURFACE_CHOICES } =
+      await import('@/ui/surfaceChoices');
+    expect(SURFACE_CHOICES).toContain(DEFAULT_SURFACE_CHOICE);
+    const shown = choose('earth', DEFAULT_SURFACE_CHOICE)!;
+    expect(shown).not.toBe(blueMarble);
+    expect(shown.service.template).toContain('eox.at');
+    expect(shown.edition).toBe(2025);
+  });
+
   it('retombe sur la mosaïque d’un corps qui n’a pas ce fond', () => {
     expect(choose('moon', 'night-lights')).toBe(SURFACE_TILESETS.get('moon'));
     expect(choose('earth', 'mosaic')).toBe(blueMarble);
