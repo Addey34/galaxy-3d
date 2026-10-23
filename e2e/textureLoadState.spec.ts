@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { useAnimatedMotion } from './motion';
 import { clickWhenCalm, waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
@@ -69,50 +70,55 @@ test('selecting the Earth raises the in-flight texture count, then it settles to
  * rien ne rougirait ailleurs : ce scénario exige qu'il MONTE pendant le vol vers la Terre et
  * pendant le passage en Explo, puis retombe à zéro.
  */
-test('a camera flight and a scale switch raise the scene-moving flag, then it settles', async ({
-  page,
-}) => {
-  await blockExternalNetwork(page);
-  await page.addInitScript(() => {
-    localStorage.setItem('ssv-guided-tour-v1', '1');
-    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
-  });
-  await page.goto('/');
-  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
-  await waitForCalmMainThread(page);
+test.describe('mouvement animé requis', () => {
+  // Ce scénario TÉMOIGNE du mouvement : en `reduce`, vols et glissement d'échelle sont instantanés et le signal ne monte jamais, ce qui est juste. Voir `playwright.config.ts` (reducedMotion).
+  useAnimatedMotion();
 
-  const canvas = page.locator('canvas').first();
-  await expect(canvas).toHaveAttribute('data-scene-moving', '0');
-  // Chaque passage à `1`, compté côté page : un sondage depuis le test pourrait tomber après.
-  await page.evaluate(() => {
-    const w = window as unknown as { __sceneMoves?: number };
-    w.__sceneMoves = 0;
-    const el = document.querySelector('canvas')!;
-    new MutationObserver(() => {
-      if (el.dataset['sceneMoving'] === '1')
-        w.__sceneMoves = (w.__sceneMoves ?? 0) + 1;
-    }).observe(el, {
-      attributes: true,
-      attributeFilter: ['data-scene-moving'],
+  test('a camera flight and a scale switch raise the scene-moving flag, then it settles', async ({
+    page,
+  }) => {
+    await blockExternalNetwork(page);
+    await page.addInitScript(() => {
+      localStorage.setItem('ssv-guided-tour-v1', '1');
+      localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
     });
-  });
-  const moves = () =>
-    page.evaluate(
-      () => (window as unknown as { __sceneMoves?: number }).__sceneMoves ?? 0
-    );
+    await page.goto('/');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+    await waitForCalmMainThread(page);
 
-  await page.locator('#body-search-trigger').click();
-  await page.locator('#orbit-earth').click();
-  await expect.poll(moves, { timeout: 30_000 }).toBeGreaterThanOrEqual(1);
-  await expect(canvas).toHaveAttribute('data-scene-moving', '0', {
-    timeout: 30_000,
-  });
+    const canvas = page.locator('canvas').first();
+    await expect(canvas).toHaveAttribute('data-scene-moving', '0');
+    // Chaque passage à `1`, compté côté page : un sondage depuis le test pourrait tomber après.
+    await page.evaluate(() => {
+      const w = window as unknown as { __sceneMoves?: number };
+      w.__sceneMoves = 0;
+      const el = document.querySelector('canvas')!;
+      new MutationObserver(() => {
+        if (el.dataset['sceneMoving'] === '1')
+          w.__sceneMoves = (w.__sceneMoves ?? 0) + 1;
+      }).observe(el, {
+        attributes: true,
+        attributeFilter: ['data-scene-moving'],
+      });
+    });
+    const moves = () =>
+      page.evaluate(
+        () => (window as unknown as { __sceneMoves?: number }).__sceneMoves ?? 0
+      );
 
-  const beforeSwitch = await moves();
-  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="explo"]'));
-  await expect.poll(moves, { timeout: 30_000 }).toBeGreaterThan(beforeSwitch);
-  await expect(canvas).toHaveAttribute('data-scene-moving', '0', {
-    timeout: 30_000,
+    await page.locator('#body-search-trigger').click();
+    await page.locator('#orbit-earth').click();
+    await expect.poll(moves, { timeout: 30_000 }).toBeGreaterThanOrEqual(1);
+    await expect(canvas).toHaveAttribute('data-scene-moving', '0', {
+      timeout: 30_000,
+    });
+
+    const beforeSwitch = await moves();
+    await clickWhenCalm(page, page.locator('.mode-btn[data-mode="explo"]'));
+    await expect.poll(moves, { timeout: 30_000 }).toBeGreaterThan(beforeSwitch);
+    await expect(canvas).toHaveAttribute('data-scene-moving', '0', {
+      timeout: 30_000,
+    });
   });
 });
 

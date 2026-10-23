@@ -17,9 +17,12 @@ const pkg = JSON.parse(read('package.json')) as {
  * s'est résolu contre `playwright-core` 1.64.1 (son pair n'était déclaré nulle part) et
  * `tsc` a refusé deux versions de `Page` mélangées.
  *
- * Cette garde ne dit pas « ne monte jamais » : elle refuse le MÉLANGE, et elle rend le pin
- * visible. Pour monter, changer les trois ensemble (et @axe-core/playwright si besoin) et rejouer les deux scénarios nommés dans
- * `.github/dependabot.yml`.
+ * Cause trouvée le même jour : sous 1.61.1 l'option `reducedMotion` de la configuration était
+ * ignorée (la page voyait `no-preference`), sous 1.64.1 elle s'applique ; deux scénarios qui ont
+ * besoin de mouvement imposent désormais `useAnimatedMotion()` (`e2e/motion.ts`). Le pin ne
+ * bloque donc plus une montée, mais il garde toujours le MÉLANGE : les trois paquets à la même
+ * version exacte, un seul `playwright-core` dans le lockfile (pair d'axe compris), et les quatre
+ * montés ensemble par Dependabot.
  */
 describe('Playwright : une seule version, partout', () => {
   const deps = pkg.devDependencies;
@@ -40,13 +43,23 @@ describe('Playwright : une seule version, partout', () => {
     expect([...resolved]).toEqual([deps['playwright-core']]);
   });
 
-  it("Dependabot n'en remonte aucun tant que la limite est écrite, et la limite part de la version suivante", () => {
-    const [major, minor] = deps['playwright']!.split('.').map(Number);
+  it('Dependabot les met à jour ENSEMBLE : un seul groupe nomme les quatre paquets', () => {
     const dependabot = read('.github/dependabot.yml');
-    const floor = `>=${major}.${minor! + 1}.0`;
-    for (const name of ['@playwright/test', 'playwright', 'playwright-core'])
-      expect(dependabot).toMatch(
-        new RegExp(`dependency-name: '?${name}'?\\s+versions: \\['${floor}'\\]`)
+    const group = /playwright:\s+patterns:([\s\S]*?)\n\s+safe-updates:/.exec(
+      dependabot
+    )?.[1];
+    expect(
+      group,
+      'groupe « playwright » absent de dependabot.yml'
+    ).toBeTruthy();
+    for (const name of [
+      '@playwright/test',
+      'playwright',
+      'playwright-core',
+      '@axe-core/playwright',
+    ])
+      expect(group).toMatch(
+        new RegExp(`- '?${name.replace('/', '\\/')}'?\\s*(\\n|$)`)
       );
   });
 });

@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { MOON_SCENE_DATE } from './moonScene';
+import { useAnimatedMotion } from './motion';
 import {
   boot,
   HERE,
@@ -197,62 +198,67 @@ test('paints tiles on the Moon, says what it serves, and lowers the floor', asyn
  * maximal de 7 et non 8, et un niveau qui reste PLUS GROSSIER que la mosaïque publiée, donc un
  * bandeau qui se tait sur l'agrandissement au lieu de l'annoncer.
  */
-test('paints Mars from a tile set record alone, with no engine change', async ({
-  page,
-}) => {
-  const errors: string[] = [];
-  page.on('pageerror', (err) => errors.push(err.message));
-  const seen = await serveTiles(page);
+test.describe('mouvement animé requis', () => {
+  // Le plancher de Mars (1,0092 R) a été établi avec un zoom animé ; en `reduce` il reste à 1,0121 R, valeur constante (30 s de sondage). Voir `playwright.config.ts` (reducedMotion).
+  useAnimatedMotion();
 
-  await boot(page, '?debug-surface&mode=explo&body=mars');
-  const probe = page.locator('#surface-probe');
-  await expect(probe).toContainText('mars', { timeout: 30_000 });
+  test('paints Mars from a tile set record alone, with no engine change', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    const seen = await serveTiles(page);
 
-  await zoomIn(page);
-  const badge = page.locator('#surface-imagery');
-  await expect(badge).toBeVisible({ timeout: 30_000 });
-  expect(seen.length, 'aucune tuile demandée en approche').toBeGreaterThan(0);
+    await boot(page, '?debug-surface&mode=explo&body=mars');
+    const probe = page.locator('#surface-probe');
+    await expect(probe).toContainText('mars', { timeout: 30_000 });
 
-  for (const request of seen) {
-    expect(request.url()).toContain(
-      '/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0//default/default028mm/'
+    await zoomIn(page);
+    const badge = page.locator('#surface-imagery');
+    await expect(badge).toBeVisible({ timeout: 30_000 });
+    expect(seen.length, 'aucune tuile demandée en approche').toBeGreaterThan(0);
+
+    for (const request of seen) {
+      expect(request.url()).toContain(
+        '/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0//default/default028mm/'
+      );
+      expect(request.url()).toMatch(/\/\d+\/\d+\/\d+\.jpg$/);
+    }
+
+    await zoomIn(page);
+    await page.waitForTimeout(3000);
+
+    // Niveau 7, soit 65 536 px sur 360° : huit fois la texture 8k livrée, et le maximum que Trek
+    // publie pour CETTE couche (le niveau 8 y répond 404, mesuré le 2026-09-21).
+    await expect(badge).toHaveAttribute('data-width', '65536', {
+      timeout: 30_000,
+    });
+    await expect(badge.locator('.si-headline')).toContainText(
+      'Viking Colorized Global Mosaic'
     );
-    expect(request.url()).toMatch(/\/\d+\/\d+\/\d+\.jpg$/);
-  }
+    await expect(badge.locator('.si-headline')).toContainText('325 m/pixel');
+    await expect(badge.locator('.si-detail')).toContainText(
+      'images from June 1976 to August 1980'
+    );
+    await expect(badge.locator('.si-detail')).toContainText('observed');
+    // LA DIFFÉRENCE AVEC LA LUNE : 182 px/degré servis contre 256 publiés. Le bandeau ne parle
+    // d'agrandissement que lorsqu'il y en a un, sans quoi il annoncerait une finesse absente.
+    await expect(badge.locator('.si-detail')).not.toContainText('larger than');
+    await expect(badge.locator('.si-credit')).toContainText('NASA');
 
-  await zoomIn(page);
-  await page.waitForTimeout(3000);
+    // Le plancher a suivi : 1,0092 rayon, soit 31,2 km, contre 1,0737 (249,7 km) avec la seule
+    // texture livrée. La formule de 9B n'a pas changé, seule sa largeur d'entrée a changé.
+    const text = (await probe.textContent()) ?? '';
+    const radii = Number(/\(([\d.]+) R\)/.exec(text)?.[1]);
+    expect(
+      radii,
+      'le plancher n’a pas suivi la finesse des carreaux'
+    ).toBeLessThan(1.011);
+    expect(radii).toBeGreaterThan(1.005);
+    expect(text).not.toContain('COUPE LE CORPS');
 
-  // Niveau 7, soit 65 536 px sur 360° : huit fois la texture 8k livrée, et le maximum que Trek
-  // publie pour CETTE couche (le niveau 8 y répond 404, mesuré le 2026-09-21).
-  await expect(badge).toHaveAttribute('data-width', '65536', {
-    timeout: 30_000,
+    expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
   });
-  await expect(badge.locator('.si-headline')).toContainText(
-    'Viking Colorized Global Mosaic'
-  );
-  await expect(badge.locator('.si-headline')).toContainText('325 m/pixel');
-  await expect(badge.locator('.si-detail')).toContainText(
-    'images from June 1976 to August 1980'
-  );
-  await expect(badge.locator('.si-detail')).toContainText('observed');
-  // LA DIFFÉRENCE AVEC LA LUNE : 182 px/degré servis contre 256 publiés. Le bandeau ne parle
-  // d'agrandissement que lorsqu'il y en a un, sans quoi il annoncerait une finesse absente.
-  await expect(badge.locator('.si-detail')).not.toContainText('larger than');
-  await expect(badge.locator('.si-credit')).toContainText('NASA');
-
-  // Le plancher a suivi : 1,0092 rayon, soit 31,2 km, contre 1,0737 (249,7 km) avec la seule
-  // texture livrée. La formule de 9B n'a pas changé, seule sa largeur d'entrée a changé.
-  const text = (await probe.textContent()) ?? '';
-  const radii = Number(/\(([\d.]+) R\)/.exec(text)?.[1]);
-  expect(
-    radii,
-    'le plancher n’a pas suivi la finesse des carreaux'
-  ).toBeLessThan(1.011);
-  expect(radii).toBeGreaterThan(1.005);
-  expect(text).not.toContain('COUPE LE CORPS');
-
-  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
 
 /**

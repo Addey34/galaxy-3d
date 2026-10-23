@@ -87,6 +87,12 @@ export default defineConfig({
     navigationTimeout: 60_000,
     // Transition Éduc↔Explo instantanée en test (le morph de positions/tailles respecte
     // prefers-reduced-motion) : rend les scénarios déterministes, sans attendre le « dolly zoom ».
+    //
+    // MESURÉ LE 2026-10-23 : sous Playwright 1.61.1 cette option n'est pas reconnue (absente des
+    // types de test) et la page voyait `prefers-reduced-motion: no-preference` ; sous 1.64.1
+    // (Chromium 156) elle s'applique et la page voit `reduce`. Deux scénarios qui exigent du
+    // mouvement (`textureLoadState.spec.ts`, `surfaceImagery.spec.ts` pour Mars) imposent donc
+    // `contextOptions: { reducedMotion: 'no-preference' }`, valable dans les deux versions.
     reducedMotion: 'reduce',
   },
   projects: [
