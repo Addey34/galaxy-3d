@@ -1,0 +1,8 @@
+{
+  "_comment": "Lignes DIVERGENTES du registre de contexte du PDS pour un même identifiant, dont on a LU la différence et décidé laquelle garder. Une divergence absente d'ici fait toujours ÉCHOUER les générateurs. Chaque entrée n'est valable que pour la différence décrite : si la source change, la règle ne s'applique plus et le générateur échoue de nouveau.",
+  "urn:nasa:pds:context:investigation:mission.hayabusa": {
+    "keepName": "Hayabusa Mission",
+    "measuredAt": "2026-10-23",
+    "reason": "Le registre sert deux fiches : « HAYABUSA » (cibles : Itokawa et six cibles d'étalonnage, champ du ciel, lampes) et « Hayabusa Mission » (Itokawa seul). Même identifiant, même début, même fin, même porteur. On garde « Hayabusa Mission », qui est la fiche déjà livrée (aucune sortie ne change) et dont les cibles sont des corps, non des étalons."
+  }
+}

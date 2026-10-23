@@ -12,7 +12,7 @@
   "citingGuidance": "https://pds.nasa.gov/datastandards/citing/",
   "citation": "NASA Planetary Data System. \"PDS Registry, instrument host and instrument context products.\" https://pds.nasa.gov/"
  },
- "retrieved": "2026-09-30",
+ "retrieved": "2026-10-23",
  "spacecraft": {
   "voyager1": {
    "hosts": 1,
@@ -66,7 +66,7 @@
    "hosts": 1,
    "investigations": 1,
    "instruments": 6,
-   "bytes": 1310
+   "bytes": 1304
   },
   "juice": {
    "hosts": 1,

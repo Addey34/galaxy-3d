@@ -57,6 +57,7 @@ import {
 import { Buffer } from 'node:buffer';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveKnownDivergence } from './pds-known-divergences.mjs';
 import {
   CACHE_DIR,
   cacheKey,
@@ -286,11 +287,23 @@ for (const row of rows) {
   if (already) {
     const a = JSON.stringify({ ...already, hosts: [...already.hosts].sort() });
     const b = JSON.stringify({ ...record, hosts: [...record.hosts].sort() });
-    if (a !== b)
-      throw new Error(
-        `le registre rend DEUX lignes divergentes pour ${lid} :\n  ${a}\n  ${b}\n` +
-          `Choisir entre elles serait arbitraire : on s'arrête.`
+    if (a !== b) {
+      // Une divergence dont la différence est écrite dans `pds-known-divergences.json` ; toute
+      // autre fait échouer, comme avant.
+      const keep = resolveKnownDivergence(
+        { ...already, refs: already.hosts },
+        { ...record, refs: record.hosts }
       );
+      if (!keep)
+        throw new Error(
+          `le registre rend DEUX lignes divergentes pour ${lid} :\n  ${a}\n  ${b}\n` +
+            `Choisir entre elles serait arbitraire : on s'arrête.`
+        );
+      console.log(
+        `divergence connue : ${lid}, on garde « ${keep.name} » (pds-known-divergences.json)`
+      );
+      byLid.set(lid, keep.name === already.name ? already : record);
+    }
     continue;
   }
   byLid.set(lid, record);

@@ -56,6 +56,7 @@ import {
 import { Buffer } from 'node:buffer';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveKnownDivergence } from './pds-known-divergences.mjs';
 import {
   CACHE_DIR,
   cacheKey,
@@ -371,7 +372,23 @@ for (const row of rows) {
   if (already) {
     const before = JSON.stringify(already);
     const now = JSON.stringify(mission);
-    if (before !== now)
+    if (before !== now) {
+      // Une divergence dont la différence est écrite dans `pds-known-divergences.json` ; toute
+      // autre fait échouer, comme avant.
+      const keep = resolveKnownDivergence(
+        { ...already, refs: already.targets },
+        { ...mission, refs: mission.targets }
+      );
+      if (keep) {
+        console.log(
+          `divergence connue : ${mission.lid}, on garde « ${keep.name} » (pds-known-divergences.json)`
+        );
+        declared.set(
+          mission.lid,
+          keep.name === already.name ? already : mission
+        );
+        continue;
+      }
       throw new Error(
         `le registre rend DEUX lignes divergentes pour ${mission.lid} :
   ${before}
@@ -380,6 +397,7 @@ for (const row of rows) {
           `Choisir entre elles serait arbitraire. On s'arrête plutôt que de publier un chiffre ` +
           `qui dépend de l'ordre des lignes.`
       );
+    }
     duplicates.push(mission.lid);
     continue;
   }

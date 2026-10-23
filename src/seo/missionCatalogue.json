@@ -1,6 +1,6 @@
 {
- "retrieved": "2026-09-29",
- "descriptionsRetrieved": "2026-10-04",
+ "retrieved": "2026-10-23",
+ "descriptionsRetrieved": "2026-10-23",
  "missions": [
   {
    "slug": "bc",
@@ -1191,7 +1191,7 @@
     {
      "lid": "urn:nasa:pds:context:target:satellite.65803_didymos.dimorphos",
      "name": "(65803) Didymos I (Dimorphos)",
-     "type": "Asteroid",
+     "type": "Satellite",
      "body": "dimorphos"
     }
    ]
@@ -1740,7 +1740,7 @@
     {
      "lid": "urn:nasa:pds:context:target:satellite.65803_didymos.dimorphos",
      "name": "(65803) Didymos I (Dimorphos)",
-     "type": "Asteroid",
+     "type": "Satellite",
      "body": "dimorphos"
     }
    ]
