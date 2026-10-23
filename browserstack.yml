@@ -1,3 +1,4 @@
+# `consoleLogs` est refusé par les iPhone (documentation iOS de BrowserStack, mesuré : toute connexion échoue).
 # Appareils RÉELS pour `pnpm test:devices` (playwright.devices.config.ts). Aucun secret ici :
 # les identifiants viennent de BROWSERSTACK_USERNAME et BROWSERSTACK_ACCESS_KEY.
 # Les noms d'appareils et versions sont ceux de la documentation BrowserStack à la date de
@@ -17,4 +18,3 @@ platforms:
 browserstackLocal: false
 debug: false
 networkLogs: false
-consoleLogs: errors

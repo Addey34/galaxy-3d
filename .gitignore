@@ -76,3 +76,4 @@ __pycache__/
 # Sorties du SDK BrowserStack (pnpm test:devices)
 /log/
 /local.log
+/browserstack-artifacts/
