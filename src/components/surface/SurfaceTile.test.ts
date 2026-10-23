@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 
 import { SurfaceTile } from './SurfaceTile';
+import { TEXTURE_SETTINGS } from '@/config/engine';
 import { geographicToLocalDirection } from '@/core/frames';
 import { tileBounds, WMTS_EQUIRECTANGULAR_2x1 } from '@/core/tilePyramid';
 
@@ -111,6 +112,18 @@ describe('géométrie d’un carreau', () => {
     expect(tile.mesh.visible).toBe(false);
     tile.setTexture(new THREE.Texture());
     expect(tile.mesh.visible).toBe(true);
+  });
+
+  it('filtre son image en anisotrope, la caméra regardant le sol de biais', () => {
+    // Mesuré le 2026-10-23 au Mont Blanc, même vue : variance du laplacien 262 sans, 461 avec
+    // (+76 %), à 60 i/s des deux côtés. Le réglage existait pour les textures livrées (8) et
+    // n'atteignait pas les carreaux, laissés à 1 par three.
+    const tile = tileFor({ level: 5, row: 1, column: 1 });
+    const image = new THREE.Texture();
+    expect(image.anisotropy).toBe(1);
+    tile.setTexture(image);
+    expect(image.anisotropy).toBe(TEXTURE_SETTINGS.defaultSettings.anisotropy);
+    expect(image.anisotropy).toBeGreaterThan(1);
   });
 
   it('DÉPLACE ses sommets quand on lui donne des hauteurs, et retire le décalage de profondeur', () => {

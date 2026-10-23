@@ -26,6 +26,7 @@
  */
 import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
+import { TEXTURE_SETTINGS } from '@/config/engine';
 import { setCompareMap } from './compareMaterial';
 import { tileFadeOpacity } from '@/core/tileFade';
 
@@ -182,6 +183,10 @@ export class SurfaceTile {
       image.minFilter = THREE.LinearMipmapLinearFilter;
       image.magFilter = THREE.LinearFilter;
       image.generateMipmaps = true;
+      // Le sol se regarde de biais (la caméra vise l'horizon près du sol) : sans filtrage
+      // anisotrope le texel s'étire en bouillie. Le réglage existait pour les textures livrées et
+      // n'atteignait pas les carreaux ; three le borne au maximum du GPU.
+      image.anisotropy = TEXTURE_SETTINGS.defaultSettings.anisotropy;
       image.needsUpdate = true;
     }
     this._texture = texture;
