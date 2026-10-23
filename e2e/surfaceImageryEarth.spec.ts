@@ -66,6 +66,9 @@ test('paints the Earth from NASA GIBS, never below its reference level', async (
   });
   // Le fond d'arrivée est Sentinel-2 depuis le 2026-10-23 : ce scénario tient la Blue Marble.
   await chooseEarthBase(page, 'mosaic');
+  // De loin, le fond d'arrivée montre l'image du jour (`core/farBase.ts`) : la garde porte sur
+  // ce qui est demandé APRÈS le choix de la Blue Marble.
+  viirsSeen.length = 0;
   await zoomIn(page);
   const badge = page.locator('#surface-imagery');
   await expect(badge).toBeVisible({ timeout: 30_000 });
@@ -594,6 +597,9 @@ test.describe('the Earth’s alternate grounds', () => {
         timeout: 30_000,
       });
       await chooseEarthBase(page, choice);
+      // De loin, le fond d'arrivée montre l'image du jour (`core/farBase.ts`) : ce qui a été
+      // demandé AVANT le choix ne compte pas, la garde porte sur ce qui suit.
+      viirs.length = 0;
       await zoomIn(page);
       await expect(page.locator('#surface-imagery')).toBeVisible({
         timeout: 30_000,
@@ -611,6 +617,45 @@ test.describe('the Earth’s alternate grounds', () => {
       expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
     });
   }
+});
+
+/**
+ * LE FOND DE LOIN (2026-10-23) : sans rien toucher au réglage, la Terre vue de loin se peint dans
+ * l'image du JOUR de la scène, et le réglage continue d'afficher Sentinel-2. Le scénario compte
+ * aussi qu'aucune tuile Sentinel-2 ne parte de si loin.
+ */
+test('shows the day’s VIIRS from afar while the setting still says Sentinel-2', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const seen = await serveViirs(page);
+  const eox: string[] = [];
+  await page.route('**tiles.maps.eox.at/**', (route) => {
+    eox.push(route.request().url());
+    return route.abort();
+  });
+
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=earth&date=2026-10-11T12:00:00Z'
+  );
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  // Un cran modéré, mesuré : -4000 amène la caméra à 1,66 rayon, où l'imagerie est demandée et
+  // où le fond de loin règne encore (`core/farBase.ts`). -3600 s'arrête à 1,92 rayon sans rien
+  // demander, -4400 à 1,44, -5200 au plancher de la texture livrée.
+  await zoomIn(page, -4000);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
+    timeout: 60_000,
+  });
+  expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
+  expect(eox, 'Sentinel-2 demandé de trop loin').toEqual([]);
+  await page.locator('#settings-trigger').click();
+  await expect(page.locator('#surface-earth-base')).toHaveValue('sentinel-2');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
 
 test('paints the Earth of the scene’s day from VIIRS, and names that day', async ({
