@@ -72,3 +72,7 @@ public/assets/kernels/*.bsp
 
 # Cache Python de scripts/spice-pose (outil de pose SPICE)
 __pycache__/
+
+# Sorties du SDK BrowserStack (pnpm test:devices)
+/log/
+/local.log

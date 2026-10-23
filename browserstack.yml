@@ -1,0 +1,20 @@
+# Appareils RÉELS pour `pnpm test:devices` (playwright.devices.config.ts). Aucun secret ici :
+# les identifiants viennent de BROWSERSTACK_USERNAME et BROWSERSTACK_ACCESS_KEY.
+# Les noms d'appareils et versions sont ceux de la documentation BrowserStack à la date de
+# rédaction ; s'ils changent, le SDK refuse la ligne en la nommant (à corriger ici).
+userName: ${BROWSERSTACK_USERNAME}
+accessKey: ${BROWSERSTACK_ACCESS_KEY}
+framework: playwright
+projectName: Galaxy
+buildName: galaxy-appareils-reels
+platforms:
+  - deviceName: iPhone 15
+    osVersion: '17'
+    browserName: safari
+  - deviceName: Samsung Galaxy S23
+    osVersion: '13.0'
+    browserName: chrome
+browserstackLocal: false
+debug: false
+networkLogs: false
+consoleLogs: errors
