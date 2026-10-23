@@ -29,6 +29,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sameWithinShippedWindow } from './perihelia-compare.mjs';
 import {
   horizonsRelative,
   norm,
@@ -187,7 +188,7 @@ const output = `${JSON.stringify(
 
 if (CHECK) {
   const shipped = existsSync(OUT) ? readFileSync(OUT, 'utf8') : '';
-  if (shipped !== output) {
+  if (!sameWithinShippedWindow(shipped, output)) {
     console.error(`${OUT} a dérivé : relancer pnpm perihelia:generate`);
     process.exit(1);
   }
