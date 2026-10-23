@@ -154,11 +154,20 @@ async function settleAnimations(page: Page): Promise<void> {
 
 /** Ce que mesure chaque page : la bonne page, axe propre, et aucun débordement horizontal. */
 async function checkDocument(page: Page, path: string): Promise<void> {
-  await page.goto(`/${path}/`, { waitUntil: 'domcontentloaded' });
+  const response = await page.goto(`/${path}/`, {
+    waitUntil: 'domcontentloaded',
+  });
 
   // LE TÉMOIN, appliqué à chaque page : le <h1> servi est celui du document construit, et non
-  // celui de la coquille que le repli SPA rendrait pour un chemin absent.
-  await expect(page.locator('h1').first()).toHaveText(builtHeading(path));
+  // celui de la coquille que le repli SPA rendrait pour un chemin absent. Il se lit dans la
+  // RÉPONSE HTTP et non dans le DOM : sur une page de corps l'application démarre, et son
+  // démarrage remplace ce <h1> par le titre générique (`documentChrome`). Lu dans le DOM, le
+  // témoin courait contre ce démarrage : vert sur une machine calme, rouge juste après un build
+  // (`/titan` seul, au premier passage, vu quatre fois le 2026-10-23, reproduit 1 fois sur 3).
+  const served = await response!.text();
+  const heading = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(served);
+  expect(heading, `${path} : aucun <h1> dans la réponse servie`).not.toBeNull();
+  expect(heading![1]!.replace(/<[^>]+>/g, '').trim()).toBe(builtHeading(path));
 
   await settleAnimations(page);
   const results = await new AxeBuilder({ page })
