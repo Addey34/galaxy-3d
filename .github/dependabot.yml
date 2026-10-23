@@ -5,3 +5,49 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Les correctifs et mineures arrivent en UNE PR : ce sont les mises à jour sûres, vérifiées
+    # ensemble par `pnpm verify`. Une majeure reste seule, pour qu'on sache laquelle a cassé.
+    groups:
+      safe-updates:
+        update-types:
+          - minor
+          - patch
+    # Chaque ligne ci-dessous a une raison MESURÉE le 2026-10-23, et se retire quand elle tombe.
+    ignore:
+      # Playwright 1.62 et au-delà embarque un Chromium plus récent qui casse deux scénarios
+      # (textureLoadState.spec.ts:72 et surfaceImagery.spec.ts:200), 4 échecs sur 4 contre 4
+      # réussis sur 4 en 1.61.1, même commit et même date. Les trois paquets montent ENSEMBLE, avec @axe-core/playwright qui se résout contre eux
+      # (src/config/playwrightPin.test.ts) : en retirer un seul laisse un mélange de types.
+      - dependency-name: '@playwright/test'
+        versions: ['>=1.62.0']
+      - dependency-name: playwright
+        versions: ['>=1.62.0']
+      - dependency-name: playwright-core
+        versions: ['>=1.62.0']
+      # three 0.186 pèse environ 56 ko de plus au démarrage et dépasse le plafond de
+      # `core/startupBudget.ts` de 22 640 o. Relever ce plafond est une décision de produit.
+      - dependency-name: three
+        update-types: ['version-update:semver-minor']
+      - dependency-name: '@types/three'
+        update-types: ['version-update:semver-minor']
+      # TypeScript 7 n'expose plus l'API du compilateur (`createSourceFile`…) que
+      # `build/glslComments.ts` et deux tests utilisent. Vite 8 remplace le bundleur par
+      # Rolldown : le budget de démarrage, l'empreinte des pages et `manualChunks` sont à refaire.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: vite
+        update-types: ['version-update:semver-major']
+      - dependency-name: vite-plugin-pwa
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    # Les actions sont épinglées par SHA avec leur version en commentaire ; Dependabot met les
+    # deux à jour. Une majeure (gitleaks-action 3) se lit avant de se fusionner.
+    groups:
+      actions:
+        update-types:
+          - minor
+          - patch

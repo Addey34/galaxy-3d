@@ -1,0 +1,146 @@
+name: Data drift
+
+# LE GUETTEUR DE DÉRIVE DES DONNÉES GÉNÉRÉES.
+#
+# Les générateurs qui lisent une source du monde (gazetteer de l'UAI, registre du PDS, Horizons,
+# archive de Galileo) savent chacun comparer ce qui est livré à ce que la source sert aujourd'hui,
+# par `--check`. Personne ne les lançait. Le 2026-10-23, un audit fait à la main a trouvé un
+# nouveau nom UAI, deux noms d'instruments corrigés, le type de Dimorphos changé, deux lignes
+# divergentes pour Hayabusa et un Horizons qui répond HTTP 500 pour Hera : rien de tout cela
+# n'était signalé. `source-health.yml` dit si les sources RÉPONDENT ; celui-ci dit si ce
+# qu'elles servent est encore ce que le dépôt livre.
+#
+# TROIS verdicts par générateur (`scripts/check-data-drift.mjs`) : à jour, DÉRIVÉ, NON MESURÉ.
+# Un plantage n'est pas une dérive, et « je n'ai pas pu mesurer » n'est pas « tout va bien » :
+# le code 2 ouvre l'issue comme une dérive.
+#
+# S'y ajoute la sonde de BepiColombo. Sa trajectoire est une solution de l'ESA ajustée jusqu'à une
+# date, prédite ensuite, et chaque manœuvre la révise : le fichier livré vieillit avec la mise en
+# orbite. Pas de `--check` pour ce générateur, donc la sonde le RÉGÉNÈRE sur le runner (jetable)
+# et regarde si git voit un changement. À retirer une fois BepiColombo en orbite autour de Mercure
+# et sa solution devenue un ajustement complet.
+#
+# Il ne conditionne RIEN : aucun déploiement, aucun run. Les lectures sont FRAÎCHES (pas de
+# cache) : un cache chaud répondrait « à jour » à une source qui a changé.
+
+on:
+  schedule:
+    # Le lundi. Les sources bougent à l'échelle de la semaine, et les générateurs d'Horizons
+    # font des milliers de requêtes : une fois par jour serait un poids sans bénéfice.
+    - cron: '47 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: data-drift
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    name: Has what the sources serve changed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0, resolved 2026-10-23
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0, resolved 2026-10-23
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Code de sortie capturé SANS pipe : un pipe rend le code du DERNIER maillon.
+      - name: Compare every generated dataset with its source
+        id: drift
+        run: |
+          code=0
+          node scripts/check-data-drift.mjs --markdown > drift.md 2> drift.err || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ ! -s drift.md ]; then
+            {
+              echo "## La dérive n'a PAS pu être mesurée (code $code)"
+              echo
+              echo '```'
+              cat drift.err
+              echo '```'
+            } > drift.md
+            echo "code=2" >> "$GITHUB_OUTPUT"
+          fi
+          cat drift.md
+
+      - name: Re-read BepiColombo's trajectory
+        id: bepi
+        run: |
+          code=0
+          pnpm ephemeris:generate --only bepicolombo,bepicolombo-mercury > bepi.log 2>&1 || code=$?
+          changed="$(git status --porcelain -- public/assets/ephemerides src/config | head -20)"
+          bad=false
+          {
+            echo
+            if [ "$code" != "0" ]; then
+              bad=true
+              echo "### BepiColombo : NON MESURÉ"
+              echo
+              echo "La régénération a échoué (code $code) :"
+              echo '```'
+              tail -8 bepi.log
+              echo '```'
+            elif [ -n "$changed" ]; then
+              bad=true
+              echo "### BepiColombo : la solution d'Horizons a CHANGÉ"
+              echo
+              echo "Fichiers modifiés par la régénération (issue #140 : ses cinq étapes) :"
+              echo '```'
+              echo "$changed"
+              echo '```'
+            else
+              echo "BepiColombo : régénéré, identique au dépôt."
+            fi
+          } >> drift.md
+          echo "bad=$bad" >> "$GITHUB_OUTPUT"
+
+      - name: Decide
+        id: verdict
+        run: |
+          if [ "${{ steps.drift.outputs.code }}" = "0" ] && [ "${{ steps.bepi.outputs.bad }}" = "false" ]; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update the tracking issue
+        if: steps.verdict.outputs.clean != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          body="$(cat drift.md)"
+          existing="$(gh issue list --repo "$REPO" --label data-drift --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            gh label create data-drift --repo "$REPO" \
+              --description "Une source a change depuis la derniere generation des donnees" --color FBCA04 || true
+            gh issue create --repo "$REPO" --label data-drift \
+              --title "Les donnees generees ont derive de leur source" --body "$body"
+          fi
+
+      - name: Close the tracking issue when everything is up to date again
+        if: steps.verdict.outputs.clean == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          existing="$(gh issue list --repo "$REPO" --label data-drift --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$REPO" --comment "$(cat drift.md)"
+          fi
