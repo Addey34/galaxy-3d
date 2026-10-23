@@ -629,4 +629,16 @@ export const ptBR: Record<MessageKey, string> = {
     'a distância média entre os dois centros logo após o impacto da DART (1,189 km antes)',
   'fact.notYetSourced':
     'A Galaxy ainda não vinculou este valor a uma fonte primária (agência espacial, UAI, artigo publicado): por isso ele não é exibido.',
+  'help.shortcut.space.key': 'Espaço',
+  'help.shortcut.space.text': 'reproduzir / pausar o tempo',
+  'help.shortcut.search.key': '/',
+  'help.shortcut.search.text': 'buscar um corpo',
+  'help.shortcut.today.key': 'T',
+  'help.shortcut.today.text': 'voltar ao presente',
+  'help.shortcut.fullscreen.key': 'F',
+  'help.shortcut.fullscreen.text': 'tela cheia',
+  'help.shortcut.mode.key': 'M',
+  'help.shortcut.mode.text': 'alternar entre Educ e Explo',
+  'help.shortcut.help.key': '?',
+  'help.shortcut.help.text': 'mostrar esta ajuda',
 };

@@ -657,6 +657,18 @@ export const en = {
     'the mean distance between the two centres just after the DART impact (1.189 km before)',
   'fact.notYetSourced':
     'Galaxy has not yet traced this value to a primary source (space agency, IAU, peer-reviewed article), so it is not shown.',
+  'help.shortcut.space.key': 'Space',
+  'help.shortcut.space.text': 'play / pause time',
+  'help.shortcut.search.key': '/',
+  'help.shortcut.search.text': 'search a body',
+  'help.shortcut.today.key': 'T',
+  'help.shortcut.today.text': 'back to now',
+  'help.shortcut.fullscreen.key': 'F',
+  'help.shortcut.fullscreen.text': 'full screen',
+  'help.shortcut.mode.key': 'M',
+  'help.shortcut.mode.text': 'switch Educ / Explo',
+  'help.shortcut.help.key': '?',
+  'help.shortcut.help.text': 'show this help',
 };
 
 /** Toutes les clés d'interface de l'application. Dérivé, jamais listé à la main. */

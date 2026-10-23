@@ -621,4 +621,16 @@ export const fr: Record<MessageKey, string> = {
     'la distance moyenne des deux centres juste après l’impact de DART (1,189 km avant)',
   'fact.notYetSourced':
     'Galaxy n’a pas encore rattaché cette valeur à une source primaire (agence spatiale, UAI, article publié) : elle n’est donc pas affichée.',
+  'help.shortcut.space.key': 'Espace',
+  'help.shortcut.space.text': 'lecture / pause du temps',
+  'help.shortcut.search.key': '/',
+  'help.shortcut.search.text': 'chercher un corps',
+  'help.shortcut.today.key': 'T',
+  'help.shortcut.today.text': 'retour au présent',
+  'help.shortcut.fullscreen.key': 'F',
+  'help.shortcut.fullscreen.text': 'plein écran',
+  'help.shortcut.mode.key': 'M',
+  'help.shortcut.mode.text': 'passer d’Educ à Explo',
+  'help.shortcut.help.key': '?',
+  'help.shortcut.help.text': 'afficher cette aide',
 };

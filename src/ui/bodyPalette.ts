@@ -318,12 +318,26 @@ export function setupBodyPalette(
       input.value = '';
       render('');
       // Focus après affichage (sinon le focus est ignoré sur un élément caché).
-      requestAnimationFrame(() => input.focus());
+      // Au doigt, le clavier virtuel couvrirait la moitié de la liste dès l'ouverture, et le
+      // visiteur voulait d'abord PARCOURIR (signalé le 2026-10-23). `inputmode="none"` garde le
+      // focus, donc le lecteur d'écran reste dans le champ, sans clavier ; un toucher sur le champ
+      // le rend (ci-dessous), parce que là le visiteur veut écrire.
+      input.inputMode = matchMedia('(pointer: coarse)').matches
+        ? 'none'
+        : 'text';
+      requestAnimationFrame(() => input.focus({ preventScroll: true }));
     }
   };
   coordinator?.register('body-palette', () => setOpen(false));
 
   trigger.addEventListener('click', () => setOpen(!open));
+  input.addEventListener('pointerdown', () => {
+    if (input.inputMode !== 'none') return;
+    input.inputMode = 'text';
+    // Le champ a déjà le focus : le relâcher et le reprendre fait apparaître le clavier.
+    input.blur();
+    requestAnimationFrame(() => input.focus({ preventScroll: true }));
+  });
 
   /**
    * Dit COMBIEN de corps correspondent.
