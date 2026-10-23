@@ -15,6 +15,7 @@
     "test:a11y": "playwright test e2e/a11y-audit.spec.ts",
     "test:perf": "playwright test e2e/perf-fps.spec.ts",
     "test:mobile": "playwright test --config=playwright.mobile.config.ts",
+    "test:devices": "pnpm dlx browserstack-node-sdk@1.74.0 playwright test --config=playwright.devices.config.ts",
     "ephemeris:generate": "node scripts/generate-horizons-ephemerides.mjs",
     "ephemeris:elements": "node scripts/derive-relative-elements.mjs",
     "ephemeris:meanmotion": "node scripts/compute-mean-motion-scale.mjs",
