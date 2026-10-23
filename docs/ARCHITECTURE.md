@@ -2111,7 +2111,15 @@ rien. Le facteur ne s'applique ni à un budget forcé (`?debug-tiles`) ni au ren
 logiciel, Sentinel-2 n'atteint pas l'IGN ; le scénario `e2e/regionalImagery.spec.ts` tient la règle
 de la base sur la Blue Marble, et l'articulation Sentinel-2 plus IGN n'est mesurée que sur GPU.
 
-### Les imageries régionales plus fines que la base (lot 53, pas 4)
+### Le fond de loin : l'image du jour (2026-10-23)
+
+Le fond d'arrivée de la Terre est l'édition annuelle de Sentinel-2 (10 m) ; de loin, `ui/surfacePanel.ts` demande à sa place l'image du JOUR de la scène (VIIRS, 250 m, la couche `daily`), tant que le visiteur n'a pas choisi un autre fond que Sentinel-2. Le réglage continue d'afficher « Sentinel-2 » : la règle ne change pas le choix, seulement le jeu de tuiles attaché, et le crédit affiché est celui du jeu attaché.
+
+La règle est `core/farBase.ts` : on passe au jour entre `FAR_BASE_ENTER_RADII` (1,5 rayon de distance au centre) et `FAR_BASE_CEILING_RADII` (1,8), on revient au fond fin sous `FAR_BASE_LEAVE_RADII` (1,3), avec hystérésis sur les deux bords pour ne pas relancer un chargement à chaque oscillation. **Le plafond est un invariant, pas un réglage** : au-dessus, le moteur ne demande aucune tuile (0 à 1,92 rayon, 18 à 1,66), et attacher le jeu du jour ferait lire le fichier de ses jours publiés au démarrage de chaque visiteur ; la première version n'avait pas de plafond et `e2e/earth-visual.spec.ts` (démarrage mobile, aucune requête VIIRS) l'a refusée en CI. **Le seuil de sortie doit rester au-dessus du plancher d'approche de la texture livrée.** Ce plancher suit la finesse de ce qui est PEINT : si le jeu du jour n'arrive pas, il reste à la texture livrée (1,073 rayon mesuré sur 800 px de haut, proportionnel à la hauteur de l'écran). Un premier essai à 1,06 bloquait la caméra à 466 km, repéré par un scénario e2e dont GIBS était coupé.
+
+Mesuré, GPU réel, Mont Blanc : la descente finit toujours à 0,917 km à 60 i/s. À 1,66 rayon, 18 tuiles VIIRS sont demandées et aucune de Sentinel-2 ; sous 1,3 rayon c'est Sentinel-2. **Limite** : la bande où cette règle régit quelque chose est étroite (1,3 à 1,8 rayon), parce que le moteur ne peint que ce que la texture livrée (8k) ne couvre plus ; plus haut, c'est cette texture, non datée, qui s'affiche. Une couche de loin vraiment fraîche demanderait de remplacer cette texture, ce que cette règle ne fait pas. Gardes : `src/core/farBase.test.ts` et le scénario « shows the day's VIIRS from afar » de `e2e/surfaceImageryEarth.spec.ts`, falsifié (règle neutralisée, il rougit).
+
+## Les imageries régionales plus fines que la base (lot 53, pas 4)
 
 Sentinel-2 s'arrête à ~10 m par pixel et la mosaïque Blue Marble de la Terre à
 ~500 m. Une imagerie NATIONALE va bien plus loin : l'orthophoto de l'IGN (BD ORTHO®, 20 cm), que

@@ -13,6 +13,7 @@
  * Une mosaïque ne décrit pas la date de la scène mais la surface : elle est servie telle quelle
  * quelle que soit la date, et c'est cela qu'il faut lire, pas un écart à combler.
  */
+import { showsFarBase } from '@/core/farBase';
 import type { PublicAPI } from '@/SolarSystemApp';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
@@ -152,6 +153,8 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   baseWrapper.append(baseLabel, baseSelect);
   wrapper.after(baseWrapper);
   let choice: SurfaceChoiceId = DEFAULT_SURFACE_CHOICE;
+  /** Mémoire de l'hystérésis du fond de loin. */
+  let farBase = false;
   baseSelect.value = choice;
 
   // RIDEAU AVANT/APRÈS (lot 50, pas 2) : une année à comparer à celle de la scène, proposée
@@ -452,7 +455,13 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       return;
     }
 
-    const tileset = chooseTileset?.(name, choice);
+    // De loin, l'image du jour plutôt que l'édition annuelle (`core/farBase.ts`) ; le choix
+    // du visiteur reste celui qu'affiche le réglage.
+    farBase =
+      choice === 'sentinel-2' &&
+      showsFarBase(distance / renderedRadius, farBase);
+    const effective: SurfaceChoiceId = farBase ? 'daily' : choice;
+    const tileset = chooseTileset?.(name, effective);
     if (!tileset) {
       if (engine.attachedBody) disable();
       return;
@@ -464,7 +473,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       tileset,
       radiusKm,
       heightsFor?.(heights.get(name) ?? [], tileset.matrix) ?? null,
-      compareFor?.(name, choice, compareYear, tileset) ?? null
+      compareFor?.(name, effective, compareYear, tileset) ?? null
     );
     // L'imagerie régionale du corps, plus fine que sa base dans sa couverture (lot 53, pas 4).
     engine.setRegional(regionalFor?.(name) ?? null);
