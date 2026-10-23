@@ -1,0 +1,72 @@
+name: Real devices
+
+# `pnpm test:devices` sur de VRAIS appareils (BrowserStack), lancé À LA MAIN : les minutes de la
+# ferme se comptent, donc ni push ni cron. Vise la production (`origin`). Aucun secret dans le
+# dépôt : le secret `BROWSERSTACK` du dépôt, ou le couple `BROWSERSTACK_USERNAME` et
+# `BROWSERSTACK_ACCESS_KEY`. Contrat : `playwright.devices.config.ts`.
+on:
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: Application visée (la production par défaut)
+        default: https://galaxy.adrianguichard.dev
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  devices:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0, resolved 2026-10-23
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0, resolved 2026-10-23
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Les identifiants passent par l'environnement, jamais par une interpolation dans le script.
+      # Un secret unique est lu sous la forme « identifiant:clé » ou sur deux lignes ; la FORME
+      # seule est dite en cas d'échec, jamais une valeur.
+      - name: Read the BrowserStack credentials
+        env:
+          BS_ONE: ${{ secrets.BROWSERSTACK }}
+          BS_USER: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+        run: |
+          user="$BS_USER"; key="$BS_KEY"
+          if [ -z "$user" ] || [ -z "$key" ]; then
+            user=$(printf '%s' "$BS_ONE" | tr '\r' '\n' | sed -E 's/[:[:space:]].*$//' | sed -n '1p')
+            key=$(printf '%s' "$BS_ONE" | tr '\r' '\n' | sed -E 's/^[^:[:space:]]*[:[:space:]]+//' | sed -n '1p')
+            if [ "$(printf '%s' "$BS_ONE" | tr '\r' '\n' | grep -c .)" -ge 2 ]; then
+              user=$(printf '%s' "$BS_ONE" | tr '\r' '\n' | grep . | sed -n '1p' | sed -E 's/^[^=]*=//')
+              key=$(printf '%s' "$BS_ONE" | tr '\r' '\n' | grep . | sed -n '2p' | sed -E 's/^[^=]*=//')
+            fi
+          fi
+          if [ -z "$user" ] || [ -z "$key" ] || [ "$user" = "$key" ]; then
+            echo "::error::secret BROWSERSTACK illisible : attendu « identifiant:clé », deux lignes, ou les secrets BROWSERSTACK_USERNAME et BROWSERSTACK_ACCESS_KEY"
+            exit 1
+          fi
+          echo "::add-mask::$user"; echo "::add-mask::$key"
+          { echo "BROWSERSTACK_USERNAME=$user"; echo "BROWSERSTACK_ACCESS_KEY=$key"; } >> "$GITHUB_ENV"
+
+      - name: Replay the device journeys on real devices
+        env:
+          DEVICES_ORIGIN: ${{ inputs.origin }}
+        run: pnpm test:devices
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2, resolved 2026-10-23
+        if: always()
+        with:
+          name: devices-reports
+          path: |
+            reports/mobile
+            reports/devices
+          if-no-files-found: ignore
