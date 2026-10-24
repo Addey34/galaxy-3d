@@ -38,6 +38,35 @@ L'image joue les deux contrôles hors réseau au build (`ingest.py --self-test`,
 `era5.py --self-test`) : une image qui casserait le format, l'origine du temps d'ERA5 ou le pont
 des analyses ne se construit pas.
 
+## Les gros fichiers du site (2026-10-24)
+
+Firebase Hosting a coupé le site le 2026-10-24 : 10,3 Go de transfert sur la période, pour des
+visites qui pèsent de 10 Mo (accueil) à 39 Mo (la Terre). Les textures, les modèles de forme et les
+éphémérides peuvent donc venir de CE serveur, par `VITE_ASSET_ORIGIN` au build
+(`src/config/assetOrigin.ts`, vide par défaut : sans elle rien ne change). **Ne la poser qu'APRÈS
+la copie** : une origine sans ses fichiers rend des 404 sans CORS, que le navigateur ne distingue
+pas d'un refus CORS.
+
+```bash
+# depuis le dépôt, après `pnpm build` (dist/ porte les fichiers avec leurs noms hachés)
+tar cf site-assets.tar -C dist assets/textures assets/models assets/ephemerides
+scp site-assets.tar ubuntu@82.70.233.45:/tmp/
+ssh ubuntu@82.70.233.45 'docker run --rm -v galaxy-data_galaxy_data:/srv -v /tmp/site-assets.tar:/in.tar:ro alpine tar xf /in.tar -C /srv && rm /tmp/site-assets.tar'
+```
+
+Même volume nommé et même méthode que pour le relief de la Terre ci-dessous. Puis, à REDÉPLOYER comme le reste (le `Caddyfile` a gagné
+l'exposition de `Content-Range` : sans elle le lecteur d'éphémérides rejette chaque fenêtre) :
+
+```bash
+# la preuve, avant de poser la variable : une plage lue depuis une AUTRE origine
+curl -sI -r 0-95 -H 'Origin: https://galaxy.adrianguichard.dev'   "https://galaxy-data.adrianguichard.dev/assets/ephemerides/manifest.json" | grep -iE 'HTTP|content-range|access-control'
+```
+
+Mesuré en local le 2026-10-24 (un second serveur Node imitant le CORS et les plages, pas le vrai
+Caddy, Docker n'étant pas lancé) : une visite `?body=earth` lit 33,9 Mo de ces fichiers sur
+l'origine et 0 sur le site, aucune erreur 4xx, texture 8k appliquée. **Pas mesuré** : le vrai
+Caddy, le débit de la VM, son espace disque.
+
 ## Le relief de la Terre (lot 48)
 
 Le service sert aussi les tuiles de hauteurs de la Terre (`assets/height-tiles/earth/<hachage>/`,

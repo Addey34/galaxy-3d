@@ -13,6 +13,9 @@
 	# passante de la VM ne l'est pas.
 	@allowed header_regexp origin Origin ^(https://galaxy\.adrianguichard\.dev|http://localhost:[0-9]+)$
 	header @allowed Access-Control-Allow-Origin {re.origin.0}
+	# Un navigateur n'expose pas `Content-Range` à une page d'une autre origine sans cet en-tête, et le
+	# lecteur d'éphémérides l'EXIGE pour valider chaque fenêtre (`core/ephemerisWindow.ts`).
+	header @allowed Access-Control-Expose-Headers "Content-Range, Content-Length, Accept-Ranges"
 	header Vary Origin
 
 	# Le manifeste change à chaque passage ; un champ publié ne change jamais (son cycle est
@@ -36,6 +39,14 @@
 	# (`assets/imagery/<id>/<hachage>/…`), donc une adresse ne change jamais d'octets.
 	@imagery path /assets/imagery/*
 	header @imagery Cache-Control "public, max-age=31536000, immutable"
+
+	# Les gros fichiers du SITE (textures, modèles de forme, éphémérides), servis d'ici quand le build
+	# pose `VITE_ASSET_ORIGIN` (`src/config/assetOrigin.ts`) : Firebase Hosting facture le transfert
+	# et a coupé le site le 2026-10-24 à 10,3 Go. Leurs noms sont STABLES (une texture réécrite garde
+	# son nom), donc la même règle que `firebase.json` : une heure, puis revalidation. Les `.bin`
+	# des éphémérides portent leur hachage et prennent la règle immuable plus haut.
+	@siteAssets path /assets/textures/* /assets/models/*
+	header @siteAssets Cache-Control "public, max-age=3600, must-revalidate"
 
 	# Rien d'autre n'est servi : ni liste de dossier, ni fichier en cours d'écriture.
 	@hidden path */.* *.part

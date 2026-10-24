@@ -1,3 +1,4 @@
+import { heavyAssetUrl } from '@/config/assetOrigin';
 import CelestialObjectFactory from './components/celestial/CelestialObjectFactory';
 import { AnimationSystem } from './components/systems/AnimationSystem';
 import { CameraSystem } from './components/systems/CameraSystem';
@@ -151,7 +152,7 @@ export class SolarSystemApp {
       performance: APP_SETTINGS.performance,
     };
     this.systems.texture = TextureSystem.getInstance(config);
-    const manifestUrl = `${import.meta.env.BASE_URL}assets/ephemerides/manifest.json`;
+    const manifestUrl = heavyAssetUrl('assets/ephemerides/manifest.json');
     let textureProgress = 0;
     let ephemeridesReady = false;
     let lastTextureMessage = t('loader.core');

@@ -4,6 +4,7 @@
  *
  * Le catalogue des corps célestes vit à part dans `bodies.ts` (il grossit indépendamment).
  */
+import { heavyAssetUrl } from './assetOrigin';
 import * as THREE from 'three';
 import {
   CIVIL_TWILIGHT_DOT,
@@ -677,7 +678,7 @@ export const WIND_SETTINGS = {
 
 export const TEXTURE_SETTINGS: TextureSettings = {
   // Vite BASE_URL keeps Firebase Hosting sub-path deployments working.
-  basePath: `${import.meta.env.BASE_URL}assets/textures/`,
+  basePath: heavyAssetUrl('assets/textures/'),
   defaultSettings: {
     wrapS: THREE.RepeatWrapping,
     wrapT: THREE.RepeatWrapping,
