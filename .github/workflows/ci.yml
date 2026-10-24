@@ -36,7 +36,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
       - run: pnpm audit:prod
+      # Les gros fichiers (textures, modeles, ephemerides) viennent du serveur de donnees, pas de
+      # Firebase Hosting, dont le transfert mensuel a coupe le site le 2026-10-24 (voir
+      # `src/config/assetOrigin.ts`). Les fichiers y sont copies AVANT de poser cette variable.
       - run: pnpm build
+        env:
+          VITE_ASSET_ORIGIN: https://galaxy-data.adrianguichard.dev
 
       # GENERATED DOCUMENT FINGERPRINT. The build derives 114 pages, the sitemap, and 56
       # thumbnails from the catalog. A migration that changes a value, key ordering, or rounding
@@ -106,6 +111,14 @@ jobs:
 
       # Deploy to Firebase Hosting on pushes to main after verify+build pass, without waiting
       # for E2E. Requires the FIREBASE_TOKEN secret.
+      # Un site qui lit ses gros fichiers ailleurs ne se deploie pas si l'un manque ou a change de
+      # taille (`scripts/check-asset-origin.mjs`) : il rendrait des 404 sans CORS.
+      - name: Check heavy files are on their origin
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          VITE_ASSET_ORIGIN: https://galaxy-data.adrianguichard.dev
+        run: node scripts/check-asset-origin.mjs
+
       - name: Deploy to Firebase Hosting
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: pnpm dlx firebase-tools@15.30.2 deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
