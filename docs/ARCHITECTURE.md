@@ -2117,7 +2117,9 @@ Textures, modèles de forme et éphémérides (la part qui fait le poids d'une v
 
 Ce qui ne bouge pas : les pages, le JavaScript et les petits JSON (gazetteer, missions, recherche) restent sur le site ; la CSP autorisait déjà cet hôte pour les images et les requêtes ; le chargeur d'éphémérides refuse un fichier d'une autre origine que son manifeste, donc le manifeste et ses `.bin` partent ensemble. **Piège payé en lisant le code, pas en production** : le lecteur d'éphémérides EXIGE `Content-Range` et un navigateur ne l'expose pas à une autre origine sans `Access-Control-Expose-Headers` ; le `Caddyfile` le pose maintenant, et un serveur de test qui l'exposait de lui-même aurait caché ce défaut.
 
-Non mesuré : le vrai Caddy (vérification locale faite avec un serveur Node qui imite CORS et les plages), le débit et l'espace disque de la VM. Limite de conception : la VM est un point unique ; si elle tombe, l'app perd ses textures, ce que Firebase ne faisait pas.
+**Activé le 2026-10-24** (`ci.yml` pose la variable sur la build de production). Les fichiers sont sur le serveur, le `Caddyfile` redéployé, et la preuve faite contre le VRAI Caddy : plage 206 avec `Content-Range` exposé, CORS limité à Galaxy, 476 fichiers lourds de même taille, une visite `?body=earth` lit 29,7 Mo sur l'origine et 0 sur le site. **Ce qu'il faut refaire à chaque changement d'une texture, d'un modèle ou d'éphémérides** : recopier les fichiers (README du service) AVANT de fusionner ; `scripts/check-asset-origin.mjs` refuse le déploiement si un fichier manque ou change de taille (404 sans CORS sinon, et une texture réécrite sous le même nom servirait l'ancienne en silence). Falsifié : une mauvaise origine nomme les fichiers absents, un octet de plus nomme la texture.
+
+Non mesuré : le débit de la VM et son allocation de sortie (Oracle). Limite de conception : la VM est un point unique ; si elle tombe, l'app perd ses textures, ce que Firebase ne faisait pas.
 
 ## Le fond de loin : l'image du jour (2026-10-23)
 
