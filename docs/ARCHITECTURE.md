@@ -2111,7 +2111,15 @@ rien. Le facteur ne s'applique ni à un budget forcé (`?debug-tiles`) ni au ren
 logiciel, Sentinel-2 n'atteint pas l'IGN ; le scénario `e2e/regionalImagery.spec.ts` tient la règle
 de la base sur la Blue Marble, et l'articulation Sentinel-2 plus IGN n'est mesurée que sur GPU.
 
-### Le fond de loin : l'image du jour (2026-10-23)
+### D'où viennent les gros fichiers du site (2026-10-24)
+
+Textures, modèles de forme et éphémérides (la part qui fait le poids d'une visite : 10 Mo à l'accueil, 39 Mo sur la Terre) ont une origine posée AU BUILD, `VITE_ASSET_ORIGIN`, lue par `config/assetOrigin.ts` (`heavyAssetUrl`). Vide par défaut : ils viennent du site, et la CI, les tests et le développement ne changent pas. Posée, ils viennent de ce serveur (`services/galaxy-data/README.md` § « Les gros fichiers du site » pour la copie). La raison : Firebase Hosting a coupé le site, et les autres sites du même projet, le 2026-10-24 à 10,3 Go de transfert sur la période.
+
+Ce qui ne bouge pas : les pages, le JavaScript et les petits JSON (gazetteer, missions, recherche) restent sur le site ; la CSP autorisait déjà cet hôte pour les images et les requêtes ; le chargeur d'éphémérides refuse un fichier d'une autre origine que son manifeste, donc le manifeste et ses `.bin` partent ensemble. **Piège payé en lisant le code, pas en production** : le lecteur d'éphémérides EXIGE `Content-Range` et un navigateur ne l'expose pas à une autre origine sans `Access-Control-Expose-Headers` ; le `Caddyfile` le pose maintenant, et un serveur de test qui l'exposait de lui-même aurait caché ce défaut.
+
+Non mesuré : le vrai Caddy (vérification locale faite avec un serveur Node qui imite CORS et les plages), le débit et l'espace disque de la VM. Limite de conception : la VM est un point unique ; si elle tombe, l'app perd ses textures, ce que Firebase ne faisait pas.
+
+## Le fond de loin : l'image du jour (2026-10-23)
 
 Le fond d'arrivée de la Terre est l'édition annuelle de Sentinel-2 (10 m) ; de loin, `ui/surfacePanel.ts` demande à sa place l'image du JOUR de la scène (VIIRS, 250 m, la couche `daily`), tant que le visiteur n'a pas choisi un autre fond que Sentinel-2. Le réglage continue d'afficher « Sentinel-2 » : la règle ne change pas le choix, seulement le jeu de tuiles attaché, et le crédit affiché est celui du jeu attaché.
 

@@ -10,6 +10,7 @@
  * Gère aussi le LOD des textures (résolution selon la distance caméra) et le passage
  * Éducatif ↔ Explo (taille de base vs vraie taille physique via radiusKm).
  */
+import { heavyAssetUrl } from '@/config/assetOrigin';
 import { SKY_LOAD_RADII } from './skyApproach';
 import * as THREE from 'three';
 import {
@@ -1623,7 +1624,7 @@ export default class CelestialObject {
       const { GLTFLoader } =
         await import('three/examples/jsm/loaders/GLTFLoader.js');
       const gltf = await new GLTFLoader().loadAsync(
-        modelPath(this.name, quality)
+        heavyAssetUrl(modelPath(this.name, quality))
       );
       if (this._disposed) return;
 
