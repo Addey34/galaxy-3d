@@ -1025,7 +1025,7 @@ légèrement au-DESSUS de 1, leurs en-têtes pesant plus que ce qu'un `206` éco
 
 | famille | plafond | origine |
 | --- | --- | --- |
-| textures | 6 979 356 o | **dérivé** : la somme du palier PLANCHER (`core/textureLadder.TIERS[0]`, soit 1k) des 60 couches que le démarrage touche, plus deux raffinements de première vue nommés |
+| textures | 6 580 464 o | **dérivé** : la somme du palier PLANCHER (`core/textureLadder.TIERS[0]`, soit 1k) des 60 couches que le démarrage touche (5 601 457 o), plus le raffinement de première vue nommé (le ciel, 979 007 o). C'était 6 979 356 o avec le Soleil en 2k (398 892 o de plus), jusqu'au 2026-10-25 |
 | modèles | 1 079 152 o | **dérivé** : le niveau le plus léger (`core/modelLod`) des 15 corps modélisés |
 | éphémérides | 1 800 000 o | **posé** : le pire cas mesuré sur toute la couverture, plus 5,3 % |
 | JavaScript | 1 300 000 o | **posé** : la mesure, plus environ huit lots de croissance ordinaire |
@@ -1037,12 +1037,13 @@ nombre d'octets, donc n'achèterait rien pour une autre famille. La qualité res
 `src/config/textureLadder.test.ts`, son seul propriétaire. Ce qui fait rougir ces familles est
 précis : un démarrage qui se met à demander plus gros que le plancher.
 
-**Les deux raffinements de première vue sont nommés, pas noyés dans une somme** : le ciel en 8k
+**Le raffinement de première vue est nommé, pas noyé dans une somme** : le ciel en 8k
 (979 007 o), parce qu'il entoure la caméra et que sa distance normalisée est nulle, donc le LOD
-résout `ultra` ; et le Soleil en 2k (398 892 o), parce que la première vue est centrée sur lui, à
-moins de 40 rayons. Ce sont les deux SEULS paliers fins que le démarrage demande, mesuré. Une
-troisième entrée fait rougir la garde : soit la première vue s'est mise à charger un palier fin,
-soit c'est légitime et il faut l'écrire avec sa raison.
+résout `ultra`. C'est le SEUL palier fin que le démarrage demande, mesuré le 2026-10-25. Il y en
+avait un second, le Soleil en 2k, tant que la table des paliers le résolvait à moins de 40 rayons ;
+elle suit désormais la taille du disque (§ « Quel palier de texture, à quelle distance »), et le
+Soleil de la première vue reste en 1k. Une seconde entrée fait rougir la garde : soit la première
+vue s'est mise à charger un palier fin, soit c'est légitime et il faut l'écrire avec sa raison.
 
 **Le plafond des éphémérides a corrigé un chiffre que cette série citait depuis 17C.** La fenêtre
 de démarrage a été balayée sur toute la couverture livrée, en faisant tourner le VRAI service
