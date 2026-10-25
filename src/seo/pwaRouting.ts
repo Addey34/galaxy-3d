@@ -84,7 +84,8 @@ export const LANDING_PAGE_GLOB_IGNORES: string[] = [
 
 /** Navigations à NE PAS remplacer par l'app shell en cache. */
 export const NAVIGATE_FALLBACK_DENYLIST: RegExp[] = [
-  /^\/privacy\.html$/,
+  // Cloudflare Pages sert privacy.html à /privacy après redirection.
+  /^\/privacy(?:\.html)?$/,
   // Un segment unique sans point : les pages de corps, sans toucher `/`, `/assets/…` ni les
   // fichiers.
   /^\/[^/.]+\/?$/,

@@ -75,6 +75,13 @@ describe('routage du service worker pour les pages d’atterrissage', () => {
     }
   });
 
+  it('garde la page de confidentialité avec et sans extension', () => {
+    for (const path of ['/privacy.html', '/privacy'])
+      expect(NAVIGATE_FALLBACK_DENYLIST.some((rule) => rule.test(path))).toBe(
+        true
+      );
+  });
+
   it('ne précache pas le résumé de validation, chargé à la demande', () => {
     // Nom réel produit par le build (hash Rollup). L'app shell, lui, reste précaché.
     expect(
