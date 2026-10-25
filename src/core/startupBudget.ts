@@ -165,13 +165,14 @@ export const MODEL_FLOOR_QUALITY: ModelQuality = MODEL_QUALITY_ORDER[0]!;
 /**
  * Ce que la PREMIÈRE VUE résout légitimement au-dessus du plancher, nommément.
  *
- * Deux cas, MESURÉS en production le 2026-09-26 et non déduits : ce sont les deux seules
- * textures que le démarrage demande à un palier supérieur à 1k. Chacune est là parce que le LOD
- * fait son travail, pas parce qu'un chargement dérape — mais elles pèsent 1 253 862 octets du
- * fil à elles deux (18,3 % de la famille), donc les laisser dans une somme anonyme aurait rendu
- * le budget illisible.
+ * Un seul cas aujourd'hui, MESURÉ : les étoiles, dont le ciel entoure la caméra. Il y en avait deux
+ * (mesurés en production le 2026-09-26) ; le Soleil de la première vue a quitté la liste le
+ * 2026-10-25, quand la table des paliers a cessé de charger un 2k pour un disque qui n'en a pas
+ * l'usage (`core/textureLod.ts`). Chaque entrée est là parce que le LOD fait son travail, pas
+ * parce qu'un chargement dérape ; les laisser dans une somme anonyme aurait rendu le budget
+ * illisible.
  *
- * Une troisième entrée qui apparaîtrait fait ROUGIR la garde, et c'est le but : soit la première
+ * Une seconde entrée qui apparaîtrait fait ROUGIR la garde, et c'est le but : soit la première
  * vue s'est mise à charger un palier fin sans qu'on le veuille, soit c'est légitime et il faut
  * l'écrire ici avec sa raison. Dérivé plutôt que décrété : leurs octets sont LUS sur les fichiers
  * livrés, jamais tapés.
@@ -190,13 +191,6 @@ export const FIRST_VIEW_TEXTURE_REFINEMENTS: readonly FirstViewRefinement[] = [
     tier: '8k',
     reason:
       "le ciel entoure la caméra : sa distance normalisée est nulle, donc le LOD résout le palier `ultra`. C'est la seule texture dont on ne s'éloigne jamais.",
-  },
-  {
-    body: 'sun',
-    layer: 'surface',
-    tier: '2k',
-    reason:
-      'la première vue est centrée sur le Soleil, à moins de 40 rayons : le LOD résout `medium`. Son 1k est demandé aussi, par le préchargement, et cela reste le comportement voulu (voir grossier tout de suite, puis net).',
   },
 ];
 

@@ -329,9 +329,10 @@ describe('budget du démarrage : famille « textures »', () => {
   });
 
   it('nomme chaque raffinement de première vue, et le lit sur un fichier livré', () => {
-    // Ces deux-là sont les SEULS paliers fins que la production demande au démarrage (mesuré).
-    // Une troisième entrée est soit une régression, soit une décision à écrire ici.
-    expect(FIRST_VIEW_TEXTURE_REFINEMENTS.length).toBe(2);
+    // Celui-là est le SEUL palier fin que le démarrage demande (mesuré le 2026-10-25, après que
+    // la table des paliers a suivi la taille du disque : le Soleil de la première vue n'est plus
+    // résolu en 2k). Une seconde entrée est soit une régression, soit une décision à écrire ici.
+    expect(FIRST_VIEW_TEXTURE_REFINEMENTS.length).toBe(1);
     for (const refinement of FIRST_VIEW_TEXTURE_REFINEMENTS) {
       const basePath = texturePath(refinement.body, refinement.layer);
       const bytes = shippedBytes(
