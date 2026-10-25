@@ -7408,3 +7408,22 @@ partagé à `PermalinkController.sync`), et l'ouverture du lien les rejoue.
 - **Gardes** : `core/viewState.test.ts` (aller-retour, ordre stable, jetons invalides, plafond),
   `e2e/sharedViewState.spec.ts` (le bouton écrit les écarts, le lien les rallume, un jeton inconnu
   ne casse rien ; falsifié en retirant l'application du tableau).
+
+## Quel palier de texture, à quelle distance (2026-10-25)
+
+Un palier de largeur W montre au plus W / pi pixels en travers du disque d'un corps ; au-delà, ses
+octets sont téléchargés, décodés et téléversés pour rien. Le palier suit donc la TAILLE du disque à
+l'écran : `core/textureLod.ts` ramène la distance en rayons à celle qui, au champ de référence de
+65 degrés, donnerait le même disque (le zoom optique rétrécit le champ et grossit le disque sans
+bouger la caméra), et la table de `config/engine.ts` (8k sous 2,5 rayons, 4k sous 5, 2k sous 10,
+1k au-delà) en est lue. Elle était à 10, 20, 40 et 80 : une visite de la Terre chargeait le 8k pour
+un disque de 170 pixels.
+
+- **Mesuré** (build par défaut, `?body=earth&mode=explo`, 1280 x 800) : textures de 36,3 Mo à
+  12,2 Mo ; à l'arrivée (7 rayons) la sonde `?debug-surface` lit « texture 2048 px, agrandissement
+  0,39 px/texel », donc un texel de la 2k couvre moins d'un demi-pixel.
+- **Marge** : un quart sur 800 pixels de haut à densité 2 ; à peine tenue sur 1 080 pixels à densité 2
+  (4 % sous le besoin). Le relief garde la distance géométrique, pas celle-ci.
+- **Gardes** : `core/textureLod.test.ts`, dont deux sur la table (un palier ne manque pas de
+  texels à son bord proche, et n'est pas chargé pour un disque que le palier plus grossier couvre
+  avec quatre fois de marge ; falsifiées avec l'ancienne table).
