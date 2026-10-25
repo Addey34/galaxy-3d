@@ -3,6 +3,7 @@ import {
   ASSET_ORIGIN,
   STATIC_ORIGIN,
   heavyAssetUrl,
+  isTrustedAssetOrigin,
   originFor,
 } from './assetOrigin';
 
@@ -36,6 +37,15 @@ describe('origine des gros fichiers', () => {
     expect(originFor('assets/textures/earth/a.jpg', ranged, whole)).toBe(whole);
     expect(originFor('assets/models/a.glb', ranged, whole)).toBe(whole);
     expect(originFor('assets/ephemerides-x/a', ranged, whole)).toBe(whole);
+  });
+
+  it('admet pour le manifeste le site et l’origine posée, rien d’autre', () => {
+    const page = 'https://galaxy.adrianguichard.dev';
+    const vm = 'https://galaxy-data.adrianguichard.dev';
+    expect(isTrustedAssetOrigin(page, page, vm)).toBe(true);
+    expect(isTrustedAssetOrigin(vm, page, vm)).toBe(true);
+    expect(isTrustedAssetOrigin('https://evil.example', page, vm)).toBe(false);
+    expect(isTrustedAssetOrigin(vm, page, '')).toBe(false);
   });
 
   it('est vide par défaut : la CI et les tests ne changent pas de serveur', () => {
