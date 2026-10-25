@@ -187,14 +187,17 @@ function textureQualityForProfile(profile: QualityProfile): TextureQualityMap {
   const ultraQuality = profile.maxTextureQuality;
   const highQuality: TextureQuality = ultraQuality === '8k' ? '4k' : '2k';
   return {
+    // Distances en rayons AU CHAMP DE RÉFÉRENCE (`core/textureLod.ts`, qui dit d'où viennent ces
+    // chiffres : un palier ne sert qu'à partir du moment où le disque du corps a plus de pixels
+    // que le palier précédent n'a de texels).
     ultra: {
       segments: profile.hiResSegments,
-      distance: 10,
+      distance: 2.5,
       quality: ultraQuality,
     },
-    high: { segments: 128, distance: 20, quality: highQuality },
-    medium: { segments: 64, distance: 40, quality: '2k' },
-    low: { segments: 32, distance: 80, quality: '1k' },
+    high: { segments: 128, distance: 5, quality: highQuality },
+    medium: { segments: 64, distance: 10, quality: '2k' },
+    low: { segments: 32, distance: 20, quality: '1k' },
   };
 }
 

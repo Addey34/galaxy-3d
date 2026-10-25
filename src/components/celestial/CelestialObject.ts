@@ -62,6 +62,7 @@ import {
   lightestModelQuality,
   type ModelQuality,
 } from '@/core/modelLod';
+import { textureLodDistance } from '@/core/textureLod';
 import type { CameraDistance, CelestialBodyConfig } from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 import Logger from '@/utils/Logger';
@@ -1511,20 +1512,27 @@ export default class CelestialObject {
     // On ne recharge que si le PALIER de qualité change réellement. Comparer la distance
     // brute (± threshold) relançait un chargement au moindre déplacement autour d'un seuil
     // de palier → oscillation entre deux résolutions (« thrash » LOD) et re-décodes inutiles.
+    // Le palier suit la TAILLE du disque à l'écran, pas la seule distance : le zoom optique
+    // rétrécit le champ et grossit le disque sans bouger la caméra (`core/textureLod.ts`). Le
+    // relief, lui, reste sur la distance géométrique, plus haut.
+    const textureDistance =
+      camera instanceof THREE.PerspectiveCamera
+        ? textureLodDistance(normalizedDistance, camera.fov)
+        : normalizedDistance;
     const nextQuality = this.textureSystem.resolveSurfaceQuality(
       this.name,
-      normalizedDistance
+      textureDistance
     );
     // Garde-fou distance : sous le seuil ET même palier → rien à faire.
     if (
       nextQuality === this._lastLODQuality &&
-      Math.abs(normalizedDistance - this.lastLODNormalizedDistance) < threshold
+      Math.abs(textureDistance - this.lastLODNormalizedDistance) < threshold
     ) {
       return;
     }
 
     this._lodPending = true;
-    this.lastLODNormalizedDistance = normalizedDistance;
+    this.lastLODNormalizedDistance = textureDistance;
     this._lastLODQuality = nextQuality;
 
     try {
@@ -1535,13 +1543,13 @@ export default class CelestialObject {
         const texture = await this.textureSystem.getLODTexture(
           this.name,
           textureKey,
-          normalizedDistance
+          textureDistance
         );
         // Le helper ré-vérifie l'état après l'await : une observation peut avoir
         // remplacé les nuages pendant le chargement LOD.
         this._applyLoadedTexture(textureKey, texture);
       }
-      if (this.config.ring) await this._loadRingTexture(normalizedDistance);
+      if (this.config.ring) await this._loadRingTexture(textureDistance);
     } catch {
       // Dégradation silencieuse : la dernière texture valide reste appliquée.
     } finally {
