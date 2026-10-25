@@ -75,6 +75,26 @@ export async function zoomIn(page: Page, delta = -12_000): Promise<void> {
   await page.mouse.wheel(0, delta);
 }
 
+/**
+ * Descend en deux temps, pour que le palier 8k de la Terre se pose DANS LE CALME.
+ *
+ * Avant le 2026-10-25 la Terre arrivait en 8k : ces textures partaient au démarrage, pendant que
+ * `boot` attendait le calme. Depuis que la table des paliers suit la taille du disque, elles ne
+ * partent qu'à l'approche (sous 2,5 rayons au champ de référence), donc PENDANT la descente du
+ * scénario, en concurrence avec les carreaux. Sur un processeur lent en rendu logiciel c'est ce
+ * qui a fait échouer trois scénarios de `surfaceImageryEarth.spec.ts` (images de 1,5 à 3 s, 43
+ * carreaux en vol, run 40152691568). Un premier cran, mesuré, amène la caméra à 2,14 rayons depuis
+ * l'arrivée (7 rayons) : le 8k s'y charge, on attend le calme, puis on finit la course.
+ */
+export async function zoomInSettling(
+  page: Page,
+  rest = -12_000
+): Promise<void> {
+  await zoomIn(page, -3300);
+  await waitForCalmMainThread(page, { budgetMs: 3000, timeoutMs: 120_000 });
+  await zoomIn(page, rest);
+}
+
 /** Avant chaque scénario : réseau extérieur coupé, visites et langue fixées. */
 export async function prepareSurfacePage(page: Page): Promise<void> {
   await blockExternalNetwork(page);
