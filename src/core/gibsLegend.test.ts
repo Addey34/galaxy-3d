@@ -116,7 +116,12 @@ describe('aucune légende distante ne subsiste', () => {
     const remote = [...imgSrc!.matchAll(/https:\/\/([a-z0-9.-]+)/g)].map(
       (m) => m[1]!
     );
-    const declared = Object.values(TILE_PROVIDERS).map((p) => p.host);
+    // Plus l'hôte des textures et modèles (Cloudflare) : `TextureLoader` de repli, sans
+    // `createImageBitmap`, les lit comme des images.
+    const declared = [
+      ...Object.values(TILE_PROVIDERS).map((p) => p.host),
+      'galaxy-static.galaxy-3d.workers.dev',
+    ];
     expect(remote.sort()).toEqual([...declared].sort());
     // Les seuls jetons non-hôtes admis restent ceux de l'origine et des images locales.
     expect(imgSrc!.replace(/https:\/\/[a-z0-9.-]+/g, '').trim()).toBe(

@@ -42,7 +42,7 @@ des analyses ne se construit pas.
 
 Firebase Hosting a coupé le site le 2026-10-24 : 10,3 Go de transfert sur la période, pour des
 visites qui pèsent de 10 Mo (accueil) à 39 Mo (la Terre). Les textures, les modèles de forme et les
-éphémérides peuvent donc venir de CE serveur, par `VITE_ASSET_ORIGIN` au build
+éphémérides peuvent donc venir de CE serveur, par `VITE_ASSET_ORIGIN` au build (depuis le 2026-10-25 seules les éphémérides y restent, lues par `Range` ; textures et modèles viennent du Worker Cloudflare `VITE_STATIC_ORIGIN`, cf. `docs/ARCHITECTURE.md`)
 (`src/config/assetOrigin.ts`, vide par défaut : sans elle rien ne change). **Ne la poser qu'APRÈS
 la copie** : une origine sans ses fichiers rend des 404 sans CORS, que le navigateur ne distingue
 pas d'un refus CORS.

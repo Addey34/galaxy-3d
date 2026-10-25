@@ -311,6 +311,25 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     },
   },
   {
+    host: 'galaxy-static.galaxy-3d.workers.dev',
+    name: 'Galaxy static files (textures, shape models)',
+    url: 'https://developers.cloudflare.com/workers/static-assets/',
+    use: {
+      en: 'The textures and shape models that dress the bodies, published by this project and served by Cloudflare.',
+      fr: 'Les textures et les modèles de forme qui habillent les corps, publiés par ce projet et servis par Cloudflare.',
+      es: 'Las texturas y los modelos de forma que visten los cuerpos, publicados por este proyecto y servidos por Cloudflare.',
+      'pt-BR':
+        'As texturas e os modelos de forma que revestem os corpos, publicados por este projeto e servidos pela Cloudflare.',
+    },
+    terms: {
+      en: 'Files we publish ourselves; the provenance and licence of each texture are on its own page.',
+      fr: 'Des fichiers que nous publions nous-mêmes ; la provenance et la licence de chaque texture sont sur sa propre page.',
+      es: 'Archivos que publicamos nosotros mismos; la procedencia y la licencia de cada textura están en su propia página.',
+      'pt-BR':
+        'Arquivos que nós mesmos publicamos; a procedência e a licença de cada textura estão na sua própria página.',
+    },
+  },
+  {
     host: 'api.open-meteo.com',
     name: 'Open-Meteo',
     url: 'https://open-meteo.com/',

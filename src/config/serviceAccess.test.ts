@@ -23,7 +23,12 @@ describe('la classification des services externes', () => {
     const own = Object.entries(SERVICE_ACCESS)
       .filter(([, s]) => s.access === 'own-service')
       .map(([host]) => host);
-    expect(own).toEqual([new URL(GALAXY_DATA_ORIGIN).host]);
+    expect(own.sort()).toEqual(
+      [
+        new URL(GALAXY_DATA_ORIGIN).host,
+        'galaxy-static.galaxy-3d.workers.dev',
+      ].sort()
+    );
   });
 
   it('un service à quota par IP n’est jamais seul : notre service existe pour lui servir de voie principale', () => {
