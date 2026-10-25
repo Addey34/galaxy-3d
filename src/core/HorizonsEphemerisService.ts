@@ -12,6 +12,7 @@ import { jdTdbFromDate } from './timeScale';
 import { propagateTwoBody } from './twoBodyPropagation';
 import { propagateOblate, type Oblateness } from './oblatePropagation';
 import type { BodyDynamics } from '@/config/gravity';
+import { isTrustedAssetOrigin } from '@/config/assetOrigin';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { mapWithByteBudget, mapWithConcurrency } from '@/utils/concurrency';
 import { medianMeanMotionScale } from './meanMotionScale';
@@ -1815,7 +1816,11 @@ async function fetchManifest(
   housekeeping: boolean;
 }> {
   const manifestAbsoluteUrl = new URL(manifestUrl, window.location.href);
-  if (manifestAbsoluteUrl.origin !== window.location.origin) {
+  // Le site, ou l'origine des gros fichiers posée au build : sans cela le manifeste du serveur de
+  // données était refusé et AUCUNE éphémeride ne se chargeait (vu le 2026-10-25, #333).
+  if (
+    !isTrustedAssetOrigin(manifestAbsoluteUrl.origin, window.location.origin)
+  ) {
     throw new LoadFailure('manifest must use the application origin', false);
   }
 

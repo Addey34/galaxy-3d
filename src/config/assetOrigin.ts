@@ -41,6 +41,22 @@ export function originFor(
 }
 
 /**
+ * Une origine de manifeste d'éphémérides est admise si c'est celle du site ou l'origine posée au
+ * build pour les éphémérides (jamais une adresse arbitraire). Les binaires, eux, doivent rester
+ * sur l'origine de leur manifeste.
+ */
+export function isTrustedAssetOrigin(
+  origin: string,
+  pageOrigin: string,
+  ranged: string = ASSET_ORIGIN
+): boolean {
+  return (
+    origin === pageOrigin ||
+    (ranged !== '' && origin === new URL(ranged).origin)
+  );
+}
+
+/**
  * Adresse d'un fichier lourd à partir de son chemin `assets/…` (sans barre initiale). Sans origine
  * posée, elle suit `BASE_URL`, qui garde les déploiements sous un sous-chemin.
  */
