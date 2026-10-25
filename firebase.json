@@ -6,7 +6,10 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
-      "assets/kernels/**"
+      "assets/kernels/**",
+      "assets/textures/**",
+      "assets/models/**",
+      "assets/ephemerides/**"
     ],
     "rewrites": [{ "source": "**", "destination": "/index.html" }],
     "headers": [
