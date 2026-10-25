@@ -2,13 +2,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { waitForCalmMainThread } from './mainThread';
 import {
   boot,
   HERE,
   prepareSurfacePage,
   TILE_JPEG,
   zoomIn,
+  zoomInSettling,
 } from './surfaceTiles';
 
 /**
@@ -180,12 +180,7 @@ test('raises the Earth from ETOPO relief, asked of the data service on the GIBS 
   });
   // Le fond d'arrivée est Sentinel-2 depuis le 2026-10-23 : ce scénario tient la Blue Marble.
   await chooseEarthBase(page, 'mosaic');
-  await zoomIn(page);
-  // Depuis que la table des paliers suit la taille du disque (2026-10-25), la Terre n'arrive plus
-  // en 8k : ces textures partent PENDANT la descente, et sur un processeur lent en rendu logiciel
-  // elles tenaient le fil principal plus de 30 s, badge caché (run 40146562421, trois échecs sur
-  // trois). On attend donc que la descente se calme, puis on lit le badge.
-  await waitForCalmMainThread(page, { timeoutMs: 120_000 });
+  await zoomInSettling(page);
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-relief', /\d+/, {
     timeout: 30_000,
@@ -355,7 +350,7 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
     timeout: 30_000,
   });
   await chooseEarthBase(page, 'sentinel-2');
-  await zoomIn(page);
+  await zoomInSettling(page);
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-relief', /\d+/, {
     timeout: 150_000,
@@ -657,8 +652,9 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   });
   // Un cran modéré, mesuré : -4000 amène la caméra à 1,66 rayon, où l'imagerie est demandée et
   // où le fond de loin règne encore (`core/farBase.ts`). -3600 s'arrête à 1,92 rayon sans rien
-  // demander, -4400 à 1,44, -5200 au plancher de la texture livrée.
-  await zoomIn(page, -4000);
+  // demander, -4400 à 1,44, -5200 au plancher de la texture livrée. En deux temps depuis le
+  // 2026-10-25 : -3300 (le 8k se pose dans le calme), puis -700, soit -4000 en tout.
+  await zoomInSettling(page, -700);
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
     timeout: 60_000,
