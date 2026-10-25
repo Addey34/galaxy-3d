@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { waitForCalmMainThread } from './mainThread';
 import {
   boot,
   HERE,
@@ -135,6 +136,7 @@ function flatHeightTile(
 test('raises the Earth from ETOPO relief, asked of the data service on the GIBS grid', async ({
   page,
 }) => {
+  test.setTimeout(240_000);
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
   const manifest = JSON.parse(
@@ -179,6 +181,11 @@ test('raises the Earth from ETOPO relief, asked of the data service on the GIBS 
   // Le fond d'arrivée est Sentinel-2 depuis le 2026-10-23 : ce scénario tient la Blue Marble.
   await chooseEarthBase(page, 'mosaic');
   await zoomIn(page);
+  // Depuis que la table des paliers suit la taille du disque (2026-10-25), la Terre n'arrive plus
+  // en 8k : ces textures partent PENDANT la descente, et sur un processeur lent en rendu logiciel
+  // elles tenaient le fil principal plus de 30 s, badge caché (run 40146562421, trois échecs sur
+  // trois). On attend donc que la descente se calme, puis on lit le badge.
+  await waitForCalmMainThread(page, { timeoutMs: 120_000 });
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-relief', /\d+/, {
     timeout: 30_000,
@@ -344,6 +351,11 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
   });
   await chooseEarthBase(page, 'sentinel-2');
   await zoomIn(page);
+  // Depuis que la table des paliers suit la taille du disque (2026-10-25), la Terre n'arrive plus
+  // en 8k : ces textures partent PENDANT la descente, et sur un processeur lent en rendu logiciel
+  // elles tenaient le fil principal plus de 30 s, badge caché (run 40146562421, trois échecs sur
+  // trois). On attend donc que la descente se calme, puis on lit le badge.
+  await waitForCalmMainThread(page, { timeoutMs: 120_000 });
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-relief', /\d+/, {
     timeout: 30_000,
