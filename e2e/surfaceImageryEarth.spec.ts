@@ -303,7 +303,12 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
   // Puis, le 2026-10-17, trois échecs au niveau 11 sur les processeurs les plus lents (EPYC 7763
   // du run 39015554287, Xeon 8370C du run 39060671525, 2,9 min chacun), quand les EPYC 9V74
   // passent en 1,4 min : le même code, une enveloppe pleine. Sondage à 150 s, test à 5 min.
-  test.setTimeout(300_000);
+  // 420 s depuis le 2026-10-25 : la Terre n'arrive plus en 8k (la table des paliers suit la taille
+  // du disque), ces textures partent PENDANT la descente, et les carreaux se posent à une image
+  // par image à 1,2 à 1,4 s l'image sur un processeur lent en rendu logiciel : 49 en vol, 13 une
+  // minute plus tard (run 40149648877, journal de l'attente de calme). Ce n'est pas un blocage :
+  // le badge attend donc 150 s au lieu de 30.
+  test.setTimeout(420_000);
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
   const trek = JSON.parse(
@@ -351,14 +356,9 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
   });
   await chooseEarthBase(page, 'sentinel-2');
   await zoomIn(page);
-  // Depuis que la table des paliers suit la taille du disque (2026-10-25), la Terre n'arrive plus
-  // en 8k : ces textures partent PENDANT la descente, et sur un processeur lent en rendu logiciel
-  // elles tenaient le fil principal plus de 30 s, badge caché (run 40146562421, trois échecs sur
-  // trois). On attend donc que la descente se calme, puis on lit le badge.
-  await waitForCalmMainThread(page, { timeoutMs: 120_000 });
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-relief', /\d+/, {
-    timeout: 30_000,
+    timeout: 150_000,
   });
   await expect(badge.locator('.si-credit')).toContainText(
     'EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)'
