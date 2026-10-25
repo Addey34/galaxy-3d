@@ -239,8 +239,33 @@ test.describe('ce que l’application dit quand elle change d’état', () => {
     const live = page.locator('body > p[role="status"][aria-live="polite"]');
     await page.locator('#events-trigger').click();
     await expect(page.locator('#astronomical-events')).toBeVisible();
+    // La région live ne garde que son DERNIER message, et la file en pose un nouveau toutes les
+    // 1 200 ms : le message de date ne reste affiché qu'un instant avant « Moon selected ».
+    // Sur un processeur lent le fil principal est bloqué plus longtemps (mesuré le 2026-10-25,
+    // Xeon 8370C : DEUX lectures en 5 s, 3 échecs sur 3), et une lecture périodique le manque.
+    // On enregistre donc tout ce que la région a affiché depuis avant le clic.
+    await live.evaluate((el) => {
+      const seen: string[] = [];
+      (window as unknown as { __announced: string[] }).__announced = seen;
+      seen.push(el.textContent ?? '');
+      new MutationObserver(() => seen.push(el.textContent ?? '')).observe(el, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+    });
     await page.locator('#astronomical-events .event-row').first().click();
-    await expect(live).toContainText('Date set to', { timeout: 5_000 });
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            (window as unknown as { __announced: string[] }).__announced.some(
+              (text) => text.includes('Date set to')
+            )
+          ),
+        { timeout: 5_000 }
+      )
+      .toBe(true);
   });
 
   /**
