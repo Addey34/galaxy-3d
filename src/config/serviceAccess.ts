@@ -28,6 +28,10 @@ export const SERVICE_ACCESS: Readonly<
     access: 'own-service',
     why: 'Le modèle GFS de la NOAA, récupéré une fois par cycle, l’archive ERA5 construite une fois par heure demandée (lot 46), et le relief de la Terre (lot 48), servis à tous.',
   },
+  'galaxy-static.galaxy-3d.workers.dev': {
+    access: 'own-service',
+    why: 'Les textures et les modèles de forme de Galaxy (fichiers statiques que nous publions, sans tiers), servis par Cloudflare depuis le 2026-10-25 parce que le transfert mensuel de Firebase Hosting avait coupé le site.',
+  },
   'gibs.earthdata.nasa.gov': {
     access: 'public-tiles',
     why: 'Service de tuiles et d’images de la NASA (EOSDIS), conçu pour la diffusion publique, sans clé.',

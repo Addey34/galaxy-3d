@@ -10,14 +10,20 @@
  * mais pas recopiée en rendrait l'ANCIENNE sans rien dire. Les `.bin` d'éphémérides portent leur
  * hachage (un fichier absent se voit), les textures ont un nom stable (seule la taille trahit).
  *
- * Sans `VITE_ASSET_ORIGIN` il n'y a rien à vérifier et le script sort en code 0.
+ * Deux origines : `VITE_ASSET_ORIGIN` (éphémérides, lues par `Range`) et `VITE_STATIC_ORIGIN`
+ * (textures et modèles). Sans `VITE_ASSET_ORIGIN` il n'y a rien à vérifier et le script sort en code 0.
  * Sortie : 0 tout est là, 1 manque ou taille différente, 2 origine illisible.
  */
 import { readdir } from 'node:fs/promises';
 import { statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
-const ORIGIN = (process.env.VITE_ASSET_ORIGIN ?? '').trim().replace(/\/+$/, '');
+const clean = (v) => (v ?? '').trim().replace(/\/+$/, '');
+const ORIGIN = clean(process.env.VITE_ASSET_ORIGIN);
+// Textures et modèles : origine statique (Cloudflare), à défaut celle des éphémérides.
+const STATIC = clean(process.env.VITE_STATIC_ORIGIN) || ORIGIN;
+const originOf = (path) =>
+  path.startsWith('assets/ephemerides/') ? ORIGIN : STATIC;
 const ROOT = process.env.DIST_DIR ?? 'dist';
 const DIRS = ['assets/textures', 'assets/models', 'assets/ephemerides'];
 const CONCURRENCY = 12;
@@ -53,7 +59,7 @@ async function remoteSize(path, attempts = 4) {
   let last;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const response = await fetch(`${ORIGIN}/${path}`, {
+      const response = await fetch(`${originOf(path)}/${path}`, {
         method: 'HEAD',
         headers: { 'Accept-Encoding': 'identity' },
       });
@@ -70,7 +76,7 @@ async function remoteSize(path, attempts = 4) {
 }
 
 async function main() {
-  if (!ORIGIN) {
+  if (!ORIGIN && !STATIC) {
     console.log('VITE_ASSET_ORIGIN vide : rien à vérifier.');
     return 0;
   }
@@ -102,18 +108,20 @@ async function main() {
   );
   if (unreadable > 0) {
     console.error(
-      `${unreadable} requêtes sans réponse : origine ${ORIGIN} injoignable ?`
+      `${unreadable} requêtes sans réponse : origine ${ORIGIN} ou ${STATIC} injoignable ?`
     );
     return 2;
   }
   const problems = compareFiles(local, remote);
   if (problems.length) {
-    console.error(`${problems.length} écart(s) entre la build et ${ORIGIN} :`);
+    console.error(
+      `${problems.length} écart(s) entre la build et ses origines :`
+    );
     for (const p of problems.slice(0, 20)) console.error(`  ${p}`);
     return 1;
   }
   console.log(
-    `${local.size} fichiers lourds présents sur ${ORIGIN}, tailles identiques.`
+    `${local.size} fichiers lourds présents sur ${[...new Set([ORIGIN, STATIC])].join(' et ')}, tailles identiques.`
   );
   return 0;
 }

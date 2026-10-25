@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ASSET_ORIGIN, heavyAssetUrl } from './assetOrigin';
+import {
+  ASSET_ORIGIN,
+  STATIC_ORIGIN,
+  heavyAssetUrl,
+  originFor,
+} from './assetOrigin';
 
 describe('origine des gros fichiers', () => {
   it('sans origine posée, suit BASE_URL comme avant', () => {
@@ -21,7 +26,20 @@ describe('origine des gros fichiers', () => {
     );
   });
 
+  it('les éphémérides vont à l’origine qui sert les Range, le reste à l’origine statique', () => {
+    const ranged = 'https://vm.example';
+    const whole = 'https://static.example';
+    expect(originFor('assets/ephemerides/manifest.json', ranged, whole)).toBe(
+      ranged
+    );
+    expect(originFor('/assets/ephemerides/a.bin', ranged, whole)).toBe(ranged);
+    expect(originFor('assets/textures/earth/a.jpg', ranged, whole)).toBe(whole);
+    expect(originFor('assets/models/a.glb', ranged, whole)).toBe(whole);
+    expect(originFor('assets/ephemerides-x/a', ranged, whole)).toBe(whole);
+  });
+
   it('est vide par défaut : la CI et les tests ne changent pas de serveur', () => {
     expect(ASSET_ORIGIN).toBe('');
+    expect(STATIC_ORIGIN).toBe('');
   });
 });
