@@ -35,6 +35,18 @@ describe('charge utile du déploiement', () => {
     ).toBe(true);
   });
 
+  it("n'emporte pas les fichiers lourds, servis par leurs origines (2026-10-25)", () => {
+    // Firebase a coupé le site le 2026-10-24 sur le transfert, et facture le stockage par version
+    // retenue : textures, modèles et éphémérides vivent sur `VITE_STATIC_ORIGIN` et
+    // `VITE_ASSET_ORIGIN` (`config/assetOrigin.ts`). Les remettre dans le déploiement
+    // rouvrirait les deux factures sans rien servir de plus, puisque le build pointe ailleurs.
+    const ignore = firebaseJson.hosting.ignore ?? [];
+    for (const dir of ['textures', 'models', 'ephemerides'])
+      expect(ignore, `assets/${dir} n'est plus exclu du déploiement`).toContain(
+        `assets/${dir}/**`
+      );
+  });
+
   it('garde les exclusions de base', () => {
     // Sans ça, une réécriture distraite de la liste emporterait aussi ces trois-là.
     const ignore = firebaseJson.hosting.ignore ?? [];
