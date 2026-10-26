@@ -65,7 +65,7 @@ automatisés observent le même résultat.
 
 ## Contrat de sécurité
 
-Firebase Hosting fournit CSP et en-têtes de durcissement depuis `firebase.json`. L'application doit
+Cloudflare Pages (depuis le 2026-10-26 ; Firebase Hosting avant) fournit CSP et en-têtes de durcissement : `scripts/prepare-pages.mjs` dérive le fichier `_headers` du bloc `**` de `firebase.json`, qui reste la source déclarative. L'application doit
 donc garder scripts et styles externes et ne jamais réintroduire de gestionnaires d'événements
 inline. Le texte utilisateur est assigné via `textContent` ; pas de parsing HTML pour du contenu
 traduit ou dérivé du réseau.
@@ -325,8 +325,8 @@ Trois choses ont été ÉCARTÉES par la mesure, et non par un avis :
   Amalthée (1,0060 rend 1 181 km, 1,0069219 — la valeur publiée — 1 100, 1,0081 1 225) : il est
   déjà à son optimum.
 
-Reste le coût en OCTETS LIVRÉS, et il est économique : Firebase facture la somme des versions
-retenues. `src/config/ephemerisStepBudget.ts` porte donc la règle, l'arithmétique du coût et la
+Reste le coût en OCTETS LIVRÉS, et il est économique : Firebase facturait la somme des versions
+retenues (SUPERSEDED 2026-10-26 : Galaxy est sur Cloudflare Pages, mais le budget d'octets livrés reste la contrainte, les actifs lourds étant servis par le Worker et la VM). `src/config/ephemerisStepBudget.ts` porte donc la règle, l'arithmétique du coût et la
 liste des refus DÉCLARÉS, que `pnpm inventory:gaps` imprime à côté du manque qu'ils expliquent :
 un manque ne s'y lit jamais sans sa raison. Le coût n'y est pas écrit, il se dérive du pas, et
 sa garde rougit si un corps s'améliore, se dégrade, ou si un chiffre dérive du relevé committé.
@@ -4127,8 +4127,8 @@ c'est vérifiable en cherchant `renderSphere` dans `dist/assets/*.js`.
 
 ### Quatre contraintes qui ont dicté la forme
 
-1. **Fichiers statiques, pas routes.** `dist/jupiter/index.html` est servi par Firebase avant la
-   réécriture SPA `** → /index.html`. Aucun changement d'hébergement ; en contrepartie une page
+1. **Fichiers statiques, pas routes.** `dist/jupiter/index.html` est servi par l'hébergeur (Cloudflare Pages depuis le 2026-10-26, Firebase avant) avant le
+   repli SPA `** → /index.html`. Aucun changement d'hébergement ; en contrepartie une page
    de corps ne peut pas porter `?body=` dans son URL.
 2. **Pas de script en ligne.** La CSP est `script-src 'self'` sans `unsafe-inline` : impossible
    d'injecter le corps courant par un `<script>` généré. C'est le CHEMIN qui porte l'information,

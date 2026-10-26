@@ -437,7 +437,7 @@ corps céleste (catalogue + textures + vérification), le workflow de PR et les 
 
 ## Déploiement
 
-Le site public est servi sur [galaxy.adrianguichard.dev](https://galaxy.adrianguichard.dev/) par Firebase Hosting (projet `galaxy-ag`). Chaque push sur `main` est vérifié par la CI GitHub (`pnpm verify`, audit des dépendances, build) puis déployé automatiquement.
+Le site public est servi sur [galaxy.adrianguichard.dev](https://galaxy.adrianguichard.dev/) par **Cloudflare Pages** (projet `galaxy-3d`, déploiement direct). Depuis le 2026-10-26 le site ne passe plus par Firebase Hosting : son quota gratuit de transfert avait coupé le site. Les textures et les modèles sont servis par un Worker Cloudflare (`galaxy-static`), les éphémérides par le service de données `galaxy-data` (voir `services/galaxy-data/README.md`). Chaque push sur `main` est vérifié par la CI GitHub (`pnpm verify`, audit des dépendances, build) puis déployé automatiquement sur Pages.
 
 Le build émet, en plus du bundle, une page statique indexable par corps (`dist/jupiter/index.html`),
 une page par éclipse solaire ou lunaire de 2024 à 2035 (`dist/eclipse/2026-08-12/index.html`, qui
@@ -445,9 +445,13 @@ ouvre l'application au pic de l'éclipse), les pages `/methodology` et `/sources
 (`dist/social/jupiter.jpg`, rendue depuis la texture déjà versionnée du corps). Tout cela est dérivé du catalogue et régénéré à chaque
 build : rien n'est committé. Voir `docs/ARCHITECTURE.md` § « Pages d'atterrissage par corps ».
 
+Le déploiement se fait par la CI. Pour le rejouer à la main, il faut les deux origines des gros fichiers :
+
 ```bash
-pnpm build
-firebase deploy --only hosting:galaxy
+VITE_ASSET_ORIGIN=https://galaxy-data.adrianguichard.dev \nVITE_STATIC_ORIGIN=https://galaxy-static.galaxy-3d.workers.dev pnpm build
+node scripts/check-asset-origin.mjs
+node scripts/prepare-pages.mjs
+npx wrangler pages deploy dist-pages --project-name galaxy-3d --branch main
 ```
 
 ## Comment citer
