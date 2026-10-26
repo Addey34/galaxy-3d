@@ -110,8 +110,11 @@ jobs:
       - name: Report deploy payload size
         run: node scripts/check-deploy-size.mjs
 
-      # Deploy to Firebase Hosting on pushes to main after verify+build pass, without waiting
-      # for E2E. Requires the FIREBASE_TOKEN secret.
+      # Deploiement sur Cloudflare Pages a chaque push sur main une fois verify+build verts, sans
+      # attendre l'E2E. Pas de plafond de transfert contrairement a Firebase Hosting, dont le
+      # quota gratuit a coupe le site le 2026-10-24 (voir `docs/ARCHITECTURE.md`). Demande le
+      # secret CLOUDFLARE_API_TOKEN (permission Pages : Edit) ; l'identifiant de compte n'est
+      # pas un secret.
       # Un site qui lit ses gros fichiers ailleurs ne se deploie pas si l'un manque ou a change de
       # taille (`scripts/check-asset-origin.mjs`) : il rendrait des 404 sans CORS.
       - name: Check heavy files are on their origin
@@ -121,9 +124,19 @@ jobs:
           VITE_STATIC_ORIGIN: https://galaxy-static.galaxy-3d.workers.dev
         run: node scripts/check-asset-origin.mjs
 
-      - name: Deploy to Firebase Hosting
+      - name: Prepare the Cloudflare Pages output
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: pnpm dlx firebase-tools@15.30.2 deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
+        env:
+          VITE_ASSET_ORIGIN: https://galaxy-data.adrianguichard.dev
+          VITE_STATIC_ORIGIN: https://galaxy-static.galaxy-3d.workers.dev
+        run: node scripts/prepare-pages.mjs
+
+      - name: Deploy to Cloudflare Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 4ba5628462722ad3cf78ec3ecba74d51
+        run: pnpm dlx wrangler@4.152.0 pages deploy dist-pages --project-name galaxy-3d --branch main --force
 
       # « CI verte » ne dit rien de ce qui est EN LIGNE. Cette etape recupere l'index servi et
       # compare le nom hache de l'entree applicative a celle qu'on vient de construire.
