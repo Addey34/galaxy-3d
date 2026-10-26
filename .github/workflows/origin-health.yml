@@ -1,0 +1,98 @@
+name: Origin health
+
+# LE GUETTEUR DES DEUX ORIGINES DES GROS FICHIERS (2026-10-26).
+#
+# Depuis la #333, textures et modeles viennent du Worker Cloudflare `galaxy-static`, les
+# ephemerides de la VM `galaxy-data`. `production-health.yml` regarde ce que Firebase sert ;
+# personne ne regardait ces deux hotes, dont une panne laisse le site s'afficher SANS textures
+# ni ephemerides (404 sans CORS, indiscernables d'un refus). Une fois par jour, ce guetteur rejoue
+# `scripts/check-asset-origin.mjs` (les 476 fichiers, presence et taille) puis
+# `scripts/check-origin-range.mjs` (la VM sert-elle encore les plages, `Content-Range` expose).
+#
+# Il ne conditionne RIEN. Meme forme que `production-health.yml` : une issue qui RESTE, refermee
+# par un passage sain. Le code 2 (« je n'ai pas pu mesurer ») ouvre l'issue comme un echec.
+
+on:
+  schedule:
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: origin-health
+  cancel-in-progress: false
+
+env:
+  VITE_ASSET_ORIGIN: https://galaxy-data.adrianguichard.dev
+  VITE_STATIC_ORIGIN: https://galaxy-static.galaxy-3d.workers.dev
+  # Les fichiers du depot : ce sont eux que la build copie dans `dist/`.
+  DIST_DIR: public
+
+jobs:
+  probe:
+    name: Do the two origins still serve the heavy files
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0, resolved 2026-10-23
+        with:
+          node-version: 22
+
+      # Code de sortie capture SANS pipe (un pipe rend celui du dernier maillon).
+      - name: Read what the origins serve
+        id: verdict
+        run: |
+          code=0
+          {
+            echo '## Presence et taille des gros fichiers'
+            echo '```'
+            node scripts/check-asset-origin.mjs 2>&1 || code=$?
+            echo '```'
+            echo '## Plage des ephemerides'
+            echo '```'
+            node scripts/check-origin-range.mjs 2>&1 || { c=$?; [ "$code" = "0" ] && code=$c; }
+            echo '```'
+          } > origin.md
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" = "0" ]; then
+            echo "healthy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "healthy=false" >> "$GITHUB_OUTPUT"
+          fi
+          cat origin.md
+
+      - name: Open or update the tracking issue
+        if: steps.verdict.outputs.healthy != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          body="$(cat origin.md)"
+          existing="$(gh issue list --repo "$REPO" --label origin-health --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            gh label create origin-health --repo "$REPO" \
+              --description "Une origine des gros fichiers ne sert plus ce que la build attend" --color B60205 || true
+            gh issue create --repo "$REPO" --label origin-health \
+              --title "Une origine des gros fichiers ne sert plus ce que la build attend" --body "$body"
+          fi
+
+      - name: Close the tracking issue when the origins are healthy again
+        if: steps.verdict.outputs.healthy == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          existing="$(gh issue list --repo "$REPO" --label origin-health --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$REPO" --comment "$(cat origin.md)"
+          fi
