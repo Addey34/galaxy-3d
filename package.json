@@ -61,6 +61,7 @@
     "e2e:durations": "node scripts/e2e-durations.mjs",
     "ci:health": "node scripts/check-ci-health.mjs",
     "sources:health": "node scripts/check-source-health.mjs",
+    "sites:health": "node scripts/check-sites.mjs",
     "production:health": "node scripts/check-production.mjs",
     "screenreader:nvda": "node scripts/nvda-session.mjs",
     "screenreader:capture": "node scripts/capture-screenreader.mjs",
