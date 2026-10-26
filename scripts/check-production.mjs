@@ -218,6 +218,25 @@ export function judgeBakedTile(kind, response, origin) {
     : { ok: false, detail: wrong.join(', ') };
 }
 
+/** L'hôte qui sert les éphémérides (`VITE_ASSET_ORIGIN` du build de production) et le manifeste stable. */
+const EPHEMERIS_HOST =
+  process.env.VITE_ASSET_ORIGIN ?? 'https://galaxy-data.adrianguichard.dev';
+const STABLE_MANIFEST = '/assets/ephemerides/manifest.json';
+
+/** Un actif au nom stable : 200, CORS vers l'origine de la page, cache présent et NON immuable. */
+export function judgeStableAsset(response, origin) {
+  const wrong = [];
+  if (response.status !== 200) wrong.push(`HTTP ${response.status}`);
+  if (response.headers['access-control-allow-origin'] !== origin)
+    wrong.push('CORS absent ou autre origine');
+  const cache = response.headers['cache-control'] ?? '';
+  if (!cache) wrong.push('cache-control absent');
+  if (/immutable/.test(cache)) wrong.push('cache immuable sur un nom stable');
+  return wrong.length === 0
+    ? { ok: true, detail: `HTTP 200, CORS, ${cache}` }
+    : { ok: false, detail: wrong.join(', ') };
+}
+
 /** Les jeux cuits du dépôt : les fiches de tuiles qui ont un manifeste dans `public/assets/imagery/`. */
 function bakedTilesets() {
   const imagery = resolve(ROOT, 'public/assets/imagery');
@@ -365,18 +384,31 @@ export async function run({ origin, browser = true, placeName = PLACE_NAME }) {
     unmeasured.push(`sitemap : ${error.message}`);
   }
 
-  // Les en-têtes de `**` sur la racine, puis la règle d'un actif au nom stable.
-  for (const path of ['/', '/assets/ephemerides/manifest.json']) {
-    try {
-      const response = await get(origin, path);
-      results.push({
-        group: 'en-têtes',
-        name: path,
-        ...judgeHeaders(expectedHeaders(firebase, path), response.headers),
-      });
-    } catch (error) {
-      unmeasured.push(`${path} : ${error.message}`);
-    }
+  // Les en-têtes de `**` sur la racine.
+  try {
+    const response = await get(origin, '/');
+    results.push({
+      group: 'en-têtes',
+      name: '/',
+      ...judgeHeaders(expectedHeaders(firebase, '/'), response.headers),
+    });
+  } catch (error) {
+    unmeasured.push(`/ : ${error.message}`);
+  }
+
+  // Un actif au nom stable n'est plus servi par le site mais par l'hôte des éphémérides : c'est
+  // LÀ qu'on le juge, avec l'origine de la page (CORS) et sans `immutable`.
+  try {
+    results.push({
+      group: 'en-têtes',
+      name: `${EPHEMERIS_HOST}${STABLE_MANIFEST}`,
+      ...judgeStableAsset(
+        await getTile(`${EPHEMERIS_HOST}${STABLE_MANIFEST}`, origin),
+        origin
+      ),
+    });
+  } catch (error) {
+    unmeasured.push(`${STABLE_MANIFEST} : ${error.message}`);
   }
 
   // Les tuiles cuites, servies par le service de données (hôte lu dans la fiche).

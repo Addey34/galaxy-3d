@@ -59,3 +59,7 @@ export function judgeBakedTile(
   },
   origin: string
 ): Verdict;
+export function judgeStableAsset(
+  response: { status: number; headers: Record<string, string> },
+  origin: string
+): Verdict;

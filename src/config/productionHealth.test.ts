@@ -6,6 +6,7 @@ import {
   canonicalOf,
   expectedHeaders,
   judgeBakedTile,
+  judgeStableAsset,
   judgeConsole,
   judgeHeaders,
   judgePage,
@@ -155,6 +156,41 @@ describe('les tuiles cuites', () => {
         template: set.template.replace('0123456789ab', 'x'),
       })
     ).toThrow(/hachage/);
+  });
+  it('juge un actif au nom stable : CORS de la page, cache présent et non immuable', () => {
+    const stable = {
+      status: 200,
+      headers: {
+        'access-control-allow-origin': ORIGIN,
+        'cache-control': 'public, max-age=300',
+      },
+    };
+    expect(judgeStableAsset(stable, ORIGIN).ok).toBe(true);
+    expect(judgeStableAsset({ ...stable, status: 404 }, ORIGIN).ok).toBe(false);
+    expect(
+      judgeStableAsset(
+        { ...stable, headers: { 'cache-control': 'max-age=300' } },
+        ORIGIN
+      ).detail
+    ).toMatch(/CORS/);
+    expect(
+      judgeStableAsset(
+        {
+          ...stable,
+          headers: { ...stable.headers, 'cache-control': 'immutable' },
+        },
+        ORIGIN
+      ).detail
+    ).toMatch(/immuable/);
+    expect(
+      judgeStableAsset(
+        {
+          ...stable,
+          headers: { 'access-control-allow-origin': ORIGIN },
+        },
+        ORIGIN
+      ).detail
+    ).toMatch(/absent/);
   });
   it('juge une tuile servie sur son statut, son type, son CORS et son cache', () => {
     expect(judgeBakedTile('première', good, ORIGIN).ok).toBe(true);
