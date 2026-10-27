@@ -292,7 +292,8 @@ async function readOverture(set) {
   const { release } = set.source;
   const [x0, y0, x1, y1] = set.bboxLonLat;
   const key = createHash('sha1')
-    .update(`${release}:${set.bboxLonLat}`)
+    // `:datasets` : format d'extrait depuis le relevé des jeux sources ; un ancien extrait n'est plus relu.
+    .update(`${release}:${set.bboxLonLat}:datasets`)
     .digest('hex')
     .slice(0, 16);
   const file = join(RAW_CACHE, `overture-${key}.json`);
@@ -328,6 +329,9 @@ async function readOverture(set) {
   overtureFacts.set(set.id, {
     floorsFactor: json.floorsFactor,
     release: json.release,
+    // Jeux sources PRÉSENTS dans la boîte (bâtiments par jeu) : `buildingAttribution.test.ts` les
+    // confronte à l'attribution publiée.
+    datasets: json.datasets,
   });
   return { features: json.features, oldest: json.readAt, newest: json.readAt };
 }
