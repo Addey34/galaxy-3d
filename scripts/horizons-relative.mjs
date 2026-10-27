@@ -22,7 +22,15 @@ const API = 'https://ssd.jpl.nasa.gov/api/horizons.api';
  * Une fenêtre qui déborde la couverture d'une trajectoire : c'est une RÉPONSE (la rencontre
  * touche le début ou la fin de ce qu'Horizons sert), pas une panne.
  */
-const COVERAGE = /Insufficient ephemeris data|No ephemeris for target/;
+// Les trois formes sous lesquelles Horizons dit « je ne sers pas cette date » : la sonde ou le centre
+// n'a pas de table. La troisième (centre absent du fichier SPK) est celle que Didymos rend depuis fin
+// octobre 2026 (mesurée le 2026-10-28, flybys et orbits plantaient dessus au lieu de conclure à la fin
+// de la couverture) ; l'ancienne forme « Insufficient ephemeris data » se lisait le 2026-10-14.
+const COVERAGE =
+  /Insufficient ephemeris data|No ephemeris for target|Center code\s+\d+ not in indicated file/;
+
+/** Vrai quand la réponse de Horizons dit que la date demandée n'est pas servie (pas une panne). */
+export const isOutsideCoverageText = (text) => COVERAGE.test(text);
 export class OutsideCoverage extends Error {}
 
 const utc = (ms) => new Date(ms).toISOString().slice(0, 19).replace('T', ' ');
