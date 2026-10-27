@@ -1,6 +1,6 @@
 /* global console, process, window */
 /* Les rappels passés à `addInitScript` tournent DANS la page, pas dans Node : d'où ces globaux. */
-/* global localStorage, PerformanceObserver, WebGL2RenderingContext, performance */
+/* global localStorage, PerformanceObserver, WebGL2RenderingContext, performance, document, requestAnimationFrame */
 /**
  * CE QUE COÛTE UNE SCÈNE HORS OCTETS (lot 54) : images par seconde, blocages du fil principal,
  * mémoire GPU estimée, appels de dessin. Mesuré dans un vrai navigateur, scène par scène, par la
@@ -49,6 +49,11 @@ const ONLY = flag('--only', null);
 const JSON_OUT = flag('--json', null);
 const PROFILE = flag('--profile', null);
 const LINKS = args.includes('--links');
+/** Palier de qualité forcé (`low`, `medium`, `high`) : le budget de bâtiments en dépend (lot 63). */
+const TIER = flag('--tier', null);
+/** Répétitions d'une scène (la dispersion se mesure, un seul échantillon ne dit rien) et essais permis par répétition. */
+const REPEAT = Number(flag('--repeat', '1'));
+const ATTEMPTS = Number(flag('--attempts', '3'));
 /** Paramètres ajoutés à chaque adresse, pour un A/B sur le même build (`--extra debug-decode-img`). */
 const EXTRA = flag('--extra', null);
 
@@ -95,6 +100,29 @@ const SCENES = [
     steps: 12,
   },
   {
+    // Lot 63 : les bâtiments de Paris, visés par la recherche comme le fait un visiteur, puis la
+    // descente jusqu'à la pose (`canvas.dataset.buildings`, lu plus bas).
+    id: 'earth-buildings',
+    query: `?debug-perf&debug-surface&mode=educ&body=earth&date=${DATE}`,
+    steps: 8,
+    wheel: -3000,
+    settleMs: 3000,
+    place: 'Paris',
+    expect: 'buildings',
+  },
+  {
+    // Le TÉMOIN de la scène ci-dessus : même palier, mêmes textures, même descente jusqu'au sol,
+    // sur un lieu qu'aucun jeu de bâtiments ne couvre. La différence entre les deux est le coût
+    // des bâtiments ; sans lui, le palier (textures 8k, antialiasing) se confond avec eux.
+    id: 'earth-ground-witness',
+    query: `?debug-perf&debug-surface&mode=educ&body=earth&date=${DATE}`,
+    steps: 8,
+    wheel: -3000,
+    settleMs: 3000,
+    place: 'Rome',
+    expect: 'ground',
+  },
+  {
     id: 'mars-surface',
     query: `?debug-perf&mode=explo&body=mars&date=${DATE}`,
     steps: 12,
@@ -104,16 +132,32 @@ const SCENES = [
 // `--software` : le rendu LOGICIEL (SwiftShader) de la CI, sans GPU. Payé le 2026-10-17 : le
 // décodage hors du fil, gagnant sur la RTX, a rendu la suite e2e de la CI non saine.
 const SOFTWARE = args.includes('--software');
-const browser = await chromium.launch(
-  SOFTWARE
-    ? {}
-    : { args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] }
-);
+// Sans ces drapeaux, Chromium juge parfois la fenêtre masquée et cesse de rendre : zéro image
+// mesurée, caméra figée (constaté le 2026-10-27, 1 mesure sur 6 sur la scène des bâtiments).
+const KEEP_AWAKE = [
+  '--disable-features=CalculateNativeWinOcclusion',
+  '--disable-renderer-backgrounding',
+  '--disable-background-timer-throttling',
+  '--disable-backgrounding-occluded-windows',
+];
+const browser = await chromium.launch({
+  args: [
+    ...KEEP_AWAKE,
+    ...(SOFTWARE
+      ? []
+      : ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist']),
+  ],
+});
 const results = [];
-for (const scene of SCENES) {
+/** Une mesure de la scène ; `false` quand elle n'est pas VALIDE (rien n'est alors retenu). */
+async function measureScene(scene) {
   const context = await browser.newContext({
     viewport: { width: 1280, height: 800 },
   });
+  if (TIER)
+    await context.addInitScript((tier) => {
+      localStorage.setItem('ssv-quality', tier);
+    }, TIER);
   await context.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
     localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
@@ -146,14 +190,23 @@ for (const scene of SCENES) {
         const ms = performance.now() - start;
         if (ms > 20) {
           // Les #define des shaders attachés : ce qui distingue deux variantes d'un même matériau.
-          const defines = (this.getAttachedShaders(target) ?? [])
-            .map((shader) =>
-              (this.getShaderSource(shader) ?? '')
-                .split('\n')
-                .filter((line) => line.startsWith('#define'))
-                .join(' ')
-            )
-            .join(' | ');
+          // `target` est un programme OU un shader selon la méthode, et la sonde ne doit JAMAIS lever
+          // dans le chemin de rendu de l'application : un `getAttachedShaders` sur un shader a cassé
+          // la boucle de rendu une mesure sur trois quand une compilation dépassait 20 ms
+          // (constaté le 2026-10-27, scène des bâtiments).
+          let defines = '';
+          try {
+            defines = (this.getAttachedShaders(target) ?? [])
+              .map((shader) =>
+                (this.getShaderSource(shader) ?? '')
+                  .split('\n')
+                  .filter((line) => line.startsWith('#define'))
+                  .join(' ')
+              )
+              .join(' | ');
+          } catch {
+            // pas un programme : aucune définition à relever
+          }
           links.push({ program: target, ms, at: start, method, defines });
         }
         return value;
@@ -187,14 +240,97 @@ for (const scene of SCENES) {
       console.log(`  ${ms.toFixed(0).padStart(7)} ms  ${k}`);
   }
   if (PROFILE === 'approach') await cdp.send('Profiler.start');
+  if (scene.place) {
+    // La sélection d'un lieu par la recherche se PERD parfois : la palette se ferme, aucun vol ne
+    // part (constaté le 2026-10-27, 3 mesures sur 4 au palier medium). On vérifie donc que la
+    // caméra a quitté sa distance de départ et, sinon, on rouvre la palette et on recommence.
+    const flightStarted = () =>
+      page
+        .waitForFunction(
+          () => {
+            const t = (
+              document.getElementById('surface-probe')?.innerText ?? ''
+            )
+              .split(/\s+/)
+              .join(' ');
+            const km = /altitude ([-0-9.]+) km/.exec(t)?.[1];
+            return km !== undefined && Number(km) < 200_000;
+          },
+          null,
+          { timeout: 12_000 }
+        )
+        .then(
+          () => true,
+          () => false
+        );
+    let flying = false;
+    for (let pick = 1; pick <= 3 && !flying; pick += 1) {
+      await page.locator('#body-search-trigger').click();
+      await page.locator('#palette-input').fill(scene.place);
+      // Le premier résultat doit être CELUI du lieu demandé : cliquer avant que la liste soit à
+      // jour sélectionne un résultat périmé.
+      await page
+        .locator('#palette-hit-0')
+        .filter({ hasText: scene.place })
+        .waitFor({ timeout: 15_000 });
+      await page.locator('#palette-hit-0').click();
+      await page.bringToFront();
+      flying = await flightStarted();
+      if (!flying)
+        console.log(`  sélection de ${scene.place} perdue (${pick}/3)`);
+    }
+    await page.waitForTimeout(6000);
+  }
   const box = await page.locator('canvas').first().boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   for (let i = 0; i < scene.steps; i += 1) {
-    await page.mouse.wheel(0, -1500);
-    await page.waitForTimeout(2500);
+    await page.mouse.wheel(0, scene.wheel ?? -1500);
+    await page.waitForTimeout(scene.settleMs ?? 2500);
   }
   await page.waitForTimeout(8000);
   const approach = await page.evaluate(() => window.perfProbe.snapshot());
+  const buildings = await page
+    .locator('canvas')
+    .first()
+    .evaluate((c) => c.dataset['buildings'] ?? '');
+  // Où est la caméra : sans l'altitude, « aucun bâtiment » ne dit pas si la descente a échoué.
+  const altitude = await page
+    .locator('#surface-probe')
+    .innerText({ timeout: 2000 })
+    .then(
+      (t) => /altitude ([-0-9.]+) km/.exec(t.split(/\s+/).join(' '))?.[1] ?? '?'
+    )
+    .catch(() => 'sonde absente');
+  if (scene.expect) {
+    // Une mesure n'est retenue que si la scène est ce qu'elle prétend être : au sol, images qui
+    // tournent, bâtiments posés ou absents selon le cas. Sinon on rejoue, on ne moyenne pas.
+    const frames = await page.evaluate(
+      () =>
+        new Promise((done) => {
+          let n = 0;
+          const t0 = performance.now();
+          const tick = () => {
+            n += 1;
+            if (performance.now() - t0 < 1000) requestAnimationFrame(tick);
+            else done(n);
+          };
+          requestAnimationFrame(tick);
+        })
+    );
+    const posed = /:\d+:[1-9]\d*$/.test(buildings);
+    const problems = [];
+    if (!(Number(altitude) < 50)) problems.push(`altitude ${altitude} km`);
+    // Un plancher de PANNE, pas de performance : le palier high freiné ×4 ne fait que 12 à 18 images/s.
+    if (frames < 3) problems.push(`${frames} images en 1 s`);
+    if (scene.expect === 'buildings' && !posed) problems.push('aucun bâtiment');
+    if (scene.expect === 'ground' && buildings !== '')
+      problems.push(`bâtiments inattendus (${buildings})`);
+    if (problems.length > 0) {
+      console.log(`${scene.id.padEnd(14)} INVALIDE : ${problems.join(', ')}`);
+      await context.close();
+      return false;
+    }
+  }
   if (LINKS) {
     const links = await page.evaluate(() => window.perfProbe.shaderLinks());
     for (const l of links)
@@ -235,8 +371,13 @@ for (const scene of SCENES) {
     seconds: Math.round((Date.now() - started) / 1000),
     approach,
     steady,
+    buildings,
   });
   const mib = (b) => (b / 1048576).toFixed(0);
+  if (scene.place)
+    console.log(
+      `${''.padEnd(14)} bâtiments (jeu:tuiles:posés) : ${buildings || 'aucun'} ; altitude ${altitude} km`
+    );
   console.log(
     `${scene.id.padEnd(14)} régime p50 ${steady.frames.p50Ms.toFixed(1)} ms, p95 ${steady.frames.p95Ms.toFixed(1)} ms` +
       ` | approche : ${approach.longTasks.count} blocages, ${Math.round(approach.longTasks.totalMs)} ms, max ${Math.round(approach.longTasks.maxMs)} ms` +
@@ -258,11 +399,32 @@ for (const scene of SCENES) {
       console.log(`${''.padEnd(18)}${line}`);
   }
   await context.close();
+  return true;
+}
+const failed = [];
+for (const scene of SCENES) {
+  for (let run = 1; run <= REPEAT; run += 1) {
+    let valid = false;
+    for (let attempt = 1; attempt <= ATTEMPTS && !valid; attempt += 1) {
+      if (attempt > 1)
+        console.log(
+          `${scene.id.padEnd(14)} nouvel essai ${attempt}/${ATTEMPTS}`
+        );
+      valid = await measureScene(scene);
+    }
+    if (!valid) failed.push(scene.id);
+  }
 }
 await browser.close();
 console.log(
-  `GPU : ${results[0]?.steady.renderer ?? '?'} ; frein CPU × ${CPU} ; origine ${ORIGIN}`
+  `GPU : ${results[0]?.steady.renderer ?? '?'} ; frein CPU × ${CPU}${TIER ? ` ; palier ${TIER}` : ''} ; origine ${ORIGIN}`
 );
+if (failed.length > 0) {
+  console.log(
+    `SCÈNES NON VALIDES après ${ATTEMPTS} essais : ${failed.join(', ')}`
+  );
+  process.exitCode = 1;
+}
 if (JSON_OUT) {
   const out = resolve(JSON_OUT);
   mkdirSync(dirname(out), { recursive: true });
