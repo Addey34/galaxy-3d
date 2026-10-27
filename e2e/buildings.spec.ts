@@ -215,11 +215,32 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
       .poll(
         async () => {
           const t0 = Date.now();
-          await zoomIn(page);
-          const zoomMs = Date.now() - t0;
-          const buildings = await canvas.evaluate(
-            (c) => (c as HTMLCanvasElement).dataset['buildings'] ?? ''
-          );
+          // La descente bloque parfois le fil principal de la page plus longtemps que le délai
+          // d'une action (15 s : `locator.boundingBox`, run 40467972055, premier essai). Une
+          // exception levée ICI termine le sondage ; un délai n'est que « pas encore ».
+          let buildings: string;
+          let zoomMs: number;
+          try {
+            await zoomIn(page);
+            zoomMs = Date.now() - t0;
+            buildings = await canvas.evaluate(
+              (c) => (c as HTMLCanvasElement).dataset['buildings'] ?? ''
+            );
+          } catch (error) {
+            if (!(error instanceof Error) || error.name !== 'TimeoutError')
+              throw error;
+            trace.push({
+              at: Date.now(),
+              zoomMs: Date.now() - t0,
+              probeMs: 0,
+              longTasks: -1,
+              longTaskMs: -1,
+              frames: -1,
+              probe: 'page occupée (délai de la molette)',
+              buildings: '',
+            });
+            return '';
+          }
           const t1 = Date.now();
           const probe = await page
             .locator('#surface-probe')
