@@ -24,13 +24,41 @@ import { boot, prepareSurfacePage, TILE_JPEG, zoomIn } from './surfaceTiles';
  * de la page. Le cas Explo a été rouge en CI (run 40434197609, 40440698086) sans qu'aucun artefact dise
  * où était la caméra ; les artefacts ne gardent que les essais en échec.
  */
-let trace: { at: number; probe: string; buildings: string }[] = [];
+let trace: {
+  at: number;
+  zoomMs: number;
+  probeMs: number;
+  longTasks: number;
+  longTaskMs: number;
+  frames: number;
+  probe: string;
+  buildings: string;
+}[] = [];
 let requestedTiles: string[] = [];
 
 test.beforeEach(async ({ page }) => {
   trace = [];
   requestedTiles = [];
   await prepareSurfacePage(page);
+  // Ce que fait le fil principal PENDANT la descente : blocages de plus de 50 ms et images
+  // dessinées (compteur de rAF), pour distinguer une scène lourde d'une page arrêtée.
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, number>;
+    w['__lt'] = 0;
+    w['__ltMs'] = 0;
+    w['__frames'] = 0;
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) {
+        w['__lt'] = (w['__lt'] ?? 0) + 1;
+        w['__ltMs'] = (w['__ltMs'] ?? 0) + e.duration;
+      }
+    }).observe({ type: 'longtask' });
+    const tick = () => {
+      w['__frames'] = (w['__frames'] ?? 0) + 1;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
 });
 
 test.afterEach(async ({ page }, testInfo) => {
@@ -181,16 +209,33 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
     await expect
       .poll(
         async () => {
+          const t0 = Date.now();
           await zoomIn(page);
+          const zoomMs = Date.now() - t0;
           const buildings = await canvas.evaluate(
             (c) => (c as HTMLCanvasElement).dataset['buildings'] ?? ''
           );
+          const t1 = Date.now();
           const probe = await page
             .locator('#surface-probe')
-            .innerText({ timeout: 1_000 })
+            .innerText({ timeout: 20_000 })
             .catch(() => 'sonde absente');
+          const probeMs = Date.now() - t1;
+          const main = await page
+            .evaluate(() => {
+              const w = window as unknown as Record<string, number>;
+              return {
+                longTasks: w['__lt'] ?? 0,
+                longTaskMs: Math.round(w['__ltMs'] ?? 0),
+                frames: w['__frames'] ?? 0,
+              };
+            })
+            .catch(() => ({ longTasks: -1, longTaskMs: -1, frames: -1 }));
           trace.push({
             at: Date.now(),
+            zoomMs,
+            probeMs,
+            ...main,
             probe: probe.split(/\s+/).join(' ').slice(0, 400),
             buildings,
           });
