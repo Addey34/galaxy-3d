@@ -6,7 +6,13 @@ import {
   quantizeToTile,
   tileOfLonLat,
 } from '@/core/buildingTile';
-import { boot, prepareSurfacePage, TILE_JPEG, zoomIn } from './surfaceTiles';
+import {
+  boot,
+  prepareSurfacePage,
+  TILE_JPEG,
+  zoomIn,
+  zoomInSettling,
+} from './surfaceTiles';
 
 /**
  * LES BÂTIMENTS 3D DE PARIS (lot 63, C.3b et C.4) : ce que l'application demande et quand, ce
@@ -145,6 +151,14 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
     await page.locator('#palette-input').fill(city);
     await page.locator('#palette-hit-0').click();
 
+    // Explo : la Terre est la même (rayon 35) mais la caméra descend en vraie échelle ; sur un
+    // processeur lent en rendu logiciel (run 40434197609, shard 8) la course d'un seul tenant
+    // ne posait aucun bâtiment en 120 s. Même remède que les scénarios de surface : un premier
+    // cran, le calme, puis la fin de la course.
+    if (mode === 'explo') {
+      test.slow();
+      await zoomInSettling(page);
+    }
     const canvas = page.locator('canvas').first();
     await expect
       .poll(
@@ -169,10 +183,28 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
 
     // Chaque tuile demandée existe dans le manifeste livré, au zoom du jeu.
     const id = tileOfLonLat(lon, lat, 14);
-    expect(
-      tileUrls.some((u) => u.endsWith(`/14/${id.column}/${id.row}.bin`)),
-      'la tuile sous la visée'
-    ).toBe(true);
+    await expect
+      .poll(
+        () =>
+          tileUrls.some((u) => {
+            const m = /\/14\/(\d+)\/(\d+)\.bin$/.exec(u);
+            if (!m) return false;
+            // Éduc : la tuile exacte. Explo : la caméra, relevée vers l'horizon, regarde à
+            // 1 ou 2 colonnes (~3 km) à l'ouest de la cible (mesuré le 2026-10-27 : tuiles 8297 et
+            // 8298 demandées pour 8299) ; on borne cet écart au lieu de le laisser grandir.
+            const reach = mode === 'explo' ? 3 : 0;
+            return (
+              Math.abs(Number(m[1]) - id.column) <= reach &&
+              Math.abs(Number(m[2]) - id.row) <= (mode === 'explo' ? 1 : 0)
+            );
+          }),
+        {
+          message: 'la tuile sous la visée',
+          timeout: 60_000,
+          intervals: [1_000],
+        }
+      )
+      .toBe(true);
     expect(quantizeToTile(lon, lat, id)).toHaveLength(2);
 
     const axe = await new AxeBuilder({ page })
