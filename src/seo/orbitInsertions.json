@@ -16,7 +16,7 @@
       "massSensitivitySeconds": null,
       "solution": "MEX_merged",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-14"
+      "retrieved": "2026-10-27"
     },
     {
       "probe": "cassini",
@@ -32,7 +32,7 @@
       "massSensitivitySeconds": null,
       "solution": "cassini_merge",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-15"
+      "retrieved": "2026-10-23"
     },
     {
       "probe": "rosetta",
@@ -48,7 +48,7 @@
       "massSensitivitySeconds": 0,
       "solution": "rosetta_merged",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-14"
+      "retrieved": "2026-10-27"
     },
     {
       "probe": "juno",
@@ -64,7 +64,7 @@
       "massSensitivitySeconds": null,
       "solution": "Juno_merged",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-14"
+      "retrieved": "2026-10-27"
     },
     {
       "probe": "exomars-tgo",
@@ -80,7 +80,7 @@
       "massSensitivitySeconds": null,
       "solution": "ExoMars16_merged",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-14"
+      "retrieved": "2026-10-23"
     },
     {
       "probe": "osiris-rex",
@@ -96,7 +96,7 @@
       "massSensitivitySeconds": 0,
       "solution": "ORX_merged",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-14"
+      "retrieved": "2026-10-27"
     }
   ],
   "excluded": [
