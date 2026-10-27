@@ -61,7 +61,13 @@ jobs:
             fi
           fi
           if [ -z "$user" ] || [ -z "$key" ] || [ "$user" = "$key" ]; then
-            echo "::error::secret BROWSERSTACK illisible : attendu « identifiant:clé », deux lignes, ou les secrets BROWSERSTACK_USERNAME et BROWSERSTACK_ACCESS_KEY"
+            # Dire LEQUEL est vide (jamais une valeur) : un secret enregistré par `gh secret set` sans
+            # terminal interactif existe mais est VIDE (3 runs perdus le 2026-10-27).
+            empty=""
+            [ -z "$BS_USER" ] && empty="$empty BROWSERSTACK_USERNAME"
+            [ -z "$BS_KEY" ] && empty="$empty BROWSERSTACK_ACCESS_KEY"
+            [ -z "$BS_ONE" ] && empty="$empty BROWSERSTACK"
+            echo "::error::identifiants BrowserStack inutilisables. Secrets vides ou absents :${empty:- aucun (le secret BROWSERSTACK est mal formé)}. Les recréer depuis un terminal interactif, depuis le dépôt ou avec -R : gh secret set NOM"
             exit 1
           fi
           echo "::add-mask::$user"; echo "::add-mask::$key"
