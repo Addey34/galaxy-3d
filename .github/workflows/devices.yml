@@ -11,6 +11,10 @@ on:
         description: Application visée (la production par défaut)
         default: https://galaxy.adrianguichard.dev
         required: false
+      grep:
+        description: Ne rejouer que les tests dont le titre contient ce texte (vide = tous)
+        default: ''
+        required: false
 
 permissions:
   contents: read
@@ -66,7 +70,9 @@ jobs:
       - name: Replay the device journeys on real devices
         env:
           DEVICES_ORIGIN: ${{ inputs.origin }}
-        run: pnpm test:devices
+          DEVICES_GREP: ${{ inputs.grep }}
+        run: |
+          if [ -n "$DEVICES_GREP" ]; then pnpm test:devices --grep "$DEVICES_GREP"; else pnpm test:devices; fi
 
       # Les noms d'appareils portent des « : » que l'artefact refuse (mesuré au premier run) : archive.
       - name: Pack the reports
