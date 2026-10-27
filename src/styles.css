@@ -2552,6 +2552,13 @@ button {
 .surface-imagery-badge .si-credit {
   opacity: 0.8;
 }
+/* L'adresse de la licence d'un jeu de bâtiments : lisible comme le reste du crédit, et coupable
+   à 390 px (une adresse n'a aucun espace où se replier). */
+.surface-imagery-badge .si-buildings-credit a {
+  color: inherit;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
 /* BÂTIMENTS 3D (lot 63) : légende des origines de hauteur, puis attribution de la licence du jeu.
    Une pastille ne porte JAMAIS seule l'information : chaque couleur est suivie de son libellé. */
 .surface-imagery-badge .si-buildings:not([hidden]) {

@@ -22,6 +22,8 @@ import {
 import { isMobile } from '@/config/engine';
 import { HEIGHT_ORIGIN } from '@/core/buildingTile';
 import { originColour } from '@/core/buildingOriginStyle';
+import { splitUrls } from '@/core/textLinks';
+import { safeExternalUrl } from '@/utils/safeUrl';
 import { getLocale, intlLocale, t } from '@/i18n';
 import { GALAXY_DATA_ORIGIN } from '@/core/galaxyData';
 import { readQualityMode, resolveQualityTier } from '@/core/qualityTier';
@@ -33,6 +35,9 @@ const SITE_ORIGIN = (): string =>
 
 /** Marge autour d'un jeu où l'on prépare déjà ses tuiles (une tuile déborde de son emprise). */
 const COVERAGE_MARGIN_DEG = 0.02;
+
+/** Hôtes des licences dont une adresse peut apparaître dans l'attribution d'un jeu. */
+const LICENCE_HOSTS: ReadonlySet<string> = new Set(['opendatacommons.org']);
 
 export interface BuildingTarget extends BuildingHost {
   worldPointToGeographic(worldPoint: import('three').Vector3): {
@@ -162,7 +167,23 @@ export function createBuildingsOverlay(mount: HTMLElement): BuildingsOverlay {
     });
     const credit = document.createElement('span');
     credit.className = 'si-buildings-credit';
-    credit.textContent = st.attribution ?? '';
+    // Le texte reste celui du manifeste (le mode capture le relit tel quel) ; seule l'adresse de la
+    // licence devient un lien, et seulement vers un hôte de licence connu.
+    credit.append(
+      ...splitUrls(st.attribution ?? '').map((part) => {
+        const href =
+          part.kind === 'url'
+            ? safeExternalUrl(part.value, LICENCE_HOSTS)
+            : null;
+        if (!href) return document.createTextNode(part.value);
+        const link = document.createElement('a');
+        link.href = href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = part.value;
+        return link;
+      })
+    );
     mount.replaceChildren(head, ...items, credit);
   };
 

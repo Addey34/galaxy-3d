@@ -280,6 +280,15 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
     await expect(line).toContainText('3D buildings');
     await expect(line).toContainText('measured');
     for (const piece of credit) await expect(line).toContainText(piece);
+    // Une adresse de licence dans l'attribution (ODbL) est un lien sûr, pas du texte à recopier.
+    if (set === 'nairobi-overture') {
+      const link = line.locator('.si-buildings-credit a');
+      await expect(link).toHaveAttribute(
+        'href',
+        'https://opendatacommons.org/licenses/odbl/1-0/'
+      );
+      await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    }
     // Une pastille ne porte jamais seule l'information : un libellé la suit.
     expect(await line.locator('.si-swatch').count()).toBeGreaterThan(0);
 
