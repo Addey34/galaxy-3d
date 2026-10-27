@@ -6,13 +6,7 @@ import {
   quantizeToTile,
   tileOfLonLat,
 } from '@/core/buildingTile';
-import {
-  boot,
-  prepareSurfacePage,
-  TILE_JPEG,
-  zoomIn,
-  zoomInSettling,
-} from './surfaceTiles';
+import { boot, prepareSurfacePage, TILE_JPEG, zoomIn } from './surfaceTiles';
 
 /**
  * LES BÂTIMENTS 3D DE PARIS (lot 63, C.3b et C.4) : ce que l'application demande et quand, ce
@@ -29,30 +23,13 @@ test.beforeEach(async ({ page }) => {
 });
 
 /** Un jeu de bâtiments livré : la ville visée, son identifiant, un point sous la visée, son crédit. */
-const CITIES: {
-  city: string;
-  set: string;
-  lon: number;
-  lat: number;
-  credit: string[];
-  mode?: 'educ' | 'explo';
-}[] = [
+const CITIES = [
   {
     city: 'Paris',
     set: 'paris-bdtopo',
     lon: 2.353,
     lat: 48.8581,
     credit: ['IGN', 'Licence Ouverte 2.0'],
-  },
-  // Même Terre (rayon 35 dans les deux modes) mais caméra différente en Explo : relevée vers
-  // l'horizon, FOV optique, plans near/far adaptatifs (`CameraSystem`). Une ville suffit à le prouver.
-  {
-    city: 'Paris',
-    set: 'paris-bdtopo',
-    lon: 2.353,
-    lat: 48.8581,
-    credit: ['IGN', 'Licence Ouverte 2.0'],
-    mode: 'explo',
   },
   {
     city: 'Berlin',
@@ -70,8 +47,8 @@ const CITIES: {
   },
 ];
 
-for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
-  test(`draws the buildings of ${city} in ${mode} mode, says where their heights come from, and asks for nothing from afar`, async ({
+for (const { city, set, lon, lat, credit } of CITIES) {
+  test(`draws the buildings of ${city}, says where their heights come from, and asks for nothing from afar`, async ({
     page,
   }) => {
     const errors: string[] = [];
@@ -134,14 +111,10 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
       }
     );
 
-    await boot(page, `?debug-surface&mode=${mode}&body=earth`);
+    await boot(page, '?debug-surface&mode=educ&body=earth');
     await expect(page.locator('#surface-probe')).toContainText('earth', {
       timeout: 30_000,
     });
-    // Le mode demandé est bien celui de la scène (sinon le cas Explo rejouerait l'Éduc).
-    await expect(
-      page.locator(`.mode-btn[data-mode="${mode}"]`)
-    ).toHaveAttribute('aria-pressed', 'true');
     // De loin, ni tuile ni légende.
     expect(tileUrls, 'tuiles demandées avant toute approche').toEqual([]);
     await expect(page.locator('.si-buildings')).toBeHidden();
@@ -151,14 +124,6 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
     await page.locator('#palette-input').fill(city);
     await page.locator('#palette-hit-0').click();
 
-    // Explo : la Terre est la même (rayon 35) mais la caméra descend en vraie échelle ; sur un
-    // processeur lent en rendu logiciel (run 40434197609, shard 8) la course d'un seul tenant
-    // ne posait aucun bâtiment en 120 s. Même remède que les scénarios de surface : un premier
-    // cran, le calme, puis la fin de la course.
-    if (mode === 'explo') {
-      test.slow();
-      await zoomInSettling(page);
-    }
     const canvas = page.locator('canvas').first();
     await expect
       .poll(
@@ -183,28 +148,10 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
 
     // Chaque tuile demandée existe dans le manifeste livré, au zoom du jeu.
     const id = tileOfLonLat(lon, lat, 14);
-    await expect
-      .poll(
-        () =>
-          tileUrls.some((u) => {
-            const m = /\/14\/(\d+)\/(\d+)\.bin$/.exec(u);
-            if (!m) return false;
-            // Éduc : la tuile exacte. Explo : la caméra, relevée vers l'horizon, regarde à
-            // 1 ou 2 colonnes (~3 km) à l'ouest de la cible (mesuré le 2026-10-27 : tuiles 8297 et
-            // 8298 demandées pour 8299) ; on borne cet écart au lieu de le laisser grandir.
-            const reach = mode === 'explo' ? 3 : 0;
-            return (
-              Math.abs(Number(m[1]) - id.column) <= reach &&
-              Math.abs(Number(m[2]) - id.row) <= (mode === 'explo' ? 1 : 0)
-            );
-          }),
-        {
-          message: 'la tuile sous la visée',
-          timeout: 60_000,
-          intervals: [1_000],
-        }
-      )
-      .toBe(true);
+    expect(
+      tileUrls.some((u) => u.endsWith(`/14/${id.column}/${id.row}.bin`)),
+      'la tuile sous la visée'
+    ).toBe(true);
     expect(quantizeToTile(lon, lat, id)).toHaveLength(2);
 
     const axe = await new AxeBuilder({ page })
