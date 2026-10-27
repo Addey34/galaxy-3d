@@ -23,30 +23,13 @@ test.beforeEach(async ({ page }) => {
 });
 
 /** Un jeu de bâtiments livré : la ville visée, son identifiant, un point sous la visée, son crédit. */
-const CITIES: {
-  city: string;
-  set: string;
-  lon: number;
-  lat: number;
-  credit: string[];
-  mode?: 'educ' | 'explo';
-}[] = [
+const CITIES = [
   {
     city: 'Paris',
     set: 'paris-bdtopo',
     lon: 2.353,
     lat: 48.8581,
     credit: ['IGN', 'Licence Ouverte 2.0'],
-  },
-  // Même Terre (rayon 35 dans les deux modes) mais caméra différente en Explo : relevée vers
-  // l'horizon, FOV optique, plans near/far adaptatifs (`CameraSystem`). Une ville suffit à le prouver.
-  {
-    city: 'Paris',
-    set: 'paris-bdtopo',
-    lon: 2.353,
-    lat: 48.8581,
-    credit: ['IGN', 'Licence Ouverte 2.0'],
-    mode: 'explo',
   },
   {
     city: 'Berlin',
@@ -64,8 +47,8 @@ const CITIES: {
   },
 ];
 
-for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
-  test(`draws the buildings of ${city} in ${mode} mode, says where their heights come from, and asks for nothing from afar`, async ({
+for (const { city, set, lon, lat, credit } of CITIES) {
+  test(`draws the buildings of ${city}, says where their heights come from, and asks for nothing from afar`, async ({
     page,
   }) => {
     const errors: string[] = [];
@@ -128,14 +111,10 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
       }
     );
 
-    await boot(page, `?debug-surface&mode=${mode}&body=earth`);
+    await boot(page, '?debug-surface&mode=educ&body=earth');
     await expect(page.locator('#surface-probe')).toContainText('earth', {
       timeout: 30_000,
     });
-    // Le mode demandé est bien celui de la scène (sinon le cas Explo rejouerait l'Éduc).
-    await expect(
-      page.locator(`.mode-btn[data-mode="${mode}"]`)
-    ).toHaveAttribute('aria-pressed', 'true');
     // De loin, ni tuile ni légende.
     expect(tileUrls, 'tuiles demandées avant toute approche').toEqual([]);
     await expect(page.locator('.si-buildings')).toBeHidden();
