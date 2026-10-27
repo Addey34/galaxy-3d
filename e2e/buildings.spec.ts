@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {
@@ -18,18 +19,66 @@ import { boot, prepareSurfacePage, TILE_JPEG, zoomIn } from './surfaceTiles';
  * la mesure ne dépend ni du service de données ni de fichiers absents de git.
  */
 
+/**
+ * LA TRACE d'un échec : la caméra et les bâtiments à chaque pas du sondage, les tuiles demandées, l'état
+ * de la page. Le cas Explo a été rouge en CI (run 40434197609, 40440698086) sans qu'aucun artefact dise
+ * où était la caméra ; les artefacts ne gardent que les essais en échec.
+ */
+let trace: { at: number; probe: string; buildings: string }[] = [];
+let requestedTiles: string[] = [];
+
 test.beforeEach(async ({ page }) => {
+  trace = [];
+  requestedTiles = [];
   await prepareSurfacePage(page);
 });
 
+test.afterEach(async ({ page }, testInfo) => {
+  const state = await page
+    .evaluate(() => ({
+      visibility: document.visibilityState,
+      focus: document.hasFocus(),
+      url: location.pathname + location.search,
+    }))
+    .catch(() => 'page fermée');
+  // Un FICHIER dans le dossier de sortie du test : c'est ce que la CI téléverse pour un essai en
+  // échec (une pièce jointe passée en mémoire n'y est pas écrite).
+  const file = testInfo.outputPath('camera-trace.json');
+  writeFileSync(
+    file,
+    JSON.stringify({ state, requestedTiles, trace }, null, 2)
+  );
+  await testInfo.attach('camera-trace.json', {
+    path: file,
+    contentType: 'application/json',
+  });
+});
+
 /** Un jeu de bâtiments livré : la ville visée, son identifiant, un point sous la visée, son crédit. */
-const CITIES = [
+const CITIES: {
+  city: string;
+  set: string;
+  lon: number;
+  lat: number;
+  credit: string[];
+  mode?: 'educ' | 'explo';
+}[] = [
   {
     city: 'Paris',
     set: 'paris-bdtopo',
     lon: 2.353,
     lat: 48.8581,
     credit: ['IGN', 'Licence Ouverte 2.0'],
+  },
+  // Même Terre (rayon 35 dans les deux modes) mais caméra différente en Explo : relevée vers
+  // l'horizon, FOV optique, plans near/far adaptatifs (`CameraSystem`). Une ville suffit à le prouver.
+  {
+    city: 'Paris',
+    set: 'paris-bdtopo',
+    lon: 2.353,
+    lat: 48.8581,
+    credit: ['IGN', 'Licence Ouverte 2.0'],
+    mode: 'explo',
   },
   {
     city: 'Berlin',
@@ -47,8 +96,8 @@ const CITIES = [
   },
 ];
 
-for (const { city, set, lon, lat, credit } of CITIES) {
-  test(`draws the buildings of ${city}, says where their heights come from, and asks for nothing from afar`, async ({
+for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
+  test(`draws the buildings of ${city} in ${mode} mode, says where their heights come from, and asks for nothing from afar`, async ({
     page,
   }) => {
     const errors: string[] = [];
@@ -111,10 +160,14 @@ for (const { city, set, lon, lat, credit } of CITIES) {
       }
     );
 
-    await boot(page, '?debug-surface&mode=educ&body=earth');
+    await boot(page, `?debug-surface&mode=${mode}&body=earth`);
     await expect(page.locator('#surface-probe')).toContainText('earth', {
       timeout: 30_000,
     });
+    // Le mode demandé est bien celui de la scène (sinon le cas Explo rejouerait l'Éduc).
+    await expect(
+      page.locator(`.mode-btn[data-mode="${mode}"]`)
+    ).toHaveAttribute('aria-pressed', 'true');
     // De loin, ni tuile ni légende.
     expect(tileUrls, 'tuiles demandées avant toute approche').toEqual([]);
     await expect(page.locator('.si-buildings')).toBeHidden();
@@ -129,9 +182,22 @@ for (const { city, set, lon, lat, credit } of CITIES) {
       .poll(
         async () => {
           await zoomIn(page);
-          return canvas.evaluate(
+          const buildings = await canvas.evaluate(
             (c) => (c as HTMLCanvasElement).dataset['buildings'] ?? ''
           );
+          const probe = await page
+            .locator('#surface-probe')
+            .innerText({ timeout: 1_000 })
+            .catch(() => 'sonde absente');
+          trace.push({
+            at: Date.now(),
+            probe: probe.split(/\s+/).join(' ').slice(0, 400),
+            buildings,
+          });
+          requestedTiles = tileUrls.map((u) =>
+            u.split('/').slice(-3).join('/')
+          );
+          return buildings;
         },
         { timeout: 120_000, intervals: [2_000] }
       )
