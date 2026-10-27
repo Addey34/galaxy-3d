@@ -128,6 +128,11 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
   test(`draws the buildings of ${city} in ${mode} mode, says where their heights come from, and asks for nothing from afar`, async ({
     page,
   }) => {
+    // Explo, rendu logiciel d'un petit runner : la descente finale bloque le fil principal bien
+    // au-delà des ~10 s de l'Éduc (traces des runs 40463167127 et 40465715865 : un seul échantillon
+    // en 120 s). Le sondage et le test reçoivent le temps que la mesure demande, rien de plus.
+    const slow = mode === 'explo';
+    if (slow) test.setTimeout(480_000);
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
     await page.route(
@@ -244,7 +249,7 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
           );
           return buildings;
         },
-        { timeout: 120_000, intervals: [2_000] }
+        { timeout: slow ? 300_000 : 120_000, intervals: [2_000] }
       )
       .toMatch(new RegExp(`^${set}:\\d+:[1-9]\\d*$`));
 
