@@ -61,6 +61,16 @@ def classify(rows):
     return features, factor, len(ratios), counts
 
 
+def count_datasets(lists):
+    """Combien de bâtiments portent chaque jeu source (un bâtiment peut en cumuler plusieurs : OSM et
+    Microsoft, par exemple). Sert à vérifier que l'attribution cite les sources PRÉSENTES, pas celles du thème."""
+    counts = {}
+    for names in lists:
+        for name in set(names or []):
+            counts[name] = counts.get(name, 0) + 1
+    return dict(sorted(counts.items()))
+
+
 def self_test() -> None:
     """Sans réseau ni DuckDB : les trois branches et le seuil de paires."""
     assert MIN_PAIRS == 30, "le seuil de paires est une règle publiée, pas un réglage"
@@ -83,6 +93,8 @@ def self_test() -> None:
     # Sous le seuil de paires, rien n'est déduit : la hauteur reste absente.
     features, factor, n, counts = classify(pairs[: MIN_PAIRS - 1] + others)
     assert factor is None and counts["floors"] == 0 and counts["none"] == 2, (factor, counts)
+    # Un bâtiment compte une fois par jeu, même cité deux fois ; les listes vides ou absentes ne comptent pas.
+    assert count_datasets([["A", "B", "A"], ["B"], None, []]) == {"A": 1, "B": 2}
     print("auto-contrôle ok")
 
 
@@ -107,7 +119,8 @@ def main() -> None:
     rows = con.execute(
         f"""
         SELECT id, height, num_floors, sources[1].dataset AS dataset,
-               ST_AsGeoJSON(geometry) AS geometry
+               ST_AsGeoJSON(geometry) AS geometry,
+               list_transform(sources, lambda x: x.dataset) AS datasets
         FROM read_parquet('{PARQUET.format(release=args.release)}', hive_partitioning=1)
         WHERE bbox.xmin >= ? AND bbox.xmax <= ? AND bbox.ymin >= ? AND bbox.ymax <= ?
         ORDER BY id
@@ -115,7 +128,8 @@ def main() -> None:
         [xmin, xmax, ymin, ymax],
     ).fetchall()
 
-    features, factor, pairs, counts = classify(rows)
+    features, factor, pairs, counts = classify([r[:5] for r in rows])
+    datasets = count_datasets([r[5] for r in rows])
 
     out = {
         "type": "FeatureCollection",
@@ -123,11 +137,12 @@ def main() -> None:
         "readAt": datetime.now(timezone.utc).isoformat(),
         "floorsFactor": None if factor is None else {"metresPerFloor": factor, "pairs": pairs},
         "counts": counts,
+        "datasets": datasets,
         "features": features,
     }
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False)
-    print(f"{len(features)} bâtiments, facteur par étage {out['floorsFactor']}, méthodes {counts}")
+    print(f"{len(features)} bâtiments, facteur par étage {out['floorsFactor']}, méthodes {counts}, jeux {datasets}")
 
 
 if __name__ == "__main__":
