@@ -30,6 +30,16 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
   );
   await expect(page.locator('#loader')).toBeHidden({ timeout: 120_000 });
 
+  // Simulation EN PAUSE : horloge qui tourne, la Terre glisse de 7 à 9 km sous la caméra pendant
+  // le vol et la descente, hors de l'emprise de Paris (4 km sur 2 km). Un clic DOM, le panneau
+  // du temps pouvant être replié sur un téléphone.
+  await page.locator('#play-pause-btn').evaluate((b: HTMLElement) => {
+    if (b.getAttribute('aria-pressed') !== 'true') b.click();
+  });
+  await expect(page.locator('#play-pause-btn')).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
   await page.locator('#body-search-trigger').click();
   await page.locator('#palette-input').fill('Paris');
   await page
