@@ -111,6 +111,17 @@ const SCENES = [
     expect: 'buildings',
   },
   {
+    // La même descente en Explo (échelle vraie) : sur un Redmi Note 11 réel, 12 images/s contre 31 en
+    // Éduc (BrowserStack, 2026-10-28, un échantillon). Cette scène sépare le coût de l'échelle.
+    id: 'earth-buildings-explo',
+    query: `?debug-perf&debug-surface&mode=explo&body=earth&date=${DATE}`,
+    steps: 8,
+    wheel: -3000,
+    settleMs: 3000,
+    place: 'Paris',
+    expect: 'buildings',
+  },
+  {
     // Le TÉMOIN de la scène ci-dessus : même palier, mêmes textures, même descente jusqu'au sol,
     // sur un lieu qu'aucun jeu de bâtiments ne couvre. La différence entre les deux est le coût
     // des bâtiments ; sans lui, le palier (textures 8k, antialiasing) se confond avec eux.
