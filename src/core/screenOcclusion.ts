@@ -68,6 +68,12 @@ export class ScreenOcclusion {
   private _camY = 0;
   private _camZ = 0;
   private readonly _active: SceneOccluder[] = [];
+  private _signature = 0;
+
+  /** Résumé de l'ensemble retenu : change dès qu'un occulteur ou la caméra bouge (cache de dessin). */
+  get signature(): number {
+    return this._signature;
+  }
 
   /** Recompose l'ensemble pour cette image. */
   set(
@@ -90,6 +96,10 @@ export class ScreenOcclusion {
       if (distance <= o.radius) continue;
       if (o.radius / distance >= minAngularRadius) this._active.push(o);
     }
+    let signature = camera.x + 3 * camera.y + 7 * camera.z;
+    for (const o of this._active)
+      signature += o.x + 3 * o.y + 7 * o.z + 11 * o.radius;
+    this._signature = signature;
   }
 
   /** Nombre d'occulteurs retenus pour cette image (lu par les tests). */

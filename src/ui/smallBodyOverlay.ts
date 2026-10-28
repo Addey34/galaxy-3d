@@ -52,6 +52,8 @@ export class SmallBodyOverlay {
   /** Positions en repère scène AVANT mise à l'échelle, à la date `_cacheDate`. */
   private _cache = new Float64Array(0);
   private _cacheDate: number | null = null;
+  /** Ce qui a décidé le dernier dessin : identique, le canvas déjà peint est encore juste. */
+  private _drawnKey: number[] = [];
 
   constructor() {
     this.canvas = document.createElement('canvas');
@@ -99,6 +101,7 @@ export class SmallBodyOverlay {
   /** Catégories à dessiner (panneau de filtres) — un corps sans catégorie reste toujours dessiné. */
   setVisibleCategories(categories: ReadonlySet<SmallBodyCategory>): void {
     this.visibleCategories = categories;
+    this._drawnKey = [];
   }
 
   /** Les corps qui masquent un marqueur passé derrière eux (ligne 45.8). */
@@ -109,6 +112,7 @@ export class SmallBodyOverlay {
   /** Affiche/masque l'overlay. À l'extinction, efface le canvas. */
   setActive(active: boolean): void {
     this.active = active;
+    this._drawnKey = [];
     this.canvas.classList.toggle('is-visible', active);
     if (!active) this._clear();
   }
@@ -120,14 +124,33 @@ export class SmallBodyOverlay {
 
     const w = window.innerWidth;
     const h = window.innerHeight;
-    this._clear();
     camera.getWorldPosition(this._cam);
+    // Rien n'a changé depuis le dernier dessin : ne pas vider ni repeindre un canvas plein écran
+    // (coût natif du navigateur, ~25 % de l'image en Explo près du sol, mesuré le 2026-10-28).
+    this._refreshPositions(date);
+    const key = [
+      ...camera.matrixWorld.elements,
+      ...camera.projectionMatrix.elements,
+      w,
+      h,
+      morph,
+      this._cacheDate ?? -1,
+      this.bodies.length,
+      this.visibleCategories.size,
+      this._occlusion?.signature ?? 0,
+    ];
+    if (
+      key.length === this._drawnKey.length &&
+      key.every((v, i) => v === this._drawnKey[i])
+    )
+      return;
+    this._drawnKey = key;
+    this._clear();
 
     // LOD : à partir d'un certain volume, ne garder que les corps les plus proches de la
     // caméra. Le tri complet serait coûteux chaque frame ; on approxime avec un seuil de
     // distance adaptatif appliqué à la volée (voir _distanceCutoff).
     const cutoff = this._distanceCutoff();
-    this._refreshPositions(date);
 
     this.ctx.fillStyle = `rgba(${SMALL_BODY_MARKER_RGB}, 0.75)`;
     let drawn = 0;
@@ -184,6 +207,7 @@ export class SmallBodyOverlay {
   }
 
   private readonly _resize = (): void => {
+    this._drawnKey = []; // redimensionner un canvas le vide
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(window.innerWidth * dpr);
     this.canvas.height = Math.round(window.innerHeight * dpr);
