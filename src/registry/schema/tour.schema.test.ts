@@ -127,6 +127,8 @@ describe('le schéma des visites refuse', () => {
     ['une cible regardée depuis elle-même', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'earth' }] }], // prettier-ignore
     ['un point de vue en majuscules', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'Moon' }] }], // prettier-ignore
     ['un profil par rapport à la cible elle-même', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', side: 'earth' }] }], // prettier-ignore
+    ['une distance sous la sphère de la cible', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', distanceRadii: 1 }] }], // prettier-ignore
+    ['une distance qui ne cadre plus rien', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', distanceRadii: 500 }] }], // prettier-ignore
     ['deux cadrages à la fois', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'earth', from: 'moon', side: 'sun' }] }], // prettier-ignore
   ])('%s', (_label, record) => {
     expect(tourSchema.safeParse(record).success).toBe(false);

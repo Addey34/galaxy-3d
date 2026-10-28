@@ -982,6 +982,24 @@ export class CameraSystem {
     );
   }
 
+  /**
+   * Pose la caméra à `radii` rayons de `bodyName`, SANS l'animer et en gardant la direction
+   * courante (celle que `viewFromBody` ou `viewBesideBody` vient de poser). Le rayon est celui
+   * du corps À L'ÉCHELLE AFFICHÉE, comme `viewFromBody` : la distance suit donc le mode. Les
+   * bornes de zoom s'appliquent (`applyViewAngles`). Sans effet si le corps est inconnu, ou si
+   * la caméra est confondue avec la cible (direction indéfinie). À appeler après le vol.
+   */
+  viewAtRadii(bodyName: string, radii: number): void {
+    const radius = this.celestialBodies[bodyName]?.group.userData['radius'] as
+      number | undefined;
+    if (!radius || !this.controls) return;
+    const angles = viewAnglesFromDirection(
+      this.camera.position.clone().sub(this.controls.target)
+    );
+    if (!angles) return;
+    this.applyViewAngles(angles.azimuthDeg, angles.polarDeg, radius * radii);
+  }
+
   private getDefaultDistance(bodyName: string): number {
     const cd = this._target(bodyName)?.cameraDistance;
     if (!cd) return CAMERA_SETTINGS.defaultBodyDistance;
