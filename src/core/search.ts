@@ -19,6 +19,7 @@ export type SearchKind =
   | 'flyby'
   | 'orbitInsertion'
   | 'perihelion'
+  | 'perijove'
   | 'contact'
   | 'discovery';
 
@@ -31,6 +32,7 @@ const SEARCH_KINDS: readonly SearchKind[] = [
   'flyby',
   'orbitInsertion',
   'perihelion',
+  'perijove',
   'contact',
   'discovery',
 ];
@@ -46,6 +48,8 @@ export interface SearchIndexFile {
   orbitInsertions?: [string, string, string][];
   /** [sonde, Soleil, instant du périhélie] (lot 69), même forme que les mises en orbite. */
   perihelia?: [string, string, string][];
+  /** [sonde, planète, instant du périjove] (Juno), même forme que les périhélies. */
+  perijoves?: [string, string, string][];
   /** [sonde, corps, instant du contact] (lot 49, pas 3). */
   contacts?: [string, string, string][];
   /** [nom ou null (alors celui du corps), corps à montrer, jour ou année, découvreurs ou null] */
@@ -79,6 +83,13 @@ export type SearchHit =
     }
   | {
       kind: 'perihelion';
+      label: string;
+      probe: string;
+      body: string;
+      at: string;
+    }
+  | {
+      kind: 'perijove';
       label: string;
       probe: string;
       body: string;
@@ -149,6 +160,7 @@ export function prepareSearchIndex(
     flyby: [],
     orbitInsertion: [],
     perihelion: [],
+    perijove: [],
     contact: [],
     discovery: [],
   };
@@ -189,6 +201,13 @@ export function prepareSearchIndex(
     add(
       { kind: 'perihelion', label, probe, body, at },
       `${probe} ${body} perihelion perihelie perihelio perielio`
+    );
+  }
+  for (const [probe, body, at] of file.perijoves ?? []) {
+    const label = `${nameOf(probe)} · ${nameOf(body)} · ${at.slice(0, 10)}`;
+    add(
+      { kind: 'perijove', label, probe, body, at },
+      `${probe} ${body} perijove perijoves perijovo`
     );
   }
   for (const [probe, body, at] of file.contacts ?? []) {

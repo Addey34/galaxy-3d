@@ -85,6 +85,8 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
     '« Instruments » s’écrit pareil en français et en anglais',
   'search.group.contact':
     '« Contacts » s’écrit pareil en français et en anglais',
+  'search.group.perijove':
+    '« Perijoves » s’écrit pareil en anglais, en espagnol et en portugais',
   'mode.educ': 'abréviation, identique en espagnol et en portugais',
   'mode.explo': 'abréviation, identique dans les quatre langues',
   'time.histEra': 'le mot « era » est le même en espagnol et en portugais',

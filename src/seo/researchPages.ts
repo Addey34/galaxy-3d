@@ -20,6 +20,7 @@ import {
   MISSIONS_SLUG,
   ORBIT_INSERTIONS_SLUG,
   PERIHELIA_SLUG,
+  PERIJOVES_SLUG,
   PLACES_SLUG,
   RESEARCH_SLUG,
   docPath,
@@ -108,6 +109,22 @@ const FAMILIES: readonly Family[] = [
       es: 'el paso de Parker Solar Probe y de Solar Orbiter más cerca del Sol, leído en sus trayectorias.',
       'pt-BR':
         'a passagem da Parker Solar Probe e da Solar Orbiter mais perto do Sol, lida em suas trajetórias.',
+    },
+  },
+  {
+    slug: PERIJOVES_SLUG,
+    name: {
+      en: 'Perijoves',
+      fr: 'Périjoves',
+      es: 'Perijoves',
+      'pt-BR': 'Perijoves',
+    },
+    what: {
+      en: 'the closest pass of Juno to Jupiter, numbered as NASA numbers them and read on its trajectory.',
+      fr: 'le passage de Juno au plus près de Jupiter, numéroté comme la NASA le numérote et lu sur sa trajectoire.',
+      es: 'el paso de Juno más cerca de Júpiter, numerado como lo numera la NASA y leído en su trayectoria.',
+      'pt-BR':
+        'a passagem da Juno mais perto de Júpiter, numerada como a NASA a numera e lida em sua trajetória.',
     },
   },
   {

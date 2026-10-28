@@ -60,6 +60,7 @@ function generatedDocuments(): string[] {
       'flybys',
       'orbit-insertions',
       'perihelia',
+      'perijoves',
       'contacts',
       'places',
       'activities',
@@ -110,6 +111,14 @@ const ORBIT_PAGES = DOCUMENTS.filter((d) => d.endsWith('orbit-insertions')).map(
  */
 const PERIHELION_PAGES = DOCUMENTS.filter((d) => d.endsWith('perihelia')).map(
   (index) => `${index}/parker-solar-probe-2024-12-24`
+);
+
+/**
+ * Une page de périjove, dans les quatre langues : PJ57 (2023-12-30), le survol à basse altitude
+ * d'Io, numéro confronté au tableau de la NASA donc stable d'une lecture d'Horizons à l'autre.
+ */
+const PERIJOVE_PAGES = DOCUMENTS.filter((d) => d.endsWith('perijoves')).map(
+  (index) => `${index}/juno-2023-12-30`
 );
 
 /**
@@ -218,7 +227,7 @@ test.describe('pages générées, à 390 px', () => {
 
   test('la dérivation trouve les sept documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(40);
+    expect(DOCUMENTS.length).toBe(44);
     expect(PLACE_PAGES.length).toBe(4);
     expect(ACTIVITY_PAGES.length).toBe(20);
     expect(DOCUMENTS).toContain('pt-br/activities');
@@ -228,6 +237,8 @@ test.describe('pages générées, à 390 px', () => {
     expect(ORBIT_PAGES.length).toBe(4);
     expect(CONTACT_PAGES.length).toBe(4);
     expect(PERIHELION_PAGES.length).toBe(4);
+    expect(PERIJOVE_PAGES.length).toBe(4);
+    expect(DOCUMENTS).toContain('fr/perijoves');
     expect(DOCUMENTS).toContain('fr/perihelia');
     expect(DOCUMENTS).toContain('pt-br/contacts');
     expect(DOCUMENTS).toContain('es/orbit-insertions');
@@ -263,6 +274,7 @@ test.describe('pages générées, à 390 px', () => {
     ...FLYBY_PAGES,
     ...ORBIT_PAGES,
     ...PERIHELION_PAGES,
+    ...PERIJOVE_PAGES,
     ...CONTACT_PAGES,
     ...PLACE_PAGES,
     ...ACTIVITY_PAGES,
@@ -355,6 +367,7 @@ test.describe('pages générées, à 390 px', () => {
       ...FLYBY_PAGES,
       ...ORBIT_PAGES,
       ...PERIHELION_PAGES,
+      ...PERIJOVE_PAGES,
       ...CONTACT_PAGES,
       ...PLACE_PAGES,
       ...ACTIVITY_PAGES,

@@ -72,6 +72,11 @@ export const DRIFT_GENERATORS = [
     script: 'perihelia:generate',
     about: 'périhélies (Horizons)',
   },
+  {
+    id: 'perijoves',
+    script: 'perijoves:generate',
+    about: 'périjoves de Juno (Horizons)',
+  },
 ];
 
 const PER_GENERATOR_TIMEOUT_MS = 25 * 60 * 1000;

@@ -39,6 +39,7 @@ describe('l’index de la recherche universelle', () => {
         body,
       ]),
       ...(index.perihelia ?? []).flatMap(([probe, body]) => [probe, body]),
+      ...(index.perijoves ?? []).flatMap(([probe, body]) => [probe, body]),
       ...(index.contacts ?? []).flatMap(([probe, body]) => [probe, body]),
       ...(index.discoveries ?? []).map(([, body]) => body),
     ].filter((id): id is string => id !== null);
