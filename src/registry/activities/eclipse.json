@@ -1,0 +1,245 @@
+{
+  "$schema": "../schema/activity.schema.json",
+  "id": "eclipse",
+  "title": {
+    "en": "Why can the Moon hide the Sun?",
+    "fr": "Pourquoi la Lune peut-elle cacher le Soleil ?",
+    "es": "¿Por qué la Luna puede ocultar el Sol?",
+    "pt-BR": "Por que a Lua pode esconder o Sol?"
+  },
+  "summary": {
+    "en": "Pupils compare the size and the distance of the Sun and the Moon on their cards, and discover that the two ratios are almost equal: this is why the two look about the same size in our sky.",
+    "fr": "Les élèves comparent la taille et la distance du Soleil et de la Lune sur leurs fiches, et découvrent que les deux rapports sont presque égaux : c’est pour cela que les deux paraissent à peu près de la même taille dans notre ciel.",
+    "es": "Los alumnos comparan el tamaño y la distancia del Sol y de la Luna en sus fichas, y descubren que las dos relaciones son casi iguales: por eso ambos parecen de un tamaño parecido en nuestro cielo.",
+    "pt-BR": "Os alunos comparam o tamanho e a distância do Sol e da Lua nas fichas, e descobrem que as duas razões são quase iguais: é por isso que os dois parecem ter quase o mesmo tamanho no nosso céu."
+  },
+  "tour": "eclipse",
+  "ages": {
+    "from": 11,
+    "to": 16
+  },
+  "durationMinutes": 40,
+  "difficulty": "medium",
+  "subjects": [
+    "astronomy",
+    "physics"
+  ],
+  "objectives": [
+    {
+      "en": "Explain that the Sun and the Moon look about the same size because the Sun is much larger but also much farther.",
+      "fr": "Expliquer que le Soleil et la Lune paraissent à peu près de la même taille parce que le Soleil est beaucoup plus grand mais aussi beaucoup plus loin.",
+      "es": "Explicar que el Sol y la Luna parecen de un tamaño parecido porque el Sol es mucho más grande pero también mucho más lejano.",
+      "pt-BR": "Explicar que o Sol e a Lua parecem ter quase o mesmo tamanho porque o Sol é muito maior, mas também muito mais distante."
+    },
+    {
+      "en": "Link a total or annular eclipse to the changing distance of the Moon.",
+      "fr": "Relier une éclipse totale ou annulaire à la distance changeante de la Lune.",
+      "es": "Relacionar un eclipse total o anular con la distancia cambiante de la Luna.",
+      "pt-BR": "Relacionar um eclipse total ou anular com a distância variável da Lua."
+    },
+    {
+      "en": "Use two ratios read on the cards of bodies to test a prediction.",
+      "fr": "Se servir de deux rapports lus sur les fiches des corps pour tester une prédiction.",
+      "es": "Usar dos relaciones leídas en las fichas de los cuerpos para comprobar una predicción.",
+      "pt-BR": "Usar duas razões lidas nas fichas dos corpos para testar uma previsão."
+    }
+  ],
+  "material": [
+    {
+      "en": "A computer or tablet per group, with a recent web browser (the scene uses WebGL).",
+      "fr": "Un ordinateur ou une tablette par groupe, avec un navigateur récent (la scène utilise WebGL).",
+      "es": "Un ordenador o una tableta por grupo, con un navegador reciente (la escena usa WebGL).",
+      "pt-BR": "Um computador ou tablet por grupo, com um navegador recente (a cena usa WebGL)."
+    },
+    {
+      "en": "A calculator, and the printed pupil sheet below.",
+      "fr": "Une calculatrice, et la fiche élève ci-dessous, imprimée.",
+      "es": "Una calculadora y la ficha del alumno de abajo, impresa.",
+      "pt-BR": "Uma calculadora e a ficha do aluno abaixo, impressa."
+    }
+  ],
+  "values": {
+    "sizeRatio": {
+      "kind": "factRatio",
+      "fact": "radiusKm",
+      "outer": "sun",
+      "inner": "moon",
+      "decimals": 0
+    },
+    "distanceRatio": {
+      "kind": "factRatio",
+      "fact": "distanceAU",
+      "outer": "earth",
+      "inner": "moon",
+      "decimals": 0
+    },
+    "sunAngular": {
+      "kind": "angularSize",
+      "body": "sun",
+      "distanceOf": "earth",
+      "decimals": 2
+    },
+    "moonAngular": {
+      "kind": "angularSize",
+      "body": "moon",
+      "distanceOf": "moon",
+      "decimals": 2
+    }
+  },
+  "parts": [
+    {
+      "title": {
+        "en": "Two ratios",
+        "fr": "Deux rapports",
+        "es": "Dos relaciones",
+        "pt-BR": "Dos razões"
+      },
+      "teacher": {
+        "en": "Play the tour “Birth of an eclipse” with the link below: it jumps to the next real solar eclipse and looks at the Earth from the Moon. Then ask pupils why the Moon can hide a Sun that is so much bigger. Let them find that the answer is in two numbers, how big and how far. The ratios below use the mean distances, the semi-major axes of the orbits. NASA’s “My NASA Data” classroom activity “Calculating Ratios of an Eclipse” builds the same reasoning.",
+        "fr": "Jouez la visite « Naissance d’une éclipse » avec le lien ci-dessous : elle saute à la prochaine vraie éclipse solaire et regarde la Terre depuis la Lune. Demandez ensuite aux élèves pourquoi la Lune peut cacher un Soleil bien plus grand. Laissez-les trouver que la réponse tient en deux nombres, combien c’est grand et combien c’est loin. Les rapports ci-dessous utilisent les distances moyennes, les demi-grands axes des orbites. L’activité « Calculating Ratios of an Eclipse » de « My NASA Data » construit le même raisonnement.",
+        "es": "Reproduzca la visita «Nacimiento de un eclipse» con el enlace de abajo: salta al próximo eclipse solar real y mira la Tierra desde la Luna. Después pregunte a los alumnos por qué la Luna puede ocultar un Sol mucho más grande. Deje que descubran que la respuesta está en dos números, qué tan grande y qué tan lejos. Las relaciones de abajo usan las distancias medias, los semiejes mayores de las órbitas. La actividad «Calculating Ratios of an Eclipse» de «My NASA Data» construye el mismo razonamiento.",
+        "pt-BR": "Reproduza a visita “Nascimento de um eclipse” com o link abaixo: ela salta para o próximo eclipse solar real e olha a Terra a partir da Lua. Depois pergunte aos alunos por que a Lua pode esconder um Sol muito maior. Deixe que descubram que a resposta está em dois números, quão grande e quão longe. As razões abaixo usam as distâncias médias, os semieixos maiores das órbitas. A atividade “Calculating Ratios of an Eclipse” do “My NASA Data” constrói o mesmo raciocínio."
+      },
+      "steps": [
+        {
+          "en": "Open the tour with the link on this sheet and follow it to the end.",
+          "fr": "Ouvrez la visite avec le lien de cette fiche et suivez-la jusqu’au bout.",
+          "es": "Abre la visita con el enlace de esta ficha y síguela hasta el final.",
+          "pt-BR": "Abra a visita com o link desta ficha e acompanhe-a até o fim."
+        },
+        {
+          "en": "Open the cards of the Sun and of the Moon and note the line “Radius” of each. On the card of the Earth note “Mean distance (Sun)”, on the card of the Moon “Mean distance (Earth)”.",
+          "fr": "Ouvrez les fiches du Soleil et de la Lune et notez la ligne « Rayon » de chacune. Sur la fiche de la Terre notez « Distance moyenne (Soleil) », sur celle de la Lune « Distance moyenne (Terre) ».",
+          "es": "Abre las fichas del Sol y de la Luna y anota la línea «Radio» de cada una. En la ficha de la Tierra anota «Distancia media (Sol)», en la de la Luna «Distancia media (Tierra)».",
+          "pt-BR": "Abra as fichas do Sol e da Lua e anote a linha “Raio” de cada uma. Na ficha da Terra anote “Distância média (Sol)”, na da Lua “Distância média (Terra)”."
+        },
+        {
+          "en": "Divide the radius of the Sun by that of the Moon, then the distance of the Sun by that of the Moon.",
+          "fr": "Divisez le rayon du Soleil par celui de la Lune, puis la distance du Soleil par celle de la Lune.",
+          "es": "Divide el radio del Sol por el de la Luna, y luego la distancia del Sol por la de la Luna.",
+          "pt-BR": "Divida o raio do Sol pelo da Lua, e depois a distância do Sol pela da Lua."
+        }
+      ],
+      "questions": [
+        {
+          "id": "size",
+          "prompt": {
+            "en": "How many times larger than the Moon is the Sun?",
+            "fr": "Combien de fois le Soleil est-il plus grand que la Lune ?",
+            "es": "¿Cuántas veces es el Sol más grande que la Luna?",
+            "pt-BR": "Quantas vezes o Sol é maior que a Lua?"
+          },
+          "answer": {
+            "en": "About {sizeRatio} times: the radius of the Sun divided by the radius of the Moon.",
+            "fr": "Environ {sizeRatio} fois : le rayon du Soleil divisé par le rayon de la Lune.",
+            "es": "Unas {sizeRatio} veces: el radio del Sol dividido por el radio de la Luna.",
+            "pt-BR": "Cerca de {sizeRatio} vezes: o raio do Sol dividido pelo raio da Lua."
+          },
+          "evidence": [
+            "sizeRatio"
+          ]
+        },
+        {
+          "id": "distance",
+          "prompt": {
+            "en": "How many times farther from the Earth than the Moon is the Sun?",
+            "fr": "Combien de fois le Soleil est-il plus loin de la Terre que la Lune ?",
+            "es": "¿Cuántas veces está el Sol más lejos de la Tierra que la Luna?",
+            "pt-BR": "Quantas vezes o Sol está mais longe da Terra do que a Lua?"
+          },
+          "answer": {
+            "en": "About {distanceRatio} times: the mean distance of the Earth to the Sun divided by the mean distance of the Moon to the Earth.",
+            "fr": "Environ {distanceRatio} fois : la distance moyenne de la Terre au Soleil divisée par la distance moyenne de la Lune à la Terre.",
+            "es": "Unas {distanceRatio} veces: la distancia media de la Tierra al Sol dividida por la distancia media de la Luna a la Tierra.",
+            "pt-BR": "Cerca de {distanceRatio} vezes: a distância média da Terra ao Sol dividida pela distância média da Lua à Terra."
+          },
+          "evidence": [
+            "distanceRatio"
+          ]
+        },
+        {
+          "id": "same-size",
+          "prompt": {
+            "en": "Compare your two results. What do they tell you about how big the Sun and the Moon look in the sky?",
+            "fr": "Comparez vos deux résultats. Que disent-ils de la grandeur du Soleil et de la Lune dans le ciel ?",
+            "es": "Compara tus dos resultados. ¿Qué dicen sobre lo grandes que se ven el Sol y la Luna en el cielo?",
+            "pt-BR": "Compare os seus dois resultados. O que eles dizem sobre o tamanho com que o Sol e a Lua aparecem no céu?"
+          },
+          "answer": {
+            "en": "The Sun is about {sizeRatio} times larger and about {distanceRatio} times farther: the two numbers are almost equal, so the two discs look almost the same size.",
+            "fr": "Le Soleil est environ {sizeRatio} fois plus grand et environ {distanceRatio} fois plus loin : les deux nombres sont presque égaux, donc les deux disques paraissent presque de la même taille.",
+            "es": "El Sol es unas {sizeRatio} veces más grande y está unas {distanceRatio} veces más lejos: los dos números son casi iguales, así que los dos discos parecen casi del mismo tamaño.",
+            "pt-BR": "O Sol é cerca de {sizeRatio} vezes maior e está cerca de {distanceRatio} vezes mais longe: os dois números são quase iguais, então os dois discos parecem quase do mesmo tamanho."
+          },
+          "evidence": [
+            "sizeRatio",
+            "distanceRatio"
+          ]
+        },
+        {
+          "id": "angular",
+          "level": "advanced",
+          "prompt": {
+            "en": "At their mean distances, the Sun looks {sunAngular}° wide. How wide does the Moon look, and which one is bigger?",
+            "fr": "À leurs distances moyennes, le Soleil paraît large de {sunAngular}°. De quelle largeur paraît la Lune, et laquelle est la plus grande ?",
+            "es": "A sus distancias medias, el Sol se ve de {sunAngular}° de ancho. ¿Qué ancho tiene la Luna y cuál es mayor?",
+            "pt-BR": "Nas suas distâncias médias, o Sol aparece com {sunAngular}° de largura. Qual a largura da Lua e qual dos dois é maior?"
+          },
+          "answer": {
+            "en": "The Moon looks {moonAngular}° wide: slightly smaller than the Sun, {sunAngular}°. At its mean distance the Moon is a little too small to cover the Sun.",
+            "fr": "La Lune paraît large de {moonAngular}° : un peu plus petite que le Soleil, {sunAngular}°. À sa distance moyenne, la Lune est un peu trop petite pour cacher le Soleil.",
+            "es": "La Luna se ve de {moonAngular}° de ancho: un poco más pequeña que el Sol, {sunAngular}°. A su distancia media, la Luna es un poco pequeña para ocultar el Sol.",
+            "pt-BR": "A Lua aparece com {moonAngular}° de largura: um pouco menor que o Sol, {sunAngular}°. Na sua distância média, a Lua é um pouco pequena demais para esconder o Sol."
+          },
+          "evidence": [
+            "sunAngular",
+            "moonAngular"
+          ]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "Discussion",
+        "fr": "Discussion",
+        "es": "Debate",
+        "pt-BR": "Discussão"
+      },
+      "teacher": {
+        "en": "The Moon’s orbit is an ellipse, so its distance changes. According to NASA, an eclipse at the Moon’s closest point (perigee) can be total, while one near its farthest point (apogee) is annular: a ring of sunlight stays visible around the Moon. The tour shows the Moon’s shadow on the Earth from the Moon itself.",
+        "fr": "L’orbite de la Lune est une ellipse, donc sa distance change. Selon la NASA, une éclipse au point le plus proche de la Lune (périgée) peut être totale, alors qu’une éclipse près de son point le plus éloigné (apogée) est annulaire : un anneau de lumière du Soleil reste visible autour de la Lune. La visite montre l’ombre de la Lune sur la Terre depuis la Lune elle-même.",
+        "es": "La órbita de la Luna es una elipse, así que su distancia cambia. Según la NASA, un eclipse en el punto más cercano de la Luna (perigeo) puede ser total, mientras que uno cerca de su punto más lejano (apogeo) es anular: un anillo de luz del Sol permanece visible alrededor de la Luna. La visita muestra la sombra de la Luna sobre la Tierra desde la propia Luna.",
+        "pt-BR": "A órbita da Lua é uma elipse, então a sua distância muda. Segundo a NASA, um eclipse no ponto mais próximo da Lua (perigeu) pode ser total, enquanto um perto do ponto mais distante (apogeu) é anular: um anel de luz do Sol continua visível ao redor da Lua. A visita mostra a sombra da Lua sobre a Terra a partir da própria Lua."
+      },
+      "steps": [
+        {
+          "en": "Discuss in your group, then answer.",
+          "fr": "Discutez en groupe, puis répondez.",
+          "es": "Debatid en grupo y luego responded.",
+          "pt-BR": "Discutam em grupo e depois respondam."
+        }
+      ],
+      "questions": [
+        {
+          "id": "ring",
+          "prompt": {
+            "en": "During an eclipse the Moon sometimes leaves a ring of sunlight around it. Does the Moon then look bigger or smaller than the Sun? What must happen for it to hide the whole Sun?",
+            "fr": "Pendant une éclipse, la Lune laisse parfois un anneau de lumière du Soleil autour d’elle. La Lune paraît-elle alors plus grande ou plus petite que le Soleil ? Que faut-il pour qu’elle cache tout le Soleil ?",
+            "es": "Durante un eclipse la Luna deja a veces un anillo de luz del Sol a su alrededor. ¿Se ve entonces la Luna más grande o más pequeña que el Sol? ¿Qué hace falta para que oculte todo el Sol?",
+            "pt-BR": "Durante um eclipse a Lua às vezes deixa um anel de luz do Sol ao seu redor. A Lua aparece então maior ou menor que o Sol? O que é preciso para que ela esconda todo o Sol?"
+          },
+          "answer": {
+            "en": "Smaller: it does not cover the whole disc. At its mean distance the Moon already looks smaller than the Sun ({moonAngular}° against {sunAngular}°), so to hide the whole Sun it must be nearer to the Earth than average. When it is not near enough, a ring remains.",
+            "fr": "Plus petite : elle ne couvre pas tout le disque. À sa distance moyenne, la Lune paraît déjà plus petite que le Soleil ({moonAngular}° contre {sunAngular}°) ; pour cacher tout le Soleil, il faut donc qu’elle soit plus près de la Terre que la moyenne. Quand elle n’est pas assez près, un anneau reste visible.",
+            "es": "Más pequeña: no cubre todo el disco. A su distancia media la Luna ya se ve más pequeña que el Sol ({moonAngular}° frente a {sunAngular}°), así que para ocultar todo el Sol debe estar más cerca de la Tierra que el promedio. Cuando no está lo bastante cerca, queda un anillo.",
+            "pt-BR": "Menor: ela não cobre todo o disco. Na sua distância média a Lua já aparece menor que o Sol ({moonAngular}° contra {sunAngular}°), então para esconder todo o Sol ela precisa estar mais perto da Terra do que a média. Quando não está perto o bastante, resta um anel."
+          },
+          "evidence": [
+            "moonAngular",
+            "sunAngular"
+          ]
+        }
+      ]
+    }
+  ]
+}

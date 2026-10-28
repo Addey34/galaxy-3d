@@ -60,31 +60,31 @@
   ],
   "values": {
     "plutoNeptune": {
-      "kind": "periodRatio",
+      "kind": "factRatio", "fact": "orbitPeriodDays",
       "outer": "pluto",
       "inner": "neptune",
       "decimals": 1
     },
     "haumeaPluto": {
-      "kind": "periodRatio",
+      "kind": "factRatio", "fact": "orbitPeriodDays",
       "outer": "haumea",
       "inner": "pluto",
       "decimals": 1
     },
     "makemakePluto": {
-      "kind": "periodRatio",
+      "kind": "factRatio", "fact": "orbitPeriodDays",
       "outer": "makemake",
       "inner": "pluto",
       "decimals": 1
     },
     "erisPluto": {
-      "kind": "periodRatio",
+      "kind": "factRatio", "fact": "orbitPeriodDays",
       "outer": "eris",
       "inner": "pluto",
       "decimals": 1
     },
     "sednaPluto": {
-      "kind": "periodRatio",
+      "kind": "factRatio", "fact": "orbitPeriodDays",
       "outer": "sedna",
       "inner": "pluto",
       "decimals": 0

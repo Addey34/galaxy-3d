@@ -25,11 +25,12 @@ import {
   subsolarLatitudeDeg,
 } from './activityMeasures';
 import { formatDateText } from './dateText';
+import { KM_PER_AU } from './ScaleService';
 
-/** Lit un fait de la fiche d'un corps (degrés pour `axialTilt`, jours pour `orbitPeriodDays`) ; `undefined` s'il n'est pas publié. */
+/** Lit un fait de la fiche d'un corps (degrés pour `axialTilt`, jours pour `orbitPeriodDays`, km pour `radiusKm`, UA pour `distanceAU`) ; `undefined` s'il n'est pas publié. */
 export type FactReader = (
   body: string,
-  fact: 'axialTilt' | 'orbitPeriodDays'
+  fact: 'axialTilt' | 'orbitPeriodDays' | 'radiusKm' | 'distanceAU'
 ) => number | undefined;
 
 /** Lit l'intervalle (ms UTC) que décrit l'édition `edition` de l'imagerie d'un corps. */
@@ -127,20 +128,40 @@ export function evaluateActivityValues(
         };
         break;
       }
-      case 'periodRatio': {
-        const outer = readFact(value.outer, 'orbitPeriodDays');
-        const inner = readFact(value.inner, 'orbitPeriodDays');
-        for (const [body, period] of [
+      case 'factRatio': {
+        const outer = readFact(value.outer, value.fact);
+        const inner = readFact(value.inner, value.fact);
+        for (const [body, read] of [
           [value.outer, outer],
           [value.inner, inner],
         ] as const)
-          if (period === undefined || period <= 0)
+          if (read === undefined || read <= 0)
             throw new Error(
-              `valeur « ${name} » : ${body}.orbitPeriodDays n'est pas publié`
+              `valeur « ${name} » : ${body}.${value.fact} n'est pas publié`
             );
         out[name] = {
           kind: 'ratio',
           value: outer! / inner!,
+          decimals: value.decimals,
+        };
+        break;
+      }
+      case 'angularSize': {
+        const radiusKm = readFact(value.body, 'radiusKm');
+        const distanceAU = readFact(value.distanceOf, 'distanceAU');
+        if (radiusKm === undefined || radiusKm <= 0)
+          throw new Error(
+            `valeur « ${name} » : ${value.body}.radiusKm n'est pas publié`
+          );
+        if (distanceAU === undefined || distanceAU <= 0)
+          throw new Error(
+            `valeur « ${name} » : ${value.distanceOf}.distanceAU n'est pas publié`
+          );
+        out[name] = {
+          kind: 'degrees',
+          value:
+            (2 * Math.atan(radiusKm / (distanceAU * KM_PER_AU)) * 180) /
+            Math.PI,
           decimals: value.decimals,
         };
         break;

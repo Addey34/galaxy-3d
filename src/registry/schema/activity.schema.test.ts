@@ -101,7 +101,8 @@ describe('fiches d’activité', () => {
         values: {
           ...(galileans['values'] as object),
           ioEuropa: {
-            kind: 'periodRatio',
+            kind: 'factRatio',
+            fact: 'orbitPeriodDays',
             outer: 'io',
             inner: 'io',
             decimals: 1,

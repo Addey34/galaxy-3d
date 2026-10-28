@@ -53,16 +53,16 @@
     }
   ],
   "values": {
-    "ioEuropa": { "kind": "periodRatio", "outer": "europa", "inner": "io", "decimals": 1 },
+    "ioEuropa": { "kind": "factRatio", "fact": "orbitPeriodDays", "outer": "europa", "inner": "io", "decimals": 1 },
     "europaGanymede": {
-      "kind": "periodRatio",
+      "kind": "factRatio", "fact": "orbitPeriodDays",
       "outer": "ganymede",
       "inner": "europa",
       "decimals": 1
     },
-    "ioGanymede": { "kind": "periodRatio", "outer": "ganymede", "inner": "io", "decimals": 1 },
+    "ioGanymede": { "kind": "factRatio", "fact": "orbitPeriodDays", "outer": "ganymede", "inner": "io", "decimals": 1 },
     "ganymedeCallisto": {
-      "kind": "periodRatio",
+      "kind": "factRatio", "fact": "orbitPeriodDays",
       "outer": "callisto",
       "inner": "ganymede",
       "decimals": 1
