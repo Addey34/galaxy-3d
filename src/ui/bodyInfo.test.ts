@@ -333,7 +333,7 @@ describe('fiche d’information — atmosphère des géantes (lot 51)', () => {
   });
 
   const GIANTS = ['jupiter', 'saturn', 'uranus', 'neptune'];
-  const SURFACE_ATMOSPHERE_BODIES = ['venus', 'earth', 'mars'];
+  const SURFACE_ATMOSPHERE_BODIES = ['venus', 'earth', 'mars', 'titan'];
   const ATMOSPHERE = [
     'Température à 1 bar',
     'Température à 0,1 bar',
@@ -364,7 +364,7 @@ describe('fiche d’information — atmosphère des géantes (lot 51)', () => {
     }
   });
 
-  it('donne à Vénus, la Terre et Mars l’atmosphère AU SOL, et à eux seuls', () => {
+  it('donne à Vénus, la Terre, Mars et Titan l’atmosphère AU SOL, et à eux seuls', () => {
     const SURFACE = [
       'Pression à la surface',
       'Masse volumique à la surface',

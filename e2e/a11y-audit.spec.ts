@@ -523,6 +523,55 @@ test.describe('mobile viewport', () => {
   }
 
   /**
+   * LE PROFIL MESURÉ DE TITAN (2026-10-28) : le profil de HASI, l'instrument de la sonde Huygens,
+   * dans le même bloc que celui de Jupiter mais compté depuis le SOL, avec une ligne « sol », une
+   * pression de surface et trois faits sans valeur (leur raison s'affiche). Quatre langues : les
+   * libellés espagnol et portugais sont les plus longs.
+   */
+  for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const) {
+    test(`Titan measured profile, ${locale}, is clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+      }, locale);
+      await page.goto('/?body=titan');
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+      const card = page.locator('#body-info');
+      await expect(card.locator('.bi-stats')).toContainText(/1[.,]467/);
+      const block = card.locator('.bi-atmosphere');
+      await expect(block).toBeVisible({ timeout: 15_000 });
+      await block.evaluate((el) => {
+        (el as HTMLDetailsElement).open = true;
+      });
+      // Le plus haut échantillon, au plus quatre repères de pression, et la ligne du sol : sans
+      // doublon, donc de trois à six lignes ; aucune n'est ajustée (la source ne le dit pas).
+      const rows = block.locator('tbody tr');
+      expect(await rows.count()).toBeGreaterThanOrEqual(3);
+      expect(await rows.count()).toBeLessThanOrEqual(6);
+      await expect(block.locator('tr.is-adjusted')).toHaveCount(0);
+      await expect(block).toContainText('10.17189/23e7-zw13');
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth
+        ),
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
+      expect(
+        await clippedOverflow(page),
+        `texte rogné dans la fiche (${locale})`
+      ).toEqual([]);
+    });
+  }
+
+  /**
    * LES VENTS PAR BANDE DE LATITUDE (lot 51) : la plus longue valeur de la fiche, mesurée sur les
    * quatre langues, est celle de Saturne en espagnol (« hasta 400 m/s por debajo de 30° de
    * latitud, 150 m/s más allá »). Neptune, le témoin ci-dessus, n'a qu'une plage.

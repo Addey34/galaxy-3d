@@ -109,14 +109,101 @@ describe('l’index des profils', () => {
       .map(([id]) => id)
       .sort();
     expect(
-      [...Object.keys(index.profiles), ...Object.keys(index.absent)].sort()
+      [
+        ...Object.keys(index.profiles).filter((id) => id !== 'titan'),
+        ...Object.keys(index.absent),
+      ].sort()
     ).toEqual(giants);
     expect(index.witness.jupiter).toBe('urn:nasa:pds:gp:data_asi');
   });
 });
 
+/**
+ * LE PROFIL DE TITAN, tel qu'il est LIVRÉ (2026-10-28) : HASI, l'instrument de la sonde Huygens.
+ * Le point de surface vient d'AUTRES tables (PPI pour la pression, TEM pour la température) que
+ * les profils (`PROFILES`) : le dernier échantillon de la descente, à quelques mètres du sol, est
+ * donc un TÉMOIN indépendant de la conversion des pascals en bars et de l'ordre des colonnes.
+ */
+const titan = JSON.parse(
+  readFileSync(
+    resolve(
+      import.meta.dirname,
+      '../../public/assets/atmosphere-profiles/titan.json'
+    ),
+    'utf-8'
+  )
+) as AtmosphereProfile;
+
+describe('le profil de la sonde Huygens, livré', () => {
+  const descent = titan.segments.find((s) => s.kind === 'descent')!;
+  const lowest = descent.samples.at(-1)!;
+  const surface = titan.surface!;
+
+  it('compte l’altitude depuis le sol, et le dit', () => {
+    expect(titan.altitudeReference).toBe('surface');
+    expect(surface.altitudeKm).toBe(0);
+    expect(
+      titan.segments.find((s) => s.kind === 'entry')!.samples[0]![0]
+    ).toBeGreaterThan(1000);
+  });
+
+  it('place le sol là où la descente s’arrête, sur deux tables indépendantes', () => {
+    // Le dernier échantillon de la descente est à quelques mètres du sol : même pression à 0,2 %,
+    // même température à un kelvin. Une pression laissée en pascals serait 100 000 fois trop haute.
+    expect(lowest[0]).toBeLessThan(0.01);
+    expect(Math.abs(lowest[1] / surface.pressureBar - 1)).toBeLessThan(0.002);
+    expect(Math.abs(lowest[2] - surface.temperatureK)).toBeLessThan(1);
+    expect(surface.pressureBar).toBeGreaterThan(1.4);
+    expect(surface.pressureBar).toBeLessThan(1.5);
+  });
+
+  it('garde la dispersion des lectures au sol, sans la lisser', () => {
+    expect(surface.pressureRangeBar[0]).toBeLessThanOrEqual(
+      surface.pressureBar
+    );
+    expect(surface.pressureRangeBar[1]).toBeGreaterThanOrEqual(
+      surface.pressureBar
+    );
+    expect(surface.temperatureRangeK[0]).toBeLessThanOrEqual(
+      surface.temperatureK
+    );
+    expect(surface.temperatureRangeK[1]).toBeGreaterThanOrEqual(
+      surface.temperatureK
+    );
+  });
+
+  it('est mesuré de bout en bout : aucune phrase d’ajustement, aucune ligne ajustée', () => {
+    expect(adjustedBelowKm(titan)).toBeNull();
+    expect(profileRows(titan).some((r) => r.adjusted)).toBe(false);
+    const rows = profileRows(titan);
+    expect(rows.at(-1)!.kind).toBe('surface');
+    expect(rows.at(-1)!.altitudeKm).toBe(0);
+  });
+
+  it('place la sonde dans l’hémisphère sud, et cite les deux paquets par leur DOI', () => {
+    expect(titan.latitudeDeg.min).toBeLessThan(-10);
+    expect(titan.latitudeDeg.max).toBeLessThan(-10);
+    expect(titan.bundle.doi).toMatch(/^10\.17189\//);
+    expect(titan.latitudeSource?.doi).toMatch(/^10\.17189\//);
+    expect(titan.reference.text).toMatch(/^Fulchignoni, M\./);
+  });
+
+  it('compte exactement les échantillons livrés', () => {
+    expect(index.profiles.titan.samples).toBe(
+      titan.segments.reduce((n, s) => n + s.samples.length, 0)
+    );
+  });
+
+  it('a un TÉMOIN : le registre du PDS rattache HASI à Titan', () => {
+    expect(index.titanRegistry.collections).toBeGreaterThan(100);
+  });
+});
+
 describe('la pression affichée, sur neuf ordres de grandeur', () => {
   it('bar, millibar, puis notation scientifique', () => {
+    expect(formatPressure(1.4672)).toMatch(/^1[.,]47\u00a0bar$/);
+    // 9,97 × 10⁻⁴ ne s'écrit pas « 10 × 10⁻⁴ » : la mantisse arrondie passe à l'exposant suivant.
+    expect(formatPressure(9.97e-4)).toMatch(/^1\u00a0×\u00a010⁻³\u00a0bar$/);
     expect(formatPressure(22.05)).toMatch(/^22[.,]1\u00a0bar$/);
     expect(formatPressure(0.1004)).toMatch(/^100[.,]4\u00a0mbar$/);
     expect(formatPressure(9.665e-10)).toMatch(

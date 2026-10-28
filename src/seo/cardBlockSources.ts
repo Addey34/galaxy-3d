@@ -188,22 +188,36 @@ function instrumentRows(): CardBlockSourceRow[] {
 }
 
 function atmosphereProfileRows(): CardBlockSourceRow[] {
-  const { provider, profiles, absent } = atmosphereProfileIndex;
-  const samples = sum(Object.values(profiles), (p) => p.samples);
+  const { providers, profiles, absent } = atmosphereProfileIndex;
   const none = Object.keys(absent).length;
   return [
     {
       index: 'atmosphereProfileIndex.json',
-      publisher: provider.publisher,
-      title: `${provider.title} (DOI ${provider.doi})`,
-      url: provider.url,
+      publisher: providers.jupiter.publisher,
+      title: `${providers.jupiter.title} (DOI ${providers.jupiter.doi})`,
+      url: providers.jupiter.url,
       usedBy: ['bi.atmosphere.label'],
       coverage: (locale) =>
         ({
-          en: `${count(samples, locale)} samples of the Galileo probe’s temperature and pressure profile for Jupiter; ${count(none, locale)} giants with none published as data, and their card says so`,
-          fr: `${count(samples, locale)} échantillons du profil de température et de pression de la sonde Galileo pour Jupiter ; ${count(none, locale)} géantes sans profil publié en données, et leur fiche le dit`,
-          es: `${count(samples, locale)} muestras del perfil de temperatura y presión de la sonda Galileo para Júpiter; ${count(none, locale)} gigantes sin perfil publicado como datos, y su ficha lo dice`,
-          'pt-BR': `${count(samples, locale)} amostras do perfil de temperatura e pressão da sonda Galileo para Júpiter; ${count(none, locale)} gigantes sem perfil publicado como dados, e a ficha delas o diz`,
+          en: `${count(profiles.jupiter.samples, locale)} samples of the Galileo probe’s temperature and pressure profile for Jupiter; ${count(none, locale)} giants with none published as data, and their card says so`,
+          fr: `${count(profiles.jupiter.samples, locale)} échantillons du profil de température et de pression de la sonde Galileo pour Jupiter ; ${count(none, locale)} géantes sans profil publié en données, et leur fiche le dit`,
+          es: `${count(profiles.jupiter.samples, locale)} muestras del perfil de temperatura y presión de la sonda Galileo para Júpiter; ${count(none, locale)} gigantes sin perfil publicado como datos, y su ficha lo dice`,
+          'pt-BR': `${count(profiles.jupiter.samples, locale)} amostras do perfil de temperatura e pressão da sonda Galileo para Júpiter; ${count(none, locale)} gigantes sem perfil publicado como dados, e a ficha delas o diz`,
+        })[locale],
+      asOf: atmosphereProfileIndex.retrieved,
+    },
+    {
+      index: 'atmosphereProfileIndex.json',
+      publisher: providers.titan.publisher,
+      title: `${providers.titan.title} (DOI ${providers.titan.doi})`,
+      url: providers.titan.url,
+      usedBy: ['bi.atmosphere.labelTitan'],
+      coverage: (locale) =>
+        ({
+          en: `${count(profiles.titan.samples, locale)} samples of the temperature and pressure profile measured by the Huygens probe on Titan, from entry to the ground, plus its ground-level point`,
+          fr: `${count(profiles.titan.samples, locale)} échantillons du profil de température et de pression mesuré par la sonde Huygens sur Titan, de l’entrée au sol, et son point au sol`,
+          es: `${count(profiles.titan.samples, locale)} muestras del perfil de temperatura y presión medido por la sonda Huygens en Titán, desde la entrada hasta el suelo, y su punto a nivel del suelo`,
+          'pt-BR': `${count(profiles.titan.samples, locale)} amostras do perfil de temperatura e pressão medido pela sonda Huygens em Titã, da entrada ao solo, e o seu ponto ao nível do solo`,
         })[locale],
       asOf: atmosphereProfileIndex.retrieved,
     },
