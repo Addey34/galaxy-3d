@@ -12,17 +12,19 @@ import { SURFACE_VARIANTS, type SurfaceTileset } from './surfaceTilesets';
 export function catalogueFactReader(config: CelestialConfig): FactReader {
   const bodies = flattenBodies(config);
   return (body, fact) => {
+    const value = bodies.get(body)?.realData?.[fact];
+    if (typeof value !== 'number') return undefined;
     // `axialTilt` est en RADIANS dans le catalogue (la scène le lit tel quel) : la fiche le
-    // déclare en degrés (`{"$deg": …}`), c'est en degrés qu'une activité le cite.
-    const radians = bodies.get(body)?.realData?.[fact];
-    return typeof radians === 'number' ? (radians * 180) / Math.PI : undefined;
+    // déclare en degrés (`{"$deg": …}`), c'est en degrés qu'une activité le cite. Une période
+    // est en jours dans la fiche comme dans le catalogue.
+    return fact === 'axialTilt' ? (value * 180) / Math.PI : value;
   };
 }
 
 export function catalogueFactProvenance(
   config: CelestialConfig,
   body: string,
-  fact: 'axialTilt'
+  fact: 'axialTilt' | 'orbitPeriodDays'
 ): FactProvenance | undefined {
   return flattenBodies(config).get(body)?.realData?.sources?.[fact];
 }

@@ -251,6 +251,35 @@
             "properties": {
               "kind": {
                 "type": "string",
+                "const": "periodRatio"
+              },
+              "outer": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "inner": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "decimals": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              }
+            },
+            "required": [
+              "kind",
+              "outer",
+              "inner",
+              "decimals"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
                 "enum": [
                   "subsolarLatitude",
                   "polarDayLatitude"

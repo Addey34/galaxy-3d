@@ -32,6 +32,7 @@ describe('fiches d’activité', () => {
   });
 
   const valid = read(join(ACTIVITIES, 'seasons.json'));
+  const galileans = read(join(ACTIVITIES, 'galileans.json'));
   type Part = {
     questions: { answer: Record<string, string>; evidence: string[] }[];
   };
@@ -89,6 +90,21 @@ describe('fiches d’activité', () => {
             event: 'june-solstice',
             decimals: 1,
             agrees: { value: 'absente', tolerance: 0.05 },
+          },
+        },
+      },
+    ],
+    [
+      'un rapport de périodes d’un corps avec lui-même',
+      {
+        ...galileans,
+        values: {
+          ...(galileans['values'] as object),
+          ioEuropa: {
+            kind: 'periodRatio',
+            outer: 'io',
+            inner: 'io',
+            decimals: 1,
           },
         },
       },

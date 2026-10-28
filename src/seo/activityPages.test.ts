@@ -77,4 +77,15 @@ describe.each(LOCALES)('pages des activités en %s', (locale) => {
     const pupil = seasons.body.slice(seasons.body.indexOf('id="pupil"'));
     expect(pupil).not.toContain('activity-answers');
   });
+  it('la note de sources dit ce que l’activité cite : jamais des images pour des périodes', () => {
+    const galileans = pages.find((p) => p.slug === 'activities/galileans')!;
+    const nile = pages.find((p) => p.slug === 'activities/nile-delta')!;
+    // Les galiléennes ne lisent que des faits sourcés du catalogue, le delta lit des éditions.
+    const note = (body: string): string =>
+      /class="activity-note">([^<]*)</.exec(body)?.[1] ?? '';
+    expect(note(galileans.body)).not.toBe(note(nile.body));
+    expect(note(galileans.body)).not.toMatch(
+      /imag(e|en|ens)|édition|edition|edição|ediciones/i
+    );
+  });
 });
