@@ -267,6 +267,11 @@ const catalogueConfig = z
      * lieu du halo de Fresnel. Absent, il garde son halo.
      */
     skyScattering: z.enum(SKY_SCATTERING_MODELS).optional(),
+    /**
+     * Classe d'atmosphère déclarée (vocabulaire fermé) : `gas-giant` ouvre les six faits « à 1 bar »
+     * de la fiche du NSSDCA ; absente, ils sont hors sujet pour le corps (`core/bodyFacts.ts`).
+     */
+    atmosphereClass: z.enum(['gas-giant']).optional(),
     ring: plainObject.optional(),
     satellites: satellites.optional(),
     realData: z

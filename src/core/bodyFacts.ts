@@ -145,6 +145,16 @@ const INSTRUMENT_ONLY_FACTS: ReadonlySet<FactField> = new Set<FactField>([
   'absoluteMagnitude',
 ]);
 
+/** Les six faits de la fiche d'une géante gazeuse du NSSDCA, définis « à 1 bar ». */
+export const GAS_GIANT_ATMOSPHERE_FACTS: readonly FactField[] = [
+  'temperature1BarK',
+  'temperature01BarK',
+  'density1BarKgM3',
+  'scaleHeightKm',
+  'meanMolecularWeight',
+  'windSpeedMs',
+];
+
 /**
  * Champs structurellement hors sujet pour un `kind`. Une étoile centrale n'orbite rien et n'a
  * pas de lunes (le Soleil a longtemps porté `moonCount: 8` pour ses planètes). Une lune n'a pas
@@ -163,7 +173,14 @@ export function notApplicableFacts(cfg: CelestialBodyConfig): Set<FactField> {
       )
     );
   }
+  // Un fond d'étoiles n'est pas un corps : aucun fait ne s'y applique (le test de complétude l'exclut
+  // déjà ; l'inventaire le comptait manquant de neuf faits).
+  if (cfg.kind === 'skybox') return new Set(ALL_FACT_FIELDS);
   const out = new Set<FactField>(INSTRUMENT_ONLY_FACTS);
+  // Les six faits « à 1 bar » sont ceux de la fiche d'une GÉANTE du NSSDCA : hors sujet pour tout
+  // corps qui ne se déclare pas tel (déclaré dans la fiche, jamais déduit de l'absence de valeur).
+  if (cfg.atmosphereClass !== 'gas-giant')
+    for (const field of GAS_GIANT_ATMOSPHERE_FACTS) out.add(field);
   if (cfg.kind === 'star')
     for (const field of ['orbitPeriodDays', 'distanceAU', 'moonCount'] as const)
       out.add(field);

@@ -219,6 +219,13 @@ export interface CelestialBodyConfig {
   atmosphereColor?: number;
   /** Modèle publié de diffusion de l'air : un ciel calculé au lieu du halo (`core/atmosphereScattering.ts`). */
   skyScattering?: SkyScatteringModelId;
+  /**
+   * Classe d'atmosphère DÉCLARÉE : `gas-giant` = une géante dont le NSSDCA publie la fiche « au niveau
+   * de 1 bar » (les six champs `temperature1BarK` à `windSpeedMs`). Absente, ces six faits ne
+   * s'appliquent pas au corps (`core/bodyFacts.ts::notApplicableFacts`) : la pression à 1 bar de
+   * Jupiter n'est pas la pression de surface de Vénus, ce n'est pas la même grandeur.
+   */
+  atmosphereClass?: 'gas-giant';
   ring?: RingConfig;
   satellites?: Record<string, CelestialBodyConfig>;
   /** Données astronomiques réelles — utilisées par OrbitalMechanics en mode Explo. */

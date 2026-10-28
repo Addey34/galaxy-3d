@@ -4614,6 +4614,16 @@ de l'application comme la page publique les affichent, sur les quatre et sur auc
 La page publique ne réécrit pas les décimales de la source : « 27 km » reste 27 et non « 27,0 »,
 comme sur la fiche (garde de parité page/fiche, falsifiée).
 
+**Ces six faits sont applicables aux seuls corps qui se DÉCLARENT géante (2026-10-28).** La fiche porte
+`atmosphereClass: "gas-giant"` (vocabulaire fermé du schéma d'entité) ; `core/bodyFacts.ts::notApplicableFacts`
+range les six champs (`GAS_GIANT_ATMOSPHERE_FACTS`) parmi les faits hors sujet de tout autre corps, et
+traite un fond d'étoiles (`kind: skybox`) comme sans aucun fait. Avant cela `pnpm inventory:gaps` les comptait
+manquants sur 78 corps sur 102 : la règle les supposait valables partout, alors que la fiche du NSSDCA ne
+les publie, « au niveau de 1 bar », que pour les géantes. `src/config/gasGiantAtmosphere.test.ts` tient les
+deux bords (un corps qui publie une de ces valeurs doit se déclarer géante ; une géante déclarée doit les
+publier toutes), falsifié. La pression ou la hauteur d'échelle de Vénus, de la Terre, de Mars ou de Titan ne
+sont PAS ces champs : une autre grandeur, qui demanderait d'autres champs et d'autres sources.
+
 **La sphère d'une géante est le niveau de 1 bar, et les libellés le disent (lot 51, pas 2).** Le
 NSSDCA publie le rayon des quatre géantes comme « Equatorial radius (1 bar level) » et leur
 gravité comme « Gravity (mean, 1 bar) », précisions déjà portées par la provenance (`detail`).
