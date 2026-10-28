@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { clickWhenCalm } from './mainThread';
 import {
   boot,
   HERE,
@@ -661,7 +662,12 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   });
   expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
   expect(eox, 'Sentinel-2 demandé de trop loin').toEqual([]);
-  await page.locator('#settings-trigger').click();
+  // Le clic final tombait dans le travail de la scène sur un runner lent (Xeon 8370C, run
+  // 40729356516 : « waiting for element to be visible, enabled and stable » 3 fois sur 3, 15 s). Le
+  // calme est attendu d'abord, et son échec nomme la série d'images mesurée au lieu de se taire.
+  await clickWhenCalm(page, page.locator('#settings-trigger'), {
+    timeoutMs: 90_000,
+  });
   await expect(page.locator('#surface-earth-base')).toHaveValue('sentinel-2');
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
