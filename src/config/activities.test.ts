@@ -204,3 +204,29 @@ describe('galiléennes : ce que le corrigé affirme', () => {
     expect(fillSlots('{ioEuropa}', other, 'fr')).not.toBe('2,0');
   });
 });
+
+describe('Kuiper : ce que le corrigé affirme', () => {
+  const kuiper = activities.find((a) => a.id === 'kuiper')!;
+  const values = evaluateActivityValues(
+    kuiper,
+    readFact,
+    catalogueEditionReader
+  );
+  const fr = (name: string): string => fillSlots(`{${name}}`, values, 'fr');
+
+  it('lit les rapports d’années dans le catalogue (périodes dérivées des éléments)', () => {
+    expect(fr('plutoNeptune')).toBe('1,5');
+    expect(fr('haumeaPluto')).toBe('1,1');
+    expect(fr('makemakePluto')).toBe('1,2');
+    expect(fr('erisPluto')).toBe('2,3');
+    expect(fr('sednaPluto')).toBe('46');
+  });
+
+  it('les périodes des planètes naines sont DÉRIVÉES, celle de Neptune mesurée : la fiche doit le dire', () => {
+    const provenance = (body: string) =>
+      catalogueFactProvenance(CELESTIAL_CONFIG, body, 'orbitPeriodDays');
+    expect(provenance('neptune')?.method).toBe('measured');
+    for (const body of ['pluto', 'haumea', 'makemake', 'eris', 'sedna'])
+      expect(provenance(body)?.method).toBe('derived');
+  });
+});

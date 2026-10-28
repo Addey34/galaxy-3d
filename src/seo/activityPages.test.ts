@@ -88,4 +88,19 @@ describe.each(LOCALES)('pages des activités en %s', (locale) => {
       /imag(e|en|ens)|édition|edition|edição|ediciones/i
     );
   });
+  it('dit qu’une période est dérivée des éléments quand elle l’est, et pas quand elle est mesurée', () => {
+    const kuiper = pages.find((p) => p.slug === 'activities/kuiper')!;
+    const galileans = pages.find((p) => p.slug === 'activities/galileans')!;
+    const derived =
+      locale === 'fr'
+        ? 'dérivée des éléments orbitaux'
+        : locale === 'en'
+          ? 'derived from the orbital elements'
+          : locale === 'es'
+            ? 'derivado de los elementos orbitales'
+            : 'derivado dos elementos orbitais';
+    // Pluton est dérivée, Neptune mesurée : une seule ligne de source porte la mention par corps dérivé.
+    expect(kuiper.body.split(derived).length - 1).toBe(5);
+    expect(galileans.body).not.toContain(derived);
+  });
 });

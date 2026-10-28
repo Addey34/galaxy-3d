@@ -220,7 +220,7 @@ test.describe('pages générées, à 390 px', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
     expect(DOCUMENTS.length).toBe(40);
     expect(PLACE_PAGES.length).toBe(4);
-    expect(ACTIVITY_PAGES.length).toBe(12);
+    expect(ACTIVITY_PAGES.length).toBe(16);
     expect(DOCUMENTS).toContain('pt-br/activities');
     expect(DOCUMENTS).toContain('fr/places');
     expect(MISSION_PAGES.length).toBe(4);
