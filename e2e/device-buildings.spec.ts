@@ -38,9 +38,22 @@ async function wheelIn(page: Page): Promise<void> {
   }
 }
 
-test('Paris : la descente pose les bâtiments et la scène reste vivante', async ({
-  page,
-}) => {
+/**
+ * Les deux échelles : Éduc (comprimée) et Explo (vraie, 2026-10-28). Le rendu au sol de l'Explo
+ * n'avait jamais tourné sur un vrai GPU ; c'est le même parcours, seul `mode` change.
+ */
+for (const mode of ['educ', 'explo'] as const) {
+  test(`Paris (${mode}) : la descente pose les bâtiments et la scène reste vivante`, async ({
+    page,
+  }) => {
+    await descendToParis(page, mode);
+  });
+}
+
+async function descendToParis(
+  page: Page,
+  mode: 'educ' | 'explo'
+): Promise<void> {
   test.setTimeout(480_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -53,7 +66,7 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
     }
   });
   await page.goto(
-    `/?debug-surface&mode=educ&body=earth&date=${encodeURIComponent(DATE)}`
+    `/?debug-surface&mode=${mode}&body=earth&date=${encodeURIComponent(DATE)}`
   );
   await expect(page.locator('#loader')).toBeHidden({ timeout: 120_000 });
 
@@ -119,7 +132,7 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
   );
   const final = await state();
   const report = [
-    `appareil ${test.info().project.name}`,
+    `appareil ${test.info().project.name}, mode ${mode}`,
     ...log,
     `final : altitude ${final.altitude} km, bâtiments « ${final.buildings} », ${frames} images en 1 s`,
   ].join('\n');
@@ -137,4 +150,4 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
     3
   );
   expect(final.buildings, 'des bâtiments sont posés').toMatch(/:\d+:[1-9]\d*$/);
-});
+}
