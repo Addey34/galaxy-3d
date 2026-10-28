@@ -27,9 +27,9 @@
   "review": {
     "status": "reference",
     "sourcePage": "https://visibleearth.nasa.gov/images/74343/may-blue-marble-next-generation-w-topography/74345l",
-    "sourceResolution": "500 m/pixel monthly composites",
+    "sourceResolution": "21600×10800 (environ 1,85 km/pixel à l'équateur)",
     "projection": "equirectangular",
     "qualityClass": "native-candidate",
-    "note": "NASA Blue Marble Next Generation is the preferred global color baseline."
+    "note": "Famille NASA Blue Marble (domaine public), version exacte et date non établies : comparée le 2026-10-28 aux mois de Blue Marble Next Generation (2004), elle n'en reproduit aucun (Sahara 203 contre 141 à 148 en luminance, corrélation 0,88 avec juillet et août). Le fichier cité par sourceUrl n'a pas pu être relu (Wikimedia répondait 503). Un remplacement par VIIRS 2025 a été essayé et rejeté (résidus de nuages, voile gris)."
   }
 }
