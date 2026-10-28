@@ -50,6 +50,25 @@ const ESA_FORMAT_SOURCE = {
   accessed: '2026-10-18',
 } as const;
 
+/** Le nom de la grandeur lue, dans la ligne de source : un fait ajouté à une activité s'y nomme. */
+const QUANTITY: Record<
+  'axialTilt' | 'orbitPeriodDays',
+  Record<Locale, string>
+> = {
+  axialTilt: {
+    en: 'axial tilt',
+    fr: 'inclinaison axiale',
+    es: 'inclinación axial',
+    'pt-BR': 'inclinação axial',
+  },
+  orbitPeriodDays: {
+    en: 'orbital period',
+    fr: 'période orbitale',
+    es: 'período orbital',
+    'pt-BR': 'período orbital',
+  },
+};
+
 const TEXT = {
   indexTitle: {
     en: 'Classroom activities',
@@ -151,17 +170,23 @@ const TEXT = {
       'Valores calculados pelo Galaxy para os anos de {from} a {to}, com o mesmo código da cena; datas em tempo universal. Dados citados:',
   },
   factLine: {
-    en: '{body}, axial tilt: {publisher}, {title}, read on {date}.',
-    fr: '{body}, inclinaison axiale : {publisher}, {title}, lu le {date}.',
-    es: '{body}, inclinación axial: {publisher}, {title}, consultado el {date}.',
-    'pt-BR':
-      '{body}, inclinação axial: {publisher}, {title}, consultado em {date}.',
+    en: '{body}, {quantity}: {publisher}, {title}, read on {date}.',
+    fr: '{body}, {quantity} : {publisher}, {title}, lu le {date}.',
+    es: '{body}, {quantity}: {publisher}, {title}, consultado el {date}.',
+    'pt-BR': '{body}, {quantity}: {publisher}, {title}, consultado em {date}.',
   },
   editionLine: {
     en: '{title}: {credit}; product sheet read on {date}.',
     fr: '{title} : {credit} ; fiche du produit relue le {date}.',
     es: '{title}: {credit}; ficha del producto consultada el {date}.',
     'pt-BR': '{title}: {credit}; ficha do produto consultada em {date}.',
+  },
+  factsNote: {
+    en: 'Every figure of the answer key is read from the sourced facts of the body cards, not typed. Sources:',
+    fr: 'Chaque valeur du corrigé est lue dans les faits sourcés des fiches des corps, et non tapée. Sources :',
+    es: 'Cada valor de las respuestas se lee de los hechos con fuente de las fichas de los cuerpos, no se escribe a mano. Fuentes:',
+    'pt-BR':
+      'Cada valor das respostas é lido dos fatos com fonte das fichas dos corpos, e não digitado. Fontes:',
   },
   editionNote: {
     en: 'Image dates quoted from the product sheets of the imagery editions, not computed. Sources:',
@@ -305,28 +330,40 @@ function factLines(
       if (tileset.verified > latest) latest = tileset.verified;
       continue;
     }
-    if (value.kind !== 'fact') continue;
-    const key = `${value.body}.${value.fact}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const provenance = catalogueFactProvenance(config, value.body, value.fact);
-    const source = provenance && factSource(provenance.source);
-    if (!source)
-      throw new Error(`activité ${activity.id} : ${key} sans source`);
-    const body = flattenBodies(config).get(value.body)?.displayName?.[locale];
-    if (!body)
-      throw new Error(`activité ${activity.id} : corps ${value.body} sans nom`);
-    lines.push(
-      escapeHtml(
-        fill(TEXT.factLine[locale], {
-          body,
-          publisher: source.publisher,
-          title: source.title,
-          date: longDay(source.accessed, locale),
-        })
-      )
-    );
-    if (source.accessed > latest) latest = source.accessed;
+    // Les faits que la valeur LIT dans le catalogue : un fait seul, ou les deux périodes d'un rapport.
+    const read: { body: string; fact: 'axialTilt' | 'orbitPeriodDays' }[] =
+      value.kind === 'fact'
+        ? [{ body: value.body, fact: value.fact }]
+        : value.kind === 'periodRatio'
+          ? [
+              { body: value.outer, fact: 'orbitPeriodDays' },
+              { body: value.inner, fact: 'orbitPeriodDays' },
+            ]
+          : [];
+    for (const { body: bodyId, fact } of read) {
+      const key = `${bodyId}.${fact}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const provenance = catalogueFactProvenance(config, bodyId, fact);
+      const source = provenance && factSource(provenance.source);
+      if (!source)
+        throw new Error(`activité ${activity.id} : ${key} sans source`);
+      const body = flattenBodies(config).get(bodyId)?.displayName?.[locale];
+      if (!body)
+        throw new Error(`activité ${activity.id} : corps ${bodyId} sans nom`);
+      lines.push(
+        escapeHtml(
+          fill(TEXT.factLine[locale], {
+            body,
+            quantity: QUANTITY[fact][locale],
+            publisher: source.publisher,
+            title: source.title,
+            date: longDay(source.accessed, locale),
+          })
+        )
+      );
+      if (source.accessed > latest) latest = source.accessed;
+    }
   }
   return { lines, latest };
 }
@@ -403,7 +440,11 @@ function activityPage(
             from: String(activity.years.from),
             to: String(activity.years.to),
           })
-        : TEXT.editionNote[locale]
+        : Object.values(activity.values).some(
+              (v) => v.kind === 'imageryEdition'
+            )
+          ? TEXT.editionNote[locale]
+          : TEXT.factsNote[locale]
     )}</p>` + list(facts.lines);
 
   const pupil =

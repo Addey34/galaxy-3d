@@ -42,12 +42,19 @@ describe.each(activities.map((a) => [a.id, a] as const))(
     );
 
     it('chaque fait cité est sourcé dans le catalogue', () => {
-      for (const value of Object.values(activity.values))
+      for (const value of Object.values(activity.values)) {
         if (value.kind === 'fact')
           expect(
             catalogueFactProvenance(CELESTIAL_CONFIG, value.body, value.fact)
               ?.source
           ).toBeTruthy();
+        if (value.kind === 'periodRatio')
+          for (const body of [value.outer, value.inner])
+            expect(
+              catalogueFactProvenance(CELESTIAL_CONFIG, body, 'orbitPeriodDays')
+                ?.source
+            ).toBeTruthy();
+      }
     });
 
     it.each(LOCALES)(
@@ -154,5 +161,46 @@ describe('delta du Nil : ce que le corrigé affirme', () => {
     expect(() =>
       evaluateActivityValues(unknown, readFact, catalogueEditionReader)
     ).toThrow(/n'a pas d'édition/);
+  });
+});
+
+describe('galiléennes : ce que le corrigé affirme', () => {
+  const galileans = activities.find((a) => a.id === 'galileans')!;
+  const values = evaluateActivityValues(
+    galileans,
+    readFact,
+    catalogueEditionReader
+  );
+  const fr = (name: string): string => fillSlots(`{${name}}`, values, 'fr');
+
+  it('lit les rapports de périodes dans les fiches des quatre lunes', () => {
+    // Io 1,769 j, Europe 3,551 j, Ganymède 7,155 j, Callisto 16,689 j (NSSDCA, relevé du catalogue).
+    expect(fr('ioEuropa')).toBe('2,0');
+    expect(fr('europaGanymede')).toBe('2,0');
+    expect(fr('ioGanymede')).toBe('4,0');
+    expect(fr('ganymedeCallisto')).toBe('2,3');
+  });
+
+  it('refuse une période que le catalogue ne publie pas', () => {
+    const noPeriod: FactReader = (body, fact) =>
+      fact === 'orbitPeriodDays' && body === 'io'
+        ? undefined
+        : readFact(body, fact);
+    expect(() =>
+      evaluateActivityValues(galileans, noPeriod, catalogueEditionReader)
+    ).toThrow(/io\.orbitPeriodDays n'est pas publié/);
+  });
+
+  it('falsification : des périodes quelconques ne donnent plus le rapport 2 que le texte affirme', () => {
+    const shifted: FactReader = (body, fact) =>
+      fact === 'orbitPeriodDays' && body === 'europa'
+        ? 5.3
+        : readFact(body, fact);
+    const other = evaluateActivityValues(
+      galileans,
+      shifted,
+      catalogueEditionReader
+    );
+    expect(fillSlots('{ioEuropa}', other, 'fr')).not.toBe('2,0');
   });
 });

@@ -26,10 +26,10 @@ import {
 } from './activityMeasures';
 import { formatDateText } from './dateText';
 
-/** Lit un fait de la fiche d'un corps, en degrés ; `undefined` s'il n'est pas publié. */
+/** Lit un fait de la fiche d'un corps (degrés pour `axialTilt`, jours pour `orbitPeriodDays`) ; `undefined` s'il n'est pas publié. */
 export type FactReader = (
   body: string,
-  fact: 'axialTilt'
+  fact: 'axialTilt' | 'orbitPeriodDays'
 ) => number | undefined;
 
 /** Lit l'intervalle (ms UTC) que décrit l'édition `edition` de l'imagerie d'un corps. */
@@ -41,6 +41,8 @@ export type EditionReader = (
 export type EvaluatedValue =
   | { kind: 'degrees'; value: number; decimals: number }
   | { kind: 'percent'; value: number; decimals: number }
+  /** Un rapport sans unité (deux périodes), écrit à la précision déclarée. */
+  | { kind: 'ratio'; value: number; decimals: number }
   | { kind: 'hours'; value: number }
   | { kind: 'date'; date: Date }
   /** Un mois et une année : la précision d'une mosaïque, qui décrit des mois de passages. */
@@ -121,6 +123,24 @@ export function evaluateActivityValues(
         out[name] = {
           kind: 'degrees',
           value: value.form === 'complement90' ? 90 - fact : fact,
+          decimals: value.decimals,
+        };
+        break;
+      }
+      case 'periodRatio': {
+        const outer = readFact(value.outer, 'orbitPeriodDays');
+        const inner = readFact(value.inner, 'orbitPeriodDays');
+        for (const [body, period] of [
+          [value.outer, outer],
+          [value.inner, inner],
+        ] as const)
+          if (period === undefined || period <= 0)
+            throw new Error(
+              `valeur « ${name} » : ${body}.orbitPeriodDays n'est pas publié`
+            );
+        out[name] = {
+          kind: 'ratio',
+          value: outer! / inner!,
           decimals: value.decimals,
         };
         break;
@@ -207,6 +227,7 @@ function formatActivityValue(value: EvaluatedValue, locale: Locale): string {
   switch (value.kind) {
     case 'degrees':
     case 'percent':
+    case 'ratio':
       return fixed(value.decimals)(value.value).replace('.', DECIMAL[locale]);
     case 'hours': {
       const total = Math.round(value.value * 60);

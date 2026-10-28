@@ -61,6 +61,18 @@ const value = z.discriminatedUnion('kind', [
       decimals,
     })
     .strict(),
+  /**
+   * Le RAPPORT des périodes orbitales de deux corps du catalogue (`outer` / `inner`), chacune lue
+   * dans la fiche du corps (« La danse des Galiléennes ») : rien n'est recopié dans l'activité.
+   */
+  z
+    .object({
+      kind: z.literal('periodRatio'),
+      outer: kebab,
+      inner: kebab,
+      decimals,
+    })
+    .strict(),
   z
     .object({
       kind: z.enum(['subsolarLatitude', 'polarDayLatitude']),
@@ -212,6 +224,12 @@ export const activitySchema = z
     const declared = new Set(Object.keys(record.values));
     const used = new Set<string>();
     for (const [name, v] of Object.entries(record.values)) {
+      if (v.kind === 'periodRatio' && v.outer === v.inner)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['values', name],
+          message: 'un rapport de périodes demande deux corps différents',
+        });
       if ('agrees' in v && v.agrees !== undefined) {
         used.add(v.agrees.value);
         if (!declared.has(v.agrees.value) || v.agrees.value === name)

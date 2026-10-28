@@ -1,0 +1,198 @@
+{
+  "$schema": "../schema/activity.schema.json",
+  "id": "galileans",
+  "title": {
+    "en": "The dance of Jupiter’s moons",
+    "fr": "La danse des lunes de Jupiter",
+    "es": "La danza de las lunas de Júpiter",
+    "pt-BR": "A dança das luas de Júpiter"
+  },
+  "summary": {
+    "en": "Pupils read the orbital periods of Io, Europa, Ganymede and Callisto on their cards, divide them, and find that three of the four moons keep a simple rhythm.",
+    "fr": "Les élèves lisent sur leurs fiches les périodes orbitales d’Io, d’Europe, de Ganymède et de Callisto, les divisent, et découvrent que trois des quatre lunes suivent un rythme simple.",
+    "es": "Los alumnos leen en sus fichas los períodos orbitales de Ío, Europa, Ganímedes y Calisto, los dividen y descubren que tres de las cuatro lunas siguen un ritmo sencillo.",
+    "pt-BR": "Os alunos leem nas fichas os períodos orbitais de Io, Europa, Ganimedes e Calisto, dividem um pelo outro e descobrem que três das quatro luas seguem um ritmo simples."
+  },
+  "tour": "galileans",
+  "ages": { "from": 11, "to": 15 },
+  "durationMinutes": 30,
+  "difficulty": "medium",
+  "subjects": ["astronomy", "physics"],
+  "objectives": [
+    {
+      "en": "Compare the orbital periods of several moons by dividing one by another.",
+      "fr": "Comparer les périodes orbitales de plusieurs lunes en divisant l’une par l’autre.",
+      "es": "Comparar los períodos orbitales de varias lunas dividiendo uno por otro.",
+      "pt-BR": "Comparar os períodos orbitais de várias luas dividindo um pelo outro."
+    },
+    {
+      "en": "Recognise a simple ratio between the periods of Io, Europa and Ganymede, and that Callisto does not follow it.",
+      "fr": "Reconnaître un rapport simple entre les périodes d’Io, d’Europe et de Ganymède, et que Callisto ne le suit pas.",
+      "es": "Reconocer una relación sencilla entre los períodos de Ío, Europa y Ganímedes, y que Calisto no la sigue.",
+      "pt-BR": "Reconhecer uma relação simples entre os períodos de Io, Europa e Ganimedes, e que Calisto não a segue."
+    },
+    {
+      "en": "Read figures on the card of a body and use them to test a prediction.",
+      "fr": "Lire des valeurs sur la fiche d’un corps et s’en servir pour tester une prédiction.",
+      "es": "Leer valores en la ficha de un cuerpo y usarlos para comprobar una predicción.",
+      "pt-BR": "Ler valores na ficha de um corpo e usá-los para testar uma previsão."
+    }
+  ],
+  "material": [
+    {
+      "en": "A computer or tablet per group, with a recent web browser (the scene uses WebGL).",
+      "fr": "Un ordinateur ou une tablette par groupe, avec un navigateur récent (la scène utilise WebGL).",
+      "es": "Un ordenador o una tableta por grupo, con un navegador reciente (la escena usa WebGL).",
+      "pt-BR": "Um computador ou tablet por grupo, com um navegador recente (a cena usa WebGL)."
+    },
+    {
+      "en": "A calculator, and the printed pupil sheet below.",
+      "fr": "Une calculatrice, et la fiche élève ci-dessous, imprimée.",
+      "es": "Una calculadora y la ficha del alumno de abajo, impresa.",
+      "pt-BR": "Uma calculadora e a ficha do aluno abaixo, impressa."
+    }
+  ],
+  "values": {
+    "ioEuropa": { "kind": "periodRatio", "outer": "europa", "inner": "io", "decimals": 1 },
+    "europaGanymede": {
+      "kind": "periodRatio",
+      "outer": "ganymede",
+      "inner": "europa",
+      "decimals": 1
+    },
+    "ioGanymede": { "kind": "periodRatio", "outer": "ganymede", "inner": "io", "decimals": 1 },
+    "ganymedeCallisto": {
+      "kind": "periodRatio",
+      "outer": "callisto",
+      "inner": "ganymede",
+      "decimals": 1
+    }
+  },
+  "parts": [
+    {
+      "title": {
+        "en": "Watching the dance",
+        "fr": "Regarder la danse",
+        "es": "Mirar la danza",
+        "pt-BR": "Olhar a dança"
+      },
+      "teacher": {
+        "en": "Play the tour “The dance of the Galilean moons” with the link below. Time runs fast, so the moons circle Jupiter in a few seconds; pupils can slow it with the speed control to follow one moon. Ask them to guess which moon is quickest and which is slowest before reading any figure.",
+        "fr": "Jouez la visite « La danse des Galiléennes » avec le lien ci-dessous. Le temps est accéléré, donc les lunes font le tour de Jupiter en quelques secondes ; les élèves peuvent le ralentir avec la commande de vitesse pour suivre une lune. Demandez-leur de deviner quelle lune est la plus rapide et laquelle est la plus lente avant de lire le moindre chiffre.",
+        "es": "Reproduzca la visita «La danza de las galileanas» con el enlace de abajo. El tiempo corre deprisa, así que las lunas dan la vuelta a Júpiter en pocos segundos; los alumnos pueden frenarlo con el control de velocidad para seguir una luna. Pídales que adivinen qué luna es la más rápida y cuál la más lenta antes de leer ninguna cifra.",
+        "pt-BR": "Reproduza a visita “A dança das galileanas” com o link abaixo. O tempo corre depressa, então as luas dão a volta em Júpiter em poucos segundos; os alunos podem reduzi-lo com o controle de velocidade para acompanhar uma lua. Peça que adivinhem qual lua é a mais rápida e qual é a mais lenta antes de ler qualquer número."
+      },
+      "steps": [
+        {
+          "en": "Open the tour with the link on this sheet and watch the four moons.",
+          "fr": "Ouvrez la visite avec le lien de cette fiche et observez les quatre lunes.",
+          "es": "Abre la visita con el enlace de esta ficha y observa las cuatro lunas.",
+          "pt-BR": "Abra a visita com o link desta ficha e observe as quatro luas."
+        },
+        {
+          "en": "Open the card of each moon (the panel on the right) and note the line “Orbit”: it gives the time the moon takes to go round Jupiter.",
+          "fr": "Ouvrez la fiche de chaque lune (le panneau à droite) et notez la ligne « Orbite » : elle donne le temps que la lune met à faire le tour de Jupiter.",
+          "es": "Abre la ficha de cada luna (el panel de la derecha) y anota la línea «Órbita»: indica el tiempo que tarda la luna en dar la vuelta a Júpiter.",
+          "pt-BR": "Abra a ficha de cada lua (o painel à direita) e anote a linha “Órbita”: ela indica o tempo que a lua leva para dar a volta em Júpiter."
+        },
+        {
+          "en": "Divide the period of each moon by that of the one just inside it.",
+          "fr": "Divisez la période de chaque lune par celle de la lune juste à l’intérieur.",
+          "es": "Divide el período de cada luna por el de la que está justo por dentro.",
+          "pt-BR": "Divida o período de cada lua pelo da lua logo por dentro."
+        }
+      ],
+      "questions": [
+        {
+          "id": "io-europa",
+          "prompt": {
+            "en": "How many times longer does Europa take than Io to go round Jupiter?",
+            "fr": "Combien de fois plus de temps Europe met-elle qu’Io pour faire le tour de Jupiter ?",
+            "es": "¿Cuántas veces más tarda Europa que Ío en dar la vuelta a Júpiter?",
+            "pt-BR": "Quantas vezes mais tempo Europa leva do que Io para dar a volta em Júpiter?"
+          },
+          "answer": {
+            "en": "About {ioEuropa} times as long: Io goes round twice while Europa goes round once.",
+            "fr": "Environ {ioEuropa} fois plus : Io fait deux tours pendant qu’Europe en fait un.",
+            "es": "Unas {ioEuropa} veces más: Ío da dos vueltas mientras Europa da una.",
+            "pt-BR": "Cerca de {ioEuropa} vezes mais: Io dá duas voltas enquanto Europa dá uma."
+          },
+          "evidence": ["ioEuropa"]
+        },
+        {
+          "id": "europa-ganymede",
+          "prompt": {
+            "en": "And Ganymede compared with Europa?",
+            "fr": "Et Ganymède par rapport à Europe ?",
+            "es": "¿Y Ganímedes respecto a Europa?",
+            "pt-BR": "E Ganimedes em relação a Europa?"
+          },
+          "answer": {
+            "en": "Again about {europaGanymede} times as long: Europa goes round twice while Ganymede goes round once.",
+            "fr": "Encore environ {europaGanymede} fois plus : Europe fait deux tours pendant que Ganymède en fait un.",
+            "es": "De nuevo unas {europaGanymede} veces más: Europa da dos vueltas mientras Ganímedes da una.",
+            "pt-BR": "De novo cerca de {europaGanymede} vezes mais: Europa dá duas voltas enquanto Ganimedes dá uma."
+          },
+          "evidence": ["europaGanymede"]
+        },
+        {
+          "id": "callisto",
+          "level": "advanced",
+          "prompt": {
+            "en": "Does Callisto follow the same rule with respect to Ganymede?",
+            "fr": "Callisto suit-elle la même règle par rapport à Ganymède ?",
+            "es": "¿Sigue Calisto la misma regla respecto a Ganímedes?",
+            "pt-BR": "Calisto segue a mesma regra em relação a Ganimedes?"
+          },
+          "answer": {
+            "en": "No. Callisto takes about {ganymedeCallisto} times as long as Ganymede, not a whole number: it is not part of the pattern of the three inner moons.",
+            "fr": "Non. Callisto met environ {ganymedeCallisto} fois plus de temps que Ganymède, ce qui n’est pas un nombre entier : elle ne fait pas partie du schéma des trois lunes intérieures.",
+            "es": "No. Calisto tarda unas {ganymedeCallisto} veces más que Ganímedes, que no es un número entero: no forma parte del patrón de las tres lunas interiores.",
+            "pt-BR": "Não. Calisto leva cerca de {ganymedeCallisto} vezes mais tempo do que Ganimedes, o que não é um número inteiro: ela não faz parte do padrão das três luas internas."
+          },
+          "evidence": ["ganymedeCallisto"]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "Discussion",
+        "fr": "Discussion",
+        "es": "Debate",
+        "pt-BR": "Discussão"
+      },
+      "teacher": {
+        "en": "This regular rhythm is called the Laplace resonance, and NASA describes it as one orbit of Ganymede for two of Europa and four of Io. Moons that return to the same positions at regular intervals tug on one another in the same way each time; according to NASA this keeps their orbits slightly elliptical, and the resulting tidal flexing heats Io. NASA/JPL’s educational activity “Moons in Resonance” builds the same idea.",
+        "fr": "Ce rythme régulier s’appelle la résonance de Laplace, que la NASA décrit comme un tour de Ganymède pour deux d’Europe et quatre d’Io. Des lunes qui reviennent aux mêmes positions à intervalles réguliers se tirent mutuellement de la même façon à chaque fois ; selon la NASA, cela maintient leurs orbites légèrement elliptiques, et la déformation de marée qui en résulte chauffe Io. L’activité pédagogique « Moons in Resonance » de la NASA/JPL construit la même idée.",
+        "es": "Este ritmo regular se llama resonancia de Laplace, que la NASA describe como una órbita de Ganímedes por cada dos de Europa y cuatro de Ío. Las lunas que vuelven a las mismas posiciones a intervalos regulares se atraen entre sí del mismo modo cada vez; según la NASA, esto mantiene sus órbitas ligeramente elípticas, y la deformación de marea resultante calienta a Ío. La actividad educativa «Moons in Resonance» de la NASA/JPL construye la misma idea.",
+        "pt-BR": "Esse ritmo regular se chama ressonância de Laplace, que a NASA descreve como uma órbita de Ganimedes para duas de Europa e quatro de Io. Luas que voltam às mesmas posições em intervalos regulares puxam umas às outras do mesmo modo a cada vez; segundo a NASA, isso mantém suas órbitas levemente elípticas, e a deformação de maré resultante aquece Io. A atividade educativa “Moons in Resonance” da NASA/JPL constrói a mesma ideia."
+      },
+      "steps": [
+        {
+          "en": "Discuss in your group, then answer.",
+          "fr": "Discutez en groupe, puis répondez.",
+          "es": "Debatid en grupo y luego responded.",
+          "pt-BR": "Discutam em grupo e depois respondam."
+        }
+      ],
+      "questions": [
+        {
+          "id": "one-ganymede-turn",
+          "prompt": {
+            "en": "While Ganymede goes round Jupiter once, how many times do Europa and Io go round?",
+            "fr": "Pendant que Ganymède fait un tour de Jupiter, combien de tours font Europe et Io ?",
+            "es": "Mientras Ganímedes da una vuelta a Júpiter, ¿cuántas vueltas dan Europa y Ío?",
+            "pt-BR": "Enquanto Ganimedes dá uma volta em Júpiter, quantas voltas dão Europa e Io?"
+          },
+          "answer": {
+            "en": "Europa goes round about {europaGanymede} times and Io about {ioGanymede} times. Together with Ganymede this gives a 4 : 2 : 1 pattern.",
+            "fr": "Europe fait environ {europaGanymede} tours et Io environ {ioGanymede} tours. Avec Ganymède, cela donne un schéma 4 : 2 : 1.",
+            "es": "Europa da unas {europaGanymede} vueltas e Ío unas {ioGanymede}. Junto con Ganímedes, esto da un patrón 4 : 2 : 1.",
+            "pt-BR": "Europa dá cerca de {europaGanymede} voltas e Io cerca de {ioGanymede}. Junto com Ganimedes, isso dá um padrão 4 : 2 : 1."
+          },
+          "evidence": ["europaGanymede", "ioGanymede"]
+        }
+      ]
+    }
+  ]
+}
