@@ -10,6 +10,7 @@ export const cardFr: Record<CardMessageKey, string> = {
   'search.group.flyby': 'Survols',
   'search.group.orbitInsertion': 'Mises en orbite',
   'search.group.perihelion': 'Périhélies',
+  'search.group.perijove': 'Périjoves',
   'search.group.contact': 'Contacts',
   'search.missionPage': 'page de la mission',
   'surface.compare.slider': 'Rideau avant/après',

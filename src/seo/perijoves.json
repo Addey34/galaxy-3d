@@ -1,0 +1,1017 @@
+{
+  "$comment": "Écrit par `pnpm perijoves:generate` (scripts/generate-perijoves.mjs), jamais à la main. Chaque minimum local de la distance de Juno au centre de Jupiter, lu dans Horizons à l’heure, à la minute puis à la seconde ; `pj` est le numéro de la NASA (PJ1 à PJ76 confrontés à son tableau par scripts/juno-perijove-witnesses.json, au-delà il prolonge la série) ; altitude = distance au centre moins le rayon équatorial de la fiche de Jupiter ; un périjove postérieur à sa date de lecture est une prédiction. `bounds` : la fenêtre réellement lue.",
+  "source": "NASA/JPL Horizons, CENTER 500@599, ECLIPTIC J2000, VEC_CORR NONE, UT ; rayon de Jupiter de la fiche de Galaxy ; numérotation : NASA Science, Juno Orbits",
+  "jupiterRadiusKm": 71492,
+  "halfWindowDays": 15,
+  "witnessedUpTo": 76,
+  "bounds": [
+    {
+      "probe": "juno",
+      "from": "2016-07-03T22:00:00Z",
+      "to": "2027-12-02T00:00:00Z",
+      "retrieved": "2026-10-28"
+    }
+  ],
+  "perijoves": [
+    {
+      "probe": "juno",
+      "pj": 1,
+      "at": "2016-08-27T12:50:44Z",
+      "distanceKm": 75632.731,
+      "altitudeKm": 4140.731,
+      "speedKmS": 57.804834,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 2,
+      "at": "2016-10-19T18:10:54Z",
+      "distanceKm": 75636.916,
+      "altitudeKm": 4144.916,
+      "speedKmS": 57.801101,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 3,
+      "at": "2016-12-11T17:03:41Z",
+      "distanceKm": 75595.889,
+      "altitudeKm": 4103.889,
+      "speedKmS": 57.814267,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 4,
+      "at": "2017-02-02T12:57:09Z",
+      "distanceKm": 75729.398,
+      "altitudeKm": 4237.398,
+      "speedKmS": 57.759852,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 5,
+      "at": "2017-03-27T08:51:52Z",
+      "distanceKm": 74808.514,
+      "altitudeKm": 3316.514,
+      "speedKmS": 58.119587,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 6,
+      "at": "2017-05-19T06:00:47Z",
+      "distanceKm": 74877.526,
+      "altitudeKm": 3385.526,
+      "speedKmS": 58.090032,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 7,
+      "at": "2017-07-11T01:54:42Z",
+      "distanceKm": 74854.203,
+      "altitudeKm": 3362.203,
+      "speedKmS": 58.095767,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 8,
+      "at": "2017-09-01T21:48:50Z",
+      "distanceKm": 74826.892,
+      "altitudeKm": 3334.892,
+      "speedKmS": 58.102764,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 9,
+      "at": "2017-10-24T17:42:31Z",
+      "distanceKm": 75333.531,
+      "altitudeKm": 3841.531,
+      "speedKmS": 57.899091,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 10,
+      "at": "2017-12-16T17:56:59Z",
+      "distanceKm": 75584.187,
+      "altitudeKm": 4092.187,
+      "speedKmS": 57.796999,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 11,
+      "at": "2018-02-07T13:51:30Z",
+      "distanceKm": 74728.791,
+      "altitudeKm": 3236.791,
+      "speedKmS": 58.128847,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 12,
+      "at": "2018-04-01T09:45:43Z",
+      "distanceKm": 74694.721,
+      "altitudeKm": 3202.721,
+      "speedKmS": 58.138194,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 13,
+      "at": "2018-05-24T05:39:51Z",
+      "distanceKm": 74657.633,
+      "altitudeKm": 3165.633,
+      "speedKmS": 58.148272,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 14,
+      "at": "2018-07-16T05:17:22Z",
+      "distanceKm": 74619.475,
+      "altitudeKm": 3127.475,
+      "speedKmS": 58.159962,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 15,
+      "at": "2018-09-07T01:11:41Z",
+      "distanceKm": 74580.339,
+      "altitudeKm": 3088.339,
+      "speedKmS": 58.169626,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 16,
+      "at": "2018-10-29T21:06:00Z",
+      "distanceKm": 74538.746,
+      "altitudeKm": 3046.746,
+      "speedKmS": 58.180857,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 17,
+      "at": "2018-12-21T16:59:48Z",
+      "distanceKm": 76056.838,
+      "altitudeKm": 4564.838,
+      "speedKmS": 57.581084,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 18,
+      "at": "2019-02-12T17:34:31Z",
+      "distanceKm": 74455.556,
+      "altitudeKm": 2963.556,
+      "speedKmS": 58.203502,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 19,
+      "at": "2019-04-06T12:14:22Z",
+      "distanceKm": 76220.296,
+      "altitudeKm": 4728.296,
+      "speedKmS": 57.508165,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 20,
+      "at": "2019-05-29T08:08:18Z",
+      "distanceKm": 78128.801,
+      "altitudeKm": 6636.801,
+      "speedKmS": 56.784485,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 21,
+      "at": "2019-07-21T04:02:43Z",
+      "distanceKm": 78821.635,
+      "altitudeKm": 7329.635,
+      "speedKmS": 56.525821,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 22,
+      "at": "2019-09-12T03:40:44Z",
+      "distanceKm": 78781.86,
+      "altitudeKm": 7289.86,
+      "speedKmS": 56.53701,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 23,
+      "at": "2019-11-03T22:18:14Z",
+      "distanceKm": 74262.557,
+      "altitudeKm": 2770.557,
+      "speedKmS": 58.254362,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 24,
+      "at": "2019-12-26T17:36:13Z",
+      "distanceKm": 75774.806,
+      "altitudeKm": 4282.806,
+      "speedKmS": 57.657702,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 25,
+      "at": "2020-02-17T17:51:55Z",
+      "distanceKm": 75400.179,
+      "altitudeKm": 3908.179,
+      "speedKmS": 57.799017,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 26,
+      "at": "2020-04-10T13:47:40Z",
+      "distanceKm": 74160.607,
+      "altitudeKm": 2668.607,
+      "speedKmS": 58.281826,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 27,
+      "at": "2020-06-02T10:20:03Z",
+      "distanceKm": 74125.965,
+      "altitudeKm": 2633.965,
+      "speedKmS": 58.291109,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 28,
+      "at": "2020-07-25T06:15:27Z",
+      "distanceKm": 74085.338,
+      "altitudeKm": 2593.338,
+      "speedKmS": 58.301268,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 29,
+      "at": "2020-09-16T02:10:52Z",
+      "distanceKm": 74046.678,
+      "altitudeKm": 2554.678,
+      "speedKmS": 58.311116,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 30,
+      "at": "2020-11-08T01:49:42Z",
+      "distanceKm": 74005.124,
+      "altitudeKm": 2513.124,
+      "speedKmS": 58.323139,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 31,
+      "at": "2020-12-30T21:45:45Z",
+      "distanceKm": 73935.981,
+      "altitudeKm": 2443.981,
+      "speedKmS": 58.344325,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 32,
+      "at": "2021-02-21T17:40:34Z",
+      "distanceKm": 75298.337,
+      "altitudeKm": 3806.337,
+      "speedKmS": 57.801738,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 33,
+      "at": "2021-04-15T23:32:25Z",
+      "distanceKm": 75386.464,
+      "altitudeKm": 3894.464,
+      "speedKmS": 57.761689,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 34,
+      "at": "2021-06-08T07:46:01Z",
+      "distanceKm": 73879.11,
+      "altitudeKm": 2387.11,
+      "speedKmS": 58.318643,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 35,
+      "at": "2021-07-21T08:15:05Z",
+      "distanceKm": 73806.359,
+      "altitudeKm": 2314.359,
+      "speedKmS": 58.342773,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 36,
+      "at": "2021-09-02T22:42:52Z",
+      "distanceKm": 73758.504,
+      "altitudeKm": 2266.504,
+      "speedKmS": 58.355052,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 37,
+      "at": "2021-10-16T17:13:32Z",
+      "distanceKm": 73698.813,
+      "altitudeKm": 2206.813,
+      "speedKmS": 58.373046,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 38,
+      "at": "2021-11-29T14:13:30Z",
+      "distanceKm": 73639.91,
+      "altitudeKm": 2147.91,
+      "speedKmS": 58.38816,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 39,
+      "at": "2022-01-12T10:33:02Z",
+      "distanceKm": 73576.001,
+      "altitudeKm": 2084.001,
+      "speedKmS": 58.40508,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 40,
+      "at": "2022-02-25T01:59:57Z",
+      "distanceKm": 73685.836,
+      "altitudeKm": 2193.836,
+      "speedKmS": 58.352285,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 41,
+      "at": "2022-04-09T15:49:18Z",
+      "distanceKm": 73446.922,
+      "altitudeKm": 1954.922,
+      "speedKmS": 58.438993,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 42,
+      "at": "2022-05-23T02:15:54Z",
+      "distanceKm": 73378.289,
+      "altitudeKm": 1886.289,
+      "speedKmS": 58.45667,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 43,
+      "at": "2022-07-05T09:17:22Z",
+      "distanceKm": 73424.563,
+      "altitudeKm": 1932.563,
+      "speedKmS": 58.428392,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 44,
+      "at": "2022-08-17T14:45:39Z",
+      "distanceKm": 73555.677,
+      "altitudeKm": 2063.677,
+      "speedKmS": 58.366117,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 45,
+      "at": "2022-09-29T17:11:56Z",
+      "distanceKm": 73825.228,
+      "altitudeKm": 2333.228,
+      "speedKmS": 58.225154,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 46,
+      "at": "2022-11-06T21:38:37Z",
+      "distanceKm": 73106.495,
+      "altitudeKm": 1614.495,
+      "speedKmS": 58.5038,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 47,
+      "at": "2022-12-15T03:23:23Z",
+      "distanceKm": 73039,
+      "altitudeKm": 1547,
+      "speedKmS": 58.521197,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 48,
+      "at": "2023-01-22T05:44:19Z",
+      "distanceKm": 73082.736,
+      "altitudeKm": 1590.736,
+      "speedKmS": 58.493058,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 49,
+      "at": "2023-03-01T05:53:22Z",
+      "distanceKm": 72894.427,
+      "altitudeKm": 1402.427,
+      "speedKmS": 58.560215,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 50,
+      "at": "2023-04-08T08:13:34Z",
+      "distanceKm": 72820.137,
+      "altitudeKm": 1328.137,
+      "speedKmS": 58.579206,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 51,
+      "at": "2023-05-16T07:22:45Z",
+      "distanceKm": 72752.423,
+      "altitudeKm": 1260.423,
+      "speedKmS": 58.597363,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 52,
+      "at": "2023-06-23T06:55:08Z",
+      "distanceKm": 72671.805,
+      "altitudeKm": 1179.805,
+      "speedKmS": 58.619853,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 53,
+      "at": "2023-07-31T09:05:44Z",
+      "distanceKm": 72605.607,
+      "altitudeKm": 1113.607,
+      "speedKmS": 58.638125,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 54,
+      "at": "2023-09-07T11:58:02Z",
+      "distanceKm": 72668.034,
+      "altitudeKm": 1176.034,
+      "speedKmS": 58.602544,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 55,
+      "at": "2023-10-15T10:52:50Z",
+      "distanceKm": 73320.976,
+      "altitudeKm": 1828.976,
+      "speedKmS": 58.331763,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 56,
+      "at": "2023-11-22T12:17:18Z",
+      "distanceKm": 73571.856,
+      "altitudeKm": 2079.856,
+      "speedKmS": 58.222485,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 57,
+      "at": "2023-12-30T12:36:21Z",
+      "distanceKm": 72368.443,
+      "altitudeKm": 876.443,
+      "speedKmS": 58.686383,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 58,
+      "at": "2024-02-03T21:47:29Z",
+      "distanceKm": 73674.574,
+      "altitudeKm": 2182.574,
+      "speedKmS": 58.132472,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 59,
+      "at": "2024-03-07T15:42:20Z",
+      "distanceKm": 72208.722,
+      "altitudeKm": 716.722,
+      "speedKmS": 58.710689,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 60,
+      "at": "2024-04-09T08:48:19Z",
+      "distanceKm": 72132.818,
+      "altitudeKm": 640.818,
+      "speedKmS": 58.73168,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 61,
+      "at": "2024-05-12T03:38:39Z",
+      "distanceKm": 72063.64,
+      "altitudeKm": 571.64,
+      "speedKmS": 58.750281,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 62,
+      "at": "2024-06-13T19:53:41Z",
+      "distanceKm": 72491.114,
+      "altitudeKm": 999.114,
+      "speedKmS": 58.567036,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 63,
+      "at": "2024-07-16T14:33:58Z",
+      "distanceKm": 71941.895,
+      "altitudeKm": 449.895,
+      "speedKmS": 58.780623,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 64,
+      "at": "2024-08-18T06:57:08Z",
+      "distanceKm": 71875.255,
+      "altitudeKm": 383.255,
+      "speedKmS": 58.798769,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 65,
+      "at": "2024-09-20T02:28:52Z",
+      "distanceKm": 71812.775,
+      "altitudeKm": 320.775,
+      "speedKmS": 58.815502,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 66,
+      "at": "2024-10-22T18:11:02Z",
+      "distanceKm": 71747.576,
+      "altitudeKm": 255.576,
+      "speedKmS": 58.833079,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 67,
+      "at": "2024-11-24T13:05:28Z",
+      "distanceKm": 71690.093,
+      "altitudeKm": 198.093,
+      "speedKmS": 58.847804,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 68,
+      "at": "2024-12-27T05:22:30Z",
+      "distanceKm": 71629.551,
+      "altitudeKm": 137.551,
+      "speedKmS": 58.863964,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 69,
+      "at": "2025-01-28T23:05:12Z",
+      "distanceKm": 71571.695,
+      "altitudeKm": 79.695,
+      "speedKmS": 58.878773,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 70,
+      "at": "2025-03-02T16:04:32Z",
+      "distanceKm": 71517.121,
+      "altitudeKm": 25.121,
+      "speedKmS": 58.892993,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 71,
+      "at": "2025-04-04T09:30:55Z",
+      "distanceKm": 71459.271,
+      "altitudeKm": -32.729,
+      "speedKmS": 58.908724,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 72,
+      "at": "2025-05-07T03:01:33Z",
+      "distanceKm": 71402.545,
+      "altitudeKm": -89.455,
+      "speedKmS": 58.924036,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 73,
+      "at": "2025-06-08T20:30:47Z",
+      "distanceKm": 71351.787,
+      "altitudeKm": -140.213,
+      "speedKmS": 58.936893,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 74,
+      "at": "2025-07-11T13:40:03Z",
+      "distanceKm": 72084.745,
+      "altitudeKm": 592.745,
+      "speedKmS": 58.631324,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 75,
+      "at": "2025-08-13T07:04:54Z",
+      "distanceKm": 72747.707,
+      "altitudeKm": 1255.707,
+      "speedKmS": 58.358572,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 76,
+      "at": "2025-09-14T23:52:04Z",
+      "distanceKm": 73427.528,
+      "altitudeKm": 1935.528,
+      "speedKmS": 58.08297,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 77,
+      "at": "2025-10-17T16:04:42Z",
+      "distanceKm": 74092.914,
+      "altitudeKm": 2600.914,
+      "speedKmS": 57.817362,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 78,
+      "at": "2025-11-19T08:37:51Z",
+      "distanceKm": 74728.424,
+      "altitudeKm": 3236.424,
+      "speedKmS": 57.567565,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 79,
+      "at": "2025-12-22T01:14:17Z",
+      "distanceKm": 75406.72,
+      "altitudeKm": 3914.72,
+      "speedKmS": 57.304629,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 80,
+      "at": "2026-01-23T17:17:28Z",
+      "distanceKm": 75959.344,
+      "altitudeKm": 4467.344,
+      "speedKmS": 57.092292,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 81,
+      "at": "2026-02-25T09:32:54Z",
+      "distanceKm": 76442.55,
+      "altitudeKm": 4950.55,
+      "speedKmS": 56.907587,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 82,
+      "at": "2026-03-29T22:47:14Z",
+      "distanceKm": 77062.115,
+      "altitudeKm": 5570.115,
+      "speedKmS": 56.676149,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 83,
+      "at": "2026-05-01T15:02:33Z",
+      "distanceKm": 77558.123,
+      "altitudeKm": 6066.123,
+      "speedKmS": 56.491902,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 84,
+      "at": "2026-06-03T06:52:21Z",
+      "distanceKm": 78059.853,
+      "altitudeKm": 6567.853,
+      "speedKmS": 56.306974,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 85,
+      "at": "2026-07-05T22:01:41Z",
+      "distanceKm": 78512.973,
+      "altitudeKm": 7020.973,
+      "speedKmS": 56.142432,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 86,
+      "at": "2026-08-07T14:49:51Z",
+      "distanceKm": 78955.854,
+      "altitudeKm": 7463.854,
+      "speedKmS": 55.981975,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 87,
+      "at": "2026-09-09T06:22:47Z",
+      "distanceKm": 79316.341,
+      "altitudeKm": 7824.341,
+      "speedKmS": 55.852616,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 88,
+      "at": "2026-10-11T23:02:47Z",
+      "distanceKm": 79733.749,
+      "altitudeKm": 8241.749,
+      "speedKmS": 55.703953,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 89,
+      "at": "2026-11-13T14:51:20Z",
+      "distanceKm": 80110.472,
+      "altitudeKm": 8618.472,
+      "speedKmS": 55.571106,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 90,
+      "at": "2026-12-16T07:13:33Z",
+      "distanceKm": 80490.747,
+      "altitudeKm": 8998.747,
+      "speedKmS": 55.437773,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 91,
+      "at": "2027-01-17T23:16:24Z",
+      "distanceKm": 80841.413,
+      "altitudeKm": 9349.413,
+      "speedKmS": 55.315653,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 92,
+      "at": "2027-02-19T15:14:27Z",
+      "distanceKm": 81193.215,
+      "altitudeKm": 9701.215,
+      "speedKmS": 55.194203,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 93,
+      "at": "2027-03-24T07:08:08Z",
+      "distanceKm": 81587.592,
+      "altitudeKm": 10095.592,
+      "speedKmS": 55.059253,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 94,
+      "at": "2027-04-25T23:08:09Z",
+      "distanceKm": 81958.051,
+      "altitudeKm": 10466.051,
+      "speedKmS": 54.933818,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 95,
+      "at": "2027-05-28T15:35:18Z",
+      "distanceKm": 82366.085,
+      "altitudeKm": 10874.085,
+      "speedKmS": 54.796217,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 96,
+      "at": "2027-06-30T07:37:37Z",
+      "distanceKm": 82696.222,
+      "altitudeKm": 11204.222,
+      "speedKmS": 54.68594,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 97,
+      "at": "2027-08-01T23:37:52Z",
+      "distanceKm": 83064.709,
+      "altitudeKm": 11572.709,
+      "speedKmS": 54.563158,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 98,
+      "at": "2027-09-03T15:29:01Z",
+      "distanceKm": 83416.936,
+      "altitudeKm": 11924.936,
+      "speedKmS": 54.447483,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 99,
+      "at": "2027-10-06T07:29:24Z",
+      "distanceKm": 83778.595,
+      "altitudeKm": 12286.595,
+      "speedKmS": 54.328823,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    },
+    {
+      "probe": "juno",
+      "pj": 100,
+      "at": "2027-11-07T23:34:03Z",
+      "distanceKm": 84131.89,
+      "altitudeKm": 12639.89,
+      "speedKmS": 54.214499,
+      "solution": "Juno_merged",
+      "retrieved": "2026-10-28"
+    }
+  ]
+}

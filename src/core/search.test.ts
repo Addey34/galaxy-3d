@@ -36,6 +36,7 @@ const file: SearchIndexFile = {
   flybys: [['voyager2', 'neptune', '1989-08-25T03:56:36Z']],
   orbitInsertions: [['juno', 'jupiter', '2016-07-05T02:55:34Z']],
   perihelia: [['parker-solar-probe', 'sun', '2024-12-24T11:40:57Z']],
+  perijoves: [['juno', 'jupiter', '2023-12-30T12:36:21Z']],
   contacts: [['rosetta', 'churyumov-gerasimenko', '2016-09-30T10:39:34Z']],
   discoveries: [
     ['Titania', 'uranus', '1787', 'W. Herschel'],
@@ -84,6 +85,7 @@ describe('searchPrepared', () => {
   it('une mise en orbite se trouve par sa sonde et son corps, et porte son instant', () => {
     expect(labels('juno jupiter')).toEqual([
       'orbitInsertion:Juno · Jupiter · 2016-07-05',
+      'perijove:Juno · Jupiter · 2023-12-30',
     ]);
     expect(searchPrepared(index, 'juno')[0]).toEqual({
       kind: 'orbitInsertion',
@@ -109,6 +111,20 @@ describe('searchPrepared', () => {
       probe: 'parker-solar-probe',
       body: 'sun',
       at: '2024-12-24T11:40:57Z',
+    });
+  });
+
+  it('un périjove se trouve par le mot du type, dans les quatre langues, et porte son instant', () => {
+    for (const word of ['perijove', 'perijoves', 'perijovo', 'périjove'])
+      expect(labels(word), word).toEqual([
+        'perijove:Juno · Jupiter · 2023-12-30',
+      ]);
+    expect(searchPrepared(index, 'perijove')[0]).toEqual({
+      kind: 'perijove',
+      label: 'Juno · Jupiter · 2023-12-30',
+      probe: 'juno',
+      body: 'jupiter',
+      at: '2023-12-30T12:36:21Z',
     });
   });
 

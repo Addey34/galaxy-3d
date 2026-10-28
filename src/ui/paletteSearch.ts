@@ -113,6 +113,7 @@ export function hitDetail(hit: SearchHit): string {
     case 'flyby':
     case 'orbitInsertion':
     case 'perihelion':
+    case 'perijove':
     case 'contact':
       return '';
     case 'discovery':
@@ -224,6 +225,7 @@ export function runHit(
     case 'flyby':
     case 'orbitInsertion':
     case 'perihelion':
+    case 'perijove':
     case 'contact': {
       const om = api.orbitalMechanics;
       const at = hit.kind === 'flyby' ? hit.closestAt : hit.at;

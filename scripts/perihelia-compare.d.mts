@@ -1,4 +1,5 @@
 export function sameWithinShippedWindow(
   shippedText: string,
-  freshText: string
+  freshText: string,
+  listKey?: string
 ): boolean;

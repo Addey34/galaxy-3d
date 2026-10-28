@@ -6489,6 +6489,38 @@ dans les quatre langues), falsifiée deux fois (vitesse fausse de 5 %, record é
 d'être livrée. `e2e/built-pages.spec.ts` : la famille passe axe et le débordement à 390 px dans
 les quatre langues.
 
+## Pages des périjoves de Juno (`/perijoves/`, 2026-10-28)
+
+L'index `/perijoves/` et une page par périjove de Juno (`/perijoves/juno-2023-12-30/`), dans les
+quatre langues, même rendu et même routage que les périhélies (`NESTED_SEGMENTS`). Module pur :
+`src/seo/perijovePages.ts`, qui importe de `flybyPages.ts` les noms, les nombres et l'heure.
+
+- **Ce qui est mesuré** : `pnpm perijoves:generate` (`scripts/generate-perijoves.mjs`) lit dans
+  Horizons la position de Juno par rapport au centre de Jupiter (`CENTER 500@599`) sur la fenêtre
+  du fichier `juno--jupiter-2024-10-22`, à l'heure, garde chaque minimum LOCAL (demi-fenêtre
+  `halfWindowDays`) et le relit à la minute puis à la seconde. Même plafond de 400 jours après la
+  date de lecture, même règle de prédiction, même `--check` (`perihelia-compare.mjs`, paramétré par
+  la clé de la liste).
+- **La numérotation est celle de la NASA, et elle est CONFRONTÉE** : PJ0 est l'insertion en orbite
+  (déjà mesurée par `orbits:generate`), le minimum de bord n'est jamais listé, donc le premier
+  minimum listé est PJ1 et le rang vaut le numéro. `scripts/juno-perijove-witnesses.json` porte les
+  dates UTC de PJ1 à PJ76 lues le 2026-10-28 dans le tableau de NASA Science « Juno Orbits », et le
+  générateur ÉCHOUE si un numéro ne tombe pas à un jour près sur le minimum mesuré (le tableau
+  donne des jours). Mesuré : les 76 concordent. Au-delà de PJ76 le tableau s'arrête : la page dit
+  que le numéro prolonge la série sans confirmation (`witnessedUpTo`).
+- **Pas d'« altitude au-dessus des nuages »** : Jupiter est aplatie et le périjove tombe à haute
+  latitude. L'écart publié est la distance au centre moins le rayon ÉQUATORIAL de la fiche
+  (71 492 km, niveau 1 bar), signé : PJ73 donne −140 km. PJ1 donne 4 141 km, la NASA dit 4 200 km
+  au-dessus des nuages : deux grandeurs voisines, pas la même, et la page le dit.
+- **Les liens retour** : les pages de Juno et de Jupiter portent la liste des périjoves
+  (`perijoveListsByObject`). La recherche universelle gagne le type `perijove`.
+
+Gardes : `src/seo/perijovePages.test.ts` (témoins PJ1, PJ57, PJ58, PJ76 contre le tableau de la
+NASA ; numéros consécutifs ; relevé vide, hors d'ordre ou incohérent refusé ; prédiction marquée
+exactement quand elle suit la date de lecture ; voisins liés dans les quatre langues),
+`src/config/perijoveCheck.test.ts` (`--check` compare la source, pas le calendrier).
+`e2e/built-pages.spec.ts` : la famille passe axe et le débordement à 390 px.
+
 ## Pages des grands lieux nommés (lot 55)
 
 L'index `/places/` et une page par grande formation nommée par l'UAI, `/places/moon/mare-imbrium/`,

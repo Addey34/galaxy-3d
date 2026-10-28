@@ -441,6 +441,13 @@ function bodyLandingPages() {
         const perihelionRecord = JSON.parse(
           await readFile(resolve(__dirname, 'src/seo/perihelia.json'), 'utf-8')
         ) as import('./src/seo/perihelionPages').PerihelionRecord;
+        /** LES PÉRIJOVES DE JUNO : le relevé écrit par `pnpm perijoves:generate`, listé après les périhélies. */
+        const perijoveSeo = (await loader.ssrLoadModule(
+          '/src/seo/perijovePages.ts'
+        )) as typeof import('./src/seo/perijovePages');
+        const perijoveRecord = JSON.parse(
+          await readFile(resolve(__dirname, 'src/seo/perijoves.json'), 'utf-8')
+        ) as import('./src/seo/perijovePages').PerijoveRecord;
         /** LES CONTACTS (lot 49, pas 3) : le relevé écrit par `pnpm contacts:generate`, listé après. */
         const contactSeo = (await loader.ssrLoadModule(
           '/src/seo/surfaceContactPages.ts'
@@ -468,6 +475,11 @@ function bodyLandingPages() {
             lists.set(id, (lists.get(id) ?? '') + html);
           for (const [id, html] of perihelionSeo.perihelionListsByObject(
             { ...inputs, record: perihelionRecord },
+            locale
+          ))
+            lists.set(id, (lists.get(id) ?? '') + html);
+          for (const [id, html] of perijoveSeo.perijoveListsByObject(
+            { ...inputs, record: perijoveRecord },
             locale
           ))
             lists.set(id, (lists.get(id) ?? '') + html);
@@ -1186,6 +1198,27 @@ function bodyLandingPages() {
             `pages des périhélies : ${perihelionDocPages.length} au lieu de ${(perihelionRecord.perihelia.length + 1) * DOC_LOCALE_COUNT}`
           );
         docPages.push(...perihelionDocPages);
+        // Les périjoves de Juno : l'index plus une page par périjove, dans chaque langue.
+        const perijoveDocPages = [undefined, ...OTHER_LOCALES].flatMap(
+          (locale) =>
+            perijoveSeo.perijovePages(
+              {
+                record: perijoveRecord,
+                config: catalogue.CELESTIAL_CONFIG,
+                navigable: navigable.NAVIGABLE_TARGETS,
+                origin: SITE_ORIGIN,
+              },
+              locale ?? 'en'
+            )
+        );
+        if (
+          perijoveDocPages.length !==
+          (perijoveRecord.perijoves.length + 1) * DOC_LOCALE_COUNT
+        )
+          throw new Error(
+            `pages des périjoves : ${perijoveDocPages.length} au lieu de ${(perijoveRecord.perijoves.length + 1) * DOC_LOCALE_COUNT}`
+          );
+        docPages.push(...perijoveDocPages);
         // Les contacts : l'index plus une page par contact, dans chaque langue.
         const contactDocPages = [undefined, ...OTHER_LOCALES].flatMap(
           (locale) =>

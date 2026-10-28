@@ -8,7 +8,11 @@ const DAY = 24 * 3600 * 1000;
  * fenêtre, et on exige l'égalité de tout périhélie de la fenêtre LIVRÉE, une demi-fenêtre avant sa
  * fin (au bord, le minimum local n'est pas décidable).
  */
-export function sameWithinShippedWindow(shippedText, freshText) {
+export function sameWithinShippedWindow(
+  shippedText,
+  freshText,
+  listKey = 'perihelia'
+) {
   if (!shippedText) return false;
   let shipped;
   let fresh;
@@ -27,9 +31,9 @@ export function sameWithinShippedWindow(shippedText, freshText) {
   );
   const inside = (p) => Date.parse(p.at) <= (limit.get(p.probe) ?? -Infinity);
   const key = (p) => JSON.stringify(strip(p));
-  const a = shipped.perihelia.filter(inside).map(key);
-  const b = fresh.perihelia.filter(inside).map(key);
-  const header = ({ bounds: _b, perihelia: _p, ...rest }) =>
+  const a = shipped[listKey].filter(inside).map(key);
+  const b = fresh[listKey].filter(inside).map(key);
+  const header = ({ bounds: _b, [listKey]: _p, ...rest }) =>
     JSON.stringify(rest);
   return (
     a.length === b.length &&

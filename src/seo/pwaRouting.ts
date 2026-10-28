@@ -37,6 +37,9 @@ const ORBIT_INSERTIONS_SEGMENT = 'orbit-insertions';
 /** Segment des périhélies (`/perihelia/parker-solar-probe-2024-12-24/`), `documentPage.ts::PERIHELIA_SLUG`. */
 const PERIHELIA_SEGMENT = 'perihelia';
 
+/** Segment des périjoves de Juno (`/perijoves/juno-2023-12-30/`), `documentPage.ts::PERIJOVES_SLUG`. */
+const PERIJOVES_SEGMENT = 'perijoves';
+
 /** Segment des contacts avec un corps (`/contacts/rosetta-churyumov-gerasimenko-2016-09-30/`), `documentPage.ts::CONTACTS_SLUG`. */
 const CONTACTS_SEGMENT = 'contacts';
 
@@ -47,6 +50,7 @@ const NESTED_SEGMENTS = [
   FLYBYS_SEGMENT,
   ORBIT_INSERTIONS_SEGMENT,
   PERIHELIA_SEGMENT,
+  PERIJOVES_SEGMENT,
   CONTACTS_SEGMENT,
 ];
 

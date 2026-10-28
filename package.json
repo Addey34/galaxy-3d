@@ -29,6 +29,7 @@
     "flybys:generate": "node scripts/generate-flyby-events.mjs",
     "orbits:generate": "node scripts/generate-orbit-insertions.mjs",
     "perihelia:generate": "node scripts/generate-perihelia.mjs",
+    "perijoves:generate": "node scripts/generate-perijoves.mjs",
     "contacts:generate": "node scripts/generate-surface-contacts.mjs",
     "ephemeris:oblateness": "node scripts/publish-oblateness.mjs",
     "facts:snapshot": "node scripts/snapshot-fact-sources.mjs",
