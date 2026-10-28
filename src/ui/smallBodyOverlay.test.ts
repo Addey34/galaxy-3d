@@ -75,6 +75,8 @@ describe('champ des petits corps : positions mises en cache par date (lot 54)', 
     const cached = overlay();
     cached.update(cam, new Date(t.getTime() - 5_000), 1);
     rects.splice(0);
+    // Un changement de filtre force la repeinture, avec les positions encore en cache.
+    cached.setVisibleCategories(new Set(['main-belt', 'neo', 'comet', 'tno']));
     cached.update(cam, t, 1);
     // Le cache date de 5 s plus tôt : comparé à un calcul neuf, l'écart reste sous le pixel.
     const fromCache = rects.splice(0);
@@ -90,5 +92,23 @@ describe('champ des petits corps : positions mises en cache par date (lot 54)', 
       })
     );
     expect(maxGap).toBeLessThan(1);
+  });
+});
+
+describe('champ des petits corps : pas de repeinture sans changement', () => {
+  it('ne repeint pas quand caméra, date et filtres sont inchangés, et repeint dès que la caméra bouge', () => {
+    const o = overlay();
+    const cam = camera();
+    const t = new Date('2024-07-01T12:00:00Z');
+    o.update(cam, t, 1);
+    expect(rects.length).toBeGreaterThan(0);
+    rects.splice(0);
+    o.update(cam, new Date(t.getTime() + 16), 1);
+    expect(rects.length).toBe(0);
+    cam.position.set(36, 0, 0.5);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+    o.update(cam, t, 1);
+    expect(rects.length).toBeGreaterThan(0);
   });
 });
