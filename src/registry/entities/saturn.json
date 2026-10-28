@@ -5,6 +5,7 @@
   "source": "catalogue",
   "config": {
     "kind": "planet",
+    "atmosphereClass": "gas-giant",
     "displayName": {
       "en": "Saturn",
       "fr": "Saturne",
