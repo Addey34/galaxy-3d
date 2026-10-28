@@ -33,6 +33,7 @@ import type {
 
 import nssdcaFactSheets from './nssdca-fact-sheets.json';
 import nssdcaMasterCatalog from './nssdca-master-catalog.json';
+import pdsHuygensHasi from './pds-huygens-hasi.json';
 import jplSsdSatellitePhysicalParameters from './jpl-ssd-satellite-physical-parameters.json';
 import jplSsdSatelliteMeanElements from './jpl-ssd-satellite-mean-elements.json';
 import jplSbdb from './jpl-sbdb.json';
@@ -98,6 +99,7 @@ const asPositionSource = <
 export const FACT_SOURCE_PROVIDERS = {
   'nssdca-fact-sheets': asFactSource(nssdcaFactSheets),
   'nssdca-master-catalog': asFactSource(nssdcaMasterCatalog),
+  'pds-huygens-hasi': asFactSource(pdsHuygensHasi),
   'jpl-horizons-object-data': asFactSource(jplHorizonsObjectData),
   'jpl-ssd-satellite-physical-parameters': asFactSource(
     jplSsdSatellitePhysicalParameters

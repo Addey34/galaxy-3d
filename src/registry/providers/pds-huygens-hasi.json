@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "pds-huygens-hasi",
+  "role": "fact-source",
+  "publisher": "NASA Planetary Data System, Atmospheres Node",
+  "title": "Huygens Atmosphere Structure Instrument (HASI) Bundle",
+  "url": "https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hphasi_bundle/",
+  "kind": "database",
+  "accessed": "2026-10-28"
+}

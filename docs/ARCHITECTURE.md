@@ -4637,8 +4637,8 @@ et le « ~ » de la densité de Vénus et de Mars (`surfaceDensityApproximate`, 
 plus de deux chiffres). Pas retenus : les vents (trois formes sans rapport : une plage, une liste par saison, un maximum) et la
 variation saisonnière de la pression de Mars (« variable from 4.0 to 8.7 mb »), qui reste dans `surfacePressure.raw` du relevé. La
 température moyenne reste celle de la table principale (Mars : -65 °C), la fiche de Mars écrivant par ailleurs « ~214 K (-59 C) »
-au sol : non affichée, donc sans contradiction visible. Titan n'a pas de fiche NSSDCA de ce type ; sa source serait la sonde Huygens
-(instrument HASI, PDS), à mesurer avant tout chiffre.
+au sol : non affichée, donc sans contradiction visible. Titan n'a pas de fiche NSSDCA de ce type : SUPERSEDED le 2026-10-28 pour
+« à mesurer avant tout chiffre », voir le paragraphe « Titan » plus bas (la sonde Huygens, instrument HASI, PDS).
 
 **La sphère d'une géante est le niveau de 1 bar, et les libellés le disent (lot 51, pas 2).** Le
 NSSDCA publie le rayon des quatre géantes comme « Equatorial radius (1 bar level) » et leur
@@ -4676,6 +4676,32 @@ XML (l'entrée écrit sa pression en millibars, la descente en bars), et écrit
   aucune n'étant un profil de la basse atmosphère (lu à la main) ; la requête a un TÉMOIN, la
   collection de l'ASI sur Jupiter. Un compte qui bouge fait sortir `--check` en code 1, pour
   relire. Le jeu est cité dans le bloc, comme ceux des blocs Missions et Instruments.
+
+**Titan : le profil mesuré par HASI, et une pression de surface (2026-10-28).** La sonde Huygens a traversé
+l'atmosphère de Titan le 2005-01-14 et son instrument HASI a laissé des tables réduites au PDS, paquet PDS4
+`urn:nasa:pds:hp_hasi` (DOI lu dans le registre). `pnpm atmosphere:generate` les lit comme celles de Galileo
+(colonnes et unités LUES dans les étiquettes XML, ici des mètres et des pascals) et écrit
+`public/assets/atmosphere-profiles/titan.json` : 911 échantillons d'entrée (1 380 km à 157 km) et 1 816 de descente
+(147 km à 3 m), l'altitude comptée depuis le SOL (`altitudeReference: "surface"`, Jupiter la compte depuis le niveau de
+1 bar), plus un POINT DE SURFACE écrit à part (`surface`) : la première ligne à altitude 0 de la pression (`PPI`) et de la
+température (`TEM`), tables de la phase « sol » de HASI, avec la dispersion des lectures de cette phase, non lissée. Quatre
+décisions :
+
+- **La descente n'est pas ajustée.** Le seul profil ajusté est celui de Galileo, et c'est sa phrase de méthode qui le dit :
+  `adjustedBelowKm` rend `null` pour un segment sans phrase, et `ProfileRow.adjusted` en dérive (plus du seul `kind`).
+- **Local, avec sa latitude lue ailleurs.** HASI n'a pas de colonne de latitude : elle vient de la trajectoire reconstruite
+  (paquet `urn:nasa:pds:hp_dtwg`, colonne `LAT`, de −10,3 à −10,2°), citée dans la note du bloc (`latitudeSource`).
+- **Un témoin entre deux tables.** Le dernier échantillon de la descente (3 m) et le point de surface viennent de produits
+  différents : même pression à 0,2 % et même température à 1 K (`atmosphereProfiles.test.ts`, falsifié en laissant la
+  pression en pascals). La requête du registre porte son témoin : elle rend `hp_hasi:data_raw` pour la cible Titan.
+- **Un fait, trois raisons.** `atmosphereClass: "terrestrial"` ouvre les quatre faits au sol : seule la pression
+  (`surfacePressureBar`, 1,4672 bar, `pds-huygens-hasi`, confrontée au fichier livré) est publiée. La masse volumique
+  s'arrête à 3 m au-dessus du sol, HASI ne publie ni hauteur d'échelle ni masse molaire : chacune a sa raison, dans la fiche.
+  La température du sol vit dans le bloc, pas dans `meanTempC` : une lecture locale n'est pas une moyenne.
+
+Le choix de l'utilisateur (2026-10-28) : le bloc profil ET les faits au sol, comme pour Jupiter.
+Une ligne de l'index (`atmosphereProfileIndex.json`) porte désormais un FOURNISSEUR PAR CORPS (`providers`), lu par
+`/sources` (`src/seo/cardBlockSources.ts`).
 
 **Une magnitude porte son incertitude en valeur absolue.** La SBDB publie H = 22,08 ± 0,445 pour
 ʻOumuamua. En relatif, cela ferait 2 %, sous le seuil d'affichage de 5 %, donc on le tairait ;

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { isLocalizedText } from '@/i18n/localizedOrKey';
 import { CELESTIAL_CONFIG } from './bodies';
@@ -581,6 +583,24 @@ function expected(
     throw new Error(`${name}.${field} (${p.source}) : ${why}`);
   };
   switch (p.source) {
+    // Le profil de la sonde Huygens (2026-10-28) : le point de surface écrit par
+    // `pnpm atmosphere:generate`, lu ici dans le fichier LIVRÉ, première ligne à altitude 0.
+    case 'pds-huygens-hasi': {
+      if (field !== 'surfacePressureBar')
+        fail('aucune règle de confrontation pour ce champ');
+      const profile = JSON.parse(
+        readFileSync(
+          resolve(
+            import.meta.dirname,
+            `../../public/assets/atmosphere-profiles/${name}.json`
+          ),
+          'utf-8'
+        )
+      ) as { surface?: { pressureBar: number } };
+      const surface = profile.surface;
+      if (surface === undefined) return fail('profil sans point de surface');
+      return { values: [surface.pressureBar], tolerance: 0 };
+    }
     case 'nssdca-fact-sheets': {
       const sat = nssdcaSat[name];
       const sheet = nssdca[name];

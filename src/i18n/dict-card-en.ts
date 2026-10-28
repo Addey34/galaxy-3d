@@ -75,6 +75,12 @@ export const cardEn = {
     'A survey submitted on {date} found none, down to about {radius} km in radius.',
   'bi.atmosphere.label': 'Measured profile (Galileo probe)',
   'bi.atmosphere.labelNone': 'Measured atmospheric profile',
+  'bi.atmosphere.labelTitan': 'Measured profile (Huygens probe)',
+  'bi.atmosphere.altitudeSurface': 'Above the ground',
+  'bi.atmosphere.ground': 'Ground',
+  'bi.atmosphere.localTitan':
+    'A single place on Titan, latitude {min}° to {max}°, descended on {date}. The last row is the first reading at ground level; the readings that followed range from {low} to {high} K.',
+  'bi.atmosphere.site': 'Latitude read from: {title}, DOI {doi}.',
   'bi.atmosphere.altitude': 'Above 1 bar',
   'bi.atmosphere.pressure': 'Pressure',
   'bi.atmosphere.temperature': 'Temperature',

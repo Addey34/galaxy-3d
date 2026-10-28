@@ -55,10 +55,15 @@ const SUPERSCRIPT: Record<string, string> = {
 
 /** Une pression sur neuf ordres de grandeur : bar, millibar, puis notation scientifique. */
 export function formatPressure(bar: number): string {
-  if (bar >= 1) return `${num(bar, 1)}\u00a0bar`;
+  if (bar >= 1) return `${num(bar, bar < 10 ? 2 : 1)}\u00a0bar`;
   if (bar >= 1e-3) return `${num(bar * 1000, 1)}\u00a0mbar`;
-  const exponent = Math.floor(Math.log10(bar));
-  const mantissa = bar / 10 ** exponent;
+  let exponent = Math.floor(Math.log10(bar));
+  let mantissa = bar / 10 ** exponent;
+  // Une mantisse qui s'arrondit à 10 (9,97 × 10⁻⁴) passe à l'exposant suivant : « 1 × 10⁻³ ».
+  if (Number(mantissa.toFixed(1)) >= 10) {
+    exponent += 1;
+    mantissa /= 10;
+  }
   const sup = String(exponent)
     .split('')
     .map((c) => SUPERSCRIPT[c] ?? c)
@@ -70,6 +75,11 @@ export function formatPressure(bar: number): string {
 function formatAltitude(km: number): string {
   const text = `${num(Math.abs(km))}\u00a0km`;
   return km > 0 ? `+${text}` : km < 0 ? `−${text}` : text;
+}
+
+/** Une altitude au-dessus du sol : en km, et en mètres sous le kilomètre. */
+function formatHeight(km: number): string {
+  return Math.abs(km) < 1 ? `${num(km * 1000)}\u00a0m` : `${num(km)}\u00a0km`;
 }
 
 function formatKelvin(kelvin: number): string {
@@ -95,12 +105,15 @@ export function setupAtmosphereBlock(
   let nothingToShow: string | null = null;
 
   const renderProfile = (profile: AtmosphereProfile): void => {
-    label.textContent = t('bi.atmosphere.label');
+    const ground = profile.altitudeReference === 'surface';
+    label.textContent = t(
+      ground ? 'bi.atmosphere.labelTitan' : 'bi.atmosphere.label'
+    );
     const table = document.createElement('table');
     table.className = 'bi-atmosphere-table';
     const head = document.createElement('tr');
     for (const key of [
-      'bi.atmosphere.altitude',
+      ground ? 'bi.atmosphere.altitudeSurface' : 'bi.atmosphere.altitude',
       'bi.atmosphere.pressure',
       'bi.atmosphere.temperature',
     ] as const) {
@@ -114,9 +127,13 @@ export function setupAtmosphereBlock(
     const tbody = document.createElement('tbody');
     for (const row of profileRows(profile)) {
       const tr = document.createElement('tr');
-      tr.classList.toggle('is-adjusted', row.kind === 'descent');
+      tr.classList.toggle('is-adjusted', row.adjusted);
       for (const text of [
-        formatAltitude(row.altitudeKm),
+        row.kind === 'surface'
+          ? t('bi.atmosphere.ground')
+          : ground
+            ? formatHeight(row.altitudeKm)
+            : formatAltitude(row.altitudeKm),
         formatPressure(row.pressureBar),
         formatKelvin(row.temperatureK),
       ]) {
@@ -129,11 +146,18 @@ export function setupAtmosphereBlock(
     table.append(thead, tbody);
     const entry = profile.segments.find((s) => s.kind === 'entry');
     const local = document.createElement('p');
-    local.textContent = t('bi.atmosphere.local', {
+    const place = {
       min: num(profile.latitudeDeg.min, 1),
       max: num(profile.latitudeDeg.max, 1),
       date: entry?.start ? formatDay(entry.start) : '',
-    });
+    };
+    local.textContent = profile.surface
+      ? t('bi.atmosphere.localTitan', {
+          ...place,
+          low: num(profile.surface.temperatureRangeK[0], 1),
+          high: num(profile.surface.temperatureRangeK[1], 1),
+        })
+      : t('bi.atmosphere.local', place);
     const below = adjustedBelowKm(profile);
     const adjusted = document.createElement('p');
     adjusted.textContent =
@@ -151,6 +175,11 @@ export function setupAtmosphereBlock(
       reference: profile.reference.text,
       date: formatDay(profile.bundle.retrieved),
     });
+    if (profile.latitudeSource)
+      note.textContent += ` ${t('bi.atmosphere.site', {
+        title: profile.latitudeSource.title,
+        doi: profile.latitudeSource.doi,
+      })}`;
   };
 
   const render = (current: string): void => {

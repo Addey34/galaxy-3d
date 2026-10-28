@@ -92,7 +92,7 @@ async function get(url, valid) {
 function fieldsOf(xml) {
   const fields = [];
   for (const m of xml.matchAll(
-    /<Field_Character>([\s\S]*?)<\/Field_Character>/g
+    /<Field_(?:Character|Delimited)>([\s\S]*?)<\/Field_(?:Character|Delimited)>/g
   )) {
     const name = /<name>([^<]+)<\/name>/.exec(m[1])?.[1]?.trim();
     const unit = /<unit>([^<]+)<\/unit>/.exec(m[1])?.[1]?.trim() ?? null;
@@ -211,6 +211,229 @@ async function collectionsOf(body) {
   return { lids: d.data.map((x) => x.id.split('::')[0]), retrieved };
 }
 
+// ── Titan : le profil mesuré par HASI, l'instrument de la sonde Huygens (2026-10-28) ──────────
+const HASI_BUNDLE =
+  'https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hphasi_bundle';
+const HASI_LID = 'urn:nasa:pds:hp_hasi';
+const HASI_COLLECTION = 'urn:nasa:pds:hp_hasi:data_raw';
+const DTWG_BUNDLE =
+  'https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hpdtwg_bundle';
+const DTWG_LID = 'urn:nasa:pds:hp_dtwg';
+
+/** Les cellules d'une table délimitée (point-virgule), guillemets retirés. */
+function delimitedRows(table, width) {
+  const rows = [];
+  for (const line of table.split(/\r?\n/)) {
+    const cells = line.split(';').map((c) => c.trim().replace(/^"|"$/g, ''));
+    if (cells.length >= width) rows.push(cells);
+  }
+  return rows;
+}
+
+/** L'indice d'une colonne de l'étiquette, et son unité EXIGÉE : jamais supposée. */
+function column(fields, product, name, unit) {
+  const i = fields.findIndex((f) => f.name === name);
+  if (i < 0)
+    throw new Error(`${product} : colonne ${name} absente de l'étiquette`);
+  if (unit !== undefined && fields[i].unit !== unit)
+    throw new Error(`${product} : ${name} en ${fields[i].unit}, pas ${unit}`);
+  return i;
+}
+
+/** Un produit de HASI : son étiquette (identifiant logique vérifié) et sa table. */
+async function hasiProduct(directory, product) {
+  const label = await get(
+    `${HASI_BUNDLE}/DATA/${directory}/${product}.xml`,
+    (b) =>
+      /<logical_identifier>urn:nasa:pds:hp_hasi:[^<]*<\/logical_identifier>/.test(
+        b
+      )
+        ? null
+        : 'identifiant logique absent'
+  );
+  const table = await get(`${HASI_BUNDLE}/DATA/${directory}/${product}.TAB`);
+  return {
+    url: `${HASI_BUNDLE}/DATA/${directory}/${product}.TAB`,
+    fields: fieldsOf(label.body),
+    rows: delimitedRows(table.body, 3),
+    start: /<start_date_time>([^<]+)</.exec(label.body)?.[1] ?? null,
+    stop: /<stop_date_time>([^<]+)</.exec(label.body)?.[1] ?? null,
+    retrieved: [label.retrieved, table.retrieved].sort().at(-1),
+  };
+}
+
+/** Un segment de profil : altitude (km), pression (bar), température (K), de haut en bas. */
+async function hasiSegment(kind, product) {
+  const t = await hasiProduct('PROFILES', product);
+  const alt = column(t.fields, product, 'Altitude', 'm');
+  const pressure = column(t.fields, product, 'Pressure', 'Pa');
+  const temperature = column(t.fields, product, 'Temperature', 'K');
+  const samples = t.rows
+    .map((r) => [
+      Number(r[alt]) / 1000,
+      Number(r[pressure]) / 1e5,
+      Number(r[temperature]),
+    ])
+    .filter((r) => r.every(Number.isFinite))
+    .map(([a, p, k]) => [a, Number(p.toPrecision(6)), k])
+    .sort((a, b) => b[0] - a[0]);
+  if (samples.length < 100)
+    throw new Error(`${product} : ${samples.length} lignes seulement`);
+  return {
+    kind,
+    product: `${HASI_COLLECTION}:${product.toLowerCase()}`,
+    url: t.url,
+    retrieved: t.retrieved,
+    start: t.start,
+    stop: t.stop,
+    samples,
+  };
+}
+
+/**
+ * LE POINT DE SURFACE : la PREMIÈRE ligne à altitude 0 de la pression (PPI) et de la température
+ * (TEM), les deux tables de la phase « surface » de HASI, avec la dispersion des lignes de cette
+ * phase (la sonde y est restée plus d'une heure), écrite et non lissée.
+ */
+async function hasiSurface() {
+  const ppi = await hasiProduct('PPI', 'HASI_L4_PPI_PRESSURE_VEL');
+  const tem = await hasiProduct('TEM', 'HASI_L4_TEM_TEMPERATURE');
+  const pName = 'HASI_L4_PPI_PRESSURE_VEL';
+  const tName = 'HASI_L4_TEM_TEMPERATURE';
+  const pAlt = column(ppi.fields, pName, 'Altitude', 'm');
+  const pAmbient = column(ppi.fields, pName, 'Ambient pressure', 'Pa');
+  const tAlt = column(tem.fields, tName, 'Altitude', 'm');
+  const tTemp = column(tem.fields, tName, 'Temperature', 'K');
+  const tSigma = column(tem.fields, tName, 'Temperature uncertainty', 'K');
+  const ground = (t, alt) => t.rows.filter((r) => Number(r[alt]) === 0);
+  const pRows = ground(ppi, pAlt);
+  const tRows = ground(tem, tAlt);
+  if (pRows.length === 0 || tRows.length === 0)
+    throw new Error('HASI : aucune ligne à altitude 0');
+  const pressures = pRows.map((r) => Number(r[pAmbient]));
+  const temperatures = tRows.map((r) => Number(r[tTemp]));
+  const range = (v) => [Math.min(...v), Math.max(...v)];
+  return {
+    altitudeKm: 0,
+    pressureBar: Number((pressures[0] / 1e5).toPrecision(6)),
+    pressureRangeBar: range(pressures).map((p) =>
+      Number((p / 1e5).toPrecision(6))
+    ),
+    pressureSamples: pressures.length,
+    temperatureK: temperatures[0],
+    temperatureSigmaK: Number(tRows[0][tSigma]),
+    temperatureRangeK: range(temperatures),
+    temperatureSamples: temperatures.length,
+    products: [
+      {
+        product: `${HASI_COLLECTION}:${pName.toLowerCase()}`,
+        url: ppi.url,
+        retrieved: ppi.retrieved,
+      },
+      {
+        product: `${HASI_COLLECTION}:${tName.toLowerCase()}`,
+        url: tem.url,
+        retrieved: tem.retrieved,
+      },
+    ],
+  };
+}
+
+/** La latitude de la sonde pendant la descente, dans la trajectoire reconstruite (paquet DTWG). */
+async function dtwgLatitude() {
+  const product = 'HUY_DTWG_DESCENT_POS';
+  const label = await get(`${DTWG_BUNDLE}/DATA/${product}.xml`, (b) =>
+    b.includes('urn:nasa:pds:hp_dtwg:data_derived:huy_dtwg_descent_pos')
+      ? null
+      : 'identifiant logique absent'
+  );
+  const table = await get(`${DTWG_BUNDLE}/DATA/${product}.TAB`);
+  const fields = fieldsOf(label.body);
+  const lat = fields.findIndex((f) => f.name === 'LAT');
+  if (lat < 0) throw new Error(`${product} : colonne LAT absente`);
+  const values = [];
+  for (const line of table.body.split(/\r?\n/)) {
+    const cells = line.trim().split(/\s+/);
+    if (cells.length !== fields.length) continue;
+    const v = Number(cells[lat]);
+    if (Number.isFinite(v)) values.push(v);
+  }
+  if (values.length < 1000)
+    throw new Error(`${product} : ${values.length} latitudes`);
+  return {
+    min: Math.min(...values),
+    max: Math.max(...values),
+    url: `${DTWG_BUNDLE}/DATA/${product}.TAB`,
+    retrieved: [label.retrieved, table.retrieved].sort().at(-1),
+  };
+}
+
+/** La citation d'un paquet PDS4 du registre : titre, auteurs, année, DOI. */
+async function bundleCitationOf(lid) {
+  const url =
+    `${SEARCH}/classes/bundle?q=${encodeURIComponent(`lid eq "${lid}"`)}` +
+    '&fields=lid,title,pds:Citation_Information.pds:doi,pds:Citation_Information.pds:author_list,' +
+    'pds:Citation_Information.pds:publication_year';
+  const { body, retrieved } = await get(url);
+  const p = JSON.parse(body).data?.[0]?.properties;
+  const first = (k) => {
+    const v = p?.[k]?.[0];
+    if (v === undefined || v === 'null')
+      throw new Error(`paquet ${lid} : ${k} absent`);
+    return v;
+  };
+  return {
+    lid,
+    title: first('title'),
+    authors: first('pds:Citation_Information.pds:author_list'),
+    year: Number(
+      first('pds:Citation_Information.pds:publication_year').slice(0, 4)
+    ),
+    doi: first('pds:Citation_Information.pds:doi'),
+    retrieved,
+  };
+}
+
+async function titanProfile() {
+  const bundle = await bundleCitationOf(HASI_LID);
+  const trajectory = await bundleCitationOf(DTWG_LID);
+  const refCat = await get(`${HASI_BUNDLE}/CATALOG/REFERENCE.CAT`);
+  const refMatch =
+    /REFERENCE_KEY_ID\s*=\s*"FULCHIGNONIETAL2005"\s*REFERENCE_DESC\s*=\s*"([^"]+)"/.exec(
+      refCat.body
+    );
+  if (!refMatch)
+    throw new Error('référence FULCHIGNONIETAL2005 absente de REFERENCE.CAT');
+  const latitude = await dtwgLatitude();
+  const segments = [
+    await hasiSegment('entry', 'HASI_L4_ATMO_PROFILE_ENTRY'),
+    await hasiSegment('descent', 'HASI_L4_ATMO_PROFILE_DESCEN'),
+  ];
+  const surface = await hasiSurface();
+  return {
+    $comment:
+      'Écrit par `pnpm atmosphere:generate` depuis le paquet PDS4 de HASI, l’instrument de la sonde Huygens. Ne pas éditer à la main.',
+    body: 'titan',
+    instrument: 'Huygens Atmospheric Structure Instrument (HASI)',
+    altitudeReference: 'surface',
+    bundle,
+    reference: {
+      text: refMatch[1].replace(/\s+/g, ' ').trim(),
+      retrieved: refCat.retrieved,
+    },
+    latitudeDeg: { min: latitude.min, max: latitude.max },
+    latitudeSource: {
+      lid: trajectory.lid,
+      title: trajectory.title,
+      doi: trajectory.doi,
+      url: latitude.url,
+      retrieved: latitude.retrieved,
+    },
+    segments,
+    surface,
+  };
+}
+
 const snapshot = JSON.parse(readFileSync(SNAPSHOT, 'utf8'));
 const giants = Object.entries(snapshot.nssdca.bodies)
   .filter(([, b]) => b.surfacePressure?.lowerBound === true)
@@ -275,6 +498,26 @@ const profile = {
   ],
 };
 
+const titan = await titanProfile();
+// TÉMOIN de Titan : le registre rattache la collection de HASI à la cible. Une recherche muette
+// ne prouverait rien sur l'absence d'un autre profil ; celle-ci doit répondre.
+const titanRegistry = await (async () => {
+  const url = `${SEARCH}/classes/collection?q=${encodeURIComponent(
+    'ref_lid_target eq "urn:nasa:pds:context:target:satellite.saturn.titan"'
+  )}&limit=2000&fields=lid`;
+  const { body: text, retrieved } = await get(url);
+  const d = JSON.parse(text);
+  if (d.summary.hits > d.data.length)
+    throw new Error(
+      `titan : ${d.summary.hits} collections, ${d.data.length} rendues`
+    );
+  const lids = d.data.map((x) => x.id.split('::')[0]);
+  if (!lids.includes(HASI_COLLECTION))
+    throw new Error(
+      `TÉMOIN : le registre ne rend pas ${HASI_COLLECTION} pour Titan`
+    );
+  return { collections: lids.length, retrieved };
+})();
 const witness = await collectionsOf('jupiter');
 if (!witness.lids.includes(ASI_COLLECTION))
   throw new Error(
@@ -291,18 +534,38 @@ const index = {
     'Écrit par `pnpm atmosphere:generate`. Les géantes sans profil : collections rattachées par le registre du PDS au jour de la lecture, aucune n’étant un profil de la basse atmosphère (lu le 2026-10-15). Un compte qui bouge se relit.',
   // La provenance que `/sources` publie (`src/seo/cardBlockSources.ts`), LUE et non recopiée :
   // le titre et le DOI viennent du registre, l'adresse est celle qui a servi les tables.
-  provider: {
-    publisher: 'NASA Planetary Data System, Atmospheres Node',
-    title: citation.title,
-    url: `${BUNDLE}/`,
-    doi: citation.doi,
+  providers: {
+    jupiter: {
+      publisher: 'NASA Planetary Data System, Atmospheres Node',
+      title: citation.title,
+      url: `${BUNDLE}/`,
+      doi: citation.doi,
+    },
+    titan: {
+      publisher: 'NASA Planetary Data System, Atmospheres Node',
+      title: titan.bundle.title,
+      url: `${HASI_BUNDLE}/`,
+      doi: titan.bundle.doi,
+    },
   },
-  retrieved: [entry.retrieved, descent.retrieved, citation.retrieved]
+  retrieved: [
+    entry.retrieved,
+    descent.retrieved,
+    citation.retrieved,
+    titan.bundle.retrieved,
+    ...titan.segments.map((x) => x.retrieved),
+    ...titan.surface.products.map((x) => x.retrieved),
+    titan.latitudeSource.retrieved,
+  ]
     .sort()
     .at(-1),
   profiles: {
     jupiter: { samples: entry.samples.length + descent.samples.length },
+    titan: {
+      samples: titan.segments.reduce((n, x) => n + x.samples.length, 0),
+    },
   },
+  titanRegistry,
   witness: {
     jupiter: ASI_COLLECTION,
     collections: witness.lids.length,
@@ -314,6 +577,7 @@ const index = {
 const outFile = join(OUT_DIR, 'jupiter.json');
 const write = [
   [outFile, `${JSON.stringify(profile, null, 1)}\n`],
+  [join(OUT_DIR, 'titan.json'), `${JSON.stringify(titan, null, 1)}\n`],
   [INDEX, `${JSON.stringify(index, null, 2)}\n`],
 ];
 if (check) {
@@ -326,6 +590,7 @@ if (check) {
 mkdirSync(OUT_DIR, { recursive: true });
 for (const [f, text] of write) writeFileSync(f, text);
 console.log(
-  `jupiter : ${entry.samples.length} + ${descent.samples.length} échantillons, ` +
+  `titan : ${titan.segments.map((x) => x.samples.length).join(' + ')} échantillons, surface ${titan.surface.pressureBar} bar, ${titan.surface.temperatureK} K, latitude ${titan.latitudeDeg.min} à ${titan.latitudeDeg.max}°\n` +
+    `jupiter : ${entry.samples.length} + ${descent.samples.length} échantillons, ` +
     `latitude ${profile.latitudeDeg.min} à ${profile.latitudeDeg.max}° ; sans profil : ${Object.keys(absent).join(', ')}`
 );

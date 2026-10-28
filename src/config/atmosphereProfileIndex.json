@@ -1,16 +1,31 @@
 {
   "$comment": "Écrit par `pnpm atmosphere:generate`. Les géantes sans profil : collections rattachées par le registre du PDS au jour de la lecture, aucune n’étant un profil de la basse atmosphère (lu le 2026-10-15). Un compte qui bouge se relit.",
-  "provider": {
-    "publisher": "NASA Planetary Data System, Atmospheres Node",
-    "title": "Galileo Probe (GP) Bundle",
-    "url": "https://atmos.nmsu.edu/PDS/data/PDS4/galileo_probe_bundle/",
-    "doi": "10.17189/0hsp-bb78"
+  "providers": {
+    "jupiter": {
+      "publisher": "NASA Planetary Data System, Atmospheres Node",
+      "title": "Galileo Probe (GP) Bundle",
+      "url": "https://atmos.nmsu.edu/PDS/data/PDS4/galileo_probe_bundle/",
+      "doi": "10.17189/0hsp-bb78"
+    },
+    "titan": {
+      "publisher": "NASA Planetary Data System, Atmospheres Node",
+      "title": "Huygens Atmosphere Structure Instrument (HASI) Bundle",
+      "url": "https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hphasi_bundle/",
+      "doi": "10.17189/23e7-zw13"
+    }
   },
-  "retrieved": "2026-10-23",
+  "retrieved": "2026-10-28",
   "profiles": {
     "jupiter": {
       "samples": 686
+    },
+    "titan": {
+      "samples": 2727
     }
+  },
+  "titanRegistry": {
+    "collections": 176,
+    "retrieved": "2026-10-28"
   },
   "witness": {
     "jupiter": "urn:nasa:pds:gp:data_asi",

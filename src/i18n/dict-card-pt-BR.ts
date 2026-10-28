@@ -64,6 +64,12 @@ export const cardPtBR: Record<CardMessageKey, string> = {
     'Uma busca depositada em {date} não encontrou nenhum, até cerca de {radius} km de raio.',
   'bi.atmosphere.label': 'Perfil medido (sonda Galileo)',
   'bi.atmosphere.labelNone': 'Perfil medido da atmosfera',
+  'bi.atmosphere.labelTitan': 'Perfil medido (sonda Huygens)',
+  'bi.atmosphere.altitudeSurface': 'Acima do solo',
+  'bi.atmosphere.ground': 'Solo',
+  'bi.atmosphere.localTitan':
+    'Um único lugar de Titã, latitude {min}° a {max}°, atravessado em {date} na descida. A última linha é a primeira leitura ao nível do solo; as leituras seguintes vão de {low} a {high} K.',
+  'bi.atmosphere.site': 'Latitude lida em: {title}, DOI {doi}.',
   'bi.atmosphere.altitude': 'Acima de 1 bar',
   'bi.atmosphere.pressure': 'Pressão',
   'bi.atmosphere.temperature': 'Temperatura',

@@ -5,6 +5,7 @@
   "source": "catalogue",
   "config": {
     "kind": "moon",
+    "atmosphereClass": "terrestrial",
     "displayName": {
       "en": "Titan",
       "fr": "Titan",
@@ -111,6 +112,38 @@
         "fr": "Aucune température n'est publiée là où viennent ses autres chiffres : ni les fiches des satellites de la NASA, ni les tables des satellites de JPL n'en portent.",
         "es": "No se publica ninguna temperatura allí donde se obtienen sus demás cifras: ni las hojas de datos de satélites de la NASA ni las tablas de satélites del JPL la incluyen.",
         "pt-BR": "Nenhuma temperatura é publicada onde vêm os seus outros números: nem as fichas dos satélites da NASA nem as tabelas de satélites do JPL a trazem."
+      }
+    },
+    "surfacePressureBar": {
+      "value": 1.4672,
+      "source": "pds-huygens-hasi",
+      "method": "measured"
+    },
+    "surfaceDensityKgM3": {
+      "published": false,
+      "reason": {
+        "en": "No density is published at the ground itself: the density profile of the Huygens HASI instrument stops a few metres above it.",
+        "fr": "Aucune masse volumique n’est publiée au sol même : le profil de densité de l’instrument HASI de Huygens s’arrête quelques mètres au-dessus.",
+        "es": "No se publica ninguna densidad en el propio suelo: el perfil de densidad del instrumento HASI de Huygens termina unos metros por encima.",
+        "pt-BR": "Nenhuma densidade é publicada no próprio solo: o perfil de densidade do instrumento HASI da Huygens termina alguns metros acima."
+      }
+    },
+    "scaleHeightKm": {
+      "published": false,
+      "reason": {
+        "en": "No scale height is published for Titan: the NASA satellite fact sheets carry no atmosphere block, and the HASI tables give no such value.",
+        "fr": "Aucune hauteur d’échelle n’est publiée pour Titan : les fiches des satellites de la NASA n’ont pas de bloc d’atmosphère, et les tables de HASI ne donnent pas cette valeur.",
+        "es": "No se publica ninguna altura de escala para Titán: las hojas de satélites de la NASA no incluyen un bloque de atmósfera, y las tablas de HASI no dan ese valor.",
+        "pt-BR": "Nenhuma altura de escala é publicada para Titã: as fichas de satélites da NASA não trazem um bloco de atmosfera, e as tabelas do HASI não dão esse valor."
+      }
+    },
+    "meanMolecularWeight": {
+      "published": false,
+      "reason": {
+        "en": "No mean molecular weight is published in the HASI profile tables; the composition belongs to another Huygens instrument, whose archive is not read here.",
+        "fr": "Aucune masse molaire moyenne n’est publiée dans les tables de profil de HASI ; la composition relève d’un autre instrument de Huygens, dont l’archive n’est pas lue ici.",
+        "es": "No se publica ninguna masa molecular media en las tablas de perfil de HASI; la composición corresponde a otro instrumento de Huygens, cuyo archivo no se lee aquí.",
+        "pt-BR": "Nenhuma massa molecular média é publicada nas tabelas de perfil do HASI; a composição pertence a outro instrumento da Huygens, cujo arquivo não é lido aqui."
       }
     },
     "axialTilt": {
