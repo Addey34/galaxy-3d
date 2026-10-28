@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 /**
  * LES BÂTIMENTS SUR UN VRAI APPAREIL (`pnpm test:devices`, lot 63) : Paris visé par la recherche
@@ -10,6 +10,33 @@ import { expect, test } from '@playwright/test';
  */
 
 const DATE = '2024-07-01T12:00:00Z';
+
+/**
+ * Un cran de molette vers l'avant. WebKit mobile ÉMULÉ refuse `mouse.wheel` (« Mouse wheel is not
+ * supported in mobile WebKit ») alors que la ferme d'appareils réels l'accepte : on tombe alors sur
+ * l'événement `wheel` que les contrôles de la caméra écoutent sur le canevas.
+ */
+async function wheelIn(page: Page): Promise<void> {
+  try {
+    await page.mouse.wheel(0, -3000);
+  } catch {
+    await page
+      .locator('canvas')
+      .first()
+      .evaluate((canvas) => {
+        const box = canvas.getBoundingClientRect();
+        canvas.dispatchEvent(
+          new WheelEvent('wheel', {
+            deltaY: -3000,
+            clientX: box.left + box.width / 2,
+            clientY: box.top + box.height / 2,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+      });
+  }
+}
 
 test('Paris : la descente pose les bâtiments et la scène reste vivante', async ({
   page,
@@ -68,7 +95,7 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
   });
   const log: string[] = [];
   for (let i = 0; i < 12; i += 1) {
-    await page.mouse.wheel(0, -3000);
+    await wheelIn(page);
     await page.waitForTimeout(3_000);
     const s = await state();
     log.push(
