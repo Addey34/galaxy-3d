@@ -48,12 +48,22 @@ describe.each(activities.map((a) => [a.id, a] as const))(
             catalogueFactProvenance(CELESTIAL_CONFIG, value.body, value.fact)
               ?.source
           ).toBeTruthy();
-        if (value.kind === 'periodRatio')
-          for (const body of [value.outer, value.inner])
-            expect(
-              catalogueFactProvenance(CELESTIAL_CONFIG, body, 'orbitPeriodDays')
-                ?.source
-            ).toBeTruthy();
+        const read =
+          value.kind === 'factRatio'
+            ? [value.outer, value.inner].map(
+                (body) => [body, value.fact] as const
+              )
+            : value.kind === 'angularSize'
+              ? ([
+                  [value.body, 'radiusKm'],
+                  [value.distanceOf, 'distanceAU'],
+                ] as const)
+              : [];
+        for (const [body, fact] of read)
+          expect(
+            catalogueFactProvenance(CELESTIAL_CONFIG, body, fact)?.source,
+            `${body}.${fact}`
+          ).toBeTruthy();
       }
     });
 
@@ -228,5 +238,53 @@ describe('Kuiper : ce que le corrigé affirme', () => {
     expect(provenance('neptune')?.method).toBe('measured');
     for (const body of ['pluto', 'haumea', 'makemake', 'eris', 'sedna'])
       expect(provenance(body)?.method).toBe('derived');
+  });
+});
+
+describe('éclipse : ce que le corrigé affirme', () => {
+  const eclipse = activities.find((a) => a.id === 'eclipse')!;
+  const values = evaluateActivityValues(
+    eclipse,
+    readFact,
+    catalogueEditionReader
+  );
+  const fr = (name: string): string => fillSlots(`{${name}}`, values, 'fr');
+
+  it('lit les rapports et les tailles apparentes dans les fiches du Soleil, de la Terre et de la Lune', () => {
+    expect(fr('sizeRatio')).toBe('400');
+    expect(fr('distanceRatio')).toBe('389');
+    expect(fr('sunAngular')).toBe('0,53');
+    expect(fr('moonAngular')).toBe('0,52');
+  });
+
+  it('la Lune à sa distance moyenne paraît PLUS PETITE que le Soleil : la réponse « plus loin » en dépend', () => {
+    const angular = (name: string): number => {
+      const v = values[name];
+      return v && 'value' in v ? v.value : Number.NaN;
+    };
+    expect(angular('moonAngular')).toBeLessThan(angular('sunAngular'));
+  });
+
+  it('refuse une distance que le catalogue ne publie pas', () => {
+    const noDistance: FactReader = (body, fact) =>
+      fact === 'distanceAU' && body === 'moon'
+        ? undefined
+        : readFact(body, fact);
+    expect(() =>
+      evaluateActivityValues(eclipse, noDistance, catalogueEditionReader)
+    ).toThrow(/moon\.distanceAU n'est pas publié/);
+  });
+
+  it('falsification : une Lune deux fois plus proche change la taille apparente écrite', () => {
+    const closer: FactReader = (body, fact) =>
+      fact === 'distanceAU' && body === 'moon'
+        ? readFact(body, fact)! / 2
+        : readFact(body, fact);
+    const other = evaluateActivityValues(
+      eclipse,
+      closer,
+      catalogueEditionReader
+    );
+    expect(fillSlots('{moonAngular}', other, 'fr')).not.toBe('0,52');
   });
 });

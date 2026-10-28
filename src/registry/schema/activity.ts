@@ -46,6 +46,9 @@ const agrees = z
   .object({ value: slotName, tolerance: z.number().positive() })
   .strict();
 
+/** Les faits dont une activité sait prendre le rapport : fermé, un fait s'ajoute avec l'activité qui le cite. */
+const RATIO_FACTS = ['orbitPeriodDays', 'radiusKm', 'distanceAU'] as const;
+
 const value = z.discriminatedUnion('kind', [
   z
     .object({
@@ -62,14 +65,30 @@ const value = z.discriminatedUnion('kind', [
     })
     .strict(),
   /**
-   * Le RAPPORT des périodes orbitales de deux corps du catalogue (`outer` / `inner`), chacune lue
-   * dans la fiche du corps (« La danse des Galiléennes ») : rien n'est recopié dans l'activité.
+   * Le RAPPORT d'un même fait de deux corps du catalogue (`outer` / `inner`), chacun lu dans la
+   * fiche du corps : les périodes de deux lunes (« La danse des lunes de Jupiter »), les rayons
+   * du Soleil et de la Lune, leurs distances à la Terre (« Pourquoi une éclipse totale ? »).
+   * Rien n'est recopié dans l'activité.
    */
   z
     .object({
-      kind: z.literal('periodRatio'),
+      kind: z.literal('factRatio'),
+      fact: z.enum(RATIO_FACTS),
       outer: kebab,
       inner: kebab,
+      decimals,
+    })
+    .strict(),
+  /**
+   * Le diamètre APPARENT d'un corps vu de la Terre, en degrés : 2·atan(rayon / distance), le
+   * rayon lu dans la fiche de `body`, la distance moyenne (le demi-grand axe du NSSDCA) dans la
+   * fiche de `distanceOf` (la Terre pour le Soleil, la Lune pour elle-même).
+   */
+  z
+    .object({
+      kind: z.literal('angularSize'),
+      body: kebab,
+      distanceOf: kebab,
       decimals,
     })
     .strict(),
@@ -224,11 +243,11 @@ export const activitySchema = z
     const declared = new Set(Object.keys(record.values));
     const used = new Set<string>();
     for (const [name, v] of Object.entries(record.values)) {
-      if (v.kind === 'periodRatio' && v.outer === v.inner)
+      if (v.kind === 'factRatio' && v.outer === v.inner)
         ctx.addIssue({
           code: 'custom',
           path: ['values', name],
-          message: 'un rapport de périodes demande deux corps différents',
+          message: 'un rapport de faits demande deux corps différents',
         });
       if ('agrees' in v && v.agrees !== undefined) {
         used.add(v.agrees.value);

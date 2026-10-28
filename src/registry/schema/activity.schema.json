@@ -251,7 +251,15 @@
             "properties": {
               "kind": {
                 "type": "string",
-                "const": "periodRatio"
+                "const": "factRatio"
+              },
+              "fact": {
+                "type": "string",
+                "enum": [
+                  "orbitPeriodDays",
+                  "radiusKm",
+                  "distanceAU"
+                ]
               },
               "outer": {
                 "type": "string",
@@ -269,8 +277,38 @@
             },
             "required": [
               "kind",
+              "fact",
               "outer",
               "inner",
+              "decimals"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "angularSize"
+              },
+              "body": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "distanceOf": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "decimals": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              }
+            },
+            "required": [
+              "kind",
+              "body",
+              "distanceOf",
               "decimals"
             ],
             "additionalProperties": false

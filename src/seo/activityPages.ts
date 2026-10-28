@@ -52,7 +52,7 @@ const ESA_FORMAT_SOURCE = {
 
 /** Le nom de la grandeur lue, dans la ligne de source : un fait ajouté à une activité s'y nomme. */
 const QUANTITY: Record<
-  'axialTilt' | 'orbitPeriodDays',
+  'axialTilt' | 'orbitPeriodDays' | 'radiusKm' | 'distanceAU',
   Record<Locale, string>
 > = {
   axialTilt: {
@@ -66,6 +66,18 @@ const QUANTITY: Record<
     fr: 'période orbitale',
     es: 'período orbital',
     'pt-BR': 'período orbital',
+  },
+  radiusKm: {
+    en: 'radius',
+    fr: 'rayon',
+    es: 'radio',
+    'pt-BR': 'raio',
+  },
+  distanceAU: {
+    en: 'mean distance (semi-major axis)',
+    fr: 'distance moyenne (demi-grand axe)',
+    es: 'distancia media (semieje mayor)',
+    'pt-BR': 'distância média (semieixo maior)',
   },
 };
 
@@ -342,15 +354,20 @@ function factLines(
       continue;
     }
     // Les faits que la valeur LIT dans le catalogue : un fait seul, ou les deux périodes d'un rapport.
-    const read: { body: string; fact: 'axialTilt' | 'orbitPeriodDays' }[] =
+    const read: { body: string; fact: keyof typeof QUANTITY }[] =
       value.kind === 'fact'
         ? [{ body: value.body, fact: value.fact }]
-        : value.kind === 'periodRatio'
+        : value.kind === 'factRatio'
           ? [
-              { body: value.outer, fact: 'orbitPeriodDays' },
-              { body: value.inner, fact: 'orbitPeriodDays' },
+              { body: value.outer, fact: value.fact },
+              { body: value.inner, fact: value.fact },
             ]
-          : [];
+          : value.kind === 'angularSize'
+            ? [
+                { body: value.body, fact: 'radiusKm' },
+                { body: value.distanceOf, fact: 'distanceAU' },
+              ]
+            : [];
     for (const { body: bodyId, fact } of read) {
       const key = `${bodyId}.${fact}`;
       if (seen.has(key)) continue;

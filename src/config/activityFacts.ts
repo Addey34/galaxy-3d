@@ -24,7 +24,7 @@ export function catalogueFactReader(config: CelestialConfig): FactReader {
 export function catalogueFactProvenance(
   config: CelestialConfig,
   body: string,
-  fact: 'axialTilt' | 'orbitPeriodDays'
+  fact: 'axialTilt' | 'orbitPeriodDays' | 'radiusKm' | 'distanceAU'
 ): FactProvenance | undefined {
   return flattenBodies(config).get(body)?.realData?.sources?.[fact];
 }
