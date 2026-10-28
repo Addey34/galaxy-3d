@@ -93,10 +93,13 @@ describe('les trois visites d’origine, étape par étape', () => {
     // globe entier), et seulement si la caméra n'est pas du côté Soleil de la Lune, qui la
     // cacherait elle-même : c'est ce que la visite montrait avant le lot 57.
     expect(steps('eclipse')[3]).toEqual({ kind: 'setMode', mode: 'explo' });
+    // Quatre rayons (2026-10-28) : la Terre vue de la Lune à 44 597 km faisait un disque de 200 px
+    // où l'ombre se perdait ; à 25 484 km le disque entier reste dans le cadre et la bande se lit.
     expect(steps('eclipse')[4]).toEqual({
       kind: 'flyTo',
       body: 'earth',
       from: 'moon',
+      distanceRadii: 4,
     });
   });
 

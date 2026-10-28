@@ -32,7 +32,8 @@
     {
       "kind": "flyTo",
       "body": "earth",
-      "from": "moon"
+      "from": "moon",
+      "distanceRadii": 4
     },
     {
       "kind": "caption",

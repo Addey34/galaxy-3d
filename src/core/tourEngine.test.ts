@@ -15,6 +15,7 @@ function makeHost(overrides: Partial<TourRuntimeHost> = {}): TourRuntimeHost {
     isFlying: vi.fn(() => false),
     viewFrom: vi.fn(),
     viewBeside: vi.fn(),
+    viewDistance: vi.fn(),
     jumpToDate: vi.fn(),
     jumpToEvent: vi.fn(),
     setTimeScale: vi.fn(),
@@ -165,6 +166,37 @@ describe('runTour', () => {
     vi.useRealTimers();
   });
 
+  it('pose la distance en rayons APRÈS le cadrage, et seulement quand elle est demandée', async () => {
+    vi.useFakeTimers();
+    let flying = true;
+    const order: string[] = [];
+    const host = makeHost({
+      isFlying: () => flying,
+      viewFrom: vi.fn(() => void order.push('from')),
+      viewDistance: vi.fn(() => void order.push('distance')),
+    });
+    const promise = runTour(
+      {
+        id: 'demo',
+        title: text,
+        steps: [
+          { kind: 'flyTo', body: 'earth', from: 'moon', distanceRadii: 4 },
+        ],
+      },
+      host,
+      () => {},
+      makeSignal()
+    );
+    await vi.advanceTimersByTimeAsync(200);
+    expect(host.viewDistance).not.toHaveBeenCalled();
+    flying = false;
+    await vi.advanceTimersByTimeAsync(200);
+    await promise;
+    expect(host.viewDistance).toHaveBeenCalledWith('earth', 4);
+    expect(order).toEqual(['from', 'distance']);
+    vi.useRealTimers();
+  });
+
   it('un flyTo sans `from` garde la vue du vol', async () => {
     const host = makeHost();
     await runTour(
@@ -175,6 +207,7 @@ describe('runTour', () => {
     );
     expect(host.viewFrom).not.toHaveBeenCalled();
     expect(host.viewBeside).not.toHaveBeenCalled();
+    expect(host.viewDistance).not.toHaveBeenCalled();
   });
 
   it('stops advancing once cancelled', async () => {

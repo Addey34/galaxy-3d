@@ -77,6 +77,15 @@ const step = z.discriminatedUnion('kind', [
        * caméra arrive côté Soleil et ne la montrait pas. Exclusif de `from`.
        */
       side: targetName.optional(),
+      /**
+       * La distance d'arrivée, en RAYONS de la cible, posée après le cadrage (2026-10-28). Un rayon
+       * et non des km : la visite d'éclipse garde la Terre dans le champ à toute échelle, et le
+       * même nombre sert en Éduc comme en Explo. Ajouté pour la visite « Naissance d'une
+       * éclipse », dont l'ombre est discrète vue de loin et ne se lit qu'en s'approchant (le
+       * gamma de l'ombre n'est pas le levier, mesuré). Borné : au-dessous de 1,5 rayon la caméra
+       * toucherait la sphère, au-dessus de 60 elle ne cadrerait plus rien.
+       */
+      distanceRadii: z.number().min(1.5).max(60).optional(),
     })
     .strict(),
   z

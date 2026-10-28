@@ -17,7 +17,14 @@ export type TourStep =
    * `side` : la regarder de profil par rapport à ce corps (`TourRuntimeHost.viewBeside`, lot 58).
    * Les deux s'excluent, et le schéma le refuse.
    */
-  | { kind: 'flyTo'; body: string; from?: string; side?: string }
+  | {
+      kind: 'flyTo';
+      body: string;
+      from?: string;
+      side?: string;
+      /** Distance d'arrivée en rayons de la cible, posée APRÈS le cadrage (`TourRuntimeHost.viewDistance`). */
+      distanceRadii?: number;
+    }
   | { kind: 'jumpToDate'; date: Date }
   /**
    * La prochaine occurrence RÉELLE d'un événement, depuis la date courante de la scène. Le moteur
@@ -70,6 +77,11 @@ export interface TourRuntimeHost {
   viewFrom(body: string): void;
   /** Même moment que `viewFrom`, mais de profil : la cible à angle droit de la direction de `body`. */
   viewBeside(body: string): void;
+  /**
+   * Rapproche (ou éloigne) la caméra de `body` à `radii` rayons, en gardant la direction. Appelé
+   * après `viewFrom`/`viewBeside`, jamais avant : ils posent la direction, celui-ci la distance.
+   */
+  viewDistance(body: string, radii: number): void;
   jumpToDate(date: Date): void;
   /** Résout l'événement à cet instant, puis saute : cf. l'étape `jumpToEvent`. */
   jumpToEvent(event: AstronomicalEventKind, body?: string): void;
@@ -204,6 +216,8 @@ export async function runTour(
         if (signal.cancelled) break;
         if (step.from !== undefined) host.viewFrom(step.from);
         else if (step.side !== undefined) host.viewBeside(step.side);
+        if (step.distanceRadii !== undefined)
+          host.viewDistance(step.body, step.distanceRadii);
         break;
       case 'jumpToDate':
         host.jumpToDate(step.date);

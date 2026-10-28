@@ -332,6 +332,7 @@ export function setupTourPlayer(
       isFlying: () => camera.isFlying,
       viewFrom: (body) => camera.viewFromBody(body),
       viewBeside: (body) => camera.viewBesideBody(body),
+      viewDistance: (body, radii) => camera.viewAtRadii(body, radii),
       jumpToDate: (date) => om.jumpToDate(date),
       // La date est résolue ICI, au moment où l'étape s'exécute, depuis la date courante de la
       // scène : c'est ce qui remplace l'exception `id === 'eclipse'` que ce module portait.

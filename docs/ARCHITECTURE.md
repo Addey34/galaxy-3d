@@ -5477,7 +5477,7 @@ donnée de décrire un comportement sans devenir du code.
 
 | Forme | Effet |
 |---|---|
-| `flyTo` | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` ; avec `from`, la regarde ensuite DEPUIS un autre corps (lot 57) ; avec `side`, de PROFIL par rapport à un corps (lot 58, § « Les activités pour la classe ») |
+| `flyTo` | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` ; avec `from`, la regarde ensuite DEPUIS un autre corps (lot 57) ; avec `side`, de PROFIL par rapport à un corps (lot 58, § « Les activités pour la classe ») ; `distanceRadii` (1,5 à 60 rayons de la cible, 2026-10-28) pose la distance d'arrivée APRÈS le cadrage (`CameraSystem.viewAtRadii`, même nombre en Éduc et en Explo) |
 | `jumpToDate` | saute à une date déclarée, `{"$date": "…Z"}` |
 | `jumpToEvent` | saute à la prochaine occurrence RÉELLE d'un événement, depuis la date courante |
 | `setTimeScale` | accélère (ou renverse) le temps, plafonné à ce que le curseur sait représenter |
