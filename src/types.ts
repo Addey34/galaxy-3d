@@ -221,11 +221,13 @@ export interface CelestialBodyConfig {
   skyScattering?: SkyScatteringModelId;
   /**
    * Classe d'atmosphère DÉCLARÉE : `gas-giant` = une géante dont le NSSDCA publie la fiche « au niveau
-   * de 1 bar » (les six champs `temperature1BarK` à `windSpeedMs`). Absente, ces six faits ne
-   * s'appliquent pas au corps (`core/bodyFacts.ts::notApplicableFacts`) : la pression à 1 bar de
-   * Jupiter n'est pas la pression de surface de Vénus, ce n'est pas la même grandeur.
+   * de 1 bar » (les six champs `temperature1BarK` à `windSpeedMs`) ; `terrestrial` = un corps à
+   * surface dont la fiche publie l'atmosphère AU SOL (`surfacePressureBar`, `surfaceDensityKgM3`,
+   * hauteur d'échelle, masse molaire). Absente, ces faits ne s'appliquent pas au corps
+   * (`core/bodyFacts.ts::notApplicableFacts`) : la pression à 1 bar de Jupiter n'est pas la
+   * pression de surface de Vénus, ce n'est pas la même grandeur.
    */
-  atmosphereClass?: 'gas-giant';
+  atmosphereClass?: 'gas-giant' | 'terrestrial';
   ring?: RingConfig;
   satellites?: Record<string, CelestialBodyConfig>;
   /** Données astronomiques réelles — utilisées par OrbitalMechanics en mode Explo. */
@@ -308,6 +310,11 @@ export interface RealData {
   temperature01BarK?: number;
   /** Masse volumique au niveau de 1 bar, en kg/m³. */
   density1BarKgM3?: number;
+  // ── Atmosphère au sol d'un corps à surface (2026-10-28) : Vénus, la Terre, Mars. ──────────
+  /** Pression à la surface, en bar (« Surface pressure » ; Mars à son rayon moyen). */
+  surfacePressureBar?: number;
+  /** Masse volumique de l'air à la surface, en kg/m³ (« Surface density »). */
+  surfaceDensityKgM3?: number;
   /** Hauteur d'échelle, en km. */
   scaleHeightKm?: number | readonly [number, number];
   /** Masse molaire moyenne, en g/mol (« Mean molecular weight »). */
@@ -431,7 +438,9 @@ export type FactField =
   | 'density1BarKgM3'
   | 'scaleHeightKm'
   | 'meanMolecularWeight'
-  | 'windSpeedMs';
+  | 'windSpeedMs'
+  | 'surfacePressureBar'
+  | 'surfaceDensityKgM3';
 
 /** Deux maxima de vent de part et d'autre d'une latitude, tels que la source les publie. */
 export interface WindBands {

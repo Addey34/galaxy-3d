@@ -38,6 +38,7 @@ import {
   citationOrder,
   displayedUncertainty,
   oneBarTemperatureGap,
+  surfacePressureDisplay,
 } from '@/core/bodyFacts';
 import { factSource } from '@/config/factSources';
 import {
@@ -413,6 +414,8 @@ const PAGE_FACT_ORDER: readonly FactField[] = [
   'temperature1BarK',
   'temperature01BarK',
   'density1BarKgM3',
+  'surfacePressureBar',
+  'surfaceDensityKgM3',
   'scaleHeightKm',
   'meanMolecularWeight',
   'windSpeedMs',
@@ -682,6 +685,16 @@ function bodyFactsWithSources(
       case 'density1BarKgM3':
         label = dict['stat.density1Bar'];
         value = `${formatNumber(v, publishedDecimals(v, 2), locale)} kg/m³`;
+        break;
+      case 'surfacePressureBar': {
+        label = dict['stat.surfacePressure'];
+        const pressure = surfacePressureDisplay(v);
+        value = `${formatNumber(pressure.value, publishedDecimals(pressure.value, 3), locale)}\u00a0${pressure.unit}`;
+        break;
+      }
+      case 'surfaceDensityKgM3':
+        label = dict['stat.surfaceDensity'];
+        value = `${formatNumber(v, publishedDecimals(v, 3), locale)}\u00a0kg/m³`;
         break;
       case 'scaleHeightKm':
         label = dict['stat.scaleHeight'];

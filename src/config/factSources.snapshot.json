@@ -86,7 +86,14 @@
           "bar": 92,
           "lowerBound": false
         },
-        "meanTemperatureC": 464
+        "meanTemperatureC": 464,
+        "atmosphere": {
+          "surfacePressureBar": 92,
+          "surfaceDensityKgM3": 65,
+          "surfaceDensityApproximate": true,
+          "scaleHeightKm": 15.9,
+          "meanMolecularWeight": 43.45
+        }
       },
       "earth": {
         "updated": "2024-11-15",
@@ -108,7 +115,14 @@
           "bar": 1.014,
           "lowerBound": false
         },
-        "meanTemperatureC": 15
+        "meanTemperatureC": 15,
+        "atmosphere": {
+          "surfacePressureBar": 1.014,
+          "surfaceDensityKgM3": 1.217,
+          "surfaceDensityApproximate": false,
+          "scaleHeightKm": 8.5,
+          "meanMolecularWeight": 28.97
+        }
       },
       "mars": {
         "updated": "2025-05-19",
@@ -130,7 +144,15 @@
           "bar": 0.00636,
           "lowerBound": false
         },
-        "meanTemperatureC": -65
+        "meanTemperatureC": -65,
+        "atmosphere": {
+          "surfacePressureBar": 0.00636,
+          "surfaceDensityKgM3": 0.016,
+          "surfaceDensitySigmaKgM3": 0.006,
+          "surfaceDensityApproximate": true,
+          "scaleHeightKm": 11,
+          "meanMolecularWeight": 43.49
+        }
       },
       "jupiter": {
         "updated": "2024-10-02",

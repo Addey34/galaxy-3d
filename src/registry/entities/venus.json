@@ -5,6 +5,7 @@
   "source": "catalogue",
   "config": {
     "kind": "planet",
+    "atmosphereClass": "terrestrial",
     "displayName": {
       "en": "Venus",
       "fr": "Vénus",
@@ -77,6 +78,26 @@
     },
     "meanTempC": {
       "value": 464,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "surfacePressureBar": {
+      "value": 92,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "surfaceDensityKgM3": {
+      "value": 65,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "scaleHeightKm": {
+      "value": 15.9,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanMolecularWeight": {
+      "value": 43.45,
       "source": "nssdca-fact-sheets",
       "method": "measured"
     },

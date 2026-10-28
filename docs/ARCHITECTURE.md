@@ -4621,8 +4621,24 @@ traite un fond d'étoiles (`kind: skybox`) comme sans aucun fait. Avant cela `pn
 manquants sur 78 corps sur 102 : la règle les supposait valables partout, alors que la fiche du NSSDCA ne
 les publie, « au niveau de 1 bar », que pour les géantes. `src/config/gasGiantAtmosphere.test.ts` tient les
 deux bords (un corps qui publie une de ces valeurs doit se déclarer géante ; une géante déclarée doit les
-publier toutes), falsifié. La pression ou la hauteur d'échelle de Vénus, de la Terre, de Mars ou de Titan ne
-sont PAS ces champs : une autre grandeur, qui demanderait d'autres champs et d'autres sources.
+publier toutes), falsifié. SUPERSEDED le 2026-10-28 pour la dernière phrase de ce paragraphe, qui disait que la pression ou la
+hauteur d'échelle de Vénus, de la Terre et de Mars étaient « une autre grandeur » sans champs : elles ont maintenant les leurs
+(paragraphe suivant). Titan reste sans.
+
+**L'atmosphère AU SOL de Vénus, de la Terre et de Mars (2026-10-28).** Les trois fiches du NSSDCA publient le même bloc défini à
+la SURFACE, non au niveau de 1 bar : la fiche déclare `atmosphereClass: "terrestrial"` et la règle est la même que ci-dessus
+(`atmosphereFactsOf`, `TERRESTRIAL_ATMOSPHERE_FACTS` dans `core/bodyFacts.ts`). Quatre faits : `surfacePressureBar`, `surfaceDensityKgM3`
+(nouveaux) et `scaleHeightKm`, `meanMolecularWeight` (les MÊMES champs que ceux des géantes, la référence changeant avec la classe).
+Le relevé les lit dans `nssdca.bodies.<corps>.atmosphere` (`surfaceAtmosphere` de `scripts/snapshot-fact-sources.mjs`), la pression
+venant de la lecture de « Surface pressure » déjà faite pour l'albédo affiché. Trois choses que la source dit et que la fiche garde :
+l'incertitude de Mars (« ~0.016 +/- 0.006 kg/m3 », portée par `uncertainty`, affichée « ± 38 % » et confrontée au relevé par
+`factProvenance.test.ts`), la pression en millibars de Mars (`surfacePressureDisplay` : « 6,36 mbar » sous 1 bar, « 92 bar » au-dessus),
+et le « ~ » de la densité de Vénus et de Mars (`surfaceDensityApproximate`, relevé mais non affiché : « 65 kg/m³ » ne prétend pas à
+plus de deux chiffres). Pas retenus : les vents (trois formes sans rapport : une plage, une liste par saison, un maximum) et la
+variation saisonnière de la pression de Mars (« variable from 4.0 to 8.7 mb »), qui reste dans `surfacePressure.raw` du relevé. La
+température moyenne reste celle de la table principale (Mars : -65 °C), la fiche de Mars écrivant par ailleurs « ~214 K (-59 C) »
+au sol : non affichée, donc sans contradiction visible. Titan n'a pas de fiche NSSDCA de ce type ; sa source serait la sonde Huygens
+(instrument HASI, PDS), à mesurer avant tout chiffre.
 
 **La sphère d'une géante est le niveau de 1 bar, et les libellés le disent (lot 51, pas 2).** Le
 NSSDCA publie le rayon des quatre géantes comme « Equatorial radius (1 bar level) » et leur

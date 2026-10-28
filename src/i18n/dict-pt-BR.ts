@@ -516,6 +516,8 @@ export const ptBR: Record<MessageKey, string> = {
   'stat.temperature1Bar': 'Temperatura a 1 bar',
   'stat.temperature01Bar': 'Temperatura a 0,1 bar',
   'stat.density1Bar': 'Densidade a 1 bar',
+  'stat.surfacePressure': 'Pressão na superfície',
+  'stat.surfaceDensity': 'Densidade na superfície',
   'stat.scaleHeight': 'Altura de escala',
   'stat.meanMolecularWeight': 'Massa molecular média',
   'stat.winds': 'Ventos',

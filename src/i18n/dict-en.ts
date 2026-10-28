@@ -541,6 +541,8 @@ export const en = {
   'stat.temperature1Bar': 'Temperature at 1 bar',
   'stat.temperature01Bar': 'Temperature at 0.1 bar',
   'stat.density1Bar': 'Density at 1 bar',
+  'stat.surfacePressure': 'Surface pressure',
+  'stat.surfaceDensity': 'Surface density',
   'stat.scaleHeight': 'Scale height',
   'stat.meanMolecularWeight': 'Mean molecular weight',
   'stat.winds': 'Winds',

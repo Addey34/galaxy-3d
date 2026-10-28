@@ -333,6 +333,7 @@ describe('fiche d’information — atmosphère des géantes (lot 51)', () => {
   });
 
   const GIANTS = ['jupiter', 'saturn', 'uranus', 'neptune'];
+  const SURFACE_ATMOSPHERE_BODIES = ['venus', 'earth', 'mars'];
   const ATMOSPHERE = [
     'Température à 1 bar',
     'Température à 0,1 bar',
@@ -353,9 +354,47 @@ describe('fiche d’information — atmosphère des géantes (lot 51)', () => {
     for (const [name, cfg] of CONFIGS) {
       if (GIANTS.includes(name)) continue;
       const labels = bodyStats(name, cfg).map((s) => s.label);
-      for (const label of ATMOSPHERE)
+      // La hauteur d'échelle et la masse molaire sont aussi celles de l'atmosphère au sol de
+      // Vénus, la Terre et Mars : même champ, autre référence (voir le test suivant).
+      const shared = SURFACE_ATMOSPHERE_BODIES.includes(name)
+        ? ['Hauteur d’échelle', 'Masse molaire moyenne']
+        : [];
+      for (const label of ATMOSPHERE.filter((l) => !shared.includes(l)))
         expect(labels, `${name} : ${label}`).not.toContain(label);
     }
+  });
+
+  it('donne à Vénus, la Terre et Mars l’atmosphère AU SOL, et à eux seuls', () => {
+    const SURFACE = [
+      'Pression à la surface',
+      'Masse volumique à la surface',
+      'Hauteur d’échelle',
+      'Masse molaire moyenne',
+    ];
+    for (const name of SURFACE_ATMOSPHERE_BODIES) {
+      const labels = bodyStats(name, CONFIGS.get(name)!).map((s) => s.label);
+      for (const label of SURFACE)
+        expect(labels, `${name} : ${label}`).toContain(label);
+    }
+    for (const [name, cfg] of CONFIGS) {
+      if (SURFACE_ATMOSPHERE_BODIES.includes(name)) continue;
+      const labels = bodyStats(name, cfg).map((s) => s.label);
+      for (const label of SURFACE.slice(0, 2))
+        expect(labels, `${name} : ${label}`).not.toContain(label);
+    }
+  });
+
+  it('écrit la pression de surface dans l’unité où elle se lit, et l’incertitude de Mars', () => {
+    expect(row('venus', 'Pression à la surface')?.value).toBe('92 bar');
+    expect(row('earth', 'Pression à la surface')?.value).toBe('1,014 bar');
+    expect(row('mars', 'Pression à la surface')?.value).toBe('6,36 mbar');
+    expect(row('earth', 'Masse volumique à la surface')?.value).toBe(
+      '1,217 kg/m³'
+    );
+    // 0,006 sur 0,016 : 38 %, la source l'écrit « +/- 0.006 ».
+    expect(row('mars', 'Masse volumique à la surface')?.value).toBe(
+      '0,016 kg/m³ (± 38 %)'
+    );
   });
 
   it('écrit le kelvin publié, suivi de sa conversion', () => {
