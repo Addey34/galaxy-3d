@@ -597,6 +597,18 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       es: 'densidad a 1 bar',
       'pt-BR': 'densidade a 1 bar',
     },
+    surfacePressureBar: {
+      en: 'surface pressure',
+      fr: 'pression à la surface',
+      es: 'presión en la superficie',
+      'pt-BR': 'pressão na superfície',
+    },
+    surfaceDensityKgM3: {
+      en: 'surface density',
+      fr: 'masse volumique à la surface',
+      es: 'densidad en la superficie',
+      'pt-BR': 'densidade na superfície',
+    },
     scaleHeightKm: {
       en: 'scale height',
       fr: 'hauteur d’échelle',

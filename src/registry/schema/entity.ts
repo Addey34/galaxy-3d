@@ -235,6 +235,9 @@ const facts = z
     scaleHeightKm: fact,
     meanMolecularWeight: fact,
     windSpeedMs: fact,
+    // L'atmosphère au sol d'un corps à surface (2026-10-28), fiche du NSSDCA.
+    surfacePressureBar: fact,
+    surfaceDensityKgM3: fact,
   })
   .partial()
   .strict();
@@ -269,9 +272,10 @@ const catalogueConfig = z
     skyScattering: z.enum(SKY_SCATTERING_MODELS).optional(),
     /**
      * Classe d'atmosphère déclarée (vocabulaire fermé) : `gas-giant` ouvre les six faits « à 1 bar »
-     * de la fiche du NSSDCA ; absente, ils sont hors sujet pour le corps (`core/bodyFacts.ts`).
+     * de la fiche du NSSDCA, `terrestrial` ceux de l'atmosphère au sol ; absente, ils sont hors
+     * sujet pour le corps (`core/bodyFacts.ts`).
      */
-    atmosphereClass: z.enum(['gas-giant']).optional(),
+    atmosphereClass: z.enum(['gas-giant', 'terrestrial']).optional(),
     ring: plainObject.optional(),
     satellites: satellites.optional(),
     realData: z

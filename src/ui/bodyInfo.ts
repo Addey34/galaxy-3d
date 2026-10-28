@@ -34,6 +34,7 @@ import {
   displayedUncertainty,
   oneBarTemperatureGap,
   SCIENTIFIC_MASS_KG,
+  surfacePressureDisplay,
   type FactEntry,
   type FactValue,
 } from '@/core/bodyFacts';
@@ -445,6 +446,12 @@ function formatNumericFact(
       return formatKelvin(value);
     case 'density1BarKgM3':
       return `${num(value, 2)} kg/m³`;
+    case 'surfacePressureBar': {
+      const pressure = surfacePressureDisplay(value);
+      return `${num(pressure.value, 3)}\u00a0${pressure.unit}`;
+    }
+    case 'surfaceDensityKgM3':
+      return `${num(value, 3)}\u00a0kg/m³`;
     case 'scaleHeightKm': {
       const height = convertDistanceKm(value);
       return `${num(height.value, 1)} ${height.unit}`;
@@ -510,6 +517,10 @@ function factLabel(
       return t('stat.temperature01Bar');
     case 'density1BarKgM3':
       return t('stat.density1Bar');
+    case 'surfacePressureBar':
+      return t('stat.surfacePressure');
+    case 'surfaceDensityKgM3':
+      return t('stat.surfaceDensity');
     case 'scaleHeightKm':
       return t('stat.scaleHeight');
     case 'meanMolecularWeight':
@@ -533,6 +544,8 @@ const CARD_FACT_ORDER: readonly FactField[] = [
   'temperature1BarK',
   'temperature01BarK',
   'density1BarKgM3',
+  'surfacePressureBar',
+  'surfaceDensityKgM3',
   'scaleHeightKm',
   'meanMolecularWeight',
   'windSpeedMs',

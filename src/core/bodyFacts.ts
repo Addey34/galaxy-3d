@@ -86,6 +86,8 @@ const FACT_LABEL_ORDER: Record<FactField, true> = {
   scaleHeightKm: true,
   meanMolecularWeight: true,
   windSpeedMs: true,
+  surfacePressureBar: true,
+  surfaceDensityKgM3: true,
 };
 
 /** Tous les champs de faits connus, dans l'ordre de leur déclaration. */
@@ -156,6 +158,43 @@ export const GAS_GIANT_ATMOSPHERE_FACTS: readonly FactField[] = [
 ];
 
 /**
+ * Les quatre faits de l'atmosphère AU SOL d'une planète à surface (Vénus, Terre, Mars). La hauteur
+ * d'échelle et la masse molaire sont les MÊMES champs que ceux des géantes, publiés par la même
+ * fiche ; seule la référence change (la surface, non le niveau de 1 bar), d'où la classe déclarée.
+ * Les vents n'en font pas partie : trois formes sans rapport d'une fiche à l'autre.
+ */
+export const TERRESTRIAL_ATMOSPHERE_FACTS: readonly FactField[] = [
+  'surfacePressureBar',
+  'surfaceDensityKgM3',
+  'scaleHeightKm',
+  'meanMolecularWeight',
+];
+
+/**
+ * La pression de surface en bar, écrite dans l'unité où elle se lit : « 92 bar », « 1,014 bar »,
+ * mais « 6,36 mbar » pour Mars, que la source écrit en millibars. Le seuil est 1 bar. Partagée par
+ * la fiche de l'application et la page publique du corps, qui écrivaient sinon deux unités.
+ * L'arrondi à 12 chiffres retire le bruit binaire du produit par 1000 (0,00636 × 1000).
+ */
+export function surfacePressureDisplay(bar: number): {
+  value: number;
+  unit: 'bar' | 'mbar';
+} {
+  return bar >= 1
+    ? { value: bar, unit: 'bar' }
+    : { value: Number((bar * 1000).toPrecision(12)), unit: 'mbar' };
+}
+
+/** Les faits d'atmosphère qu'une classe déclarée ouvre (`atmosphereClass`). */
+export function atmosphereFactsOf(
+  atmosphereClass: CelestialBodyConfig['atmosphereClass']
+): readonly FactField[] {
+  if (atmosphereClass === 'gas-giant') return GAS_GIANT_ATMOSPHERE_FACTS;
+  if (atmosphereClass === 'terrestrial') return TERRESTRIAL_ATMOSPHERE_FACTS;
+  return [];
+}
+
+/**
  * Champs structurellement hors sujet pour un `kind`. Une étoile centrale n'orbite rien et n'a
  * pas de lunes (le Soleil a longtemps porté `moonCount: 8` pour ses planètes). Une lune n'a pas
  * de lune connue : « Lunes connues : 0 » sur la fiche de Titan n'apprend rien et ne se source
@@ -177,10 +216,15 @@ export function notApplicableFacts(cfg: CelestialBodyConfig): Set<FactField> {
   // déjà ; l'inventaire le comptait manquant de neuf faits).
   if (cfg.kind === 'skybox') return new Set(ALL_FACT_FIELDS);
   const out = new Set<FactField>(INSTRUMENT_ONLY_FACTS);
-  // Les six faits « à 1 bar » sont ceux de la fiche d'une GÉANTE du NSSDCA : hors sujet pour tout
-  // corps qui ne se déclare pas tel (déclaré dans la fiche, jamais déduit de l'absence de valeur).
-  if (cfg.atmosphereClass !== 'gas-giant')
-    for (const field of GAS_GIANT_ATMOSPHERE_FACTS) out.add(field);
+  // Les six faits « à 1 bar » sont ceux de la fiche d'une GÉANTE du NSSDCA, les quatre faits « au
+  // sol » ceux d'une planète à surface : hors sujet pour tout corps qui ne se déclare pas tel
+  // (déclaré dans la fiche, jamais déduit de l'absence de valeur).
+  const opened = new Set(atmosphereFactsOf(cfg.atmosphereClass));
+  for (const field of [
+    ...GAS_GIANT_ATMOSPHERE_FACTS,
+    ...TERRESTRIAL_ATMOSPHERE_FACTS,
+  ])
+    if (!opened.has(field)) out.add(field);
   if (cfg.kind === 'star')
     for (const field of ['orbitPeriodDays', 'distanceAU', 'moonCount'] as const)
       out.add(field);

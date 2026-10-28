@@ -5,6 +5,7 @@
   "source": "catalogue",
   "config": {
     "kind": "planet",
+    "atmosphereClass": "terrestrial",
     "displayName": {
       "en": "Earth",
       "fr": "Terre",
@@ -101,6 +102,26 @@
     },
     "meanTempC": {
       "value": 15,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "surfacePressureBar": {
+      "value": 1.014,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "surfaceDensityKgM3": {
+      "value": 1.217,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "scaleHeightKm": {
+      "value": 8.5,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanMolecularWeight": {
+      "value": 28.97,
       "source": "nssdca-fact-sheets",
       "method": "measured"
     },

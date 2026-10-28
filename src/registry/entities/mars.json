@@ -5,6 +5,7 @@
   "source": "catalogue",
   "config": {
     "kind": "planet",
+    "atmosphereClass": "terrestrial",
     "displayName": {
       "en": "Mars",
       "fr": "Mars",
@@ -75,6 +76,27 @@
     },
     "meanTempC": {
       "value": -65,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "surfacePressureBar": {
+      "value": 0.00636,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "surfaceDensityKgM3": {
+      "value": 0.016,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "uncertainty": 0.006
+    },
+    "scaleHeightKm": {
+      "value": 11,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanMolecularWeight": {
+      "value": 43.49,
       "source": "nssdca-fact-sheets",
       "method": "measured"
     },

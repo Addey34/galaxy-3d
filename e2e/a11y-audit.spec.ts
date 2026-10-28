@@ -438,6 +438,45 @@ test.describe('mobile viewport', () => {
   }
 
   /**
+   * L'ATMOSPHÈRE AU SOL (2026-10-28) : Vénus, la Terre et Mars publient pression, masse
+   * volumique, hauteur d'échelle et masse molaire à la surface. Mars est le témoin MESURÉ : la
+   * seule dont la valeur porte une incertitude (« 0,016 kg/m³ (± 38 %) ») et la seule pression
+   * en millibars. Les quatre langues, parce que les libellés « à la surface » sont les plus longs.
+   */
+  for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const) {
+    test(`surface atmosphere rows, ${locale}, are clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+      }, locale);
+      await page.goto('/?body=mars');
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+      const card = page.locator('#body-info');
+      await expect(card).toBeVisible();
+      await expect(card.locator('.bi-stats')).toContainText(/6[.,]36\s*mbar/);
+      await expect(card.locator('.bi-stats')).toContainText(/0[.,]016/);
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth
+        ),
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
+      expect(
+        await clippedOverflow(page),
+        `texte rogné dans la fiche (${locale})`
+      ).toEqual([]);
+    });
+  }
+
+  /**
    * LE PROFIL MESURÉ DE JUPITER (lot 51, pas 3) : un tableau de trois colonnes dans une fiche de
    * 390 px, dont la pression en notation scientifique, et deux phrases de source. Ouvert par la
    * propriété, comme les autres blocs de cette suite : c'est la mise en page qu'on mesure.

@@ -509,6 +509,8 @@ export const fr: Record<MessageKey, string> = {
   'stat.temperature1Bar': 'Température à 1 bar',
   'stat.temperature01Bar': 'Température à 0,1 bar',
   'stat.density1Bar': 'Masse volumique à 1 bar',
+  'stat.surfacePressure': 'Pression à la surface',
+  'stat.surfaceDensity': 'Masse volumique à la surface',
   'stat.scaleHeight': 'Hauteur d’échelle',
   'stat.meanMolecularWeight': 'Masse molaire moyenne',
   'stat.winds': 'Vents',

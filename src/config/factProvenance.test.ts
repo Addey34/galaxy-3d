@@ -162,7 +162,7 @@ const nssdca = snapshot.nssdca.bodies as unknown as Record<
   Record<string, number | string>
 >;
 /**
- * L'atmosphère d'une géante (lot 51), telle que le relevé l'a lue : un nombre, ou un intervalle
+ * L'atmosphère d'une géante (lot 51) ou d'une planète à surface (2026-10-28), telle que le relevé l'a lue : un nombre, ou un intervalle
  * `[min, max]` quand la fiche en publie un (Neptune).
  */
 const ATMOSPHERE_FIELDS: ReadonlySet<FactField> = new Set<FactField>([
@@ -172,6 +172,8 @@ const ATMOSPHERE_FIELDS: ReadonlySet<FactField> = new Set<FactField>([
   'scaleHeightKm',
   'meanMolecularWeight',
   'windSpeedMs',
+  'surfacePressureBar',
+  'surfaceDensityKgM3',
 ]);
 function atmosphereOf(
   name: string,
@@ -620,6 +622,20 @@ function expected(
           fail(
             'la source publie un INTERVALLE ou des BANDES, la fiche un nombre'
           );
+        // L'incertitude absolue de la densité de surface (Mars : « ~0.016 +/- 0.006 kg/m3 ») est
+        // celle de la source, ni plus ni moins : absente de la fiche, la valeur se lirait exacte.
+        if (field === 'surfaceDensityKgM3') {
+          const sigma = (
+            snapshot.nssdca.bodies as unknown as Record<
+              string,
+              { atmosphere?: { surfaceDensitySigmaKgM3?: number } }
+            >
+          )[name]?.atmosphere?.surfaceDensitySigmaKgM3;
+          if (cfg.realData?.sources?.[field]?.uncertainty !== sigma)
+            fail(
+              `incertitude ${cfg.realData?.sources?.[field]?.uncertainty} ≠ sigma publié ${sigma}`
+            );
+        }
         return { values: [published as number], tolerance: 0 };
       }
       switch (field) {

@@ -293,9 +293,12 @@ async function nssdca() {
     j2,
   ];
   await planet('mercury', 'mercuryfact.html', terrestrial);
-  await planet('venus', 'venusfact.html', terrestrial);
-  await planet('earth', 'earthfact.html', terrestrial);
-  await planet('mars', 'marsfact.html', terrestrial);
+  const surfaceAtmosphereOf = (lines) => ({
+    atmosphere: surfaceAtmosphere(lines),
+  });
+  await planet('venus', 'venusfact.html', terrestrial, surfaceAtmosphereOf);
+  await planet('earth', 'earthfact.html', terrestrial, surfaceAtmosphereOf);
+  await planet('mars', 'marsfact.html', terrestrial, surfaceAtmosphereOf);
   const giantAtmosphere = (lines) => ({ atmosphere: atmosphere(lines) });
   await planet('jupiter', 'jupiterfact.html', giant, giantAtmosphere);
   await planet('saturn', 'saturnfact.html', giant, giantAtmosphere);
@@ -400,6 +403,47 @@ function atmosphere(lines) {
     scaleHeightKm: field('Scale height:', 'km'),
     meanMolecularWeight: field('Mean molecular weight:', ''),
     windSpeedMs: winds(lines),
+  };
+}
+
+/**
+ * L'ATMOSPHÈRE AU SOL d'une planète tellurique à atmosphère (2026-10-28) : Vénus, la Terre et Mars
+ * publient le même bloc, défini à la SURFACE (les géantes, elles, à 1 bar). Écritures mesurées sur
+ * les trois fiches : « Surface density: ~65. kg/m3 » (le « ~ » est l'aveu d'une valeur
+ * approchée, gardé dans `surfaceDensityApproximate`), « Surface density: ~0.016 +/- 0.006 kg/m3 »
+ * (Mars : l'incertitude absolue est gardée), « Surface density: 1.217 kg/m3 ». La pression vient
+ * de `surfacePressure()` ; celle de Mars est « 6.36 mb at mean radius (variable from 4.0 to 8.7 mb
+ * depending on season) » et la parenthèse reste dans `surfacePressure.raw`. Les vents ne sont pas
+ * lus : trois formes sans rapport (une plage, une liste par saison, un maximum).
+ */
+function surfaceAtmosphere(lines) {
+  const pressure = surfacePressure(lines);
+  if (!pressure || pressure.lowerBound)
+    throw new Error('pression de surface absente ou bornée');
+  const line = lines.find((l) => l.startsWith('Surface density:'));
+  if (!line) throw new Error('ligne « Surface density » introuvable');
+  const m = line
+    .slice('Surface density:'.length)
+    .trim()
+    .match(/^(~?)\s*([\d.]+)\s*(?:\+\/-\s*([\d.]+)\s*)?kg\/m\s*3(?:\s|$)/);
+  if (!m) throw new Error(`densité de surface illisible : « ${line} »`);
+  const field = (label, unit) => {
+    const l = lines.find((x) => x.startsWith(label));
+    if (!l) throw new Error(`ligne d'atmosphère introuvable : « ${label} »`);
+    const v = l
+      .slice(label.length)
+      .trim()
+      .match(new RegExp(String.raw`^([\d.]+)\s*${unit}(?:\s|$)`));
+    if (!v) throw new Error(`valeur d'atmosphère illisible : « ${l} »`);
+    return number(v[1]);
+  };
+  return {
+    surfacePressureBar: pressure.bar,
+    surfaceDensityKgM3: number(m[2]),
+    ...(m[3] === undefined ? {} : { surfaceDensitySigmaKgM3: number(m[3]) }),
+    surfaceDensityApproximate: m[1] === '~',
+    scaleHeightKm: field('Scale height:', 'km'),
+    meanMolecularWeight: field('Mean molecular weight:', ''),
   };
 }
 
