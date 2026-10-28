@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 /**
  * LES BÂTIMENTS SUR UN VRAI APPAREIL (`pnpm test:devices`, lot 63) : Paris visé par la recherche
@@ -11,9 +11,49 @@ import { expect, test } from '@playwright/test';
 
 const DATE = '2024-07-01T12:00:00Z';
 
-test('Paris : la descente pose les bâtiments et la scène reste vivante', async ({
-  page,
-}) => {
+/**
+ * Un cran de molette vers l'avant. WebKit mobile ÉMULÉ refuse `mouse.wheel` (« Mouse wheel is not
+ * supported in mobile WebKit ») alors que la ferme d'appareils réels l'accepte : on tombe alors sur
+ * l'événement `wheel` que les contrôles de la caméra écoutent sur le canevas.
+ */
+async function wheelIn(page: Page): Promise<void> {
+  try {
+    await page.mouse.wheel(0, -3000);
+  } catch {
+    await page
+      .locator('canvas')
+      .first()
+      .evaluate((canvas) => {
+        const box = canvas.getBoundingClientRect();
+        canvas.dispatchEvent(
+          new WheelEvent('wheel', {
+            deltaY: -3000,
+            clientX: box.left + box.width / 2,
+            clientY: box.top + box.height / 2,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+      });
+  }
+}
+
+/**
+ * Les deux échelles : Éduc (comprimée) et Explo (vraie, 2026-10-28). Le rendu au sol de l'Explo
+ * n'avait jamais tourné sur un vrai GPU ; c'est le même parcours, seul `mode` change.
+ */
+for (const mode of ['educ', 'explo'] as const) {
+  test(`Paris (${mode}) : la descente pose les bâtiments et la scène reste vivante`, async ({
+    page,
+  }) => {
+    await descendToParis(page, mode);
+  });
+}
+
+async function descendToParis(
+  page: Page,
+  mode: 'educ' | 'explo'
+): Promise<void> {
   test.setTimeout(480_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -26,7 +66,7 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
     }
   });
   await page.goto(
-    `/?debug-surface&mode=educ&body=earth&date=${encodeURIComponent(DATE)}`
+    `/?debug-surface&mode=${mode}&body=earth&date=${encodeURIComponent(DATE)}`
   );
   await expect(page.locator('#loader')).toBeHidden({ timeout: 120_000 });
 
@@ -68,7 +108,7 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
   });
   const log: string[] = [];
   for (let i = 0; i < 12; i += 1) {
-    await page.mouse.wheel(0, -3000);
+    await wheelIn(page);
     await page.waitForTimeout(3_000);
     const s = await state();
     log.push(
@@ -92,7 +132,7 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
   );
   const final = await state();
   const report = [
-    `appareil ${test.info().project.name}`,
+    `appareil ${test.info().project.name}, mode ${mode}`,
     ...log,
     `final : altitude ${final.altitude} km, bâtiments « ${final.buildings} », ${frames} images en 1 s`,
   ].join('\n');
@@ -110,4 +150,4 @@ test('Paris : la descente pose les bâtiments et la scène reste vivante', async
     3
   );
   expect(final.buildings, 'des bâtiments sont posés').toMatch(/:\d+:[1-9]\d*$/);
-});
+}
