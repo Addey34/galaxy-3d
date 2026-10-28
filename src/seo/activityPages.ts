@@ -69,6 +69,17 @@ const QUANTITY: Record<
   },
 };
 
+/**
+ * Une grandeur DÉRIVÉE (la période d'une planète naine, tirée de ses éléments orbitaux par la
+ * troisième loi de Kepler) ne se présente pas comme une mesure lue : la ligne de source le dit.
+ */
+const DERIVED: Record<Locale, string> = {
+  en: ', derived from the orbital elements',
+  fr: ', dérivée des éléments orbitaux',
+  es: ', derivado de los elementos orbitales',
+  'pt-BR': ', derivado dos elementos orbitais',
+};
+
 const TEXT = {
   indexTitle: {
     en: 'Classroom activities',
@@ -355,7 +366,9 @@ function factLines(
         escapeHtml(
           fill(TEXT.factLine[locale], {
             body,
-            quantity: QUANTITY[fact][locale],
+            quantity:
+              QUANTITY[fact][locale] +
+              (provenance?.method === 'derived' ? DERIVED[locale] : ''),
             publisher: source.publisher,
             title: source.title,
             date: longDay(source.accessed, locale),

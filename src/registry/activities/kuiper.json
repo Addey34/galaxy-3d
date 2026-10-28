@@ -1,0 +1,230 @@
+{
+  "$schema": "../schema/activity.schema.json",
+  "id": "kuiper",
+  "title": {
+    "en": "A year at the edge of the Solar System",
+    "fr": "Une année aux confins du Système solaire",
+    "es": "Un año en los confines del Sistema Solar",
+    "pt-BR": "Um ano nos confins do Sistema Solar"
+  },
+  "summary": {
+    "en": "Pupils compare the length of a year on Pluto, Haumea, Makemake, Eris and Sedna with that of Neptune and Pluto, and find that Pluto goes round the Sun twice while Neptune goes round three times.",
+    "fr": "Les élèves comparent la durée d’une année sur Pluton, Hauméa, Makémaké, Éris et Sedna à celle de Neptune et de Pluton, et découvrent que Pluton fait deux tours du Soleil pendant que Neptune en fait trois.",
+    "es": "Los alumnos comparan la duración de un año en Plutón, Haumea, Makemake, Eris y Sedna con la de Neptuno y Plutón, y descubren que Plutón da dos vueltas al Sol mientras Neptuno da tres.",
+    "pt-BR": "Os alunos comparam a duração de um ano em Plutão, Haumea, Makemake, Éris e Sedna com a de Netuno e de Plutão, e descobrem que Plutão dá duas voltas ao redor do Sol enquanto Netuno dá três."
+  },
+  "tour": "kuiper",
+  "ages": {
+    "from": 12,
+    "to": 16
+  },
+  "durationMinutes": 40,
+  "difficulty": "medium",
+  "subjects": [
+    "astronomy",
+    "physics"
+  ],
+  "objectives": [
+    {
+      "en": "Compare the lengths of the years of several bodies by dividing one by another.",
+      "fr": "Comparer la durée de l’année de plusieurs corps en divisant l’une par l’autre.",
+      "es": "Comparar la duración del año de varios cuerpos dividiendo una por otra.",
+      "pt-BR": "Comparar a duração do ano de vários corpos dividindo uma pela outra."
+    },
+    {
+      "en": "Link a simple ratio between two years to a configuration that repeats.",
+      "fr": "Relier un rapport simple entre deux années à une configuration qui se répète.",
+      "es": "Relacionar una relación sencilla entre dos años con una configuración que se repite.",
+      "pt-BR": "Relacionar uma razão simples entre dois anos com uma configuração que se repete."
+    },
+    {
+      "en": "Tell a measured value from a value derived by calculation.",
+      "fr": "Distinguer une valeur mesurée d’une valeur dérivée par le calcul.",
+      "es": "Distinguir un valor medido de un valor derivado mediante cálculo.",
+      "pt-BR": "Distinguir um valor medido de um valor derivado por cálculo."
+    }
+  ],
+  "material": [
+    {
+      "en": "A computer or tablet per group, with a recent web browser (the scene uses WebGL).",
+      "fr": "Un ordinateur ou une tablette par groupe, avec un navigateur récent (la scène utilise WebGL).",
+      "es": "Un ordenador o una tableta por grupo, con un navegador reciente (la escena usa WebGL).",
+      "pt-BR": "Um computador ou tablet por grupo, com um navegador recente (a cena usa WebGL)."
+    },
+    {
+      "en": "A calculator, and the printed pupil sheet below.",
+      "fr": "Une calculatrice, et la fiche élève ci-dessous, imprimée.",
+      "es": "Una calculadora y la ficha del alumno de abajo, impresa.",
+      "pt-BR": "Uma calculadora e a ficha do aluno abaixo, impressa."
+    }
+  ],
+  "values": {
+    "plutoNeptune": {
+      "kind": "periodRatio",
+      "outer": "pluto",
+      "inner": "neptune",
+      "decimals": 1
+    },
+    "haumeaPluto": {
+      "kind": "periodRatio",
+      "outer": "haumea",
+      "inner": "pluto",
+      "decimals": 1
+    },
+    "makemakePluto": {
+      "kind": "periodRatio",
+      "outer": "makemake",
+      "inner": "pluto",
+      "decimals": 1
+    },
+    "erisPluto": {
+      "kind": "periodRatio",
+      "outer": "eris",
+      "inner": "pluto",
+      "decimals": 1
+    },
+    "sednaPluto": {
+      "kind": "periodRatio",
+      "outer": "sedna",
+      "inner": "pluto",
+      "decimals": 0
+    }
+  },
+  "parts": [
+    {
+      "title": {
+        "en": "A year is not the same everywhere",
+        "fr": "Une année n’est pas la même partout",
+        "es": "Un año no es igual en todas partes",
+        "pt-BR": "Um ano não é igual em toda parte"
+      },
+      "teacher": {
+        "en": "Play the tour “Journey to the edge” with the link below. It visits Pluto, Eris, Haumea, Makemake and Sedna, and switches to the true scale halfway. Ask pupils what a “year” is (one turn around the Sun) before they read any figure. Note for the answer key: the year of a dwarf planet is not a measurement read from a table. Galaxy derives it from the body’s orbital elements with Kepler’s third law, and the sources line under the answers says so; Neptune’s year is a measured value.",
+        "fr": "Jouez la visite « Voyage aux confins » avec le lien ci-dessous. Elle passe par Pluton, Éris, Hauméa, Makémaké et Sedna, et bascule à la vraie échelle à mi-parcours. Demandez aux élèves ce qu’est une « année » (un tour autour du Soleil) avant qu’ils ne lisent un chiffre. Remarque pour le corrigé : l’année d’une planète naine n’est pas une mesure lue dans un tableau. Galaxy la dérive des éléments orbitaux du corps par la troisième loi de Kepler, et la ligne de sources sous les réponses le dit ; l’année de Neptune est une valeur mesurée.",
+        "es": "Reproduzca la visita «Viaje a los confines» con el enlace de abajo. Pasa por Plutón, Eris, Haumea, Makemake y Sedna, y cambia a la escala real a mitad de camino. Pregunte a los alumnos qué es un «año» (una vuelta alrededor del Sol) antes de que lean ninguna cifra. Nota para las respuestas: el año de un planeta enano no es una medida leída en una tabla. Galaxy lo deriva de los elementos orbitales del cuerpo con la tercera ley de Kepler, y la línea de fuentes bajo las respuestas lo dice; el año de Neptuno es un valor medido.",
+        "pt-BR": "Reproduza a visita “Viagem aos confins” com o link abaixo. Ela passa por Plutão, Éris, Haumea, Makemake e Sedna, e muda para a escala real no meio do caminho. Pergunte aos alunos o que é um “ano” (uma volta ao redor do Sol) antes de lerem qualquer número. Nota para as respostas: o ano de um planeta anão não é uma medida lida em uma tabela. O Galaxy o deriva dos elementos orbitais do corpo com a terceira lei de Kepler, e a linha de fontes sob as respostas diz isso; o ano de Netuno é um valor medido."
+      },
+      "steps": [
+        {
+          "en": "Open the tour with the link on this sheet and follow it to the end.",
+          "fr": "Ouvrez la visite avec le lien de cette fiche et suivez-la jusqu’au bout.",
+          "es": "Abre la visita con el enlace de esta ficha y síguela hasta el final.",
+          "pt-BR": "Abra a visita com o link desta ficha e acompanhe-a até o fim."
+        },
+        {
+          "en": "Open the card of Neptune, Pluto, Haumea, Makemake, Eris and Sedna (the panel on the right) and note the line “Year” of each.",
+          "fr": "Ouvrez la fiche de Neptune, de Pluton, de Hauméa, de Makémaké, d’Éris et de Sedna (le panneau à droite) et notez la ligne « Année » de chacun.",
+          "es": "Abre la ficha de Neptuno, Plutón, Haumea, Makemake, Eris y Sedna (el panel de la derecha) y anota la línea «Año» de cada uno.",
+          "pt-BR": "Abra a ficha de Netuno, Plutão, Haumea, Makemake, Éris e Sedna (o painel à direita) e anote a linha “Ano” de cada um."
+        },
+        {
+          "en": "Divide the year of each dwarf planet by the year of Pluto, and the year of Pluto by that of Neptune.",
+          "fr": "Divisez l’année de chaque planète naine par celle de Pluton, et l’année de Pluton par celle de Neptune.",
+          "es": "Divide el año de cada planeta enano por el de Plutón, y el año de Plutón por el de Neptuno.",
+          "pt-BR": "Divida o ano de cada planeta anão pelo de Plutão, e o ano de Plutão pelo de Netuno."
+        }
+      ],
+      "questions": [
+        {
+          "id": "pluto-neptune",
+          "prompt": {
+            "en": "How many Neptune years are there in one Pluto year?",
+            "fr": "Combien d’années de Neptune y a-t-il dans une année de Pluton ?",
+            "es": "¿Cuántos años de Neptuno hay en un año de Plutón?",
+            "pt-BR": "Quantos anos de Netuno há em um ano de Plutão?"
+          },
+          "answer": {
+            "en": "About {plutoNeptune}: while Pluto goes round the Sun twice, Neptune goes round three times.",
+            "fr": "Environ {plutoNeptune} : pendant que Pluton fait deux tours du Soleil, Neptune en fait trois.",
+            "es": "Unos {plutoNeptune}: mientras Plutón da dos vueltas al Sol, Neptuno da tres.",
+            "pt-BR": "Cerca de {plutoNeptune}: enquanto Plutão dá duas voltas ao redor do Sol, Netuno dá três."
+          },
+          "evidence": [
+            "plutoNeptune"
+          ]
+        },
+        {
+          "id": "dwarf-years",
+          "prompt": {
+            "en": "Haumea, Makemake and Eris: how many Pluto years does one of their years last?",
+            "fr": "Hauméa, Makémaké et Éris : combien d’années de Pluton dure une de leurs années ?",
+            "es": "Haumea, Makemake y Eris: ¿cuántos años de Plutón dura uno de sus años?",
+            "pt-BR": "Haumea, Makemake e Éris: quantos anos de Plutão dura um dos seus anos?"
+          },
+          "answer": {
+            "en": "Haumea: about {haumeaPluto}. Makemake: about {makemakePluto}. Eris: about {erisPluto}. The farther from the Sun, the longer the year.",
+            "fr": "Hauméa : environ {haumeaPluto}. Makémaké : environ {makemakePluto}. Éris : environ {erisPluto}. Plus on est loin du Soleil, plus l’année est longue.",
+            "es": "Haumea: unos {haumeaPluto}. Makemake: unos {makemakePluto}. Eris: unos {erisPluto}. Cuanto más lejos del Sol, más largo es el año.",
+            "pt-BR": "Haumea: cerca de {haumeaPluto}. Makemake: cerca de {makemakePluto}. Éris: cerca de {erisPluto}. Quanto mais longe do Sol, mais longo é o ano."
+          },
+          "evidence": [
+            "haumeaPluto",
+            "makemakePluto",
+            "erisPluto"
+          ]
+        },
+        {
+          "id": "sedna",
+          "level": "advanced",
+          "prompt": {
+            "en": "How many Pluto years does one year of Sedna last?",
+            "fr": "Combien d’années de Pluton dure une année de Sedna ?",
+            "es": "¿Cuántos años de Plutón dura un año de Sedna?",
+            "pt-BR": "Quantos anos de Plutão dura um ano de Sedna?"
+          },
+          "answer": {
+            "en": "About {sednaPluto} Pluto years. The larger the orbit, the slower the body travels and the longer its year.",
+            "fr": "Environ {sednaPluto} années de Pluton. Plus l’orbite est grande, plus le corps avance lentement et plus son année est longue.",
+            "es": "Unos {sednaPluto} años de Plutón. Cuanto mayor es la órbita, más despacio avanza el cuerpo y más largo es su año.",
+            "pt-BR": "Cerca de {sednaPluto} anos de Plutão. Quanto maior a órbita, mais devagar o corpo avança e mais longo é o seu ano."
+          },
+          "evidence": [
+            "sednaPluto"
+          ]
+        }
+      ]
+    },
+    {
+      "title": {
+        "en": "Discussion",
+        "fr": "Discussion",
+        "es": "Debate",
+        "pt-BR": "Discussão"
+      },
+      "teacher": {
+        "en": "A ratio of 3 to 2 between the years of Pluto and Neptune is called a 3:2 orbital resonance. Pluto’s orbit crosses Neptune’s, yet according to NASA-hosted studies the resonance protects Pluto from close encounters with Neptune, because the two are never at the crossing point at the same time. Let pupils find the idea themselves: if Neptune does three laps while Pluto does two, where are they relative to each other after each full cycle?",
+        "fr": "Un rapport de 3 à 2 entre les années de Pluton et de Neptune s’appelle une résonance orbitale 3:2. L’orbite de Pluton croise celle de Neptune, et pourtant, d’après des études hébergées par la NASA, la résonance protège Pluton des rencontres proches avec Neptune, car les deux ne sont jamais au point de croisement en même temps. Laissez les élèves trouver l’idée : si Neptune fait trois tours pendant que Pluton en fait deux, où sont-ils l’un par rapport à l’autre après chaque cycle complet ?",
+        "es": "Una relación de 3 a 2 entre los años de Plutón y Neptuno se llama resonancia orbital 3:2. La órbita de Plutón cruza la de Neptuno, y sin embargo, según estudios alojados por la NASA, la resonancia protege a Plutón de los encuentros cercanos con Neptuno, porque los dos nunca están a la vez en el punto de cruce. Deje que los alumnos descubran la idea: si Neptuno da tres vueltas mientras Plutón da dos, ¿dónde están el uno respecto al otro tras cada ciclo completo?",
+        "pt-BR": "Uma razão de 3 para 2 entre os anos de Plutão e de Netuno se chama ressonância orbital 3:2. A órbita de Plutão cruza a de Netuno, e no entanto, segundo estudos hospedados pela NASA, a ressonância protege Plutão de encontros próximos com Netuno, porque os dois nunca estão ao mesmo tempo no ponto de cruzamento. Deixe os alunos descobrirem a ideia: se Netuno dá três voltas enquanto Plutão dá duas, onde estão um em relação ao outro depois de cada ciclo completo?"
+      },
+      "steps": [
+        {
+          "en": "Discuss in your group, then answer.",
+          "fr": "Discutez en groupe, puis répondez.",
+          "es": "Debatid en grupo y luego responded.",
+          "pt-BR": "Discutam em grupo e depois respondam."
+        }
+      ],
+      "questions": [
+        {
+          "id": "cycle",
+          "prompt": {
+            "en": "Neptune goes round three times while Pluto goes round twice. After that, are the two back in the same positions as at the start?",
+            "fr": "Neptune fait trois tours pendant que Pluton en fait deux. Après cela, les deux sont-ils revenus aux mêmes positions qu’au départ ?",
+            "es": "Neptuno da tres vueltas mientras Plutón da dos. Después de eso, ¿han vuelto los dos a las mismas posiciones que al principio?",
+            "pt-BR": "Netuno dá três voltas enquanto Plutão dá duas. Depois disso, os dois voltaram às mesmas posições do início?"
+          },
+          "answer": {
+            "en": "Almost: a ratio of {plutoNeptune} means the pattern repeats after about two Pluto years. That regularity is what keeps the two apart, even though their orbits cross.",
+            "fr": "À peu près : un rapport de {plutoNeptune} veut dire que la configuration se répète au bout d’environ deux années de Pluton. C’est cette régularité qui les tient à distance, bien que leurs orbites se croisent.",
+            "es": "Casi: una relación de {plutoNeptune} significa que la configuración se repite al cabo de unos dos años de Plutón. Esa regularidad es lo que los mantiene alejados, aunque sus órbitas se cruzan.",
+            "pt-BR": "Quase: uma razão de {plutoNeptune} significa que a configuração se repete ao fim de cerca de dois anos de Plutão. É essa regularidade que os mantém afastados, embora suas órbitas se cruzem."
+          },
+          "evidence": [
+            "plutoNeptune"
+          ]
+        }
+      ]
+    }
+  ]
+}
