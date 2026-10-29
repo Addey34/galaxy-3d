@@ -26,7 +26,7 @@ import {
   markerLabelCandidates,
   overlayLabelBounds,
 } from '@/core/labelSpace';
-import type { LabelSpace } from '@/core/labelSpace';
+import type { LabelRect, LabelSpace } from '@/core/labelSpace';
 import { eclipticToScene } from '@/core/frames';
 import {
   sampleHyperbolicTimes,
@@ -106,7 +106,8 @@ export class InterstellarOverlay {
   private readonly _markers: { name: string; x: number; y: number }[] = [];
   private lastPublished = '';
   /** État de la dernière image peinte — sans changement, on ne redessine rien (cf. `update`). */
-  private readonly _lastView = new Float64Array(34);
+  /** Ce qui a décidé le dernier dessin (cf. `_viewChanged`) ; sa longueur est celle de la clé. */
+  private readonly _lastView = new Float64Array(37);
   private _hasDrawn = false;
   private _lastLocale = '';
   private readonly _p = new THREE.Vector3();
@@ -309,7 +310,12 @@ export class InterstellarOverlay {
     const h = window.innerHeight;
     const now = date.getTime();
     const locale = getLocale();
-    if (!this._viewChanged(camera, now, morph, w, h, locale)) return;
+    if (!this._viewChanged(camera, now, morph, w, h, locale)) {
+      // Les couches suivantes comptent sur ces emprises pour leurs propres noms.
+      for (const rect of this._claimed) this._space?.add(rect);
+      return;
+    }
+    this._claimed = [];
     this._clear();
     this._markers.length = 0;
 
@@ -372,14 +378,14 @@ export class InterstellarOverlay {
             overlayLabelBounds(w, h)
           )
         : { dx: 8 + textWidth / 2, dy: 0, rect: null };
-      this._space?.add({
+      this._claim({
         left: x - 4,
         right: x + 4,
         top: y - 4,
         bottom: y + 4,
       });
       if (placed) {
-        if (placed.rect) this._space?.add(placed.rect);
+        if (placed.rect) this._claim(placed.rect);
         ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
         ctx.fillText(text, x + placed.dx - textWidth / 2, y + placed.dy + 4);
       }
@@ -396,6 +402,13 @@ export class InterstellarOverlay {
    * application sans cette couche. Le coût réel était ailleurs, cf. `_drawPath`.
    */
   private _space: LabelSpace | null = null;
+  /** Emprises déclarées à `LabelSpace` à la dernière peinture, redéclarées quand on saute une image. */
+  private _claimed: LabelRect[] = [];
+
+  private _claim(rect: LabelRect): void {
+    this._claimed.push(rect);
+    this._space?.add(rect);
+  }
 
   private _viewChanged(
     camera: THREE.PerspectiveCamera,
@@ -414,15 +427,14 @@ export class InterstellarOverlay {
       // Les libellés des autres couches font partie de la vue : s'ils bougent, la place
       // disponible change et ce qui est déjà peint peut être devenu illisible.
       this._space?.signature() ?? 0,
+      w,
+      h,
     ];
     let changed = !this._hasDrawn || this._lastLocale !== locale;
-    changed ||= view[32] !== w || view[33] !== h;
     for (let i = 0; i < next.length && !changed; i++)
       changed = view[i] !== next[i];
     if (!changed) return false;
     next.forEach((value, i) => (view[i] = value));
-    view[32] = w;
-    view[33] = h;
     this._lastLocale = locale;
     this._hasDrawn = true;
     return true;

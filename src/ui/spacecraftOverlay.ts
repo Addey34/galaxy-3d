@@ -23,7 +23,7 @@ import {
   markerLabelCandidates,
   overlayLabelBounds,
 } from '@/core/labelSpace';
-import type { LabelSpace } from '@/core/labelSpace';
+import type { LabelRect, LabelSpace } from '@/core/labelSpace';
 import type { HorizonsEphemerisService } from '@/core/HorizonsEphemerisService';
 import { getLocale } from '@/i18n';
 import type { SpacecraftMission } from '@/config/spacecraft';
@@ -54,6 +54,22 @@ export class SpacecraftOverlay {
    */
   private readonly _markers: { name: string; x: number; y: number }[] = [];
   private readonly _p = new THREE.Vector3();
+  /**
+   * Ce qui est PEINT : un état identique à la dernière image rend la repeinture inutile, et vider
+   * puis repeindre un canvas plein écran coûte surtout du travail natif du navigateur (mesuré le
+   * 2026-10-29 sur la couche voisine des petits corps). Ici la comparaison porte sur les
+   * positions ÉCRAN des marqueurs, à 0,25 px près : exacte quelle que soit la vitesse du temps,
+   * sans seuil de date.
+   */
+  private _painted: { name: string; x: number; y: number }[] = [];
+  /** Emprises déclarées à `LabelSpace` à la dernière peinture, redéclarées quand on saute une image. */
+  private _claimed: LabelRect[] = [];
+  /** Un réglage a changé sans bouger la vue : la prochaine image repeint. */
+  private _dirty = true;
+  private _paintedLocale = '';
+  private _paintedWidth = 0;
+  private _paintedHeight = 0;
+  private _paintedSpace = Number.NaN;
   /** Trajectoires allumées (colonne « Orbite ») : vide par défaut. */
   private trajectoryNames: ReadonlySet<string> = new Set();
   /** Le tracé, chargé à la PREMIÈRE trajectoire allumée (cf. `spacecraftTrajectories.ts`). */
@@ -79,6 +95,7 @@ export class SpacecraftOverlay {
   /** Affiche/masque l'overlay. À l'extinction, efface le canvas. */
   setActive(active: boolean): void {
     this.active = active;
+    this._dirty = true;
     this.canvas.classList.toggle('is-visible', active);
     if (!active) {
       this._clear();
@@ -92,11 +109,13 @@ export class SpacecraftOverlay {
   /** Marqueurs à ne pas peindre (colonne « Objet » du tableau Réglages). */
   setHiddenNames(names: ReadonlySet<string>): void {
     this.hidden = new Set(names);
+    this._dirty = true;
   }
 
   /** Noms à ne pas écrire (colonne « Étiquette »), les marqueurs restent. */
   setHiddenLabelNames(names: ReadonlySet<string>): void {
     this.hiddenLabels = new Set(names);
+    this._dirty = true;
   }
 
   /**
@@ -108,6 +127,7 @@ export class SpacecraftOverlay {
       [...names].filter((n) => this.missions.some((m) => m.name === n))
     );
     this.trajectoryNames = own;
+    this._dirty = true;
     this.trajectories?.setNames(own);
     if (own.size > 0)
       this.trajectoryModule ??= import('./spacecraftTrajectories');
@@ -135,6 +155,7 @@ export class SpacecraftOverlay {
    * dans la palette ne doit pas ouvrir une vue sur un point que rien ne dessine.
    */
   setTarget(name: string | null): void {
+    if (this.target !== name) this._dirty = true;
     this.target = name;
   }
 
@@ -174,16 +195,12 @@ export class SpacecraftOverlay {
 
     const w = window.innerWidth;
     const h = window.innerHeight;
-    this._clear();
-    this._markers.length = 0;
     const locale = getLocale();
-    // Sous les marqueurs : une ligne ne masque jamais le point qu'elle relie.
     const trajectories = this._trajectoriesFor(horizons);
-    this._paths =
-      trajectories && this.trajectoryNames.size > 0
-        ? trajectories.draw(this.ctx, camera, date, morph, place, w, h)
-        : 0;
+    const drawingPaths = trajectories !== null && this.trajectoryNames.size > 0;
 
+    // 1. Où chaque marqueur tombe à l'écran, sans rien peindre.
+    const found: { mission: SpacecraftMission; x: number; y: number }[] = [];
     for (const mission of this.missions) {
       const isTarget = mission.name === this.target;
       if (!isTarget && this.hidden.has(mission.name)) continue;
@@ -204,9 +221,62 @@ export class SpacecraftOverlay {
       ) {
         continue;
       }
+      found.push({
+        mission,
+        x: (this._p.x * 0.5 + 0.5) * w,
+        y: (-this._p.y * 0.5 + 0.5) * h,
+      });
+    }
 
-      const x = (this._p.x * 0.5 + 0.5) * w;
-      const y = (-this._p.y * 0.5 + 0.5) * h;
+    // Les libellés des couches précédentes font partie de la vue : s'ils bougent, la place
+    // disponible change. Lue AVANT que cette couche n'y déclare quoi que ce soit.
+    const spaceSignature = space?.signature() ?? 0;
+    if (
+      !drawingPaths &&
+      !this._dirty &&
+      this._paintedLocale === locale &&
+      this._paintedWidth === w &&
+      this._paintedHeight === h &&
+      this._paintedSpace === spaceSignature &&
+      found.length === this._painted.length &&
+      found.every((f, k) => {
+        const before = this._painted[k]!;
+        return (
+          before.name === f.mission.name &&
+          Math.abs(before.x - f.x) < 0.25 &&
+          Math.abs(before.y - f.y) < 0.25
+        );
+      })
+    ) {
+      // Les couches suivantes comptent sur ces emprises pour leurs propres noms.
+      for (const rect of this._claimed) space?.add(rect);
+      return;
+    }
+    this._dirty = false;
+    this._paintedLocale = locale;
+    this._paintedWidth = w;
+    this._paintedHeight = h;
+    this._paintedSpace = spaceSignature;
+    this._painted = found.map((f) => ({
+      name: f.mission.name,
+      x: f.x,
+      y: f.y,
+    }));
+    this._claimed = [];
+    const claim = (rect: LabelRect): void => {
+      this._claimed.push(rect);
+      space?.add(rect);
+    };
+
+    // 2. Peindre. Sous les marqueurs : une ligne ne masque jamais le point qu'elle relie.
+    this._clear();
+    this._markers.length = 0;
+    this._paths = drawingPaths
+      ? trajectories.draw(this.ctx, camera, date, morph, place, w, h)
+      : 0;
+
+    for (const { mission, x, y } of found) {
+      const isTarget = mission.name === this.target;
       const color = `#${mission.color.toString(16).padStart(6, '0')}`;
 
       this.ctx.fillStyle = color;
@@ -231,9 +301,9 @@ export class SpacecraftOverlay {
             overlayLabelBounds(w, h)
           )
         : { dx: 8 + textWidth / 2, dy: 0, rect: null };
-      space?.add({ left: x - 4, right: x + 4, top: y - 4, bottom: y + 4 });
+      claim({ left: x - 4, right: x + 4, top: y - 4, bottom: y + 4 });
       if (!placed) continue;
-      if (placed.rect) space?.add(placed.rect);
+      if (placed.rect) claim(placed.rect);
       this.ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
       this.ctx.fillText(text, x + placed.dx - textWidth / 2, y + placed.dy + 4);
     }
@@ -263,6 +333,7 @@ export class SpacecraftOverlay {
   }
 
   private readonly _resize = (): void => {
+    this._dirty = true; // redimensionner un canvas le vide
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(window.innerWidth * dpr);
     this.canvas.height = Math.round(window.innerHeight * dpr);
