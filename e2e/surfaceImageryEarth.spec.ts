@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { clickWhenCalm } from './mainThread';
+import { waitForCalmMainThread } from './mainThread';
 import {
   boot,
   HERE,
@@ -663,11 +663,14 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
   expect(eox, 'Sentinel-2 demandé de trop loin').toEqual([]);
   // Le clic final tombait dans le travail de la scène sur un runner lent (Xeon 8370C, run
-  // 40729356516 : « waiting for element to be visible, enabled and stable » 3 fois sur 3, 15 s). Le
-  // calme est attendu d'abord, et son échec nomme la série d'images mesurée au lieu de se taire.
-  await clickWhenCalm(page, page.locator('#settings-trigger'), {
-    timeoutMs: 90_000,
-  });
+  // 40729356516 : « waiting for element to be visible, enabled and stable » 3 fois sur 3, 15 s).
+  // Le calme est attendu d'abord, et son échec nomme la série d'images mesurée au lieu de se taire.
+  // Puis le clic est ENVOYÉ à l'élément au lieu d'être joué : `click()` attend que le bouton soit
+  // « stable », donc plusieurs images fluides, et sur un EPYC 7763 en rendu logiciel la scène n'en
+  // donne jamais (run 40803413715 sur `main` ET sur `d4d2a64f`, antérieur aux calques : 120 s,
+  // 3 fois sur 3). Ce que ce scénario vérifie est la valeur du réglage, pas la géométrie du bouton.
+  await waitForCalmMainThread(page, { timeoutMs: 90_000 });
+  await page.locator('#settings-trigger').dispatchEvent('click');
   await expect(page.locator('#surface-earth-base')).toHaveValue('sentinel-2');
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
