@@ -263,7 +263,10 @@ test.describe('ce que l’application dit quand elle change d’état', () => {
               (text) => text.includes('Date set to')
             )
           ),
-        { timeout: 5_000 }
+        // 30 s : l'observateur garde tout ce que la région a affiché, donc une fenêtre large ne
+        // masque rien, elle passe dès que le message a été vu. 5 s ne suffisait pas sur un runner
+        // lent (Xeon 8370C le 2026-10-25, 3 échecs sur 3 ; EPYC 9V74 le 2026-10-29, run 40815157900).
+        { timeout: 30_000 }
       )
       .toBe(true);
   });

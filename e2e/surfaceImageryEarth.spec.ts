@@ -460,7 +460,11 @@ test('follows the scene’s year from one Sentinel-2 edition to the next', async
 
   const before = eox.length;
   const input = page.locator('#date-input');
-  await input.fill('2023-07-01');
+  // 60 s et non les 15 s par défaut : sur un runner lent (EPYC 7763, Xeon 8370C) le fil principal
+  // reste pris par les tuiles de la descente, et `fill` attend « visible, enabled and editable »
+  // jusqu'au bout (run 40794950849 : 15 s dépassées, vert au réessai ; réessai aussi le 2026-10-28
+  // et le 2026-10-29 sur Xeon 8370C).
+  await input.fill('2023-07-01', { timeout: 60_000 });
   await input.dispatchEvent('change');
   await expect(credit).toHaveText(
     'EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2023)',
