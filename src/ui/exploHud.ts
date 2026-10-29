@@ -222,6 +222,23 @@ export function findLabelPlacement(
   return null;
 }
 
+/**
+ * Ce que l'image précédente a ÉCRIT dans le DOM d'un libellé. Réécrire une valeur identique
+ * invalide quand même les styles du navigateur : avec ~40 libellés, c'était un recalcul complet
+ * à chaque image même vue immobile. On n'écrit donc que les différences.
+ */
+interface WrittenLabel {
+  shown: boolean;
+  transform: string;
+  offsetX: string;
+  offsetY: string;
+  leaderLength: string;
+  leaderAngle: string;
+  target: boolean;
+  offset: boolean;
+  markerOnly: boolean;
+}
+
 export class ExploHud {
   /** Les corps qui masquent un repère passé derrière eux (ligne 45.8), ou rien. */
   private _occlusion: ScreenOcclusion | null = null;
@@ -244,6 +261,7 @@ export class ExploHud {
   private _hiddenNames: ReadonlySet<string> = new Set();
   /** Place occupée partagée avec les couches d'instrument (cf. `core/labelSpace.ts`). */
   private _space: LabelSpace | null = null;
+  private readonly _written = new Map<HTMLElement, WrittenLabel>();
 
   /** Déclare la place commune du frame ; sans elle, l'ExploHud se comporte comme avant. */
   setLabelSpace(space: LabelSpace | null): void {
@@ -295,7 +313,11 @@ export class ExploHud {
     this.active = active;
     this.labelsLayer.classList.toggle('is-visible', active);
     if (!active) {
-      this.labels.forEach((el) => (el.style.display = 'none'));
+      this.labels.forEach((el) => {
+        el.style.display = 'none';
+        const written = this._written.get(el);
+        if (written) written.shown = false;
+      });
     }
   }
 
@@ -343,12 +365,14 @@ export class ExploHud {
     const height = window.innerHeight;
     const candidates: ProjectedLabel[] = [];
 
-    this.labels.forEach((element) => {
-      element.style.display = 'none';
-      element.classList.remove('is-target');
-      if (targetChanged) element.classList.remove('is-acquiring');
-      element.classList.remove('is-marker-only');
-    });
+    // Rien n'est masqué d'avance : un libellé qui reste placé au même endroit ne doit pas être
+    // éteint puis rallumé. Les libellés non placés cette image sont masqués en fin de passe.
+    if (targetChanged) {
+      this.labels.forEach((element) =>
+        element.classList.remove('is-acquiring')
+      );
+    }
+    const placedNow = new Set<HTMLElement>();
 
     // Vue d'ensemble Explo (aucune cible suivie) : à cette échelle, TOUS les corps projettent
     // dans un même amas minuscule au centre — sans filtre, c'est une bouillie de labels
@@ -431,28 +455,8 @@ export class ExploHud {
       if (!placement) continue;
 
       const { element } = candidate;
-      element.style.display = 'block';
-      element.style.transform =
-        'translate3d(' + placement.x + 'px, ' + placement.y + 'px, 0)';
-      element.style.setProperty(
-        '--label-offset-x',
-        `${placement.textOffsetX}px`
-      );
-      element.style.setProperty(
-        '--label-offset-y',
-        `${placement.textOffsetY}px`
-      );
-      element.style.setProperty(
-        '--leader-length',
-        `${placement.leaderLength}px`
-      );
-      element.style.setProperty(
-        '--leader-angle',
-        `${placement.leaderAngle}rad`
-      );
-      element.classList.toggle('is-target', candidate.target);
-      element.classList.toggle('is-offset', placement.offset);
-      element.classList.toggle('is-marker-only', placement.markerOnly);
+      placedNow.add(element);
+      this._write(element, candidate, placement);
       if (candidate.target && targetChanged) {
         element.classList.remove('is-acquiring');
         void element.offsetWidth;
@@ -461,6 +465,83 @@ export class ExploHud {
       }
       occupied.push(placement.rect);
       this._space?.add(placement.rect);
+    }
+
+    // Les libellés affichés (ou encore marqués cible / repère seul) à l'image précédente et non
+    // placés dans celle-ci s'éteignent ; les autres sont déjà éteints, on n'y touche pas.
+    this._written.forEach((written, element) => {
+      if (placedNow.has(element)) return;
+      if (!written.shown && !written.target && !written.markerOnly) return;
+      element.style.display = 'none';
+      element.classList.remove('is-target', 'is-marker-only');
+      written.shown = false;
+      written.target = false;
+      written.markerOnly = false;
+    });
+  }
+
+  /** Écrit l'état d'un libellé placé, en ne touchant que ce qui diffère de l'image précédente. */
+  private _write(
+    element: HTMLElement,
+    candidate: ProjectedLabel,
+    placement: LabelPlacement
+  ): void {
+    let w = this._written.get(element);
+    if (!w) {
+      w = {
+        shown: false,
+        transform: '',
+        offsetX: '',
+        offsetY: '',
+        leaderLength: '',
+        leaderAngle: '',
+        target: false,
+        offset: false,
+        markerOnly: false,
+      };
+      this._written.set(element, w);
+    }
+    if (!w.shown) {
+      element.style.display = 'block';
+      w.shown = true;
+    }
+    const transform =
+      'translate3d(' + placement.x + 'px, ' + placement.y + 'px, 0)';
+    if (w.transform !== transform) {
+      element.style.transform = transform;
+      w.transform = transform;
+    }
+    const offsetX = `${placement.textOffsetX}px`;
+    if (w.offsetX !== offsetX) {
+      element.style.setProperty('--label-offset-x', offsetX);
+      w.offsetX = offsetX;
+    }
+    const offsetY = `${placement.textOffsetY}px`;
+    if (w.offsetY !== offsetY) {
+      element.style.setProperty('--label-offset-y', offsetY);
+      w.offsetY = offsetY;
+    }
+    const leaderLength = `${placement.leaderLength}px`;
+    if (w.leaderLength !== leaderLength) {
+      element.style.setProperty('--leader-length', leaderLength);
+      w.leaderLength = leaderLength;
+    }
+    const leaderAngle = `${placement.leaderAngle}rad`;
+    if (w.leaderAngle !== leaderAngle) {
+      element.style.setProperty('--leader-angle', leaderAngle);
+      w.leaderAngle = leaderAngle;
+    }
+    if (w.target !== candidate.target) {
+      element.classList.toggle('is-target', candidate.target);
+      w.target = candidate.target;
+    }
+    if (w.offset !== placement.offset) {
+      element.classList.toggle('is-offset', placement.offset);
+      w.offset = placement.offset;
+    }
+    if (w.markerOnly !== placement.markerOnly) {
+      element.classList.toggle('is-marker-only', placement.markerOnly);
+      w.markerOnly = placement.markerOnly;
     }
   }
 
