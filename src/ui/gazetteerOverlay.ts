@@ -109,6 +109,7 @@ export class GazetteerOverlay {
   setActive(active: boolean): void {
     this.active = active;
     this.canvas.classList.toggle('is-visible', active);
+    this._drawnKey = [];
     if (!active) this._clear();
   }
 
@@ -120,6 +121,10 @@ export class GazetteerOverlay {
   private lastDrawn = 0;
   /** Les noms de la dernière image : c'est eux qu'un clic peut viser. */
   private drawnPlaces: DrawnPlace[] = [];
+  /** Ce qui a décidé la dernière image : identique, le canvas déjà peint reste juste. */
+  private _drawnKey: number[] = [];
+  private _drawnTarget: string | null = null;
+  private _drawnLocale = '';
 
   /**
    * Le nom sous un clic, s'il y en a un (marge de 6 px autour du texte, un doigt n'est pas un
@@ -199,42 +204,79 @@ export class GazetteerOverlay {
      */
     occlusion: ScreenOcclusion | null = null
   ): void {
-    this.lastDrawn = 0;
-    this.drawnPlaces = [];
     // Le compte PUBLIÉ se remet à zéro AVANT les sorties anticipées, pas seulement à la fin :
     // sinon il garde la valeur de la dernière image qui a dessiné, et la couche annonce encore
     // cinq noms alors qu'on s'est éloigné et qu'elle ne peint plus rien. C'est un témoin
     // d'e2e, donc un témoin qui ment est pire que pas de témoin du tout.
-    this.canvas.dataset['names'] = '0';
-    this.canvas.dataset['drawn'] = '';
-    this.canvas.dataset['places'] = '';
-    if (!this.ctx || !this.active) return;
-    this._clear();
-    if (!target || !targetName) return;
+    if (!this.ctx || !this.active) {
+      this._resetWitnesses();
+      return;
+    }
+    if (!target || !targetName) {
+      this._repaintFromScratch();
+      return;
+    }
     const isEarth = targetName === this.earth?.name;
     const radiusKm = isEarth
       ? this.earth!.radiusKm
       : (this.radiiKm.get(targetName) ?? 0);
-    if (radiusKm <= 0) return;
+    if (radiusKm <= 0) {
+      this._repaintFromScratch();
+      return;
+    }
 
     const sceneRadius =
       (target.group.userData['radius'] as number | undefined) ?? 0;
-    if (sceneRadius <= 0) return;
+    if (sceneRadius <= 0) {
+      this._repaintFromScratch();
+      return;
+    }
     target.group.getWorldPosition(this._centre);
     camera.getWorldPosition(this._camera);
     const apparentRadii = this._camera.distanceTo(this._centre) / sceneRadius;
-    if (apparentRadii > GAZETTEER_LOAD_RADII) return;
+    if (apparentRadii > GAZETTEER_LOAD_RADII) {
+      this._repaintFromScratch();
+      return;
+    }
 
     const features = this._ensure(targetName);
-    if (!features) return;
+    if (!features) {
+      this._repaintFromScratch();
+      return;
+    }
 
     const w = window.innerWidth;
     const h = window.innerHeight;
+    // Rien n'a changé depuis la dernière image : le canvas déjà peint, les témoins et les noms
+    // cliquables restent justes. Vider et repeindre un canvas plein écran coûte surtout du travail
+    // natif du navigateur (mesuré le 2026-10-29, `earth-explo`, frein CPU x12, palier medium :
+    // ~9 ms par image avec cette couche). Les valeurs sont arrondies à 1e-6 pour ignorer le bruit
+    // flottant ; l'orientation de la cible y est, parce qu'un nom suit la rotation de sa surface.
+    const locale = getLocale();
+    const key = [
+      ...camera.matrixWorld.elements,
+      ...camera.projectionMatrix.elements,
+      ...target.group.matrixWorld.elements,
+      w,
+      h,
+      occlusion?.signature ?? 0,
+      space?.signature() ?? 0,
+    ].map((v) => Math.round(v * 1e6));
+    if (
+      this._drawnTarget === targetName &&
+      this._drawnLocale === locale &&
+      key.length === this._drawnKey.length &&
+      key.every((v, i) => v === this._drawnKey[i])
+    )
+      return;
+    this._repaintFromScratch();
+    this._drawnKey = key;
+    this._drawnTarget = targetName;
+    this._drawnLocale = locale;
     const bounds = overlayLabelBounds(w, h);
     this.ctx.font = '11px sans-serif';
 
     // Une seule liste de noms à poser, quelle que soit leur source : le placement ne change pas.
-    const locale = getLocale();
     const labels: {
       lat: number;
       lon: number;
@@ -359,11 +401,27 @@ export class GazetteerOverlay {
     this.canvas.remove();
   }
 
+  /** Les témoins lus par l'e2e et par `placeAt` : à zéro, et la prochaine image repeint. */
+  private _resetWitnesses(): void {
+    this.lastDrawn = 0;
+    this.drawnPlaces = [];
+    this._drawnKey = [];
+    this.canvas.dataset['names'] = '0';
+    this.canvas.dataset['drawn'] = '';
+    this.canvas.dataset['places'] = '';
+  }
+
+  private _repaintFromScratch(): void {
+    this._resetWitnesses();
+    this._clear();
+  }
+
   private _clear(): void {
     this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   private readonly _resize = (): void => {
+    this._drawnKey = []; // redimensionner un canvas le vide
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(window.innerWidth * dpr);
     this.canvas.height = Math.round(window.innerHeight * dpr);
