@@ -330,6 +330,12 @@ export class ExploHud {
   ): void {
     if (!this.active) return;
 
+    // LU AVANT d'écrire le moindre style : mesurer une mise en page juste après des écritures
+    // oblige le navigateur à tout recalculer sur-le-champ, à chaque image (mesuré le 2026-10-29,
+    // `getBoundingClientRect` + recalcul natif : le HUD coûtait ~7,7 ms par image, 25 %, sur
+    // `earth-explo` au palier medium). Ces rectangles sont ceux des docks et panneaux, que les
+    // écritures ci-dessous ne déplacent pas.
+    const occupied: LabelRect[] = getSceneOverlayRects();
     const targetName = cameraSystem.targetName;
     const targetChanged = targetName !== this._lastTarget;
     this._lastTarget = targetName;
@@ -419,7 +425,6 @@ export class ExploHud {
     // La place occupée est PARTAGÉE avec les couches d'instrument quand l'appelant en fournit
     // une : sans cela, chaque couche évitait ses propres libellés et écrivait sur ceux des
     // autres (« 1I/ʻOumuamua » par-dessus « Lune », signalé le 2026-09-15).
-    const occupied: LabelRect[] = getSceneOverlayRects();
     for (const fixed of occupied) this._space?.add(fixed);
     for (const candidate of candidates) {
       const placement = this._placeLabel(candidate, occupied, width, height);
