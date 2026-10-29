@@ -89,10 +89,22 @@ const PLANET_ORDINALS = ((): Map<string, number> => {
 
 // ── Formateurs (locale courante : séparateurs de milliers/décimales adaptés à la langue) ──
 
+// `toLocaleString(locale, options)` reconstruit un formateur `Intl` à CHAQUE appel ; le readout
+// de distance en appelle plusieurs par image (~500 ms propres sur 10 s au profil, Explo, le
+// 2026-10-29). Un formateur par (langue, décimales) est gardé.
+const numberFormats = new Map<string, Intl.NumberFormat>();
+
 function num(n: number, maxFractionDigits = 0): string {
-  return n.toLocaleString(intlLocale(), {
-    maximumFractionDigits: maxFractionDigits,
-  });
+  const locale = intlLocale();
+  const key = `${locale}|${maxFractionDigits}`;
+  let format = numberFormats.get(key);
+  if (!format) {
+    format = new Intl.NumberFormat(locale, {
+      maximumFractionDigits: maxFractionDigits,
+    });
+    numberFormats.set(key, format);
+  }
+  return format.format(n);
 }
 
 /** Exposant en chiffres exposants Unicode (24 → « ²⁴ »). */
