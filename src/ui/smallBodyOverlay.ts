@@ -16,6 +16,11 @@ import { SQRT_K } from '@/core/ScaleService';
 import { scaleToScene } from '@/core/overlayScale';
 import { keplerianPositionEcliptic } from '@/core/kepler';
 import { eclipticToScene } from '@/core/frames';
+import {
+  quantizeViewKey,
+  SIGNATURE_QUANTUM,
+  sameViewKey,
+} from '@/core/viewKey';
 import type { ParsedSmallBody, SmallBodyCategory } from '@/core/sbdb';
 
 /** Nombre maximal de marqueurs dessinés par frame (LOD : les plus proches d'abord). */
@@ -129,21 +134,19 @@ export class SmallBodyOverlay {
     // (coût natif du navigateur, ~25 % de l'image en Explo près du sol, mesuré le 2026-10-28).
     this._refreshPositions(date);
     const key = [
-      ...camera.matrixWorld.elements,
-      ...camera.projectionMatrix.elements,
+      ...quantizeViewKey([
+        ...camera.matrixWorld.elements,
+        ...camera.projectionMatrix.elements,
+      ]),
+      ...quantizeViewKey([this._occlusion?.signature ?? 0], SIGNATURE_QUANTUM),
       w,
       h,
       morph,
       this._cacheDate ?? -1,
       this.bodies.length,
       this.visibleCategories.size,
-      this._occlusion?.signature ?? 0,
     ];
-    if (
-      key.length === this._drawnKey.length &&
-      key.every((v, i) => v === this._drawnKey[i])
-    )
-      return;
+    if (sameViewKey(key, this._drawnKey)) return;
     this._drawnKey = key;
     this._clear();
 

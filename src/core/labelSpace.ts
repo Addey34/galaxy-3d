@@ -76,7 +76,12 @@ export class LabelSpace {
   signature(): number {
     let value = this.rects.length;
     for (const rect of this.rects)
-      value = (value * 31 + rect.left * 7 + rect.top * 13) % 2 ** 31;
+      // Au demi-pixel : un libellé qui glisse de 0,01 px par image ne change aucune place.
+      value =
+        (value * 31 +
+          Math.round(rect.left * 2) * 7 +
+          Math.round(rect.top * 2) * 13) %
+        2 ** 31;
     return value;
   }
 
