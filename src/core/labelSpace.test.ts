@@ -113,6 +113,14 @@ describe('place occupée par les libellés', () => {
     expect(space.signature()).not.toBe(before);
   });
 
+  it('ignore une dérive sous le demi-pixel (un libellé qui glisse lentement)', () => {
+    const space = new LabelSpace();
+    space.reset([rect(100, 100)]);
+    const before = space.signature();
+    space.reset([rect(100.01, 100.01)]);
+    expect(space.signature()).toBe(before);
+  });
+
   /**
    * RÉGRESSION LIVRÉE : chaque nom était écarté de 40 px de son marqueur, jusqu'à sortir de
    * l'écran. Deux causes : des décalages constants, et le marqueur réservé AVANT son propre nom,

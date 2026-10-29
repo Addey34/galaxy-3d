@@ -6,6 +6,11 @@ import {
   overlayLabelBounds,
 } from '@/core/labelSpace';
 import type { LabelSpace } from '@/core/labelSpace';
+import {
+  quantizeViewKey,
+  ROTATION_QUANTUM,
+  SIGNATURE_QUANTUM,
+} from '@/core/viewKey';
 import type { ScreenOcclusion } from '@/core/screenOcclusion';
 import {
   featuresToLabel,
@@ -253,15 +258,21 @@ export class GazetteerOverlay {
     // ~9 ms par image avec cette couche). Les valeurs sont arrondies à 1e-6 pour ignorer le bruit
     // flottant ; l'orientation de la cible y est, parce qu'un nom suit la rotation de sa surface.
     const locale = getLocale();
+    // La caméra est lue RELATIVEMENT à la cible : elle la suit, la dérive commune ne change rien.
+    const cam = camera.matrixWorld.elements.slice();
+    const tgt = target.group.matrixWorld.elements.slice();
+    for (let k = 12; k < 15; k++) {
+      cam[k] = cam[k]! - tgt[k]!;
+      tgt[k] = 0;
+    }
     const key = [
-      ...camera.matrixWorld.elements,
-      ...camera.projectionMatrix.elements,
-      ...target.group.matrixWorld.elements,
+      ...quantizeViewKey([...cam, ...camera.projectionMatrix.elements]),
+      ...quantizeViewKey(tgt, ROTATION_QUANTUM),
+      ...quantizeViewKey([occlusion?.signature ?? 0], SIGNATURE_QUANTUM),
       w,
       h,
-      occlusion?.signature ?? 0,
       space?.signature() ?? 0,
-    ].map((v) => Math.round(v * 1e6));
+    ];
     if (
       this._drawnTarget === targetName &&
       this._drawnLocale === locale &&
@@ -270,6 +281,7 @@ export class GazetteerOverlay {
     )
       return;
     this._repaintFromScratch();
+    this._inked = true;
     this._drawnKey = key;
     this._drawnTarget = targetName;
     this._drawnLocale = locale;
@@ -411,8 +423,13 @@ export class GazetteerOverlay {
     this.canvas.dataset['places'] = '';
   }
 
+  /** Le canvas porte-t-il de l'encre ? Sinon le vider chaque image n'est que du travail natif. */
+  private _inked = false;
+
   private _repaintFromScratch(): void {
     this._resetWitnesses();
+    if (!this._inked) return;
+    this._inked = false;
     this._clear();
   }
 

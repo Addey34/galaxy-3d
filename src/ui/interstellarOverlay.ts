@@ -21,6 +21,7 @@
 import type { ScreenOcclusion } from '@/core/screenOcclusion';
 import * as THREE from 'three';
 import { scaleToScene } from '@/core/overlayScale';
+import { quantizeViewKey } from '@/core/viewKey';
 import {
   MARKER_LABEL_HEIGHT,
   markerLabelCandidates,
@@ -420,8 +421,11 @@ export class InterstellarOverlay {
   ): boolean {
     const view = this._lastView;
     const next = [
-      ...camera.matrixWorld.elements,
-      ...camera.projectionMatrix.elements,
+      // Quantifiés : la dérive d'une caméra qui suit sa cible ne doit pas tout repeindre.
+      ...quantizeViewKey([
+        ...camera.matrixWorld.elements,
+        ...camera.projectionMatrix.elements,
+      ]),
       Math.floor(now / REDRAW_DATE_STEP_MS),
       morph,
       // Les libellés des autres couches font partie de la vue : s'ils bougent, la place
