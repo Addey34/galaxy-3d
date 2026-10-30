@@ -228,6 +228,14 @@ export const fr: Record<MessageKey, string> = {
   'credits.fictional.list':
     'Les corps jamais cartographiés globalement ont une texture illustrative, pas une carte scientifique ; la fiche du corps le signale, et Sources les énumère.',
   'weather.attribution.prefix': 'Données météo :',
+  'weather.citations.summary': 'Citations des données',
+  'weather.citations.clouds': 'Nuages (imagerie en couleurs vraies)',
+  'weather.citations.precip': 'Pluie',
+  'weather.citations.thermal': 'Température de l’air',
+  'weather.citations.sea': 'Température de la mer',
+  'weather.citations.precipNote':
+    'L’imagerie de 30 minutes part du passage préliminaire (Early) et lui substitue le passage final (Final) dès qu’il existe. L’imagerie quotidienne est un produit sur mesure, sans DOI propre.',
+  'weather.citations.policy': 'Politique d’utilisation des données de la NASA',
   'weather.attribution.modified': 'rééchantillonnées en textures de carte',
   'credits.models': 'Modèles de forme 3D',
   'credits.models.list':
