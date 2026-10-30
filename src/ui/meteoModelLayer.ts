@@ -25,6 +25,7 @@ import {
 } from './earthLayer';
 import type { SourceCandidate } from '@/core/layerSource';
 import type { PublicAPI } from '@/SolarSystemApp';
+import { PROVIDER_NAMES } from '@/core/providerNames';
 
 interface MeteoTextureData {
   data: Uint8ClampedArray;
@@ -60,7 +61,9 @@ function defaultSourceLabel(
   data: Pick<MeteoGridData, 'plan' | 'provider'>
 ): string {
   if (data.provider) return data.provider;
-  return data.plan.source === 'archive' ? 'ERA5' : 'Open-Meteo';
+  return data.plan.source === 'archive'
+    ? PROVIDER_NAMES.era5
+    : PROVIDER_NAMES.openMeteo;
 }
 
 /**

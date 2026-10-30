@@ -16,6 +16,7 @@
  * puis int16 LE bande après bande ; valeur = brut × scale + offset, −32768 = absente.
  */
 import type { ScalarGrid } from './meteoGrid';
+import { PROVIDER_NAMES } from './providerNames';
 
 /** L'origine du service ; la CSP (`firebase.json`) et la page de confidentialité la citent. */
 export const GALAXY_DATA_ORIGIN = 'https://galaxy-data.adrianguichard.dev';
@@ -57,8 +58,8 @@ export type GalaxyDataArchiveVersion = 'era5' | 'era5t';
 
 /** Le nom affiché par le badge : ERA5T est la version PRÉLIMINAIRE, et le badge le dit. */
 export const ARCHIVE_PROVIDER: Record<GalaxyDataArchiveVersion, string> = {
-  era5: 'ECMWF ERA5',
-  era5t: 'ECMWF ERA5T',
+  era5: PROVIDER_NAMES.era5,
+  era5t: PROVIDER_NAMES.era5t,
 };
 
 export interface GxfHeader {
