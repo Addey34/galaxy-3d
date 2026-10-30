@@ -60,3 +60,41 @@ for (const locale of ['en', 'fr', 'es', 'pt-BR']) {
     ).toBeLessThanOrEqual(1);
   });
 }
+
+/**
+ * LES RÉGLAGES RESTENT DANS L'ÉCRAN, en portrait comme en paysage. En paysage (844 × 390) la règle
+ * `max-height: 460px` annulait la borne des surfaces ancrées sous la rangée de boutons : le
+ * panneau finissait 32 px sous le bord bas, son dernier réglage hors d'atteinte. En portrait il
+ * prend 68 vh au plus (l'onglet Image montre alors aussi la luminosité).
+ */
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 360, height: 640 },
+  { width: 844, height: 390 },
+]) {
+  test.describe(`${viewport.width} x ${viewport.height}`, () => {
+    test.use({ viewport });
+    test('le panneau des Réglages tient dans la fenêtre', async ({ page }) => {
+      await blockExternalNetwork(page);
+      await page.addInitScript(() => {
+        localStorage.setItem('ssv-guided-tour-v1', '1');
+        localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
+      });
+      await page.goto('/');
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+      await clickWhenCalm(page, page.locator('#settings-trigger'));
+      await expect(page.locator('#orbit-options')).toBeVisible();
+      const box = await page.evaluate(() => {
+        const r = document
+          .querySelector<HTMLElement>('#orbit-options')!
+          .getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom, height: innerHeight };
+      });
+      expect(box.top, 'le haut sort de la fenêtre').toBeGreaterThanOrEqual(0);
+      expect(
+        box.bottom,
+        'le bas du panneau sort de la fenêtre'
+      ).toBeLessThanOrEqual(box.height + 1);
+    });
+  });
+}
