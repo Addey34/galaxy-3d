@@ -12,6 +12,7 @@
  */
 import { heavyAssetUrl } from '@/config/assetOrigin';
 import {
+  educArrivalDistance,
   RELIEF_TESSELLATION_ENTER_RADII,
   RELIEF_TESSELLATION_EXIT_RADII,
   SKY_LOAD_RADII,
@@ -300,7 +301,13 @@ export default class CelestialObject {
 
   /** Distance de visite caméra par mode (source : catalogue). */
   get cameraDistance(): CameraDistance | undefined {
-    return this.config.cameraDistance;
+    const configured = this.config.cameraDistance;
+    if (!configured) return undefined;
+    // Éduc : jamais plus près que le seuil des couches de surface (`core/layerDistances.ts`).
+    return {
+      ...configured,
+      educ: educArrivalDistance(configured.educ, this.config.radius),
+    };
   }
 
   // ============================================================================
