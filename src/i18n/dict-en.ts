@@ -146,7 +146,7 @@ export const en = {
   'nav.kind.moon': 'moon',
   'nav.kind.dwarf': 'dwarf',
   'nav.unavailable': 'No position at this date',
-  'nav.kind.spacecraft': 'probe',
+  'nav.kind.spacecraft': 'spacecraft',
   'nav.kind.interstellar': 'interstellar',
   'surface.close': 'Close',
   'bi.trigger.aria': 'Body information',
@@ -175,7 +175,7 @@ export const en = {
   'events.kind.annular': 'annular',
   'events.kind.total': 'total',
   'events.tip.peak': 'Peak visible near {lat}, {lon}',
-  'events.tip.obscuration': '{percent}% obscured at maximum',
+  'events.tip.obscuration': '{percent} obscured at maximum',
   'events.tip.goto': 'Click to travel to this date',
   'events.source': 'Dates computed with Astronomy Engine, in UTC.',
 
@@ -338,6 +338,11 @@ export const en = {
   // ── Surface « Réglages d'affichage » : un vocabulaire, trois colonnes (étiquette, objet,
   //    orbite), les mêmes mots dans le tableau, ses en-têtes et ses lignes de groupe ──
   'settings.title': 'Display settings',
+  'settings.tab.scene': 'Scene',
+  'settings.tab.image': 'Image',
+  'settings.tab.reading': 'Reading',
+  'settings.tab.data': 'Data',
+  'settings.tabs.aria': 'Display settings sections',
   'settings.section.scene': 'In the scene',
   'settings.section.rendering': 'Rendering',
   'settings.section.layers': 'Layers',
@@ -606,7 +611,7 @@ export const en = {
   'subtitle.dwarf': 'Dwarf planet',
   'subtitle.asteroid': 'Asteroid',
   'subtitle.comet': 'Comet',
-  'subtitle.spacecraft': 'Space probe',
+  'subtitle.spacecraft': 'Spacecraft',
   'subtitle.interstellar': 'Interstellar object',
   'subtitle.planet': 'Planet',
   // {ordinal} = « 3rd » (anglais) / « 3ᵉ » (français), calculé par bodyInfo.
@@ -615,6 +620,9 @@ export const en = {
   // ── Unités & suffixes (fiche) ──
   'unit.light': 'light',
   'unit.day.short': 'd',
+  'unit.hour.short': 'h',
+  'unit.minute.short': 'min',
+  'unit.second.short': 's',
   // Unites en toutes lettres : les pages statiques par corps les emploient depuis le lot 20,
   // ou elles etaient ecrites en dur en anglais.
   'unit.hours': 'hours',

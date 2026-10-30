@@ -66,7 +66,10 @@ test('the small-body panel names its source and the date of the snapshot', async
   await expect(note).toBeVisible();
   await expect(note).toContainText('JPL Small-Body Database');
   await expect(note).toContainText(/\d{4}/);
-  const count = Number(/^(\d+)/.exec((await note.innerText()).trim())?.[1]);
+  // Le compteur est écrit avec le séparateur de milliers de la langue (« 6,965 »).
+  const count = Number(
+    (await note.innerText()).trim().split(' ')[0].replace(/\D/g, '')
+  );
   expect(count).toBeGreaterThan(1000);
 });
 

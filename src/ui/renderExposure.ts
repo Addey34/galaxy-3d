@@ -3,6 +3,7 @@
  * propre à un mode). Complète le sélecteur de qualité graphique existant : celui-ci ajuste la
  * fluidité, celui-ci ajuste la luminosité perçue selon l'écran du visiteur.
  */
+import { formatFixed } from './localNumber';
 import { STORAGE_KEYS } from '@/config/storageKeys';
 import { onLocaleChange, t } from '@/i18n';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
@@ -64,7 +65,7 @@ export function setupRenderExposure(scene: SceneSystem): void {
     caption.textContent = t('settings.exposure');
     range.setAttribute('aria-label', t('settings.exposure'));
     const current = Number(range.value);
-    const text = current.toFixed(2);
+    const text = formatFixed(current, 2);
     value.textContent = text;
     range.setAttribute('aria-valuetext', text);
   };

@@ -160,7 +160,7 @@ export const es: Record<MessageKey, string> = {
   'events.kind.annular': 'anular',
   'events.kind.total': 'total',
   'events.tip.peak': 'Máximo visible cerca de {lat}, {lon}',
-  'events.tip.obscuration': '{percent} % oscurecido en el máximo',
+  'events.tip.obscuration': '{percent} oscurecido en el máximo',
   'events.tip.goto': 'Haga clic para viajar a esta fecha',
   'events.source': 'Fechas calculadas con Astronomy Engine, en UTC.',
 
@@ -324,6 +324,11 @@ export const es: Record<MessageKey, string> = {
 
   // ── Surface « Réglages d'affichage » (cf. le bloc anglais) ──
   'settings.title': 'Ajustes de visualización',
+  'settings.tab.scene': 'Escena',
+  'settings.tab.image': 'Imagen',
+  'settings.tab.reading': 'Lectura',
+  'settings.tab.data': 'Datos',
+  'settings.tabs.aria': 'Secciones de los ajustes de visualización',
   'settings.section.scene': 'En la escena',
   'settings.section.rendering': 'Representación',
   'settings.section.layers': 'Capas',
@@ -595,6 +600,9 @@ export const es: Record<MessageKey, string> = {
   // ── Unités & suffixes (fiche) ──
   'unit.light': 'luz',
   'unit.day.short': 'd',
+  'unit.hour.short': 'h',
+  'unit.minute.short': 'min',
+  'unit.second.short': 's',
   'unit.hours': 'horas',
   'unit.days': 'días',
   'unit.year.short': 'años',

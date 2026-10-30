@@ -12,6 +12,7 @@ import type { OverlayCoordinator } from './overlayCoordinator';
 import type { PlanetNavigation } from './planetNav';
 import type { PlaybackControls } from './playback';
 import { getAnnouncer } from './announcer';
+import { formatFixed, formatPercent } from './localNumber';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -30,6 +31,7 @@ function formatEventDate(date: Date): string {
       hour: '2-digit',
       minute: '2-digit',
       timeZone: 'UTC',
+      timeZoneName: 'short',
     },
     getLocale(),
     intlLocale()
@@ -64,7 +66,7 @@ function eventLabel(event: AstronomicalEvent): string {
   // Éclipse : type (totale/partielle…) + ampleur obscurcie.
   const parts = [t(`events.kind.${event.eclipseKind}`)];
   if (event.obscuration !== undefined && event.obscuration > 0) {
-    parts.push(`${Math.round(event.obscuration * 100)}%`);
+    parts.push(formatPercent(event.obscuration));
   }
   return `${label} · ${parts.join(' · ')}`;
 }
@@ -83,15 +85,15 @@ function eventTooltip(event: AstronomicalEvent): string {
     const ew = lon >= 0 ? 'E' : 'W';
     lines.push(
       t('events.tip.peak', {
-        lat: `${Math.abs(lat).toFixed(1)}°${ns}`,
-        lon: `${Math.abs(lon).toFixed(1)}°${ew}`,
+        lat: `${formatFixed(Math.abs(lat), 1)}°${ns}`,
+        lon: `${formatFixed(Math.abs(lon), 1)}°${ew}`,
       })
     );
   }
   if (event.obscuration !== undefined && event.obscuration > 0) {
     lines.push(
       t('events.tip.obscuration', {
-        percent: `${Math.round(event.obscuration * 100)}`,
+        percent: formatPercent(event.obscuration),
       })
     );
   }

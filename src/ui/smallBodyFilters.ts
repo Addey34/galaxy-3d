@@ -23,6 +23,7 @@ import {
   SMALL_BODY_MARKER_RGB,
   type SmallBodyOverlay,
 } from './smallBodyOverlay';
+import { formatInteger } from './localNumber';
 
 const CATEGORIES: { id: SmallBodyCategory; labelKey: string }[] = [
   { id: 'main-belt', labelKey: 'smallBodies.mainBelt' },
@@ -122,7 +123,7 @@ export function setupSmallBodyFilters(
     noteEl.textContent = t(
       stale ? 'smallBodies.sourceStale' : 'smallBodies.source',
       {
-        count: String(dataset.count),
+        count: formatInteger(dataset.count),
         months: String(months),
         date: formatIsoDay(dataset.retrieved, getLocale(), intlLocale()),
       }

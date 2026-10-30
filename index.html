@@ -1128,13 +1128,17 @@
       </header>
       <div class="surface-body">
         <!-- UNE surface pour tout ce qui règle l'affichage, en sections titrées dans un ordre
-             fixe (contenu de la scène, champ d'astéroïdes, rendu, lecture, vue). Chaque module
-             se range dans SA section par son id, au lieu de s'ajouter à la fin dans l'ordre
-             des appels : c'est ce qui avait rangé les trajectoires interstellaires sous les
-             quatre boutons de qualité graphique. -->
+             fixe (scène, champ d'astéroïdes, couches, rendu, lecture, vue, hors ligne), réparties
+             en QUATRE onglets par `data-tab-group` (scène, image, lecture, données ; barre
+             construite par ui/settingsTabs.ts). Chaque module se range dans SA section par son
+             id, au lieu de s'ajouter à la fin dans l'ordre des appels : c'est ce qui avait rangé
+             les trajectoires interstellaires sous les quatre boutons de qualité graphique. Un
+             réglage vit dans le panneau de ce qu'il AFFECTE : les nuages gardés de près sont
+             dans Météo, les libellés d'événements dans Événements de la Terre. -->
         <section
           id="settings-section-scene"
           class="settings-section"
+          data-tab-group="scene"
           aria-labelledby="settings-section-scene-title"
         >
           <h4
@@ -1227,6 +1231,7 @@
         <section
           id="smallbody-filters"
           class="settings-section"
+          data-tab-group="scene"
           aria-labelledby="settings-section-field-title"
         >
           <h4
@@ -1246,11 +1251,12 @@
           <p class="sb-source" hidden></p>
         </section>
         <!-- Couches du corps ciblé : ce qu'on affiche SUR le corps (imagerie haute résolution,
-             fond de la Terre, comparaison). Rempli par ui/surfacePanel.ts ; ne persiste pas
-             par corps, comme le reste du contenu de la scène. -->
+             fond de la Terre, comparaison). Rempli par ui/surfacePanel.ts ; le choix du fond de la
+             Terre persiste, l'imagerie du corps ciblé non (contenu de la scène). -->
         <section
           id="settings-section-layers"
           class="settings-section"
+          data-tab-group="image"
           aria-labelledby="settings-section-layers-title"
         >
           <h4
@@ -1264,6 +1270,7 @@
         <section
           id="settings-section-rendering"
           class="settings-section"
+          data-tab-group="image"
           aria-labelledby="settings-section-rendering-title"
         >
           <h4
@@ -1277,6 +1284,7 @@
         <section
           id="settings-section-reading"
           class="settings-section"
+          data-tab-group="reading"
           aria-labelledby="settings-section-reading-title"
         >
           <h4
@@ -1290,6 +1298,7 @@
         <section
           id="settings-section-view"
           class="settings-section"
+          data-tab-group="image"
           aria-labelledby="settings-section-view-title"
           hidden
         >
@@ -1308,6 +1317,7 @@
         <section
           id="settings-section-offline"
           class="settings-section"
+          data-tab-group="data"
           aria-labelledby="settings-section-offline-title"
         >
           <h4
@@ -1357,6 +1367,8 @@
         <div class="wl-body">
           <!-- populated by ui/weatherLayers.ts -->
         </div>
+        <!-- Réglages qui n'agissent que sur la météo (ui/keepAppearanceToggle.ts). -->
+        <div id="weather-section-display" class="panel-display"></div>
         <!-- Attribution exigée par la licence CC BY 4.0 d'Open-Meteo, « à côté de tout endroit
              où ses données sont affichées », et citation demandée par NASA et Copernicus. La
              NOAA (GFS, domaine public) est citée comme source principale des couches de modèle
@@ -1424,6 +1436,8 @@
         <div class="ee-body">
           <!-- populated by ui/earthEvents.ts -->
         </div>
+        <!-- Réglages qui n'agissent que sur ces événements (ui/eventLabelsToggle.ts). -->
+        <div id="earth-events-section-display" class="panel-display"></div>
         <!-- Crédits demandés par les deux sources, affichés à côté de la donnée : l'USGS
              demande d'être crédité, et EONET est identifié comme le tracker de la NASA. -->
         <p class="ee-note ee-attribution">

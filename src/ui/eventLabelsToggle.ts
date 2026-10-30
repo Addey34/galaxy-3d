@@ -1,6 +1,6 @@
 /**
  * Bascule des ÉTIQUETTES DES ÉVÉNEMENTS de la Terre (séismes USGS, événements NASA EONET) —
- * surface Réglages, section « lecture ».
+ * panneau Événements de la Terre (il règle ses couches).
  *
  * Les marqueurs d'une couche ne se coupent que par la couche entière ; ce réglage retire leur
  * TEXTE seul. Réglage de lecture, donc il persiste ; activé par défaut, comme les noms de surface.
@@ -40,7 +40,7 @@ export function setupEventLabelsToggle(overlay: EarthEventsOverlay): void {
 
   wrapper.append(checkbox, text);
   const host =
-    document.getElementById('settings-section-scene') ?? document.body;
+    document.getElementById('earth-events-section-display') ?? document.body;
   host.append(wrapper);
 
   const refresh = (): void => {
