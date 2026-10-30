@@ -3,7 +3,7 @@
  *
  * Empreinte permanente réduite à une icône « ? » ; astuces de navigation puis crédits /
  * licence / don vivent dans une surface, mutuellement exclusive avec les autres (fiche,
- * réglages, événements, palette). Fermeture par la croix, Échap, le scrim ou une autre surface.
+ * réglages, événements, palette). Fermeture par la croix, Échap ou une autre surface.
  */
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { syncSurfaceFocus } from './surfaceFocus';

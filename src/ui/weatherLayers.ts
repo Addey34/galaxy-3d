@@ -2,7 +2,7 @@
  * Panneau des COUCHES MÉTÉO de la Terre : un toggle ON/OFF par couche visible depuis
  * l'espace (nuages GIBS, pluie/orages IMERG, vent Open-Meteo, température de surface MERRA-2).
  * Calqué sur `orbitOptions` : surface contextuelle du dock (ouverte par son déclencheur,
- * fermée par la croix / le scrim / Échap via le coordinateur), rangées construites en JS,
+ * fermée par la croix / Échap via le coordinateur), rangées construites en JS,
  * re-traduites sur changement de locale.
  *
  * Le panneau est PILOTÉ PAR LES DONNÉES : il itère sur les `WeatherLayerHandle` que le

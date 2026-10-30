@@ -192,7 +192,8 @@ function wireChrome(): {
   const guidedTour = setupGuidedTour();
   // Une surface contextuelle ne se ferme PAS au clic sur la scène (desktop) : seulement par son
   // déclencheur, par l'ouverture d'une autre surface (le coordinateur ferme la précédente) ou
-  // Échap. Mobile : le scrim est une couche tactile plein écran (tap hors feuille = fermer).
+  // Échap, mobile compris : le scrim n'est qu'un voile (pointer-events: none), il ne capte ni
+  // tap ni glisser, pour que la caméra reste libre sous une feuille ouverte.
   const surfaceScrim = document.getElementById('surface-scrim');
   if (surfaceScrim) {
     let activeSurfaceId: SecondaryOverlayId | null = null;
@@ -204,8 +205,6 @@ function wireChrome(): {
     window.addEventListener('resize', () => {
       if (activeSurfaceId) positionContextualSurface(activeSurfaceId);
     });
-    // Couche tactile mobile.
-    surfaceScrim.addEventListener('click', () => overlayCoordinator.closeAll());
   }
 
   return { overlayCoordinator, guidedTour };
