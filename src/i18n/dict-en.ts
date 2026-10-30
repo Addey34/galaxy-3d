@@ -248,12 +248,16 @@ export const en = {
   'help.tip.time.key': 'Clock · date',
   'help.tip.time.text': 'scroll to time-travel, tap to pick',
   'credits.textures': 'Textures',
+  'credits.textures.list':
+    'USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0; the 2016 edition CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modified) · Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modified).',
   'credits.fictional': 'Illustrative surfaces',
   'credits.fictional.list':
     'Bodies never mapped globally have an illustrative texture, not a scientific map; the body card says so, and Sources lists them.',
   'weather.attribution.prefix': 'Weather data:',
   'weather.attribution.modified': 'resampled into map textures',
   'credits.models': '3D shape models',
+  'credits.models.list':
+    'NASA PDS: NEAR (Eros), Hayabusa (Itokawa), Galileo (Ida, Gaspra) · ISAS/JAXA: Hayabusa2 (Ryugu) · NASA/Goddard SVS: OSIRIS-REx (Bennu)',
   'credits.data': 'Data',
   'credits.privacy': 'Privacy',
   'credits.methodology': 'Methodology',

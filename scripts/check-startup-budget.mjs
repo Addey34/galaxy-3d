@@ -276,10 +276,31 @@ function proseLiterals(file) {
   return found;
 }
 
+/**
+ * Un texte d'une langue inactive qui est IDENTIQUE au texte anglais n'est pas une fuite : c'est
+ * l'anglais, que le démarrage porte déjà (`dict-en` est statique). Une liste de noms propres
+ * (« NASA PDS: NEAR (Eros), Hayabusa (Itokawa) … ») s'écrit pareil en espagnol et en portugais,
+ * et la garde de fidélité des traductions en tient la liste écrite avec sa raison. Seule la
+ * valeur lue dans les sources `dict-*en.ts` est écartée : un texte réellement traduit reste vu.
+ */
+function englishDictionaryProse() {
+  const dir = join(ROOT, 'src', 'i18n');
+  const found = new Set();
+  for (const name of readdirSync(dir)) {
+    if (!/^dict(-card)?-en\.ts$/.test(name)) continue;
+    const source = readFileSync(join(dir, name), 'utf-8');
+    const pattern = /'((?:[^'\\\n]|\\.)+)'/g;
+    for (const match of source.matchAll(pattern)) found.add(match[1]);
+  }
+  return found;
+}
+const englishProse = englishDictionaryProse();
+
 const languageFiles = new Set(exclusiveFiles);
 const leaked = [];
 for (const file of exclusiveFiles) {
   for (const prose of proseLiterals(file)) {
+    if (englishProse.has(prose)) continue;
     for (const boot of bootFiles) {
       if (languageFiles.has(boot)) continue;
       if (!readFileSync(join(ASSETS, boot), 'utf-8').includes(prose)) continue;

@@ -70,6 +70,8 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'weather.humidityModel.lo': 'nombre + unité SI',
   'weather.humidityModel.hi': 'nombre + unité SI',
   // Noms propres et abréviations partagées.
+  'credits.models.list':
+    'noms de missions et d’organismes, sans mot à traduire',
   'position.source.astronomy-engine': 'nom du logiciel',
   'quality.auto': '« Auto » s’écrit pareil dans les quatre langues',
   // Titres de groupe de la recherche (lot 47) : le mot français est celui de l'anglais.
