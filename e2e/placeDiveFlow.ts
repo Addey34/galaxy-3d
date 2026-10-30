@@ -3,6 +3,8 @@ import { waitForCalmMainThread } from './mainThread';
 import { MOON_SCENE_DATE } from './moonScene';
 
 /** Le parcours commun de la plongée : approcher la Lune, viser un nom écrit, le toucher. */
+// La Lune arrive à 9 rayons (`core/layerDistances.ts`), sans nom posé : on approche par pas de 1 200,
+// un pas de 6 000 saute jusqu'au plancher d'approche où rien n'est écrit.
 async function approachUntilNamed(page: Page): Promise<void> {
   const overlay = page.locator('#gazetteer-overlay');
   const box = await page.locator('canvas').first().boundingBox();
@@ -10,7 +12,7 @@ async function approachUntilNamed(page: Page): Promise<void> {
   for (let i = 0; i < 14; i += 1) {
     if (Number((await overlay.getAttribute('data-names')) ?? '0') > 0) return;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.wheel(0, -6000);
+    await page.mouse.wheel(0, -1200);
     await page.waitForTimeout(400);
   }
 }
