@@ -157,7 +157,7 @@ export const ptBR: Record<MessageKey, string> = {
   'events.kind.annular': 'anular',
   'events.kind.total': 'total',
   'events.tip.peak': 'Máximo visível perto de {lat}, {lon}',
-  'events.tip.obscuration': '{percent} % obscurecido no máximo',
+  'events.tip.obscuration': '{percent} obscurecido no máximo',
   'events.tip.goto': 'Clique para viajar até esta data',
   'events.source': 'Datas calculadas com o Astronomy Engine, em UTC.',
 
@@ -586,6 +586,9 @@ export const ptBR: Record<MessageKey, string> = {
   // ── Unités & suffixes (fiche) ──
   'unit.light': 'luz',
   'unit.day.short': 'd',
+  'unit.hour.short': 'h',
+  'unit.minute.short': 'min',
+  'unit.second.short': 's',
   'unit.hours': 'horas',
   'unit.days': 'dias',
   'unit.year.short': 'anos',

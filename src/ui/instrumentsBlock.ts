@@ -34,6 +34,7 @@ import { formatIsoDay } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { BodyInfoPanel } from './bodyInfo';
+import { formatInteger } from './localNumber';
 
 /** Le jour d'une borne, dans la langue courante. `core/dateText.ts` porte la règle de l'ordinal. */
 const formatDay = (iso: string): string =>
@@ -144,7 +145,7 @@ export function setupInstrumentsBlock(
     }
 
     const { groups, orphans } = groupByHost(state);
-    countEl.textContent = String(state.instruments.length);
+    countEl.textContent = formatInteger(state.instruments.length);
 
     // Le nom du porteur n'est montré que quand il APPORTE quelque chose : une sonde sur neuf est
     // plusieurs engins (BepiColombo), et répéter « Cassini Orbiter » au-dessus de ses dix-huit

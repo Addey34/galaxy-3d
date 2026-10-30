@@ -175,7 +175,7 @@ export const en = {
   'events.kind.annular': 'annular',
   'events.kind.total': 'total',
   'events.tip.peak': 'Peak visible near {lat}, {lon}',
-  'events.tip.obscuration': '{percent}% obscured at maximum',
+  'events.tip.obscuration': '{percent} obscured at maximum',
   'events.tip.goto': 'Click to travel to this date',
   'events.source': 'Dates computed with Astronomy Engine, in UTC.',
 
@@ -611,6 +611,9 @@ export const en = {
   // ── Unités & suffixes (fiche) ──
   'unit.light': 'light',
   'unit.day.short': 'd',
+  'unit.hour.short': 'h',
+  'unit.minute.short': 'min',
+  'unit.second.short': 's',
   // Unites en toutes lettres : les pages statiques par corps les emploient depuis le lot 20,
   // ou elles etaient ecrites en dur en anglais.
   'unit.hours': 'hours',

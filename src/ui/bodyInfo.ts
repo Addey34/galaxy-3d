@@ -145,7 +145,8 @@ function formatSiderealRotation(hours: number): string {
   if (hours < 48) {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
-    return m ? `${h}h ${m}m` : `${h}h`;
+    const hour = t('unit.hour.short');
+    return m ? `${h}${hour} ${m}${t('unit.minute.short')}` : `${h}${hour}`;
   }
   return `${num(hours / 24)} ${t('unit.day.short')}`;
 }
@@ -182,14 +183,17 @@ export function formatLiveDistance(km: number): string {
 function formatLightTime(km: number): string {
   const s = km / C_KM_PER_S;
   const light = t('unit.light');
-  if (s < 1) return `${(s * 1000).toFixed(0)} ms ${light}`;
-  if (s < 60) return `${s.toFixed(1)} s ${light}`;
+  const hour = t('unit.hour.short');
+  const minute = t('unit.minute.short');
+  const second = t('unit.second.short');
+  if (s < 1) return `${num(Math.round(s * 1000))} ms ${light}`;
+  if (s < 60) return `${num(s, 1)} ${second} ${light}`;
   if (s < 3600) {
     const m = Math.floor(s / 60);
-    return `${m} min ${Math.round(s - m * 60)} s ${light}`;
+    return `${m} ${minute} ${Math.round(s - m * 60)} ${second} ${light}`;
   }
   const h = Math.floor(s / 3600);
-  return `${h} h ${Math.round((s - h * 3600) / 60)} min ${light}`;
+  return `${h} ${hour} ${Math.round((s - h * 3600) / 60)} ${minute} ${light}`;
 }
 
 // ── Provenance temporelle de la position (source, catégorie, écart mesuré) ──

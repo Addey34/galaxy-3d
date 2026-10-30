@@ -31,6 +31,7 @@ import { formatIsoDay } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { BodyInfoPanel } from './bodyInfo';
+import { formatInteger } from './localNumber';
 
 /**
  * Le jour d'une borne, dans la langue courante. Les bornes du PDS sont des JOURS, jamais mieux.
@@ -118,7 +119,7 @@ export function setupMissionsBlock(
       missions.length === 0
         ? ''
         : begun === 0
-          ? String(missions.length)
+          ? formatInteger(missions.length)
           : begun === missions.length
             ? t('bi.missions.countAllAtDate', { count: missions.length })
             : t('bi.missions.countAtDate', {
