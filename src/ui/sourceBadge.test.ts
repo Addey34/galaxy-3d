@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { sourceBadgeText } from './sourceBadge';
-import { resolveCloudSources, resolveThermalSources } from '@/core/layerSource';
+import {
+  resolveCloudSources,
+  resolvePrecipSources,
+  resolveThermalSources,
+} from '@/core/layerSource';
 import { planMeteoRequest } from '@/core/meteoTimeTravel';
 import type { SourceCandidate } from '@/core/layerSource';
 
@@ -56,7 +60,7 @@ describe('sourceBadgeText', () => {
       product: planMeteoRequest(past, { now }).product,
     };
     expect(sourceBadgeText(era5, past, now, t)).toBe(
-      'weather.source.prefix ERA5 · 2020-06-01 · time.category.reconstructed'
+      'weather.source.prefix ERA5 · 2020-06-01 09:00 UTC · time.category.reconstructed'
     );
 
     const future = new Date('2026-09-28T12:00:00Z');
@@ -67,7 +71,7 @@ describe('sourceBadgeText', () => {
       product: planMeteoRequest(future, { now }).product,
     };
     expect(sourceBadgeText(forecast, future, now, t)).toBe(
-      'weather.source.prefix Open-Meteo · 2026-09-28 · time.category.predicted · time.confidence.reduced'
+      'weather.source.prefix Open-Meteo · 2026-09-28 12:00 UTC · time.category.predicted · time.confidence.reduced'
     );
   });
 
@@ -85,5 +89,16 @@ describe('sourceBadgeText', () => {
     expect(sourceBadgeText(none, far, now, t)).toContain(
       'time.category.unavailable'
     );
+  });
+
+  it('un produit de moins d’un jour porte l’heure UTC, un produit journalier le jour seul', () => {
+    const sim = new Date('2024-03-10T15:10:00Z');
+    const [imerg] = resolvePrecipSources(sim, now);
+    expect(imerg.label).toBe('IMERG');
+    expect(sourceBadgeText(imerg, sim, now, t)).toMatch(
+      /IMERG · 2024-03-10 \d\d:\d\d UTC · /
+    );
+    const [viirs] = resolveCloudSources(sim, now);
+    expect(sourceBadgeText(viirs, sim, now, t)).not.toContain('UTC');
   });
 });
