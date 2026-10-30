@@ -27,6 +27,7 @@ import {
 } from '@/core/earthNames';
 import { diameterFromWebZoom } from '@/core/placeDive';
 import { getLocale } from '@/i18n';
+import { GAZETTEER_LOAD_RADII } from '@/core/layerDistances';
 import Logger from '@/utils/Logger';
 import type CelestialObject from '@/components/celestial/CelestialObject';
 
@@ -53,9 +54,6 @@ import type CelestialObject from '@/components/celestial/CelestialObject';
  * règle de sélection de SA source, le niveau de zoom publié pour chaque nom (`core/earthNames.ts`),
  * et le nom dans la langue de l'interface.
  */
-
-/** Au-delà de cette taille apparente, on ne charge rien : le corps n'occupe pas l'écran. */
-const GAZETTEER_LOAD_RADII = 8;
 
 /**
  * Un nom écrit à l'image courante, avec de quoi y plonger : son rectangle à l'écran, son point de

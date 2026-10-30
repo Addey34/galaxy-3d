@@ -83,6 +83,7 @@ import {
   type SurfaceHeightSet,
 } from '@/config/surfaceHeights';
 import Logger from '@/utils/Logger';
+import { TILE_ENGINE_ENTER_RADII } from '@/core/layerDistances';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
 
 import { SurfaceTile } from './SurfaceTile';
@@ -213,13 +214,6 @@ export interface SurfaceReliefState {
    */
   groundElevationM: number | null;
 }
-
-/**
- * Le moteur ne travaille qu'une fois la cible assez grosse à l'écran. 6 rayons apparents :
- * au-delà, l'image livrée du corps suffit largement et un carreau ne couvrirait que quelques
- * pixels. C'est aussi ce qui garantit que survoler un corps de loin ne demande rien.
- */
-const TILE_ENGINE_ENTER_RADII = 6;
 
 /**
  * Segments du maillage d'un carreau PORTANT DU RELIEF. 32 par côté, soit 2 048 triangles par
