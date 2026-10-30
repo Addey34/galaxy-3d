@@ -18,6 +18,7 @@ import {
 import type { ScalarGrid } from './meteoGrid';
 import { planMeteoRequest, type MeteoTimePlan } from './meteoTimeTravel';
 import type { DatedProduct } from './temporal';
+import { PROVIDER_NAMES } from './providerNames';
 
 /** L'époque des caches : `clearMeteoClientCache` la change, et les caches se vident alors. */
 let epochSeen = -1;
@@ -170,7 +171,14 @@ export async function fromGalaxyData(
               ? { reliableHorizonMs: plan.product.reliableHorizonMs }
               : {}),
           };
-    return served(variables, decoded, servedMs, now, product, 'NOAA GFS');
+    return served(
+      variables,
+      decoded,
+      servedMs,
+      now,
+      product,
+      PROVIDER_NAMES.gfs
+    );
   } catch (error) {
     if (options.signal?.aborted) throw error;
     return null;

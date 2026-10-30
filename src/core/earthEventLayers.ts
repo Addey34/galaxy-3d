@@ -28,6 +28,7 @@ import {
   EONET_WINDOW_DAYS,
   type NaturalEvent,
 } from './nasaEonet';
+import { PROVIDER_NAMES } from './providerNames';
 
 /** Magnitude au-delà de laquelle un marqueur atteint son poids maximal. */
 const MAX_PLOTTED_MAGNITUDE = 9.5;
@@ -136,13 +137,13 @@ export function earthquakeLayer(
     keyForDate: earthquakeQueryKey,
     async fetch(simulationTime, now, signal): Promise<EarthEventBatch> {
       const window = earthquakeWindow(simulationTime, now);
-      if (!window) return emptyBatch('USGS');
+      if (!window) return emptyBatch(PROVIDER_NAMES.usgs);
       const quakes = await fetchEarthquakes(window, fetchImpl, signal);
       return {
         events: quakes.map(earthquakeToEvent),
         candidate: {
           id: `usgs-${window.to}`,
-          label: 'USGS',
+          label: PROVIDER_NAMES.usgs,
           url: '',
           realDate: new Date(window.to).toISOString(),
           approx: false,
@@ -176,7 +177,7 @@ export function naturalEventLayer(
     keyForDate: naturalEventQueryKey,
     async fetch(simulationTime, now, signal): Promise<EarthEventBatch> {
       const window = naturalEventWindow(simulationTime, now);
-      if (!window) return emptyBatch('EONET');
+      if (!window) return emptyBatch(PROVIDER_NAMES.eonet);
       const events = await fetchNaturalEvents(
         window,
         simulationTime,
@@ -187,7 +188,7 @@ export function naturalEventLayer(
         events: events.map(naturalEventToEvent),
         candidate: {
           id: `eonet-${window.to}`,
-          label: 'NASA EONET',
+          label: PROVIDER_NAMES.eonet,
           url: '',
           realDate: new Date(window.to).toISOString(),
           approx: false,
