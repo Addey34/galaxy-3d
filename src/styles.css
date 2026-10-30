@@ -3800,3 +3800,23 @@ body.is-capturing #loader {
     0 2px 10px rgba(0, 0, 0, 0.26),
     inset 2px 0 0 rgba(var(--label-rgb), 0.62);
 }
+
+/* Citations des données météo (index.html, `.wl-citations`) : repliées, une ligne par produit. */
+.wl-citations {
+  margin-top: var(--sp-2);
+  color: var(--ink-dim);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+.wl-citations summary {
+  cursor: pointer;
+  color: var(--ink);
+}
+.wl-citation-list {
+  margin: var(--sp-1) 0 0;
+  padding-left: 1.1rem;
+}
+.wl-citation-list li {
+  margin: 0.3rem 0;
+  overflow-wrap: anywhere;
+}

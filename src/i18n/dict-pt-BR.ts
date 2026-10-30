@@ -236,6 +236,14 @@ export const ptBR: Record<MessageKey, string> = {
   'credits.fictional.list':
     'Os corpos nunca mapeados por completo têm uma textura ilustrativa, não um mapa científico; a ficha do corpo informa isso, e Fontes os lista.',
   'weather.attribution.prefix': 'Dados meteorológicos:',
+  'weather.citations.summary': 'Citações dos dados',
+  'weather.citations.clouds': 'Nuvens (imagens em cores reais)',
+  'weather.citations.precip': 'Chuva',
+  'weather.citations.thermal': 'Temperatura do ar',
+  'weather.citations.sea': 'Temperatura do mar',
+  'weather.citations.precipNote':
+    'As imagens de 30 minutos começam na passagem preliminar (Early) e são substituídas pela final (Final) quando existe. As imagens diárias são um produto sob medida, sem DOI próprio.',
+  'weather.citations.policy': 'Política de uso de dados da NASA',
   'weather.attribution.modified': 'reamostrados em texturas de mapa',
   'credits.models': 'Modelos de forma 3D',
   'credits.models.list':

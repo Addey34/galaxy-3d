@@ -239,6 +239,14 @@ export const es: Record<MessageKey, string> = {
   'credits.fictional.list':
     'Los cuerpos nunca cartografiados por completo llevan una textura ilustrativa, no un mapa científico; la ficha del cuerpo lo indica, y Fuentes los enumera.',
   'weather.attribution.prefix': 'Datos meteorológicos:',
+  'weather.citations.summary': 'Citas de los datos',
+  'weather.citations.clouds': 'Nubes (imágenes en color real)',
+  'weather.citations.precip': 'Lluvia',
+  'weather.citations.thermal': 'Temperatura del aire',
+  'weather.citations.sea': 'Temperatura del mar',
+  'weather.citations.precipNote':
+    'Las imágenes de 30 minutos parten de la pasada preliminar (Early) y se sustituyen por la final (Final) cuando existe. Las imágenes diarias son un producto a medida, sin DOI propio.',
+  'weather.citations.policy': 'Política de uso de datos de la NASA',
   'weather.attribution.modified': 'remuestreados en texturas de mapa',
   'credits.models': 'Modelos de forma 3D',
   'credits.models.list':

@@ -1399,6 +1399,48 @@
             >resampled into map textures</span
           >) · ERA5, Copernicus Climate Change Service (ECMWF).
         </p>
+        <details class="wl-citations">
+          <summary data-i18n="weather.citations.summary">Data citations</summary>
+          <!-- Citations lues le 2026-10-30 dans les fiches de couche de GIBS (nasa-gibs/worldview,
+               config/default/common/config/metadata/layers) et la politique d'utilisation des
+               données d'Earthdata. La phrase de remerciement est celle que GIBS demande, citée en
+               anglais. Un test confronte chaque couche lue par le code à ses DOI
+               (weatherAttribution.test.ts). -->
+          <p class="wl-note">
+            <q lang="en"
+              >We acknowledge the use of imagery provided by services from NASA's
+              Global Imagery Browse Services (GIBS), part of NASA's Earth Science
+              Data and Information System (ESDIS).</q
+            >
+            <a
+              href="https://www.earthdata.nasa.gov/engage/open-data-services-software-policies/data-use-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-i18n="weather.citations.policy"
+              >NASA data use policy</a
+            >
+          </p>
+          <ul class="wl-citation-list">
+            <li>
+              <span data-i18n="weather.citations.clouds">Clouds (true-colour imagery)</span>:
+              VIIRS SNPP, <a href="https://doi.org/10.5067/VIIRS/VNP02IMG_NRT.002" target="_blank" rel="noopener noreferrer">VNP02IMG_NRT</a>, <a href="https://doi.org/10.5067/VIIRS/VNP02MOD_NRT.002" target="_blank" rel="noopener noreferrer">VNP02MOD_NRT</a>, <a href="https://doi.org/10.5067/VIIRS/VNP03IMG_NRT.002" target="_blank" rel="noopener noreferrer">VNP03IMG_NRT</a>, <a href="https://doi.org/10.5067/VIIRS/VNP03MOD_NRT.002" target="_blank" rel="noopener noreferrer">VNP03MOD_NRT</a> ; MODIS Terra, Aqua, <a href="https://doi.org/10.5067/MODIS/MOD02QKM.061" target="_blank" rel="noopener noreferrer">MOD02QKM</a>, <a href="https://doi.org/10.5067/MODIS/MOD02HKM.061" target="_blank" rel="noopener noreferrer">MOD02HKM</a>, <a href="https://doi.org/10.5067/MODIS/MOD021KM.061" target="_blank" rel="noopener noreferrer">MOD021KM</a>, <a href="https://doi.org/10.5067/MODIS/MYD02QKM.061" target="_blank" rel="noopener noreferrer">MYD02QKM</a>, <a href="https://doi.org/10.5067/MODIS/MYD02HKM.061" target="_blank" rel="noopener noreferrer">MYD02HKM</a>, <a href="https://doi.org/10.5067/MODIS/MYD021KM.061" target="_blank" rel="noopener noreferrer">MYD021KM</a>
+            </li>
+            <li>
+              <span data-i18n="weather.citations.precip">Rain</span>: IMERG,
+              <a href="https://doi.org/10.5067/GPM/IMERG/3B-HH-E/07" target="_blank" rel="noopener noreferrer">GPM_3IMERGHHE</a>,
+              <a href="https://doi.org/10.5067/GPM/IMERG/3B-HH/07" target="_blank" rel="noopener noreferrer">GPM_3IMERGHH</a>
+              <span data-i18n="weather.citations.precipNote"></span>
+            </li>
+            <li>
+              <span data-i18n="weather.citations.thermal">Air temperature</span>: MERRA-2,
+              GMAO, <a href="https://doi.org/10.5067/AP1B0BA5PD2K" target="_blank" rel="noopener noreferrer">M2TMNXSLV</a>
+            </li>
+            <li>
+              <span data-i18n="weather.citations.sea">Sea temperature</span>: GHRSST MUR,
+              JPL MUR MEaSUREs Project, <a href="https://doi.org/10.5067/GHGMR-4FJ04" target="_blank" rel="noopener noreferrer">MUR-JPL-L4-GLOB-v4.1</a>
+            </li>
+          </ul>
+        </details>
       </div>
     </aside>
 

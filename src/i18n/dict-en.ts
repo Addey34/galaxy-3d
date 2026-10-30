@@ -254,6 +254,14 @@ export const en = {
   'credits.fictional.list':
     'Bodies never mapped globally have an illustrative texture, not a scientific map; the body card says so, and Sources lists them.',
   'weather.attribution.prefix': 'Weather data:',
+  'weather.citations.summary': 'Data citations',
+  'weather.citations.clouds': 'Clouds (true-colour imagery)',
+  'weather.citations.precip': 'Rain',
+  'weather.citations.thermal': 'Air temperature',
+  'weather.citations.sea': 'Sea temperature',
+  'weather.citations.precipNote':
+    'The 30-minute imagery starts as the Early run and is replaced by the Final run once available. The daily imagery is a custom product with no DOI of its own.',
+  'weather.citations.policy': 'NASA data use policy',
   'weather.attribution.modified': 'resampled into map textures',
   'credits.models': '3D shape models',
   'credits.models.list':
