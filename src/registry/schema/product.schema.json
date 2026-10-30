@@ -103,6 +103,19 @@
         "illustrative": {
           "type": "boolean"
         },
+        "colorNature": {
+          "type": "string",
+          "enum": [
+            "natural",
+            "colorized",
+            "monochrome",
+            "infrared",
+            "radar",
+            "false-color",
+            "generated",
+            "illustrative"
+          ]
+        },
         "filled": {
           "type": "boolean"
         },

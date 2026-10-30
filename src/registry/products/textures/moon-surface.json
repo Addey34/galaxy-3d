@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "monochrome",
   "review": {
     "status": "manual",
     "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif",

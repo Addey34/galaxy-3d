@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "radar",
   "review": {
     "status": "manual",
     "processing": "gdal-required",

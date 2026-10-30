@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "illustrative",
   "review": {
     "status": "reference",
     "sourcePage": "https://sdo.gsfc.nasa.gov/data/",

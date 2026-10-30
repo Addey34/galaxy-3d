@@ -30,6 +30,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "colorized",
   "review": {
     "status": "ready",
     "processing": "import-textures",

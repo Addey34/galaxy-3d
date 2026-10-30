@@ -29,6 +29,24 @@ const kebabId = z
   .string()
   .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'identifiant en kebab-case');
 
+/**
+ * Ce que la couleur d'une surface représente : `natural` (visible, vraies couleurs),
+ * `colorized` (monochrome teinté d'après des mesures de couleur), `monochrome`, `infrared`,
+ * `radar`, `false-color` (rapports de bandes), `generated` (texture produite par ce dépôt),
+ * `illustrative` (carte d'artiste ou rendu représentatif retouché, pas une image résolue).
+ */
+export const COLOR_NATURES = [
+  'natural',
+  'colorized',
+  'monochrome',
+  'infrared',
+  'radar',
+  'false-color',
+  'generated',
+  'illustrative',
+] as const;
+export type ColorNature = (typeof COLOR_NATURES)[number];
+
 const httpsUrl = z.string().regex(/^https:\/\/[^\s"']+$/, 'URL https absolue');
 
 /** Licence au sens STAC : SPDX, ou `other` (qui exige alors un lien de licence). */
@@ -127,6 +145,11 @@ const shippedTexture = z
     providers: z.array(provider).min(1),
     tier: z.literal('free'),
     illustrative: z.boolean().optional(),
+    /**
+     * NATURE de la couleur affichée : ce que les pixels représentent, pas leur qualité.
+     * Exigée de toute couche `surface` livrée (test `colorNature.test.ts`).
+     */
+    colorNature: z.enum(COLOR_NATURES).optional(),
     /** Lacunes de la carte d'origine comblées. */
     filled: z.boolean().optional(),
     /** Page de la source affichée en lien du crédit. */

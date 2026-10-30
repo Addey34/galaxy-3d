@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "monochrome",
   "filled": true,
   "review": {
     "status": "manual",

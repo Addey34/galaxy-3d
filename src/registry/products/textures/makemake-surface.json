@@ -23,6 +23,7 @@
   ],
   "tier": "free",
   "illustrative": true,
+  "colorNature": "illustrative",
   "review": {
     "status": "unresolved",
     "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",

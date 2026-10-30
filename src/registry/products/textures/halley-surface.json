@@ -23,6 +23,7 @@
   ],
   "tier": "free",
   "illustrative": true,
+  "colorNature": "illustrative",
   "review": {
     "status": "manual",
     "sourcePage": "https://pds-smallbodies.astro.umd.edu/data_sb/comet_type.shtml",

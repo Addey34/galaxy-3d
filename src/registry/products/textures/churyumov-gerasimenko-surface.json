@@ -23,6 +23,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "monochrome",
   "review": {
     "status": "ready",
     "processing": "import-textures",

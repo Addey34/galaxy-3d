@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "illustrative",
   "review": {
     "status": "reference",
     "sourcePage": "https://maps.jpl.nasa.gov/tmaps/",

@@ -21,6 +21,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "monochrome",
   "review": {
     "status": "ready",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/ceres_dawn_fc_global_mosaic_140m",

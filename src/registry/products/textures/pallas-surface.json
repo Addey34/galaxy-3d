@@ -24,6 +24,7 @@
   ],
   "tier": "free",
   "illustrative": true,
+  "colorNature": "generated",
   "review": {
     "status": "generated",
     "sourcePage": "scripts/generate-procedural-textures.mjs",
