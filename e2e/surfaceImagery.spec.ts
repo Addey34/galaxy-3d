@@ -818,9 +818,9 @@ test('hides the imagery of one body only, and offers the choice only where a mos
   const select = page.locator('#surface-body-imagery');
   await expect(select).toBeVisible();
   await expect(select).toHaveValue('auto');
-  // Le fond et la météo sont ceux de la Terre : absents pour Mercure.
-  await expect(page.locator('#surface-earth-base-wrapper')).toBeHidden();
-  await expect(page.locator('#layers-weather-link')).toBeHidden();
+  // Le fond et la météo portent « de la Terre » dans leur libellé : visibles même pour Mercure.
+  await expect(page.locator('#surface-earth-base-wrapper')).toBeVisible();
+  await expect(page.locator('#layers-weather-link')).toBeVisible();
 
   await select.selectOption('off');
   await page.locator('#orbit-options .surface-close').click();

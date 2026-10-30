@@ -162,7 +162,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   weatherLink.id = 'layers-weather-link';
   weatherLink.type = 'button';
   weatherLink.className = 'settings-switch settings-link-button';
-  weatherLink.hidden = true;
+  weatherLink.hidden = false;
   weatherLink.addEventListener('click', () =>
     document.getElementById('weather-trigger')?.click()
   );
@@ -459,10 +459,9 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   let tilesetIndex: Promise<typeof import('@/config/surfaceTilesets')> | null =
     null;
   const refreshBodyControls = async (name: string | null): Promise<void> => {
-    const isEarth = name === 'earth';
-    baseWrapper.hidden = !isEarth;
-    weatherLink.hidden = !isEarth;
-    compareWrapper.hidden = !isEarth || choice !== 'sentinel-2';
+    // Le fond, la comparaison et le lien météo portent « de la Terre » dans leur libellé : ils
+    // restent visibles quel que soit le corps ciblé (le choix vaut pour la Terre, pas pour la cible).
+    compareWrapper.hidden = choice !== 'sentinel-2';
     if (!name) {
       bodyWrapper.hidden = true;
       return;
@@ -716,7 +715,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   });
   baseSelect.addEventListener('change', () => {
     choice = baseSelect.value as SurfaceChoiceId;
-    compareWrapper.hidden = controlsFor !== 'earth' || choice !== 'sentinel-2';
+    compareWrapper.hidden = choice !== 'sentinel-2';
   });
   compareSelect.addEventListener('change', () => {
     compareYear = compareSelect.value ? Number(compareSelect.value) : null;
