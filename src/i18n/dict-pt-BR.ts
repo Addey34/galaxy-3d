@@ -419,17 +419,11 @@ export const ptBR: Record<MessageKey, string> = {
   'weather.precip.legendHi': 'Intensa',
   'weather.precipModel.note':
     'Chuva modelada: mundial sem falhas, passado + previsão. As áreas secas ficam transparentes.',
-  'weather.precipModel.lo': '0,1 mm/h',
-  'weather.precipModel.hi': '20+ mm/h',
   'weather.thermalModel.note':
     'Temperatura do ar a 2 m modelada: mundial sem falhas, passado + previsão.',
-  'weather.thermalModel.lo': '−40 °C',
-  'weather.thermalModel.hi': '+45 °C',
   'weather.pressureModel': 'Pressão ao nível do mar (modelo)',
   'weather.pressureModel.note':
     'Pressão ao nível do mar mostrada como mapa de cores, em hPa.',
-  'weather.pressureModel.lo': '960 hPa',
-  'weather.pressureModel.hi': '1060 hPa',
   'weather.humidityModel': 'Umidade relativa (modelo)',
   'weather.humidityModel.note':
     'Umidade relativa a 2 m modelada, em porcentagem.',

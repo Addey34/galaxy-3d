@@ -6,6 +6,8 @@ import {
   PRECIP_DOMAIN,
   paletteToCss,
 } from '@/core/meteoPalette';
+import { intlLocale } from '@/i18n';
+import { rainBound } from '@/core/legendBounds';
 import { setupMeteoModelLayer } from './meteoModelLayer';
 import { getEarth, type WeatherLayerHandle } from './earthLayer';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -34,8 +36,10 @@ export function setupPrecipModelLayer(
       }),
     legendGradient: {
       css: paletteToCss(PRECIP_PALETTE),
-      loKey: 'weather.precipModel.lo',
-      hiKey: 'weather.precipModel.hi',
+      loText: () =>
+        rainBound(settings.transparentBelow, { locale: intlLocale() }),
+      hiText: () =>
+        rainBound(PRECIP_DOMAIN.max, { saturates: true, locale: intlLocale() }),
     },
   });
 }

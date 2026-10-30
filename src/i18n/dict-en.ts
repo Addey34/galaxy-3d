@@ -436,17 +436,11 @@ export const en = {
   'weather.precip.legendHi': 'Intense',
   'weather.precipModel.note':
     'Modelled rainfall: gap-free worldwide, past + forecast. Dry areas stay transparent.',
-  'weather.precipModel.lo': '0.1 mm/h',
-  'weather.precipModel.hi': '20+ mm/h',
   'weather.thermalModel.note':
     'Modelled 2 m air temperature: gap-free worldwide, past + forecast.',
-  'weather.thermalModel.lo': '−40 °C',
-  'weather.thermalModel.hi': '+45 °C',
   'weather.pressureModel': 'Sea-level pressure (model)',
   'weather.pressureModel.note':
     'Sea-level pressure shown as a colour map, in hPa.',
-  'weather.pressureModel.lo': '960 hPa',
-  'weather.pressureModel.hi': '1060 hPa',
   'weather.humidityModel': 'Relative humidity (model)',
   'weather.humidityModel.note':
     'Modelled relative humidity at 2 m, in percent.',

@@ -4,12 +4,10 @@
  * températures, une seule à la fois sur ce mesh. La terre est transparente dans la source.
  */
 import { SEA_SURFACE_TEMPERATURE_SETTINGS } from '@/config/engine';
-import {
-  colormapBoundsC,
-  colormapToCss,
-  gibsColormap,
-} from '@/core/gibsLegend';
+import { colormapRangeC, colormapToCss, gibsColormap } from '@/core/gibsLegend';
 import { resolveSeaSurfaceTemperatureSources } from '@/core/layerSource';
+import { intlLocale } from '@/i18n';
+import { temperatureBound } from '@/core/legendBounds';
 import { getEarth, type WeatherLayerHandle } from './earthLayer';
 import { setupObservedTextureLayer } from './observedTextureLayer';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -19,7 +17,7 @@ export function setupSeaTemperatureLayer(
 ): WeatherLayerHandle | null {
   const settings = SEA_SURFACE_TEMPERATURE_SETTINGS;
   const colormap = gibsColormap('GHRSST_L4_MUR_Sea_Surface_Temperature');
-  const bounds = colormapBoundsC(colormap);
+  const range = colormapRangeC(colormap);
   return setupObservedTextureLayer(api, {
     name: 'SeaTemperatureLayer',
     id: 'sea-temperature',
@@ -39,8 +37,8 @@ export function setupSeaTemperatureLayer(
     // Barème de la NASA (°C), rendu par nous : bornes DÉRIVÉES du barème, pas retapées.
     legendGradient: {
       css: colormapToCss(colormap),
-      loText: bounds.lo,
-      hiText: bounds.hi,
+      loText: () => temperatureBound(range.lo, intlLocale()),
+      hiText: () => temperatureBound(range.hi, intlLocale()),
     },
     apply: (earth, texture) =>
       earth.setThermalTexture(texture, { opacity: settings.opacity }),

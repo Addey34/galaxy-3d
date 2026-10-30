@@ -67,6 +67,24 @@ export function colormapToCss(map: GibsColormap = GIBS_COLORMAP): string {
  * tels quels demanderait au lecteur une conversion que la fiche fait partout ailleurs pour lui.
  * Le signe moins est le vrai (U+2212), comme dans les libellés des couches de modèle.
  */
+export function colormapRangeC(map: GibsColormap = GIBS_COLORMAP): {
+  lo: number;
+  hi: number;
+} {
+  const toCelsius =
+    map.units === 'K'
+      ? (v: number): number => v - KELVIN_OFFSET
+      : map.units === '°C'
+        ? (v: number): number => v
+        : null;
+  if (!toCelsius)
+    throw new Error(`barème GIBS en ${map.units}, attendu en kelvins ou en °C`);
+  return {
+    lo: Math.round(toCelsius(map.min)),
+    hi: Math.round(toCelsius(map.max)),
+  };
+}
+
 export function colormapBoundsC(map: GibsColormap = GIBS_COLORMAP): {
   lo: string;
   hi: string;

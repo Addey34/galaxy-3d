@@ -10,7 +10,17 @@
  * une couche ne touche plus ce fichier. Chaque toggle ne fait que MONTRER/MASQUER une couche
  * déjà chargée — la donnée continue de se rafraîchir en fond quel que soit l'état du toggle.
  */
+import { onUnitSystemChange } from '@/core/units';
 import { t, onLocaleChange } from '@/i18n';
+
+/** Une borne de légende : fonction relue, texte rendu, ou clé du dictionnaire. */
+function boundText(
+  text: string | (() => string) | undefined,
+  key: string | undefined
+): string {
+  if (typeof text === 'function') return text();
+  return text ?? (key ? t(key) : '');
+}
 import type { SourceCandidate } from '@/core/layerSource';
 import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -253,9 +263,9 @@ export function setupWeatherLayers(
         const lo = document.createElement('span');
         // Une borne DÉRIVÉE d'une donnée (barème GIBS) arrive en texte déjà rendu ; une borne
         // rédigée vit dans le dictionnaire. Jamais les deux pour la même légende.
-        lo.textContent = grad.loText ?? (grad.loKey ? t(grad.loKey) : '');
+        lo.textContent = boundText(grad.loText, grad.loKey);
         const hi = document.createElement('span');
-        hi.textContent = grad.hiText ?? (grad.hiKey ? t(grad.hiKey) : '');
+        hi.textContent = boundText(grad.hiText, grad.hiKey);
         labels.append(lo, hi);
         wrap.append(bar, labels);
         detail.append(wrap);
@@ -313,6 +323,7 @@ export function setupWeatherLayers(
 
   buildRows();
   onLocaleChange(buildRows);
+  onUnitSystemChange(buildRows);
 
   // Surface contextuelle (dock) : même choreographie que orbitOptions.
   const triggerBtn =

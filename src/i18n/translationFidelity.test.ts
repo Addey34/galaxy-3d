@@ -67,11 +67,6 @@ const UNTRANSLATABLE = [
  */
 const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   // Bornes de légende : un nombre et une unité du SI, rien à traduire.
-  'weather.precipModel.hi': 'nombre + unité SI',
-  'weather.thermalModel.lo': 'nombre + unité SI',
-  'weather.thermalModel.hi': 'nombre + unité SI',
-  'weather.pressureModel.lo': 'nombre + unité SI',
-  'weather.pressureModel.hi': 'nombre + unité SI',
   'weather.humidityModel.lo': 'nombre + unité SI',
   'weather.humidityModel.hi': 'nombre + unité SI',
   // Noms propres et abréviations partagées.
