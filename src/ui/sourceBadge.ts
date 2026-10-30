@@ -17,6 +17,23 @@ type Translate = (
   vars?: Record<string, string | number>
 ) => string;
 
+const DAY_MS = 86_400_000;
+
+/**
+ * La date réelle de la donnée. Au JOUR pour un produit qui décrit un jour ou plus ; avec l'heure
+ * UTC (écrite « UTC », le fuseau n'est jamais implicite) pour un produit qui décrit moins d'un
+ * jour (IMERG à 30 minutes, grilles horaires des modèles) : le jour seul cachait une précision
+ * que la donnée a (audit des panneaux, A6).
+ */
+export function badgeDate(candidate: SourceCandidate): string {
+  const day = candidate.realDate.slice(0, 10);
+  const span = candidate.product
+    ? candidate.product.validTime.to - candidate.product.validTime.from
+    : DAY_MS;
+  if (span >= DAY_MS || candidate.realDate.length <= 10) return day;
+  return `${day} ${candidate.realDate.slice(11, 16)} UTC`;
+}
+
 export function sourceBadgeText(
   candidate: SourceCandidate,
   simulationTime: Date,
@@ -28,7 +45,7 @@ export function sourceBadgeText(
     : UNAVAILABLE_STAMP;
   const parts = [
     `${t('weather.source.prefix')} ${candidate.label}`,
-    candidate.realDate.slice(0, 10),
+    badgeDate(candidate),
     t(temporalCategoryLabelKey(stamp.category)),
   ];
   if (stamp.confidence === 'reduced') parts.push(t('time.confidence.reduced'));
