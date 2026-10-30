@@ -334,6 +334,7 @@ export const en = {
   'settings.title': 'Display settings',
   'settings.section.scene': 'In the scene',
   'settings.section.rendering': 'Rendering',
+  'settings.section.layers': 'Layers',
   'settings.section.reading': 'Accessibility and units',
   'settings.section.view': 'View',
   'settings.section.offline': 'Offline use',
@@ -390,6 +391,10 @@ export const en = {
   'surface.buildings.origin.absent': 'absent: flat slab',
   'settings.surfaceCompare': 'Compare with the year',
   'settings.surfaceCompare.none': 'No comparison',
+  'settings.weatherLink': 'Earth weather layers…',
+  'settings.surfaceBody': 'Surface imagery of this body',
+  'settings.surfaceBody.auto': 'Automatic',
+  'settings.surfaceBody.off': 'Hidden',
   'surface.compare.badge':
     'left of the line: {title}, images from {from} to {to}',
   'settings.units': 'Imperial units (mi, °F)',

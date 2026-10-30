@@ -1,0 +1,151 @@
+{
+  "$comment": "Écrit par `node scripts/measure-tile-gain.mjs --write`. Ne pas éditer à la main. Règle : `src/core/displayAlbedo.ts`, appliquée à la luminance mesurée des carreaux.",
+  "luminancePerAlbedo": 0.5,
+  "gains": {
+    "callisto": 1.0626,
+    "ceres": 0.48699,
+    "charon": 0.81749,
+    "dione": 1.50124,
+    "enceladus": 3.29466,
+    "europa": 1.08266,
+    "mercury": 1.08819,
+    "moon": 0.61723,
+    "pluto": 1.61259,
+    "triton": 1.10018,
+    "vesta": 2.23552
+  },
+  "rows": [
+    {
+      "body": "callisto",
+      "tileset": "callisto-voyager-galileossi-global-1km",
+      "albedo": 0.19,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.036,
+      "tileMeanLuminance": 0.0894,
+      "gain": 1.0626,
+      "baseGain": 1.9707
+    },
+    {
+      "body": "ceres",
+      "tileset": "ceres-dawn-fc-lamo-clear-global-234ppd",
+      "albedo": 0.09,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.0541,
+      "tileMeanLuminance": 0.0924,
+      "gain": 0.48699,
+      "baseGain": 0.18821
+    },
+    {
+      "body": "charon",
+      "tileset": "charon-newhorizons-global-300m",
+      "albedo": 0.42,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.3386,
+      "tileMeanLuminance": 0.25689,
+      "gain": 0.81749,
+      "baseGain": 1.09654
+    },
+    {
+      "body": "dione",
+      "tileset": "dione-cassini-voyager-global-154m",
+      "albedo": 0.7,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.0026,
+      "tileMeanLuminance": 0.23314,
+      "gain": 1.50124,
+      "baseGain": 1.57308
+    },
+    {
+      "body": "enceladus",
+      "tileset": "enceladus-cassini-iss-global-110m",
+      "albedo": 1,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.0011,
+      "tileMeanLuminance": 0.15176,
+      "gain": 3.29466,
+      "baseGain": 3.48807
+    },
+    {
+      "body": "europa",
+      "tileset": "europa-voyager-galileossi-global-500m",
+      "albedo": 0.68,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.0414,
+      "tileMeanLuminance": 0.31404,
+      "gain": 1.08266,
+      "baseGain": 1.09858
+    },
+    {
+      "body": "mercury",
+      "tileset": "mercury-messenger-mdis-bdr-global-166m",
+      "albedo": 0.142,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.004,
+      "tileMeanLuminance": 0.06525,
+      "gain": 1.08819,
+      "baseGain": 0.31035
+    },
+    {
+      "body": "moon",
+      "tileset": "moon-lroc-wac-global-303ppd-v02",
+      "albedo": 0.12,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.008,
+      "tileMeanLuminance": 0.09721,
+      "gain": 0.61723,
+      "baseGain": 0.19159
+    },
+    {
+      "body": "pluto",
+      "tileset": "pluto-newhorizons-global-300m",
+      "albedo": 0.52,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.3182,
+      "tileMeanLuminance": 0.16123,
+      "gain": 1.61259,
+      "baseGain": 2.11509
+    },
+    {
+      "body": "triton",
+      "tileset": "triton-voyager2-global-600m",
+      "albedo": 0.72,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.3801,
+      "tileMeanLuminance": 0.32722,
+      "gain": 1.10018,
+      "baseGain": 1.61425
+    },
+    {
+      "body": "vesta",
+      "tileset": "vesta-dawn-fc-hamo-global-74ppd",
+      "albedo": 0.4228,
+      "level": 2,
+      "tiles": 32,
+      "missingTiles": 0,
+      "blackFraction": 0.0051,
+      "tileMeanLuminance": 0.09456,
+      "gain": 2.23552,
+      "baseGain": 2.26157
+    }
+  ]
+}

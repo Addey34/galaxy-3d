@@ -389,7 +389,7 @@
       </button>
       <button
         id="weather-trigger"
-        class="tool"
+        class="tool tool--group-start"
         type="button"
         title="Weather layers"
         aria-label="Weather layers"
@@ -476,7 +476,7 @@
       </button>
       <button
         id="share-btn"
-        class="tool"
+        class="tool tool--group-start"
         type="button"
         title="Share this view"
         aria-label="Share this view"
@@ -571,7 +571,7 @@
       </button>
       <button
         id="help-btn"
-        class="tool"
+        class="tool tool--group-start"
         type="button"
         title="Help, tips & credits"
         aria-label="Help, tips and credits"
@@ -1108,7 +1108,7 @@
       hidden
     >
       <header class="surface-header">
-        <h3 class="surface-title" data-i18n="settings.title">Display settings</h3>
+        <h2 class="surface-title" data-i18n="settings.title">Display settings</h2>
         <button
           class="surface-close"
           type="button"
@@ -1133,6 +1133,7 @@
              des appels : c'est ce qui avait rangé les trajectoires interstellaires sous les
              quatre boutons de qualité graphique. -->
         <section
+          id="settings-section-scene"
           class="settings-section"
           aria-labelledby="settings-section-scene-title"
         >
@@ -1244,6 +1245,22 @@
           <!-- Provenance et DATE du relevé, remplies par ui/smallBodyFilters.ts. -->
           <p class="sb-source" hidden></p>
         </section>
+        <!-- Couches du corps ciblé : ce qu'on affiche SUR le corps (imagerie haute résolution,
+             fond de la Terre, comparaison). Rempli par ui/surfacePanel.ts ; ne persiste pas
+             par corps, comme le reste du contenu de la scène. -->
+        <section
+          id="settings-section-layers"
+          class="settings-section"
+          aria-labelledby="settings-section-layers-title"
+        >
+          <h4
+            id="settings-section-layers-title"
+            class="settings-section-title"
+            data-i18n="settings.section.layers"
+          >
+            Layers
+          </h4>
+        </section>
         <section
           id="settings-section-rendering"
           class="settings-section"
@@ -1318,7 +1335,7 @@
       hidden
     >
       <header class="surface-header">
-        <h3 class="surface-title" data-i18n="weather.title">Weather layers</h3>
+        <h2 class="surface-title" data-i18n="weather.title">Weather layers</h2>
         <button
           class="surface-close"
           type="button"
@@ -1383,9 +1400,9 @@
       hidden
     >
       <header class="surface-header">
-        <h3 class="surface-title" data-i18n="earthEvents.title">
+        <h2 class="surface-title" data-i18n="earthEvents.title">
           Earth events
-        </h3>
+        </h2>
         <button
           class="surface-close"
           type="button"
@@ -1438,7 +1455,7 @@
       hidden
     >
       <header class="surface-header">
-        <h3 class="surface-title" data-i18n="help.title">Navigation</h3>
+        <h2 class="surface-title" data-i18n="help.title">Navigation</h2>
         <button
           class="surface-close"
           type="button"

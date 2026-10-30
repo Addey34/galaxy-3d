@@ -41,7 +41,7 @@ export function setupGazetteerToggle(overlay: GazetteerOverlay): void {
 
   wrapper.append(checkbox, text);
   const host =
-    document.getElementById('settings-section-reading') ?? document.body;
+    document.getElementById('settings-section-scene') ?? document.body;
   host.append(wrapper);
 
   const refresh = (): void => {

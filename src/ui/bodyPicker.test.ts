@@ -42,7 +42,10 @@ function pointerEvent(
   return event;
 }
 
-function createFixture(overlayHits: OverlayHitTest[] = []): {
+function createFixture(
+  overlayHits: OverlayHitTest[] = [],
+  selected: string | null = null
+): {
   canvas: HTMLElement;
   selectBody: ReturnType<typeof vi.fn>;
 } {
@@ -69,7 +72,7 @@ function createFixture(overlayHits: OverlayHitTest[] = []): {
   const selectBody = vi.fn();
   const nav: PlanetNavigation = {
     selectBody,
-    getSelectedBody: () => null,
+    getSelectedBody: () => selected,
     setUnavailable: () => {},
     setSearchContext: () => {},
   };
@@ -79,6 +82,15 @@ function createFixture(overlayHits: OverlayHitTest[] = []): {
 }
 
 describe('setupBodyPicker', () => {
+  it('ne relance pas la sélection du corps déjà ciblé', () => {
+    const { canvas, selectBody } = createFixture([], 'earth');
+
+    canvas.dispatchEvent(pointerEvent('pointerdown', { x: 200, y: 100 }));
+    canvas.dispatchEvent(pointerEvent('pointerup', { x: 200, y: 100 }));
+
+    expect(selectBody).not.toHaveBeenCalled();
+  });
+
   it('sélectionne le corps cliqué relativement aux limites du canvas', () => {
     const { canvas, selectBody } = createFixture();
 

@@ -33,6 +33,7 @@
  *     carreaux d'un autre niveau sont maintenant retirés SEULEMENT quand le nouveau niveau est
  *     complet.
  */
+import { tileToneRatio } from '@/config/tileGain';
 import type { Figure } from '@/core/ellipsoid';
 import type { OceanMatch } from '@/core/oceanMatch';
 import * as THREE from 'three';
@@ -722,6 +723,18 @@ export class PlanetarySurfaceEngine {
     this._publishState(tileset, level, tiles.length, centre);
   }
 
+  /**
+   * Remplace le gain de la BASE, déjà dans la couleur du matériau, par celui mesuré sur la
+   * mosaïque (`config/tileGain.ts`) : la règle « luminosité = albédo publié » vaut pour l'image
+   * qu'on affiche, pas pour celle qu'on recouvre. Sans cela, Mercure montrait ses carreaux 3,5 fois
+   * plus sombres que la texture livrée autour (2026-10-30).
+   */
+  private _toneMatched(material: THREE.Material, body: string): THREE.Material {
+    const color = (material as THREE.MeshStandardMaterial).color;
+    if (color) color.multiplyScalar(tileToneRatio(body));
+    return material;
+  }
+
   private _publishState(
     tileset: SurfaceTileset,
     level: number,
@@ -1382,7 +1395,10 @@ export class PlanetarySurfaceEngine {
         radius: host.layerRadius,
         figure: host.figure ?? null,
         shape: tileset.matrix,
-        material: host.createSurfaceOverlayMaterial(primary.oceanMatch),
+        material: this._toneMatched(
+          host.createSurfaceOverlayMaterial(primary.oceanMatch),
+          tileset.body
+        ),
         releaseMaterial: (material) =>
           host.releaseSurfaceOverlayMaterial(material),
         ...(relief

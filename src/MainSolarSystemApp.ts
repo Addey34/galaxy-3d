@@ -190,11 +190,9 @@ function wireChrome(): {
   const overlayCoordinator = setupOverlayCoordinator();
   setupHelp(overlayCoordinator);
   const guidedTour = setupGuidedTour();
-  // Fermeture au clic extérieur d'une surface contextuelle.
-  //   - Mobile : le scrim est une couche tactile plein écran (tap hors feuille = fermer).
-  //   - Desktop : le scrim est volontairement transparent aux évènements (il ne doit pas
-  //     bloquer la molette/rotation sur la scène) ; on capte donc le clic extérieur au niveau
-  //     du document, en ignorant les clics dans une surface ou sur un déclencheur du dock.
+  // Une surface contextuelle ne se ferme PAS au clic sur la scène (desktop) : seulement par son
+  // déclencheur, par l'ouverture d'une autre surface (le coordinateur ferme la précédente) ou
+  // Échap. Mobile : le scrim est une couche tactile plein écran (tap hors feuille = fermer).
   const surfaceScrim = document.getElementById('surface-scrim');
   if (surfaceScrim) {
     let activeSurfaceId: SecondaryOverlayId | null = null;
@@ -208,16 +206,6 @@ function wireChrome(): {
     });
     // Couche tactile mobile.
     surfaceScrim.addEventListener('click', () => overlayCoordinator.closeAll());
-
-    // Clic extérieur desktop : seul un clic DANS LA SCÈNE (canvas WebGL) ferme la surface
-    // ouverte. Les autres docks (modes, temps, plein écran) laissent la surface en place —
-    // basculer de mode ou lire l'heure ne doit pas refermer la fiche ou les réglages. Les
-    // déclencheurs gèrent eux-mêmes leur bascule. `pointerdown` pour devancer le focus.
-    document.addEventListener('pointerdown', (event) => {
-      if (surfaceScrim.hidden) return; // aucune surface ouverte
-      const target = event.target as HTMLElement;
-      if (target.tagName === 'CANVAS') overlayCoordinator.closeAll();
-    });
   }
 
   return { overlayCoordinator, guidedTour };
