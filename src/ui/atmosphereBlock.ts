@@ -25,7 +25,15 @@ import {
   profileRows,
   type AtmosphereProfile,
 } from '@/core/atmosphereProfile';
-import { convertTemperatureC } from '@/core/units';
+import {
+  convertDistanceKm,
+  convertHeightKm,
+  convertPressureBar,
+  convertTemperatureC,
+  getUnitSystem,
+  onUnitSystemChange,
+} from '@/core/units';
+import { surfacePressureDisplay } from '@/core/bodyFacts';
 import { formatIsoDay } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -53,12 +61,10 @@ const SUPERSCRIPT: Record<string, string> = {
   '9': '⁹',
 };
 
-/** Une pression sur neuf ordres de grandeur : bar, millibar, puis notation scientifique. */
-export function formatPressure(bar: number): string {
-  if (bar >= 1) return `${num(bar, bar < 10 ? 2 : 1)}\u00a0bar`;
-  if (bar >= 1e-3) return `${num(bar * 1000, 1)}\u00a0mbar`;
-  let exponent = Math.floor(Math.log10(bar));
-  let mantissa = bar / 10 ** exponent;
+/** Une valeur positive en notation scientifique : « 1,2 × 10⁻³ unité ». */
+function formatScientific(value: number, unit: string): string {
+  let exponent = Math.floor(Math.log10(value));
+  let mantissa = value / 10 ** exponent;
   // Une mantisse qui s'arrondit à 10 (9,97 × 10⁻⁴) passe à l'exposant suivant : « 1 × 10⁻³ ».
   if (Number(mantissa.toFixed(1)) >= 10) {
     exponent += 1;
@@ -68,18 +74,47 @@ export function formatPressure(bar: number): string {
     .split('')
     .map((c) => SUPERSCRIPT[c] ?? c)
     .join('');
-  return `${num(mantissa, 1)}\u00a0×\u00a010${sup}\u00a0bar`;
+  return `${num(mantissa, 1)}\u00a0×\u00a010${sup}\u00a0${unit}`;
+}
+
+/**
+ * Une pression sur neuf ordres de grandeur. Métrique : bar, millibar, puis notation scientifique.
+ * Impérial : psi, puis trois chiffres significatifs, puis notation scientifique (le millibar n'a
+ * pas d'équivalent usuel).
+ */
+export function formatPressure(bar: number): string {
+  if (getUnitSystem() === 'imperial') {
+    const psi = convertPressureBar(bar);
+    if (psi.value >= 1)
+      return `${num(psi.value, psi.value < 10 ? 2 : 1)}\u00a0${psi.unit}`;
+    if (psi.value >= 1e-3) {
+      const decimals = Math.min(
+        8,
+        Math.max(0, 2 - Math.floor(Math.log10(psi.value)))
+      );
+      return `${num(psi.value, decimals)}\u00a0${psi.unit}`;
+    }
+    return formatScientific(psi.value, psi.unit);
+  }
+  if (bar >= 1e-3) {
+    const shown = surfacePressureDisplay(bar);
+    const decimals = bar >= 1 && bar < 10 ? 2 : 1;
+    return `${num(shown.value, decimals)}\u00a0${shown.unit}`;
+  }
+  return formatScientific(bar, convertPressureBar(bar).unit);
 }
 
 /** Une altitude signée par rapport au niveau de 1 bar (« +1 029 km », « −132 km »). */
 function formatAltitude(km: number): string {
-  const text = `${num(Math.abs(km))}\u00a0km`;
+  const distance = convertDistanceKm(Math.abs(km));
+  const text = `${num(distance.value)}\u00a0${distance.unit}`;
   return km > 0 ? `+${text}` : km < 0 ? `−${text}` : text;
 }
 
 /** Une altitude au-dessus du sol : en km, et en mètres sous le kilomètre. */
 function formatHeight(km: number): string {
-  return Math.abs(km) < 1 ? `${num(km * 1000)}\u00a0m` : `${num(km)}\u00a0km`;
+  const height = convertHeightKm(km);
+  return `${num(height.value)}\u00a0${height.unit}`;
 }
 
 function formatKelvin(kelvin: number): string {
@@ -242,7 +277,9 @@ export function setupAtmosphereBlock(
     sync();
   });
 
-  onLocaleChange(() => {
+  const redraw = (): void => {
     if (rendered) render(rendered);
-  });
+  };
+  onLocaleChange(redraw);
+  onUnitSystemChange(redraw);
 }

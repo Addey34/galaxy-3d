@@ -382,7 +382,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.surfaceBody.off': 'Oculta',
   'surface.compare.badge':
     'à esquerda da linha: {title}, imagens de {from} a {to}',
-  'settings.units': 'Unidades imperiais (mi, °F)',
+  'settings.units': 'Unidades imperiais (mi, ft, lb, mph, °F)',
 
   // ── Champ d'astéroïdes et de comètes, section des Réglages ──
   'smallBodies.title': 'Campo de asteroides e cometas',

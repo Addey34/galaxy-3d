@@ -73,7 +73,7 @@ export const cardEn = {
   'bi.discovery.refutedReported':
     'At this date, a possible satellite of this body had already been reported: from {year} by {who}, then several more times by other observers, including {others}.',
   'bi.discovery.refutedSearched':
-    'A survey submitted on {date} found none, down to about {radius} km in radius.',
+    'A survey submitted on {date} found none, down to about {radius} in radius.',
   'bi.atmosphere.label': 'Measured profile (Galileo probe)',
   'bi.atmosphere.labelNone': 'Measured atmospheric profile',
   'bi.atmosphere.labelTitan': 'Measured profile (Huygens probe)',

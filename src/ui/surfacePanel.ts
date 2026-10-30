@@ -21,6 +21,7 @@ import { STORAGE_KEYS } from '@/config/storageKeys';
 import { BOOT_QUALITY_PROFILE } from '@/config/engine';
 import { classifyTemporal, temporalCategoryLabelKey } from '@/core/temporal';
 import { formatIsoDay } from '@/core/dateText';
+import { convertHeightKm, onUnitSystemChange } from '@/core/units';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import { loadDeferredMessages } from '@/i18n/deferredMessages';
 import { isSoftwareRenderer } from '@/components/systems/rendererKind';
@@ -723,6 +724,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
 
   renderLabels();
   onLocaleChange(renderLabels);
+  onUnitSystemChange(() => renderBadge());
   window.addEventListener('resize', placeBadge);
   // Le bandeau des éphémérides manquantes occupe la même bande : quand il paraît, change de
   // taille ou disparaît, on relit sa position réelle (cf. `ui/ephemerisNotice`).
@@ -777,10 +779,16 @@ function formatMonth(ms: number): string {
   });
 }
 
-/** Mètres tant que c'est lisible, kilomètres au-delà : 83 m/px et 1,3 km/px se lisent mal ensemble. */
+/**
+ * Mètres (ou pieds) tant que c'est lisible, kilomètres (ou miles) au-delà : 83 m/px et 1,3 km/px
+ * se lisent mal ensemble. L'unité suit le bouton d'unités.
+ */
 function formatResolution(metres: number): string {
   if (!Number.isFinite(metres)) return 'n/a';
-  return metres >= 1000
-    ? `${decimals(metres / 1000, metres >= 10000 ? 0 : 1)} km`
-    : `${Math.round(metres)} m`;
+  const length = convertHeightKm(metres / 1000);
+  const small = length.unit === 'm' || length.unit === 'ft';
+  const text = small
+    ? String(Math.round(length.value))
+    : decimals(length.value, length.value >= 10 ? 0 : 1);
+  return `${text} ${length.unit}`;
 }

@@ -39,6 +39,7 @@ import {
   type AdoptedCount,
   type BodyAdoptions,
 } from '@/core/nameAdoption';
+import { convertHeightKm, onUnitSystemChange } from '@/core/units';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import { safeExternalUrl } from '@/utils/safeUrl';
@@ -101,6 +102,12 @@ function sourceLink(url: string, text: string): HTMLElement {
   link.rel = 'noopener noreferrer';
   link.textContent = text;
   return link;
+}
+
+/** Le rayon jusqu'où une recherche a regardé, dans l'unité choisie (« 0,5 km » ou « 1 640 ft »). */
+function formatRadius(km: number): string {
+  const radius = convertHeightKm(km);
+  return `${new Intl.NumberFormat(intlLocale()).format(radius.value)}\u00a0${radius.unit}`;
 }
 
 /** Ce que l'affirmation date, dans la langue courante. */
@@ -342,9 +349,7 @@ export function setupDiscoveryBlock(
                 ? [
                     t('bi.discovery.refutedSearched', {
                       date: formatDay(claim.notFound.on),
-                      radius: new Intl.NumberFormat(intlLocale()).format(
-                        claim.notFound.radiusKm
-                      ),
+                      radius: formatRadius(claim.notFound.radiusKm),
                     }),
                   ]
                 : []),
@@ -472,7 +477,9 @@ export function setupDiscoveryBlock(
     sync();
   });
 
-  onLocaleChange(() => {
+  const redraw = (): void => {
     if (rendered) render(rendered, api.orbitalMechanics.simulationDate);
-  });
+  };
+  onLocaleChange(redraw);
+  onUnitSystemChange(redraw);
 }
