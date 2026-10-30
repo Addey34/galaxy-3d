@@ -375,7 +375,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.surfaceBody.off': 'Masquée',
   'surface.compare.badge':
     'à gauche de la ligne : {title}, images de {from} à {to}',
-  'settings.units': 'Unités impériales (mi, °F)',
+  'settings.units': 'Unités impériales (mi, ft, lb, mph, °F)',
 
   // ── Champ d'astéroïdes et de comètes, section des Réglages ──
   'smallBodies.title': 'Champ d’astéroïdes et de comètes',

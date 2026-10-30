@@ -42,7 +42,13 @@ import {
 import { FACT_SOURCE_HOSTS, factSource } from '@/config/factSources';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import {
+  convertAcceleration,
+  convertDensity,
   convertDistanceKm,
+  convertMassKg,
+  convertPressureBar,
+  convertSpeedMs,
+  getUnitSystem,
   distanceDecimals,
   convertTemperatureC,
   onUnitSystemChange,
@@ -139,10 +145,12 @@ function formatMass(kg: number): string {
   // Sous le seuil, l'arrondi entier effaçait la précision PUBLIÉE : la NASA donne 721,9 kg
   // pour Voyager 1, et la fiche affichait « 722 kg ». Une décimale suffit, et elle ne
   // s'affiche que si la source en porte une (6500 kg reste « 6500 kg »).
-  if (kg < SCIENTIFIC_MASS_KG) return `${num(kg, 1)} kg`;
-  const exp = Math.floor(Math.log10(kg));
-  const mantissa = kg / 10 ** exp;
-  return `${num(mantissa, 2)} × 10${superscript(exp)} kg`;
+  const mass = convertMassKg(kg);
+  if (mass.value < SCIENTIFIC_MASS_KG)
+    return `${num(mass.value, 1)} ${mass.unit}`;
+  const exp = Math.floor(Math.log10(mass.value));
+  const mantissa = mass.value / 10 ** exp;
+  return `${num(mantissa, 2)} × 10${superscript(exp)} ${mass.unit}`;
 }
 
 /**
@@ -359,6 +367,40 @@ function formatAsOf(asOf: string): string {
 const formatDay = (iso: string): string =>
   formatIsoDay(iso, getLocale(), intlLocale());
 
+/** Une vitesse publiée en m/s, dans l'unité choisie (« 150 m/s » ou « 336 mph »). */
+function formatSpeed(ms: number): string {
+  const speed = convertSpeedMs(ms);
+  return `${num(speed.value)}\u00a0${speed.unit}`;
+}
+
+/**
+ * Le nombre de décimales qui garde TROIS chiffres significatifs à une valeur positive : une
+ * pression de 0,0875 psi (Mars) ne se lit pas « 0,088 » arrondi à l'unité, et 1 334 psi (Vénus)
+ * n'a pas besoin de décimales.
+ */
+function significantDecimals(value: number): number {
+  if (!(value > 0)) return 0;
+  return Math.min(8, Math.max(0, 2 - Math.floor(Math.log10(value))));
+}
+
+/**
+ * Une masse volumique en kg/m³ dans l'unité choisie. Le métrique garde ses décimales d'origine ;
+ * l'impérial en veut assez pour garder trois chiffres significatifs, parce que 0,16 kg/m³ vaut
+ * 0,00999 lb/ft³ et que deux décimales l'écriraient « 0,01 ».
+ */
+function formatDensity(
+  kgM3: number,
+  baseDecimals: number,
+  separator: string
+): string {
+  const density = convertDensity(kgM3);
+  const decimals =
+    getUnitSystem() === 'imperial'
+      ? Math.max(baseDecimals, significantDecimals(density.value))
+      : baseDecimals;
+  return `${num(density.value, decimals)}${separator}${density.unit}`;
+}
+
 /** Valeur mise en forme d'un fait, dans l'unité choisie par l'utilisateur. */
 function formatFact(name: string, field: FactField, value: FactValue): string {
   if (value.kind === 'date') return formatDay(value.iso);
@@ -370,9 +412,9 @@ function formatFact(name: string, field: FactField, value: FactValue): string {
   if (value.kind === 'latitudeBands')
     // Les vents de Jupiter et de Saturne, écrits comme la source les publie (lot 51).
     return t('stat.windBands', {
-      below: `${num(value.belowMaxMs)}\u00a0m/s`,
+      below: formatSpeed(value.belowMaxMs),
       lat: num(value.belowLatDeg),
-      above: `${num(value.aboveMaxMs)}\u00a0m/s`,
+      above: formatSpeed(value.aboveMaxMs),
     });
   return formatNumericFact(name, field, value.value);
 }
@@ -399,7 +441,7 @@ function formatRangeFact(field: FactField, min: number, max: number): string {
     case 'meanMolecularWeight':
       return `${t('stat.range', { min: num(min, 2), max: num(max, 2) })} g/mol`;
     case 'windSpeedMs':
-      return `${t('stat.range', { min: num(min), max: num(max) })}\u00a0m/s`;
+      return `${t('stat.range', { min: num(convertSpeedMs(min).value), max: num(convertSpeedMs(max).value) })}\u00a0${convertSpeedMs(min).unit}`;
     default:
       throw new Error(`intervalle inattendu pour ${field}`);
   }
@@ -432,7 +474,7 @@ function formatNumericFact(
       return formatMass(value);
     case 'gravity':
       // Deux décimales effaçaient la gravité des petites lunes : Phobos (0,0057) lisait « 0,01 ».
-      return `${num(value, value < 0.1 ? 4 : 2)} m/s²`;
+      return `${num(convertAcceleration(value).value, value < 0.1 ? 4 : 2)} ${convertAcceleration(value).unit}`;
     case 'meanTempC': {
       const temp = convertTemperatureC(value);
       return `${num(temp.value)} ${temp.unit}`;
@@ -458,13 +500,17 @@ function formatNumericFact(
     case 'temperature01BarK':
       return formatKelvin(value);
     case 'density1BarKgM3':
-      return `${num(value, 2)} kg/m³`;
+      return formatDensity(value, 2, ' ');
     case 'surfacePressureBar': {
+      if (getUnitSystem() === 'imperial') {
+        const psi = convertPressureBar(value);
+        return `${num(psi.value, significantDecimals(psi.value))}\u00a0${psi.unit}`;
+      }
       const pressure = surfacePressureDisplay(value);
       return `${num(pressure.value, 3)}\u00a0${pressure.unit}`;
     }
     case 'surfaceDensityKgM3':
-      return `${num(value, 3)}\u00a0kg/m³`;
+      return formatDensity(value, 3, '\u00a0');
     case 'scaleHeightKm': {
       const height = convertDistanceKm(value);
       return `${num(height.value, 1)} ${height.unit}`;
@@ -472,7 +518,7 @@ function formatNumericFact(
     case 'meanMolecularWeight':
       return `${num(value, 2)} g/mol`;
     case 'windSpeedMs':
-      return `${num(value)}\u00a0m/s`;
+      return formatSpeed(value);
     case 'launchDate':
     case 'firstObservation':
     case 'launchVehicle':

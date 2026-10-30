@@ -399,7 +399,7 @@ export const en = {
   'settings.surfaceBody.off': 'Hidden',
   'surface.compare.badge':
     'left of the line: {title}, images from {from} to {to}',
-  'settings.units': 'Imperial units (mi, °F)',
+  'settings.units': 'Imperial units (mi, ft, lb, mph, °F)',
 
   // ── Champ d'astéroïdes et de comètes (NEO / comètes / TNO), section des Réglages ──
   'smallBodies.title': 'Asteroid and comet field',

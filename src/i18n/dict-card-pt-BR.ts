@@ -62,7 +62,7 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'bi.discovery.refutedReported':
     'Nesta data, um possível satélite deste corpo já havia sido relatado: desde {year} por {who}, e depois várias vezes por outros observadores, entre eles {others}.',
   'bi.discovery.refutedSearched':
-    'Uma busca depositada em {date} não encontrou nenhum, até cerca de {radius} km de raio.',
+    'Uma busca depositada em {date} não encontrou nenhum, até cerca de {radius} de raio.',
   'bi.atmosphere.label': 'Perfil medido (sonda Galileo)',
   'bi.atmosphere.labelNone': 'Perfil medido da atmosfera',
   'bi.atmosphere.labelTitan': 'Perfil medido (sonda Huygens)',

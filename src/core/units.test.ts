@@ -6,6 +6,15 @@ import {
   convertDistanceKm,
   convertTemperatureC,
   distanceDecimals,
+  convertHeightKm,
+  convertSpeedMs,
+  convertSpeedKmh,
+  convertMassKg,
+  convertAcceleration,
+  convertDensity,
+  convertPressureBar,
+  convertPressureHpa,
+  convertRainRateMmH,
 } from './units';
 
 describe('units', () => {
@@ -66,5 +75,53 @@ describe('distanceDecimals', () => {
 
   it('traite les valeurs négatives par leur magnitude', () => {
     expect(distanceDecimals(-0.5)).toBe(distanceDecimals(0.5));
+  });
+});
+
+describe('les autres grandeurs suivent le bouton', () => {
+  beforeEach(() => {
+    setUnitSystem('metric');
+  });
+
+  it('ne change rien en métrique', () => {
+    expect(convertHeightKm(0.5)).toEqual({ value: 500, unit: 'm' });
+    expect(convertHeightKm(12)).toEqual({ value: 12, unit: 'km' });
+    expect(convertSpeedMs(30)).toEqual({ value: 30, unit: 'm/s' });
+    expect(convertSpeedKmh(90)).toEqual({ value: 90, unit: 'km/h' });
+    expect(convertMassKg(5)).toEqual({ value: 5, unit: 'kg' });
+    expect(convertAcceleration(9.8)).toEqual({ value: 9.8, unit: 'm/s²' });
+    expect(convertDensity(1000)).toEqual({ value: 1000, unit: 'kg/m³' });
+    expect(convertPressureBar(1)).toEqual({ value: 1, unit: 'bar' });
+    expect(convertPressureHpa(1013)).toEqual({ value: 1013, unit: 'hPa' });
+    expect(convertRainRateMmH(20)).toEqual({ value: 20, unit: 'mm/h' });
+  });
+
+  it('convertit avec les facteurs exacts du système impérial', () => {
+    setUnitSystem('imperial');
+    // Références : définitions légales (pied 0,3048 m, livre 0,45359237 kg, mille 1609,344 m).
+    expect(convertSpeedMs(0.44704).value).toBeCloseTo(1, 6);
+    expect(convertSpeedMs(1).unit).toBe('mph');
+    expect(convertSpeedKmh(1.609344).value).toBeCloseTo(1, 6);
+    expect(convertMassKg(0.45359237).value).toBeCloseTo(1, 8);
+    expect(convertMassKg(1).unit).toBe('lb');
+    expect(convertAcceleration(0.3048).value).toBeCloseTo(1, 8);
+    expect(convertAcceleration(1).unit).toBe('ft/s²');
+    expect(convertDensity(16.01846337).value).toBeCloseTo(1, 8);
+    expect(convertDensity(1).unit).toBe('lb/ft³');
+    expect(convertPressureBar(1).value).toBeCloseTo(14.5038, 3);
+    expect(convertPressureBar(1).unit).toBe('psi');
+    expect(convertPressureHpa(1013.25).value).toBeCloseTo(29.92, 2);
+    expect(convertPressureHpa(1).unit).toBe('inHg');
+    expect(convertRainRateMmH(25.4).value).toBeCloseTo(1, 8);
+    expect(convertRainRateMmH(1).unit).toBe('in/h');
+  });
+
+  it('bascule sur l’unité de route au mille, pas au kilomètre', () => {
+    setUnitSystem('imperial');
+    // 1,5 km = 0,93 mi : encore en pieds. 1,7 km = 1,06 mi : en miles.
+    expect(convertHeightKm(1.5).unit).toBe('ft');
+    expect(convertHeightKm(1.5).value).toBeCloseTo(4921.26, 1);
+    expect(convertHeightKm(1.7).unit).toBe('mi');
+    expect(convertHeightKm(1.609344).value).toBeCloseTo(1, 8);
   });
 });
