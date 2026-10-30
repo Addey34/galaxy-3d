@@ -807,3 +807,31 @@ test('names a single month once in the imagery badge', async ({ page }) => {
   await expect(badge).toContainText('images from July 2015');
   await expect(badge).not.toContainText('July 2015 to July 2015');
 });
+
+test('hides the imagery of one body only, and offers the choice only where a mosaic exists', async ({
+  page,
+}) => {
+  await prepareSurfacePage(page);
+  const requests = await serveTiles(page);
+  await boot(page, '?mode=explo&body=mercury');
+  await page.locator('#settings-trigger').click();
+  const select = page.locator('#surface-body-imagery');
+  await expect(select).toBeVisible();
+  await expect(select).toHaveValue('auto');
+  // Le fond et la météo sont ceux de la Terre : absents pour Mercure.
+  await expect(page.locator('#surface-earth-base-wrapper')).toBeHidden();
+  await expect(page.locator('#layers-weather-link')).toBeHidden();
+
+  await select.selectOption('off');
+  await page.locator('#orbit-options .surface-close').click();
+  await zoomIn(page);
+  await page.waitForTimeout(3000);
+  expect(requests.filter((r) => r.url().includes('trek.nasa.gov'))).toEqual([]);
+
+  // Un corps sans mosaïque n'a pas le choix.
+  await page.evaluate(() => {
+    document.querySelector<HTMLElement>('#orbit-overview')?.click();
+  });
+  await page.locator('#settings-trigger').click();
+  await expect(page.locator('#surface-body-imagery-wrapper')).toBeHidden();
+});

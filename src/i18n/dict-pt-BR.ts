@@ -316,6 +316,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.title': 'Ajustes de exibição',
   'settings.section.scene': 'Na cena',
   'settings.section.rendering': 'Renderização',
+  'settings.section.layers': 'Camadas',
   'settings.section.reading': 'Acessibilidade e unidades',
   'settings.section.view': 'Vista',
   'settings.section.offline': 'Uso offline',
@@ -373,6 +374,10 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.buildings.origin.absent': 'ausente: laje plana',
   'settings.surfaceCompare': 'Comparar com o ano',
   'settings.surfaceCompare.none': 'Sem comparação',
+  'settings.weatherLink': 'Camadas meteorológicas da Terra…',
+  'settings.surfaceBody': 'Imagens de superfície deste corpo',
+  'settings.surfaceBody.auto': 'Automática',
+  'settings.surfaceBody.off': 'Oculta',
   'surface.compare.badge':
     'à esquerda da linha: {title}, imagens de {from} a {to}',
   'settings.units': 'Unidades imperiais (mi, °F)',

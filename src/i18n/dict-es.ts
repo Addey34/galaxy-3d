@@ -320,6 +320,7 @@ export const es: Record<MessageKey, string> = {
   'settings.title': 'Ajustes de visualización',
   'settings.section.scene': 'En la escena',
   'settings.section.rendering': 'Representación',
+  'settings.section.layers': 'Capas',
   'settings.section.reading': 'Accesibilidad y unidades',
   'settings.section.view': 'Vista',
   'settings.section.offline': 'Uso sin conexión',
@@ -378,6 +379,10 @@ export const es: Record<MessageKey, string> = {
   'surface.buildings.origin.absent': 'ausente: losa plana',
   'settings.surfaceCompare': 'Comparar con el año',
   'settings.surfaceCompare.none': 'Sin comparación',
+  'settings.weatherLink': 'Capas meteorológicas de la Tierra…',
+  'settings.surfaceBody': 'Imágenes de superficie de este cuerpo',
+  'settings.surfaceBody.auto': 'Automática',
+  'settings.surfaceBody.off': 'Oculta',
   'surface.compare.badge':
     'a la izquierda de la línea: {title}, imágenes de {from} a {to}',
   'settings.units': 'Unidades imperiales (mi, °F)',

@@ -130,9 +130,43 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   const switchLabel = document.createElement('span');
   switchLabel.className = 'settings-switch-label';
   wrapper.append(checkbox, switchLabel);
-  (
-    document.getElementById('settings-section-rendering') ?? document.body
-  ).append(wrapper);
+  (document.getElementById('settings-section-layers') ?? document.body).append(
+    wrapper
+  );
+
+  // IMAGERIE DU CORPS CIBLÉ : automatique (selon la distance) ou masquée pour CE corps seulement.
+  // Le choix ne persiste pas, comme le reste du contenu de la scène ; il n'est proposé que pour un
+  // corps qui a une mosaïque publiée (`refreshBodyControls`).
+  const hiddenBodies = new Set<string>();
+  const bodyWrapper = document.createElement('label');
+  bodyWrapper.id = 'surface-body-imagery-wrapper';
+  bodyWrapper.className = 'settings-switch';
+  bodyWrapper.hidden = true;
+  const bodyLabel = document.createElement('span');
+  bodyLabel.className = 'settings-switch-label';
+  const bodySelect = document.createElement('select');
+  bodySelect.id = 'surface-body-imagery';
+  const bodyOptions = (['auto', 'off'] as const).map((mode) => {
+    const option = document.createElement('option');
+    option.value = mode;
+    return option;
+  });
+  bodySelect.append(...bodyOptions);
+  bodyWrapper.append(bodyLabel, bodySelect);
+  wrapper.after(bodyWrapper);
+
+  // MÉTÉO DE LA TERRE : le panneau des couches météo reste son propre panneau (recherche, liens
+  // de partage et préréglages en dépendent) ; cette ligne n'en est que l'entrée depuis les
+  // Couches. Ouvrir le panneau ferme les Réglages : une seule surface contextuelle à la fois.
+  const weatherLink = document.createElement('button');
+  weatherLink.id = 'layers-weather-link';
+  weatherLink.type = 'button';
+  weatherLink.className = 'settings-switch settings-link-button';
+  weatherLink.hidden = true;
+  weatherLink.addEventListener('click', () =>
+    document.getElementById('weather-trigger')?.click()
+  );
+  bodyWrapper.after(weatherLink);
 
   // FOND DE LA TERRE (lot 48) : la mosaïque par défaut, l'image du jour de la scène ou un fond de
   // rechange. Rien d'autre que la mosaïque n'est demandé tant qu'on n'en choisit pas un autre,
@@ -151,7 +185,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   });
   baseSelect.append(...baseOptions);
   baseWrapper.append(baseLabel, baseSelect);
-  wrapper.after(baseWrapper);
+  weatherLink.after(baseWrapper);
   let choice: SurfaceChoiceId = DEFAULT_SURFACE_CHOICE;
   /** Mémoire de l'hystérésis du fond de loin. */
   let farBase = false;
@@ -227,6 +261,10 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
         `settings.surfaceEarthBase.${SURFACE_CHOICES[rank]!}`
       );
     });
+    weatherLink.textContent = t('settings.weatherLink');
+    bodyLabel.textContent = t('settings.surfaceBody');
+    bodyOptions[0]!.textContent = t('settings.surfaceBody.auto');
+    bodyOptions[1]!.textContent = t('settings.surfaceBody.off');
     compareLabel.textContent = t('settings.surfaceCompare');
     noCompare.textContent = t('settings.surfaceCompare.none');
     renderBadge();
@@ -412,10 +450,44 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     api.sceneSystem.renderer.domElement.dataset['surfaceBusy'] = value;
   };
 
+  /**
+   * Les contrôles de couches suivent le corps CIBLÉ : le sélecteur d'imagerie n'existe que pour un
+   * corps qui a une mosaïque, ceux du fond et de la comparaison que pour la Terre. La liste des
+   * mosaïques est un chunk, chargé ici au premier changement de cible (jamais au démarrage).
+   */
+  let controlsFor: string | null | undefined;
+  let tilesetIndex: Promise<typeof import('@/config/surfaceTilesets')> | null =
+    null;
+  const refreshBodyControls = async (name: string | null): Promise<void> => {
+    const isEarth = name === 'earth';
+    baseWrapper.hidden = !isEarth;
+    weatherLink.hidden = !isEarth;
+    compareWrapper.hidden = !isEarth || choice !== 'sentinel-2';
+    if (!name) {
+      bodyWrapper.hidden = true;
+      return;
+    }
+    tilesetIndex ??= import('@/config/surfaceTilesets');
+    const { SURFACE_TILESETS } = await tilesetIndex.catch(() => ({
+      SURFACE_TILESETS: new Map<string, unknown>(),
+    }));
+    if (controlsFor !== name) return; // la cible a changé pendant le chargement
+    bodyWrapper.hidden = !SURFACE_TILESETS.has(name);
+    bodySelect.value = hiddenBodies.has(name) ? 'off' : 'auto';
+  };
+
   const tick = (): void => {
     publishBusy();
     const name = api.cameraSystem.targetName;
     const distance = api.cameraSystem.getDistanceToTargetSceneUnits();
+    if (name !== controlsFor) {
+      controlsFor = name;
+      void refreshBodyControls(name);
+    }
+    if (name && hiddenBodies.has(name)) {
+      if (engine?.attachedBody) disable();
+      return;
+    }
     if (!enabled || !name || distance === null) {
       if (engine?.attachedBody) disable();
       return;
@@ -636,9 +708,15 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     writeStored(enabled);
     if (!enabled) disable();
   });
+  bodySelect.addEventListener('change', () => {
+    const name = controlsFor;
+    if (!name) return;
+    if (bodySelect.value === 'off') hiddenBodies.add(name);
+    else hiddenBodies.delete(name);
+  });
   baseSelect.addEventListener('change', () => {
     choice = baseSelect.value as SurfaceChoiceId;
-    compareWrapper.hidden = choice !== 'sentinel-2';
+    compareWrapper.hidden = controlsFor !== 'earth' || choice !== 'sentinel-2';
   });
   compareSelect.addEventListener('change', () => {
     compareYear = compareSelect.value ? Number(compareSelect.value) : null;
@@ -664,6 +742,8 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       curtain = null;
       badge.remove();
       wrapper.remove();
+      bodyWrapper.remove();
+      weatherLink.remove();
       baseWrapper.remove();
       compareWrapper.remove();
     },

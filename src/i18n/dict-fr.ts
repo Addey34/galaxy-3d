@@ -309,6 +309,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.title': 'Réglages d’affichage',
   'settings.section.scene': 'Dans la scène',
   'settings.section.rendering': 'Rendu',
+  'settings.section.layers': 'Couches',
   'settings.section.reading': 'Accessibilité et unités',
   'settings.section.view': 'Vue',
   'settings.section.offline': 'Utilisation hors ligne',
@@ -366,6 +367,10 @@ export const fr: Record<MessageKey, string> = {
   'surface.buildings.origin.absent': 'absente : dalle plate',
   'settings.surfaceCompare': 'Comparer avec l’année',
   'settings.surfaceCompare.none': 'Aucune comparaison',
+  'settings.weatherLink': 'Couches météo de la Terre…',
+  'settings.surfaceBody': 'Imagerie de surface de ce corps',
+  'settings.surfaceBody.auto': 'Automatique',
+  'settings.surfaceBody.off': 'Masquée',
   'surface.compare.badge':
     'à gauche de la ligne : {title}, images de {from} à {to}',
   'settings.units': 'Unités impériales (mi, °F)',
