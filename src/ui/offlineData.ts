@@ -4,8 +4,8 @@
  *
  * Phase 17E, option (a2) tranchée par l'utilisateur le 2026-09-23. Ce n'est pas un pis-aller :
  * une école à connexion pauvre est exactement la cible du projet, et « je prépare chez moi,
- * j'enseigne sans réseau » est une fonctionnalité. Le téléchargement est DEMANDÉ : 38 Mo pris
- * d'office sur le forfait de quelqu'un seraient une décision prise à sa place.
+ * j'enseigne sans réseau » est une fonctionnalité. Le téléchargement est DEMANDÉ : des dizaines de Mo
+ * (la taille exacte est lue, voir `offlineState`) pris d'office sur le forfait de quelqu'un seraient une décision prise à sa place.
  *
  * Tout ce qui est affiché est LU (`HorizonsEphemerisService.offlineState`), jamais mémorisé :
  * un « c'est prêt » enregistré survivrait à une purge de quota du navigateur, et l'appareil
@@ -23,8 +23,8 @@ import { getAnnouncer } from './announcer';
 
 /**
  * Mégaoctets DÉCIMAUX (10^6), arrondis au dixième, parce que c'est l'unité sous laquelle ces
- * fichiers sont chiffrés partout ailleurs dans le projet : 38 445 024 octets font 38,4 Mo
- * décimaux et 36,7 Mio binaires. Afficher les seconds sous le nom des premiers est exactement
+ * fichiers sont chiffrés partout ailleurs dans le projet. Exemple du 2026-09 : 38 445 024 octets font
+ * 38,4 Mo décimaux et 36,7 Mio binaires. Afficher les seconds sous le nom des premiers est exactement
  * le piège que `du -h` a déjà tendu à ce dépôt.
  */
 function formatMegabytes(bytes: number): string {

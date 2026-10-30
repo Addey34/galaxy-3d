@@ -242,7 +242,7 @@ export function setupBodyPalette(
         (entry) => entry.button.dataset['group'] === key
       );
     }
-    emptyEl.textContent = t('events.empty');
+    emptyEl.textContent = t('nav.noMatch');
     // Le vide se dit d'abord sur les corps ; `refreshTyped` le corrige quand les résultats
     // typés arrivent (« aucun corps » ne veut plus dire « aucun résultat »).
     emptyEl.hidden = visible.length > 0 || typedItems.length > 0;

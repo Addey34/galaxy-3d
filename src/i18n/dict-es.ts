@@ -118,6 +118,7 @@ export const es: Record<MessageKey, string> = {
   'offline.started': 'Preparación sin conexión iniciada.',
   'offline.forget': 'Liberar {size} MB',
   'nav.searchPlaceholder': 'Un cuerpo, un cráter, una misión…',
+  'nav.noMatch': 'Ningún resultado',
   'nav.paletteAria':
     'Buscar y seleccionar un cuerpo, un lugar, una misión, un instrumento o un sobrevuelo',
   'nav.group.star': 'Estrella',
@@ -415,14 +416,14 @@ export const es: Record<MessageKey, string> = {
   'weather.clouds.note':
     'Cobertura nubosa real, imagen de satélite de la NASA (imagen del día).',
   'weather.cloudsModel.note':
-    'Cobertura nubosa modelizada: mundial sin huecos, admite pasado y previsión; elíjala para el directo y el viaje en el tiempo.',
+    'Cobertura nubosa modelizada: mundial sin huecos, admite pasado y previsión; elíjala para el momento presente y el viaje en el tiempo.',
   'weather.precip.note':
     'Lluvia observada NASA IMERG V07: se conserva su máscara alfa nativa; no se añade ninguna extrapolación polar.',
   'weather.precip.legendLo': 'Débil',
   'weather.precip.legendHi': 'Intensa',
   'weather.precipModel.note':
     'Lluvia modelizada: mundial sin huecos, pasado + previsión. Las zonas secas quedan transparentes.',
-  'weather.precipModel.lo': '0 mm/h',
+  'weather.precipModel.lo': '0,1 mm/h',
   'weather.precipModel.hi': '20+ mm/h',
   'weather.thermalModel.note':
     'Temperatura del aire a 2 m modelizada: mundial sin huecos, pasado + previsión.',
@@ -430,7 +431,7 @@ export const es: Record<MessageKey, string> = {
   'weather.thermalModel.hi': '+45 °C',
   'weather.pressureModel': 'Presión al nivel del mar (modelo)',
   'weather.pressureModel.note':
-    'Presión al nivel del mar mostrada como isobaras suaves en hPa.',
+    'Presión al nivel del mar mostrada como mapa de colores, en hPa.',
   'weather.pressureModel.lo': '960 hPa',
   'weather.pressureModel.hi': '1060 hPa',
   'weather.humidityModel': 'Humedad relativa (modelo)',
