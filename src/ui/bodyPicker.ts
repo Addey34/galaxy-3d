@@ -80,6 +80,15 @@ export function setupBodyPicker(
   const ndc = new THREE.Vector2();
   let pointerStart: PointerStart | null = null;
 
+  // Le corps déjà ciblé ne se re-sélectionne pas au clic : de près, le clic (ou le tap) qui
+  // suit un zoom retomberait sur lui et relancerait le vol d'approche, ce qui remet la vue à zéro.
+  // Choisir à nouveau le même corps reste possible par la palette, qui passe directement par
+  // `selectBody`.
+  const select = (name: string): void => {
+    if (name === nav.getSelectedBody()) return;
+    nav.selectBody(name);
+  };
+
   const onPointerDown = (event: PointerEvent): void => {
     // Les labels Explo ne réémettent au canvas que la molette (zoom), jamais leurs gestes de
     // pointeur : un clic sur un label n'atteint donc pas ce picker.
@@ -110,7 +119,7 @@ export function setupBodyPicker(
     for (const hit of overlayHits) {
       const name = hit(event.clientX, event.clientY);
       if (name) {
-        nav.selectBody(name);
+        select(name);
         return;
       }
     }
@@ -136,7 +145,7 @@ export function setupBodyPicker(
     )) {
       const name = resolveBodyName(hit.object, validNames);
       if (name) {
-        nav.selectBody(name);
+        select(name);
         return;
       }
     }
