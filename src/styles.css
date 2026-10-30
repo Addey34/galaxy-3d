@@ -2981,6 +2981,16 @@ body.is-capturing #loader {
     flex: none;
     overflow: visible;
   }
+  /* Réglages : quatre onglets dont deux dépassent 650 px de contenu. À 46 vh l'onglet Image
+     montrait les seules couches ; à 68 vh il montre aussi la luminosité, sans recouvrir la
+     scène que les gestes ne ferment pas. Le plafond d'ancrage reste la borne. */
+  .surface--settings {
+    max-height: min(
+      68vh,
+      40rem,
+      var(--surface-anchor-max-height, 100vh)
+    ) !important;
+  }
 }
 
 /* Palette des corps sur téléphone : une feuille qui tombe SOUS le bouton de recherche qui
@@ -2999,6 +3009,17 @@ body.is-capturing #loader {
 @media (max-height: 460px) {
   .surface {
     max-height: calc(100vh - 2 * var(--edge)) !important;
+  }
+  /* Ancrées sous la rangée de boutons (`top` du bloc de base), ces quatre surfaces
+     débordaient du bas de l'écran en paysage : la règle ci-dessus annulait leur borne. On
+     retranche donc aussi le haut qu'elles laissent (`sp-2` : la plus grande des deux ancres). */
+  .surface--info,
+  .surface--settings,
+  .surface--events,
+  .surface--help {
+    max-height: calc(
+      100vh - 2 * var(--edge) - var(--control-h) - var(--sp-2)
+    ) !important;
   }
   .dock--top-left,
   .dock--top-right {
