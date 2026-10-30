@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "infrared",
   "filled": true,
   "lineage": {
     "status": "ready",

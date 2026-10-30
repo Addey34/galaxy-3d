@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "natural",
   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Land_shallow_topo_2048.jpg",
   "postProcess": "Base NASA SANS couche nuageuse (Arctique propre, pas de voile blanc diffus). Teinte de l'océan éclaircie uniformément vers un bleu de référence (R30 G59 B117, mesuré sur la composite Blue Marble pour un rendu honnête vu de l'espace), appliquée UNIQUEMENT aux pixels océan via le masque terre/mer (spec map) — continents et vraie glace polaire (Groenland, Antarctique) intacts. Regénérée en 8k/4k/2k/1k (Lanczos, mozjpeg q90).",
   "review": {

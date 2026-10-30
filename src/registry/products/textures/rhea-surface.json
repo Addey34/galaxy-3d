@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "monochrome",
   "lineage": {
     "status": "ready",
     "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/22bc1015-d9c9-4212-86c3-e42061b204d4/resource/77fa77f8-6d6b-4072-9360-17138caa6e7d/download/full.jpg",

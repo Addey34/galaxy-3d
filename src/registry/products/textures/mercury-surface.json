@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "monochrome",
   "review": {
     "status": "manual",
     "processing": "gdal-required",

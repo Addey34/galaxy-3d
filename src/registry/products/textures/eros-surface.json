@@ -22,6 +22,7 @@
     }
   ],
   "tier": "free",
+  "colorNature": "false-color",
   "filled": true,
   "review": {
     "status": "ready",
