@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
+import { openSettingsTab } from './settingsTab';
 
 /**
  * Une unité écrite après un nombre, jamais comme début d'un mot. Le numéro de source de la fiche
@@ -39,6 +40,7 @@ test('Jupiter’s card follows the unit switch, live', async ({ page }) => {
   await expect(stats).toContainText('°C');
 
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'reading');
   await page.locator('#units-toggle').check();
 
   // Impérial : plus une seule unité SI dans les statistiques, et les équivalents sont là.
@@ -83,6 +85,7 @@ test('weather legends follow the unit switch, live', async ({ page }) => {
   expect(metric).toContain('°C');
 
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'reading');
   await page.locator('#units-toggle').check();
   await expect.poll(read).toContain('mph');
   const imperial = await read();

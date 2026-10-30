@@ -103,6 +103,7 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'tours.pause': 'même mot en français',
   'weather.precip.legendHi': 'même mot en français',
   // Unités et suffixes : décidés une fois, cf. `dict-es` et `dict-pt-BR`.
+  'settings.tab.image': 'même mot en français',
   'unit.day.short': '« d » pour day/día/dia',
   'unit.hour.short': '« h » dans les quatre langues',
   'unit.minute.short': '« min » dans les quatre langues',

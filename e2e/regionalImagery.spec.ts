@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { boot, prepareSurfacePage, TILE_JPEG } from './surfaceTiles';
+import { openSettingsTab } from './settingsTab';
 
 /**
  * L'ORTHOPHOTO DE L'IGN SOUS LES 10 M (lot 53, pas 4), dans un vrai navigateur.
@@ -42,6 +43,7 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
   // (mesuré sur GPU réel : 458 m sans, 229 m avec), ce que le rendu logiciel de la CI ne tient pas
   // (3,6 i/s à 126 carreaux) : ce scénario tient donc la règle de la base, sur la Blue Marble.
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
   await page.locator('#surface-earth-base').selectOption('mosaic');
   await page.keyboard.press('Escape');
   await expect(page.locator('#orbit-options')).toBeHidden();

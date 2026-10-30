@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { clickWhenCalm } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
+import { openSettingsTab } from './settingsTab';
 
 test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);
@@ -71,6 +72,7 @@ test('graphics quality controls live inline inside settings', async ({
   // La qualité graphique est fusionnée dans le panneau Réglages : plus de
   // bouton/popover dédié, le groupe de radios apparaît dans le même panneau.
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
   const settings = page.locator('#orbit-options');
   await expect(settings).toBeVisible();
   const qualityGroup = settings.locator('#quality-group');
