@@ -11,7 +11,11 @@
  * Éducatif ↔ Explo (taille de base vs vraie taille physique via radiusKm).
  */
 import { heavyAssetUrl } from '@/config/assetOrigin';
-import { SKY_LOAD_RADII } from './skyApproach';
+import {
+  RELIEF_TESSELLATION_ENTER_RADII,
+  RELIEF_TESSELLATION_EXIT_RADII,
+  SKY_LOAD_RADII,
+} from '@/core/layerDistances';
 import * as THREE from 'three';
 import {
   buildLayers,
@@ -78,10 +82,6 @@ import type { OceanMatch } from '@/core/oceanMatch';
 const CLOUDS_ROTATION_FACTOR = 0.1;
 // Opacité de l'ombre portée des nuages sur la surface (0 = aucune, 1 = noir).
 const CLOUD_SHADOW_STRENGTH = 0.35;
-// Distance (en rayons apparents) sous laquelle on densifie la surface pour le
-// displacement. Au-delà, le relief géométrique est invisible → géométrie standard.
-const HI_RES_TESSELLATION_ENTER = 12;
-const HI_RES_TESSELLATION_EXIT = 14;
 // Intensité maximale du clair de Lune (pleine Lune, point face à la Lune). Faible :
 // la nuit reste sombre, la Lune ne fait que déposer une lueur subtile sur les mers/sol.
 const MOONLIGHT_MAX_STRENGTH = 0.12;
@@ -1570,8 +1570,8 @@ export default class CelestialObject {
     if (!surface) return;
 
     const shouldBeHiRes = this._hiResSurfaceActive
-      ? normalizedDistance <= HI_RES_TESSELLATION_EXIT
-      : normalizedDistance <= HI_RES_TESSELLATION_ENTER;
+      ? normalizedDistance <= RELIEF_TESSELLATION_EXIT_RADII
+      : normalizedDistance <= RELIEF_TESSELLATION_ENTER_RADII;
     if (shouldBeHiRes === this._hiResSurfaceActive) return;
 
     // Première demande : on mémorise la géométrie standard (déjà en place) et on construit

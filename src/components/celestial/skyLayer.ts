@@ -2,7 +2,7 @@
  * LE CIEL CALCULÉ D'UN CORPS, POSÉ À L'APPROCHE (lot 48, pas 6).
  *
  * Un morceau à part, chargé par `CelestialObject` quand la caméra arrive à moins de
- * `SKY_LOAD_RADII` rayons (`skyApproach.ts`) d'un corps dont la fiche déclare un modèle de diffusion
+ * `SKY_LOAD_RADII` rayons (`core/layerDistances.ts`) d'un corps dont la fiche déclare un modèle de diffusion
  * (`skyScattering`), jamais au démarrage. Le shader, les coefficients et le miroir JS des étoiles
  * pèsent ~10 ko : au démarrage ils dépassaient le plafond du JavaScript de 7 332 octets (mesuré par
  * `pnpm budget:startup` le 2026-10-13), et de loin le halo de Fresnel suffit, la Terre n'y faisant

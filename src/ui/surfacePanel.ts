@@ -34,13 +34,11 @@ import {
   type SurfaceChoiceId,
 } from './surfaceChoices';
 import EDITION_YEARS from '@/config/eoxEditionYears.json';
+import { SURFACE_PANEL_LOAD_RADII } from '@/core/layerDistances';
 import type {
   PlanetarySurfaceEngine,
   SurfaceImageryState,
 } from '@/components/surface/PlanetarySurfaceEngine';
-
-/** Rayons apparents sous lesquels on daigne CHARGER le moteur. Au-delà : rien n'est demandé. */
-const ENGINE_LOAD_RADII = 8;
 
 /**
  * Altitude sous laquelle les bâtiments sont préparés. PROVISOIRE : une tuile de zoom 14 mesure
@@ -503,7 +501,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     if (renderedRadius <= 0) return;
     // Rien n'est chargé, et surtout rien n'est DEMANDÉ, tant que le corps n'occupe pas
     // l'écran : survoler Jupiter de loin ne doit coûter aucune requête.
-    if (distance / renderedRadius > ENGINE_LOAD_RADII) {
+    if (distance / renderedRadius > SURFACE_PANEL_LOAD_RADII) {
       if (engine?.attachedBody) disable();
       return;
     }
