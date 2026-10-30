@@ -321,8 +321,17 @@ test('Vénus : le satellite signalé dès 1645, puis la recherche qui n’en tro
   await expect(refuted(page).locator('a')).toHaveAttribute('href', claim!.url);
 
   await boot(page, 'venus/?date=2010-06-01T12:00:00Z');
+  // Le rayon suit le bouton d'unités (#395) : sous le kilomètre l'application l'écrit en mètres
+  // (« 300 m »), au-dessus en kilomètres. Les deux écritures du MÊME rayon sont acceptées.
+  const { radiusKm } = claim!.notFound;
+  const surveyDate = new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'long',
+    timeZone: 'UTC',
+  }).format(new Date(claim!.notFound.on));
   await expect(refuted(page)).toContainText(
-    `A survey submitted on ${new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(claim!.notFound.on))} found none, down to about ${claim!.notFound.radiusKm} km in radius.`,
+    new RegExp(
+      `A survey submitted on ${surveyDate} found none, down to about (${radiusKm}\\s+km|${Math.round(radiusKm * 1000)}\\s+m) in radius[.]`
+    ),
     { timeout: 15_000 }
   );
 });
