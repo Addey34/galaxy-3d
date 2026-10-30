@@ -218,7 +218,7 @@ export const ptBR: Record<MessageKey, string> = {
   'webxr.btn.exit.title': 'Sair da RV',
   'webxr.btn.exit.aria': 'Sair da realidade virtual',
   'help.dialog.aria': 'Ajuda e créditos',
-  'help.title': 'Navegação',
+  'help.title': 'Ajuda, dicas e créditos',
   'help.tip.drag.key': 'Arrastar',
   'help.tip.drag.text': 'girar a vista',
   'help.tip.zoom.key': 'Roda · pinça',

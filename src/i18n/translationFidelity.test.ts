@@ -99,7 +99,6 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   // Mots savants identiques d'une langue romane à l'autre.
   'events.kind.penumbral': 'même mot en espagnol et en portugais',
   'events.kind.total': 'même mot en espagnol et en portugais',
-  'help.title': 'même mot en français',
   'credits.textures': 'même mot en français',
   'credits.sources': 'même mot en français',
   'bi.sources': 'même mot en français',

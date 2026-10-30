@@ -169,8 +169,8 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   );
   bodyWrapper.after(weatherLink);
 
-  // FOND DE LA TERRE (lot 48) : la mosaïque par défaut, l'image du jour de la scène ou un fond de
-  // rechange. Rien d'autre que la mosaïque n'est demandé tant qu'on n'en choisit pas un autre,
+  // FOND DE LA TERRE (lot 48) : l'édition Sentinel-2 de l'année de la scène (le défaut), l'image du
+  // jour ou un fond de rechange. Rien d'autre que le défaut n'est demandé tant qu'on n'en choisit pas un autre,
   // et le choix ne persiste pas, comme le reste du contenu de la scène.
   const baseWrapper = document.createElement('label');
   baseWrapper.id = 'surface-earth-base-wrapper';

@@ -236,7 +236,7 @@ export const en = {
   'webxr.btn.exit.title': 'Exit VR',
   'webxr.btn.exit.aria': 'Exit virtual reality',
   'help.dialog.aria': 'Help and credits',
-  'help.title': 'Navigation',
+  'help.title': 'Help, tips & credits',
   'help.tip.drag.key': 'Drag',
   'help.tip.drag.text': 'orbit the view',
   'help.tip.zoom.key': 'Scroll · pinch',
