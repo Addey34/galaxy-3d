@@ -221,7 +221,7 @@ export const es: Record<MessageKey, string> = {
   'webxr.btn.exit.title': 'Salir de la RV',
   'webxr.btn.exit.aria': 'Salir de la realidad virtual',
   'help.dialog.aria': 'Ayuda y créditos',
-  'help.title': 'Navegación',
+  'help.title': 'Ayuda, consejos y créditos',
   'help.tip.drag.key': 'Arrastrar',
   'help.tip.drag.text': 'girar la vista',
   'help.tip.zoom.key': 'Rueda · pinza',

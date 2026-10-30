@@ -210,7 +210,7 @@ export const fr: Record<MessageKey, string> = {
   'webxr.btn.exit.title': 'Quitter la VR',
   'webxr.btn.exit.aria': 'Quitter la réalité virtuelle',
   'help.dialog.aria': 'Aide et crédits',
-  'help.title': 'Navigation',
+  'help.title': 'Aide, astuces et crédits',
   'help.tip.drag.key': 'Glisser',
   'help.tip.drag.text': 'pivoter la vue',
   'help.tip.zoom.key': 'Molette · pincer',

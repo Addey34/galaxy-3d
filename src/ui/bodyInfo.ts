@@ -14,6 +14,7 @@ import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { colorNatureOf } from '@/config/colorNature';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { formatIsoDay } from '@/core/dateText';
+import { kelvinWithConversion, superscript } from '@/core/numberText';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
 import {
@@ -112,27 +113,6 @@ function num(n: number, maxFractionDigits = 0): string {
     numberFormats.set(key, format);
   }
   return format.format(n);
-}
-
-/** Exposant en chiffres exposants Unicode (24 → « ²⁴ »). */
-function superscript(n: number): string {
-  const map: Record<string, string> = {
-    '0': '⁰',
-    '1': '¹',
-    '2': '²',
-    '3': '³',
-    '4': '⁴',
-    '5': '⁵',
-    '6': '⁶',
-    '7': '⁷',
-    '8': '⁸',
-    '9': '⁹',
-    '-': '⁻',
-  };
-  return String(n)
-    .split('')
-    .map((c) => map[c] ?? c)
-    .join('');
 }
 
 /**
@@ -420,11 +400,8 @@ function formatFact(name: string, field: FactField, value: FactValue): string {
 }
 
 /** Un kelvin publié, suivi de sa conversion dans l'unité choisie (« 165 K (-108 °C) »). */
-function formatKelvin(kelvin: number): string {
-  const temp = convertTemperatureC(kelvin - 273.15);
-  // Insécables entre un nombre et son unité : la coupure ne tombe qu'avant la conversion.
-  return `${num(kelvin)}\u00a0K (${num(temp.value)}\u00a0${temp.unit})`;
-}
+const formatKelvin = (kelvin: number): string =>
+  kelvinWithConversion(kelvin, num);
 
 /**
  * Un INTERVALLE publié comme tel (lot 51) : « 19,1 à 20,3 km ». Seuls les deux champs dont une

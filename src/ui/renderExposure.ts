@@ -55,7 +55,7 @@ export function setupRenderExposure(scene: SceneSystem): void {
   range.step = '0.05';
   group.append(label, range);
 
-  // Rangé dans la surface Réglages, sous les autres contrôles (FOV inclus).
+  // Rangé dans la surface Réglages, sous les autres contrôles de rendu (le champ de vision est dans la section Vue).
   const host =
     document.getElementById('settings-section-rendering') ?? document.body;
   host.append(group);

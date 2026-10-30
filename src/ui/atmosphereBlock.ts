@@ -29,12 +29,12 @@ import {
   convertDistanceKm,
   convertHeightKm,
   convertPressureBar,
-  convertTemperatureC,
   getUnitSystem,
   onUnitSystemChange,
 } from '@/core/units';
 import { surfacePressureDisplay } from '@/core/bodyFacts';
 import { formatIsoDay } from '@/core/dateText';
+import { kelvinWithConversion, superscript } from '@/core/numberText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { BodyInfoPanel } from './bodyInfo';
@@ -47,20 +47,6 @@ const num = (value: number, digits = 0): string =>
     value
   );
 
-const SUPERSCRIPT: Record<string, string> = {
-  '-': '⁻',
-  '0': '⁰',
-  '1': '¹',
-  '2': '²',
-  '3': '³',
-  '4': '⁴',
-  '5': '⁵',
-  '6': '⁶',
-  '7': '⁷',
-  '8': '⁸',
-  '9': '⁹',
-};
-
 /** Une valeur positive en notation scientifique : « 1,2 × 10⁻³ unité ». */
 function formatScientific(value: number, unit: string): string {
   let exponent = Math.floor(Math.log10(value));
@@ -70,10 +56,7 @@ function formatScientific(value: number, unit: string): string {
     exponent += 1;
     mantissa /= 10;
   }
-  const sup = String(exponent)
-    .split('')
-    .map((c) => SUPERSCRIPT[c] ?? c)
-    .join('');
+  const sup = superscript(exponent);
   return `${num(mantissa, 1)}\u00a0×\u00a010${sup}\u00a0${unit}`;
 }
 
@@ -117,10 +100,8 @@ function formatHeight(km: number): string {
   return `${num(height.value)}\u00a0${height.unit}`;
 }
 
-function formatKelvin(kelvin: number): string {
-  const temp = convertTemperatureC(kelvin - 273.15);
-  return `${num(kelvin)}\u00a0K (${num(temp.value)}\u00a0${temp.unit})`;
-}
+const formatKelvin = (kelvin: number): string =>
+  kelvinWithConversion(kelvin, num);
 
 export function setupAtmosphereBlock(
   api: PublicAPI,
