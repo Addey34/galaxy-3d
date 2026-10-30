@@ -160,7 +160,7 @@ export const es: Record<MessageKey, string> = {
   'events.kind.annular': 'anular',
   'events.kind.total': 'total',
   'events.tip.peak': 'Máximo visible cerca de {lat}, {lon}',
-  'events.tip.obscuration': '{percent} % oscurecido en el máximo',
+  'events.tip.obscuration': '{percent} oscurecido en el máximo',
   'events.tip.goto': 'Haga clic para viajar a esta fecha',
   'events.source': 'Fechas calculadas con Astronomy Engine, en UTC.',
 
@@ -591,6 +591,9 @@ export const es: Record<MessageKey, string> = {
   // ── Unités & suffixes (fiche) ──
   'unit.light': 'luz',
   'unit.day.short': 'd',
+  'unit.hour.short': 'h',
+  'unit.minute.short': 'min',
+  'unit.second.short': 's',
   'unit.hours': 'horas',
   'unit.days': 'días',
   'unit.year.short': 'años',

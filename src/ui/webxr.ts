@@ -33,6 +33,7 @@ import { flattenBodies } from '@/config/catalog';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import { t } from '@/i18n';
 import * as THREE from 'three';
+import { formatFixed } from './localNumber';
 
 export interface WebXRHandle {
   /** À appeler depuis le callback de bascule de mode (Éduc ↔ Explo). */
@@ -136,7 +137,7 @@ export function setupWebXR(
               ? `${Math.round(config.realData.radiusKm).toLocaleString()} km`
               : '',
             config.realData?.distanceAU
-              ? `${config.realData.distanceAU.toFixed(2)} ${t('unit.au')}`
+              ? `${formatFixed(config.realData.distanceAU, 2)} ${t('unit.au')}`
               : '',
           ].filter(Boolean);
           infoPanel.show(bodyDisplayName(name), lines, worldPos, radius);

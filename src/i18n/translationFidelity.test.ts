@@ -104,6 +104,9 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'weather.precip.legendHi': 'même mot en français',
   // Unités et suffixes : décidés une fois, cf. `dict-es` et `dict-pt-BR`.
   'unit.day.short': '« d » pour day/día/dia',
+  'unit.hour.short': '« h » dans les quatre langues',
+  'unit.minute.short': '« min » dans les quatre langues',
+  'unit.second.short': '« s » dans les quatre langues',
   'unit.million': '« M » en français comme en anglais',
   // Gabarit de ponctuation : seul le français met une espace avant le deux-points, donc les
   // trois autres langues partagent la même forme. C'est le but de cette clé.
