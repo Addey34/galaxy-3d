@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { DISCOVERY_SOURCE_HOSTS } from './discovery';
 import type {
   DiscoveryClaim,
   RefutedClaim,
@@ -295,5 +296,44 @@ describe('découverte livrée', () => {
       .map((f) => f.slice(0, -5))
       .sort();
     expect(files).toEqual(Object.keys(index.systems).sort());
+  });
+});
+
+describe('adresses des sources de découverte', () => {
+  // Chaque adresse publiée (index et listes de satellites) doit pointer vers un hôte que la fiche
+  // a le droit de lier. Sans ce test, une source ajoutée au générateur sur un hôte nouveau
+  // perdrait son lien en silence : `discoveryBlock` affiche alors la citation sans lien.
+  const urls = (text: string): string[] =>
+    [...text.matchAll(/https?:\/\/[^\s"')]+/g)].map((m) => m[0]);
+  const texts = [
+    readFileSync(
+      join(DIR, '..', '..', '..', 'src/config/discoveryIndex.json'),
+      'utf-8'
+    ),
+    ...readdirSync(DIR)
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => readFileSync(join(DIR, f), 'utf-8')),
+  ];
+
+  it('ne sortent pas de la liste d’hôtes autorisés', () => {
+    const all = texts.flatMap(urls);
+    expect(all.length).toBeGreaterThan(100);
+    const unknown = [
+      ...new Set(
+        all
+          .map((u) => new URL(u))
+          .filter(
+            (u) =>
+              u.protocol !== 'https:' || !DISCOVERY_SOURCE_HOSTS.has(u.hostname)
+          )
+          .map((u) => u.href.slice(0, 80))
+      ),
+    ];
+    expect(unknown).toEqual([]);
+  });
+
+  it('n’autorise aucun hôte que les données n’utilisent', () => {
+    const used = new Set(texts.flatMap(urls).map((u) => new URL(u).hostname));
+    expect([...DISCOVERY_SOURCE_HOSTS].filter((h) => !used.has(h))).toEqual([]);
   });
 });

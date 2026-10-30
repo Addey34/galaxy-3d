@@ -158,6 +158,7 @@ export const ptBR: Record<MessageKey, string> = {
   'events.tip.peak': 'Máximo visível perto de {lat}, {lon}',
   'events.tip.obscuration': '{percent} % obscurecido no máximo',
   'events.tip.goto': 'Clique para viajar até esta data',
+  'events.source': 'Datas calculadas com o Astronomy Engine, em UTC.',
 
   // ── Bascule de mode ──
   'mode.group': 'Modo de exibição',
@@ -484,7 +485,7 @@ export const ptBR: Record<MessageKey, string> = {
 
   // ── Fiche d'info (bodyInfo) ──
   'bi.live.label': 'Distância de você',
-  'bi.more': 'Saber mais',
+  'bi.more': 'Saber mais (Wikipédia)',
   'bi.modelCredit': 'Modelo de forma 3D',
   'bi.colourCredit': 'Cor da superfície',
   'bi.creditLine': '{label}: {value}',

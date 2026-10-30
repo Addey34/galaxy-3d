@@ -50,6 +50,20 @@ export interface SatelliteSystemInfo {
   readonly unconfirmed?: readonly SatelliteDiscovery[];
 }
 
+/**
+ * Les hôtes vers lesquels une affirmation de découverte a le droit de pointer. Un lien posé sans
+ * ce filtre aurait suivi n'importe quelle adresse écrite dans l'index ; `discovery.test.ts` refuse
+ * qu'une adresse de l'index ou des listes de satellites sorte de cette liste.
+ */
+export const DISCOVERY_SOURCE_HOSTS: ReadonlySet<string> = new Set([
+  'ssd.jpl.nasa.gov',
+  'ssd-api.jpl.nasa.gov',
+  'nssdc.gsfc.nasa.gov',
+  'science.nasa.gov',
+  'www.nasa.gov',
+  'arxiv.org',
+]);
+
 let index: DiscoveryIndex | null = null;
 let indexPromise: Promise<DiscoveryIndex | null> | null = null;
 

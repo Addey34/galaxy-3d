@@ -176,6 +176,7 @@ export const en = {
   'events.tip.peak': 'Peak visible near {lat}, {lon}',
   'events.tip.obscuration': '{percent}% obscured at maximum',
   'events.tip.goto': 'Click to travel to this date',
+  'events.source': 'Dates computed with Astronomy Engine, in UTC.',
 
   // ── Bascule de mode ──
   'mode.group': 'View mode',
@@ -500,7 +501,7 @@ export const en = {
 
   // ── Fiche d'info (bodyInfo) ──
   'bi.live.label': 'Distance from you',
-  'bi.more': 'Learn more',
+  'bi.more': 'Learn more (Wikipedia)',
   'bi.modelCredit': '3D shape model',
   'bi.colourCredit': 'Surface colour',
   // Le deux-points d'une ligne de crédit, AVEC sa typographie : le français met une espace
