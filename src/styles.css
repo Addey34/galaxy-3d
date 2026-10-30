@@ -1150,6 +1150,23 @@ button {
 .bi-fictional-badge[hidden] {
   display: none;
 }
+.bi-color-nature {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid rgba(var(--planet-rgb), 0.4);
+  border-radius: var(--r-sm);
+  background: rgba(var(--planet-rgb), 0.12);
+  color: inherit;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: help;
+}
+.bi-color-nature[hidden] {
+  display: none;
+}
 .bi-live {
   margin: 0 0 var(--sp-2);
   padding: var(--sp-2) 0.65rem;

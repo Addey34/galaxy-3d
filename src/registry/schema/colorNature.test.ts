@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TEXTURE_PRODUCTS } from '@/registry/products';
+import { COLOR_NATURE_BY_BODY } from '@/config/colorNature';
 import { COLOR_NATURES, productSchema } from './product';
 
 /**
@@ -32,6 +33,17 @@ describe('colorNature des surfaces livrées', () => {
     expect(productSchema.safeParse(bad).success).toBe(false);
     expect(COLOR_NATURES).toContain(
       sample && sample.shipped ? sample.colorNature : ''
+    );
+  });
+
+  it('est la même que la table lue par la fiche du corps (config/colorNature.ts)', () => {
+    const fromRegistry = new Map(
+      surfaces.flatMap((p) =>
+        p.shipped && p.colorNature ? [[p.body, p.colorNature] as const] : []
+      )
+    );
+    expect(Object.fromEntries(COLOR_NATURE_BY_BODY)).toEqual(
+      Object.fromEntries(fromRegistry)
     );
   });
 });

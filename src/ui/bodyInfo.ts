@@ -11,6 +11,7 @@ import { loadCardText } from '@/config/cardText';
 import { factProvenancePending } from '@/config/cardFacts';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
+import { colorNatureOf } from '@/config/colorNature';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { formatIsoDay } from '@/core/dateText';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
@@ -797,6 +798,12 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   const nameEl = panel.querySelector<HTMLElement>('.bi-name')!;
   const subEl = panel.querySelector<HTMLElement>('.bi-subtitle')!;
   const fictionalEl = panel.querySelector<HTMLElement>('.bi-fictional-badge')!;
+  // Pastille « nature de la couleur » : créée ici, pas dans index.html (qui est recopié dans
+  // chaque page générée), et posée juste après le badge « surface fictive ».
+  const colorNatureEl = document.createElement('span');
+  colorNatureEl.className = 'bi-color-nature';
+  colorNatureEl.hidden = true;
+  fictionalEl.after(colorNatureEl);
   const statsEl = panel.querySelector<HTMLElement>('.bi-stats')!;
   const descEl = panel.querySelector<HTMLElement>('.bi-desc')!;
   const creditEl = panel.querySelector<HTMLElement>('.bi-credit');
@@ -931,6 +938,20 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     if (illustrative) {
       fictionalEl.textContent = t('bi.fictional');
       fictionalEl.title = t('bi.fictional.hint');
+    }
+
+    // Nature de la couleur : redondante avec le badge quand la surface est déjà dite fictive.
+    const nature = illustrative ? undefined : colorNatureOf(name);
+    colorNatureEl.hidden = !nature;
+    if (nature) {
+      colorNatureEl.textContent = t('bi.color', {
+        nature: t(`bi.color.${nature}`),
+      });
+      colorNatureEl.title = t(`bi.color.${nature}.hint`);
+      colorNatureEl.setAttribute(
+        'aria-label',
+        `${colorNatureEl.textContent} : ${colorNatureEl.title}`
+      );
     }
 
     statsEl.replaceChildren();

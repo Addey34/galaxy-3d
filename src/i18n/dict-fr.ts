@@ -481,6 +481,31 @@ export const fr: Record<MessageKey, string> = {
   'bi.colourCredit': 'Couleur de surface',
   'bi.creditLine': '{label} : {value}',
   'bi.live.label': 'Distance depuis vous',
+  'bi.color': 'Couleur : {nature}',
+  'bi.color.natural': 'naturelle',
+  'bi.color.natural.hint':
+    'Couleurs en lumière visible, proches de ce que verrait l’œil.',
+  'bi.color.colorized': 'teintée',
+  'bi.color.colorized.hint':
+    'Une carte en gris teintée avec une couleur mesurée à part : la teinte est réelle, son détail fin ne l’est pas.',
+  'bi.color.monochrome': 'niveaux de gris',
+  'bi.color.monochrome.hint':
+    'Une image à une seule bande : cette surface est montrée en nuances de gris, pas en couleur.',
+  'bi.color.infrared': 'proche infrarouge',
+  'bi.color.infrared.hint':
+    'Image prise en lumière proche infrarouge : les couleurs ne sont pas celles que verrait l’œil.',
+  'bi.color.radar': 'imagerie radar',
+  'bi.color.radar.hint':
+    'Réflectivité radar : les nuages cachent la surface en lumière visible, il n’y a donc pas de couleur à montrer.',
+  'bi.color.false-color': 'fausses couleurs',
+  'bi.color.false-color.hint':
+    'Couleurs attribuées à des bandes qui ne sont pas le rouge, le vert et le bleu visibles : ce ne sont pas celles que verrait l’œil.',
+  'bi.color.generated': 'générée',
+  'bi.color.generated.hint':
+    'Texture produite par ce projet : aucune sonde n’a imagé cette surface.',
+  'bi.color.illustrative': 'représentative',
+  'bi.color.illustrative.hint':
+    'Un rendu représentatif ou retouché, pas une image résolue de la surface.',
   'bi.fictional': 'Surface fictive',
   'bi.fictional.hint':
     'Aucune sonde n’a résolu cette surface, la texture est donc illustrative, pas une carte scientifique.',
