@@ -115,6 +115,7 @@ export const ptBR: Record<MessageKey, string> = {
   'offline.started': 'Preparação offline iniciada.',
   'offline.forget': 'Liberar {size} MB',
   'nav.searchPlaceholder': 'Um corpo, uma cratera, uma missão…',
+  'nav.noMatch': 'Nenhum resultado',
   'nav.paletteAria':
     'Buscar e selecionar um corpo, um lugar, uma missão, um instrumento ou um sobrevoo',
   'nav.group.star': 'Estrela',
@@ -410,14 +411,14 @@ export const ptBR: Record<MessageKey, string> = {
   'weather.clouds.note':
     'Cobertura de nuvens real, imagem de satélite da NASA (imagem do dia).',
   'weather.cloudsModel.note':
-    'Cobertura de nuvens modelada: mundial sem falhas, cobre passado e previsão; escolha esta para o ao vivo e a viagem no tempo.',
+    'Cobertura de nuvens modelada: mundial sem falhas, cobre passado e previsão; escolha esta para o momento presente e a viagem no tempo.',
   'weather.precip.note':
     'Chuva observada NASA IMERG V07: sua máscara alfa nativa é preservada; nenhuma extrapolação polar é adicionada.',
   'weather.precip.legendLo': 'Fraca',
   'weather.precip.legendHi': 'Intensa',
   'weather.precipModel.note':
     'Chuva modelada: mundial sem falhas, passado + previsão. As áreas secas ficam transparentes.',
-  'weather.precipModel.lo': '0 mm/h',
+  'weather.precipModel.lo': '0,1 mm/h',
   'weather.precipModel.hi': '20+ mm/h',
   'weather.thermalModel.note':
     'Temperatura do ar a 2 m modelada: mundial sem falhas, passado + previsão.',
@@ -425,7 +426,7 @@ export const ptBR: Record<MessageKey, string> = {
   'weather.thermalModel.hi': '+45 °C',
   'weather.pressureModel': 'Pressão ao nível do mar (modelo)',
   'weather.pressureModel.note':
-    'Pressão ao nível do mar mostrada como isóbaras suaves em hPa.',
+    'Pressão ao nível do mar mostrada como mapa de cores, em hPa.',
   'weather.pressureModel.lo': '960 hPa',
   'weather.pressureModel.hi': '1060 hPa',
   'weather.humidityModel': 'Umidade relativa (modelo)',

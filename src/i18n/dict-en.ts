@@ -133,6 +133,7 @@ export const en = {
   'offline.started': 'Offline preparation started.',
   'offline.forget': 'Free {size} MB',
   'nav.searchPlaceholder': 'Search a body, a crater, a mission…',
+  'nav.noMatch': 'No match',
   'nav.paletteAria':
     'Search and select a body, a place, a mission, an instrument or a flyby',
   'nav.group.star': 'Star',
@@ -427,14 +428,14 @@ export const en = {
   'weather.clouds.note':
     "Real cloud cover from NASA satellite imagery (day's snapshot).",
   'weather.cloudsModel.note':
-    'Modelled cloud cover: gap-free worldwide, supports past and forecast; pick this for live view and time travel.',
+    'Modelled cloud cover: gap-free worldwide, supports past and forecast; pick this for the present moment and time travel.',
   'weather.precip.note':
     'Observed NASA IMERG V07 rain: its native alpha mask is preserved; no polar extrapolation is added.',
   'weather.precip.legendLo': 'Light',
   'weather.precip.legendHi': 'Intense',
   'weather.precipModel.note':
     'Modelled rainfall: gap-free worldwide, past + forecast. Dry areas stay transparent.',
-  'weather.precipModel.lo': '0 mm/h',
+  'weather.precipModel.lo': '0.1 mm/h',
   'weather.precipModel.hi': '20+ mm/h',
   'weather.thermalModel.note':
     'Modelled 2 m air temperature: gap-free worldwide, past + forecast.',
@@ -442,7 +443,7 @@ export const en = {
   'weather.thermalModel.hi': '+45 °C',
   'weather.pressureModel': 'Sea-level pressure (model)',
   'weather.pressureModel.note':
-    'Sea-level pressure shown as smooth isobars in hPa.',
+    'Sea-level pressure shown as a colour map, in hPa.',
   'weather.pressureModel.lo': '960 hPa',
   'weather.pressureModel.hi': '1060 hPa',
   'weather.humidityModel': 'Relative humidity (model)',
