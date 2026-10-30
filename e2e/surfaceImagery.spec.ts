@@ -11,6 +11,7 @@ import {
   serveTiles,
   zoomIn,
 } from './surfaceTiles';
+import { openSettingsTab } from './settingsTab';
 
 /**
  * L'IMAGERIE DE SURFACE STREAMÉE : ce qu'elle demande, quand, et ce qu'elle peint.
@@ -815,6 +816,7 @@ test('hides the imagery of one body only, and offers the choice only where a mos
   const requests = await serveTiles(page);
   await boot(page, '?mode=explo&body=mercury');
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
   const select = page.locator('#surface-body-imagery');
   await expect(select).toBeVisible();
   await expect(select).toHaveValue('auto');
@@ -833,5 +835,6 @@ test('hides the imagery of one body only, and offers the choice only where a mos
     document.querySelector<HTMLElement>('#orbit-overview')?.click();
   });
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
   await expect(page.locator('#surface-body-imagery-wrapper')).toBeHidden();
 });

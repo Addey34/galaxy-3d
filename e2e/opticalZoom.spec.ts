@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
+import { openSettingsTab } from './settingsTab';
 
 test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);
@@ -32,6 +33,7 @@ test('optical FOV lives in settings, is exploration-only and updates its value',
   await page.locator('.mode-btn[data-mode="explo"]').click();
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
   await expect(page.locator('#orbit-options')).toBeVisible();
   await expect(panel).toBeVisible();
   await expect(range).toHaveAttribute('min', '8');
@@ -104,6 +106,7 @@ test.describe('mobile bottom dock', () => {
     await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
     await page.locator('.mode-btn[data-mode="explo"]').click();
     await page.locator('#settings-trigger').click();
+    await openSettingsTab(page, 'image');
     await expect(page.locator('#optical-zoom')).toBeVisible();
 
     const dims = await page.locator('#orbit-options').evaluate((surface) => {

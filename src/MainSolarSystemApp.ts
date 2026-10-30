@@ -75,6 +75,7 @@ import { setupPlaceDive } from './ui/placeDive';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
+import { setupSettingsTabs } from './ui/settingsTabs';
 import { setupSurfacePanel } from './ui/surfacePanel';
 import { setupUnitsToggle } from './ui/unitsToggle';
 import { setupOfflineData } from './ui/offlineData';
@@ -454,6 +455,7 @@ function wireChrome(): {
     exploHud.setMode('educ');
     exploHud.setActive(true);
     setupRenderExposure(sceneSystem);
+    setupSettingsTabs();
     setupColorblindToggle(sceneSystem);
     setupUnitsToggle();
     setupQualitySection(sceneSystem);

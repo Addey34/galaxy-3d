@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
+import { openSettingsTab } from './settingsTab';
 
 /**
  * LA VISITE DE RETOUR NE REPAYE PLUS, ET LE HORS-LIGNE EXISTE À NOUVEAU (lot 17, phase 17E).
@@ -51,6 +52,7 @@ async function shippedFiles(page: Page): Promise<number> {
 /** Ouvre la surface de réglages et sa section « Utilisation hors ligne ». */
 async function openOfflineSection(page: Page): Promise<void> {
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'data');
   await expect(page.locator('#orbit-options')).toBeVisible();
   await page.locator('#settings-section-offline').scrollIntoViewIfNeeded();
 }

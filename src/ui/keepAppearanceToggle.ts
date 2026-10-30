@@ -1,5 +1,5 @@
 /**
- * Bascule « garder les nuages et la pluie visibles de près » — surface Réglages, section rendu.
+ * Bascule « garder les nuages et la pluie visibles de près » — panneau Météo (il agit sur ses couches, pas sur la qualité d'image).
  *
  * Par défaut une couche d'apparence s'efface quand sa donnée est trop grossie
  * (`core/dataMagnification.ts`). Cochée, elle garde un voile à la place. Réglage de RENDU, donc il
@@ -40,7 +40,7 @@ export function setupKeepAppearanceToggle(): void {
 
   wrapper.append(checkbox, text);
   const host =
-    document.getElementById('settings-section-rendering') ?? document.body;
+    document.getElementById('weather-section-display') ?? document.body;
   host.append(wrapper);
 
   const refresh = (): void => {

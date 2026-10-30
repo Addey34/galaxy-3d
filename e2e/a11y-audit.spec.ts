@@ -9,6 +9,7 @@ import { en } from '../src/i18n/dict-en';
 import { es } from '../src/i18n/dict-es';
 import { fr } from '../src/i18n/dict-fr';
 import { ptBR } from '../src/i18n/dict-pt-BR';
+import { openSettingsTab } from './settingsTab';
 
 /** La mention « débit limité » de chaque langue, LUE dans les dictionnaires, jamais recopiée. */
 const SPEED_LIMITED: Record<string, string> = {
@@ -164,6 +165,7 @@ test('display settings panel has no automatically detectable a11y violations', a
 }) => {
   await boot(page);
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
   await expect(page.locator('#orbit-options')).toBeVisible();
   await expect(page.locator('#quality-group')).toBeVisible();
   const results = await runAxe(page);

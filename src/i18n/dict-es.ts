@@ -320,6 +320,11 @@ export const es: Record<MessageKey, string> = {
 
   // ── Surface « Réglages d'affichage » (cf. le bloc anglais) ──
   'settings.title': 'Ajustes de visualización',
+  'settings.tab.scene': 'Escena',
+  'settings.tab.image': 'Imagen',
+  'settings.tab.reading': 'Lectura',
+  'settings.tab.data': 'Datos',
+  'settings.tabs.aria': 'Secciones de los ajustes de visualización',
   'settings.section.scene': 'En la escena',
   'settings.section.rendering': 'Representación',
   'settings.section.layers': 'Capas',

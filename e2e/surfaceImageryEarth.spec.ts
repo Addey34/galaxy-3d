@@ -10,6 +10,7 @@ import {
   zoomIn,
   zoomInSettling,
 } from './surfaceTiles';
+import { openSettingsTab } from './settingsTab';
 
 /**
  * L'IMAGERIE DE SURFACE DE LA TERRE (lots 48 et 50) : ses fonds (Blue Marble de GIBS,
@@ -269,6 +270,7 @@ async function serveViirs(page: Page): Promise<{
 /** Choisit le fond de la Terre par le panneau, comme un visiteur, puis le referme. */
 async function chooseEarthBase(page: Page, choice: string): Promise<void> {
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
   const select = page.locator('#surface-earth-base');
   await expect(select).toBeVisible();
   await select.selectOption(choice);
@@ -518,6 +520,7 @@ test('compares two Sentinel-2 editions across a curtain, with both attributions'
     timeout: 30_000,
   });
   await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
   // Le choix d'année n'existe qu'avec le fond Sentinel-2, la seule série d'éditions : il est là
   // d'emblée puisque c'est le fond d'arrivée, et disparaît avec la Blue Marble.
   await expect(page.locator('#surface-earth-compare')).toBeVisible();

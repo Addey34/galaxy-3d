@@ -316,6 +316,11 @@ export const ptBR: Record<MessageKey, string> = {
 
   // ── Surface « Réglages d'affichage » (cf. le bloc anglais) ──
   'settings.title': 'Ajustes de exibição',
+  'settings.tab.scene': 'Cena',
+  'settings.tab.image': 'Imagem',
+  'settings.tab.reading': 'Leitura',
+  'settings.tab.data': 'Dados',
+  'settings.tabs.aria': 'Seções das configurações de exibição',
   'settings.section.scene': 'Na cena',
   'settings.section.rendering': 'Renderização',
   'settings.section.layers': 'Camadas',
