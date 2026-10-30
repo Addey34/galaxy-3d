@@ -1,6 +1,8 @@
 /** Couche satellite MERRA-2 temperature. Configuration fine de observedTextureLayer. */
 import { THERMAL_SETTINGS } from '@/config/engine';
-import { colormapBoundsC, colormapToCss } from '@/core/gibsLegend';
+import { intlLocale } from '@/i18n';
+import { colormapRangeC, colormapToCss } from '@/core/gibsLegend';
+import { temperatureBound } from '@/core/legendBounds';
 import { resolveThermalSources } from '@/core/layerSource';
 import { getEarth, type WeatherLayerHandle } from './earthLayer';
 import { setupObservedTextureLayer } from './observedTextureLayer';
@@ -29,8 +31,8 @@ export function setupThermalLayer(api: PublicAPI): WeatherLayerHandle | null {
     // notre CSP bloque (cf. `core/gibsLegend.ts`). Bornes DÉRIVÉES du barème, pas retapées.
     legendGradient: {
       css: colormapToCss(),
-      loText: colormapBoundsC().lo,
-      hiText: colormapBoundsC().hi,
+      loText: () => temperatureBound(colormapRangeC().lo, intlLocale()),
+      hiText: () => temperatureBound(colormapRangeC().hi, intlLocale()),
     },
     apply: (earth, texture) =>
       earth.setThermalTexture(texture, { opacity: settings.opacity }),

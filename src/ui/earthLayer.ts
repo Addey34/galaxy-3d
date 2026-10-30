@@ -85,8 +85,9 @@ export interface WeatherLayerHandle {
     css: string;
     loKey?: string;
     hiKey?: string;
-    loText?: string;
-    hiText?: string;
+    /** Texte déjà rendu, ou fonction relue à chaque dessin (unités, langue). */
+    loText?: string | (() => string);
+    hiText?: string | (() => string);
   };
   /** Clé i18n d'un texte explicatif (couleurs arbitraires) sous le toggle. */
   noteKey?: string;

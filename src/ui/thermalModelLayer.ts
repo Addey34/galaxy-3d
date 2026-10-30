@@ -6,6 +6,8 @@ import {
   TEMPERATURE_DOMAIN,
   paletteToCss,
 } from '@/core/meteoPalette';
+import { intlLocale } from '@/i18n';
+import { temperatureBound } from '@/core/legendBounds';
 import { setupMeteoModelLayer } from './meteoModelLayer';
 import { getEarth, type WeatherLayerHandle } from './earthLayer';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -27,8 +29,8 @@ export function setupThermalModelLayer(
     targetLayer: 'thermal',
     legendGradient: {
       css: paletteToCss(TEMPERATURE_PALETTE),
-      loKey: 'weather.thermalModel.lo',
-      hiKey: 'weather.thermalModel.hi',
+      loText: () => temperatureBound(TEMPERATURE_DOMAIN.min, intlLocale()),
+      hiText: () => temperatureBound(TEMPERATURE_DOMAIN.max, intlLocale()),
     },
     encodeGrid: (grid) =>
       scalarGridToRGBA(grid, TEMPERATURE_PALETTE, {

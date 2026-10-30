@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { PRECIP_MODEL_SETTINGS } from '@/config/engine';
+import { rainBound } from '@/core/legendBounds';
 import { messages } from './allDictionaries';
 import { LOCALES } from './locales';
 
@@ -34,7 +35,7 @@ describe('textes de la météo et de la palette', () => {
   it('écrit en bas de la barre de pluie le seuil réel de transparence', () => {
     const threshold = PRECIP_MODEL_SETTINGS.transparentBelow;
     for (const locale of LOCALES) {
-      const low = messages[locale]['weather.precipModel.lo'];
+      const low = rainBound(threshold, { locale: locale });
       const value = Number(low.replace(',', '.').replace(/[^\d.]/g, ''));
       expect(value, `${locale} : « ${low} »`).toBe(threshold);
     }

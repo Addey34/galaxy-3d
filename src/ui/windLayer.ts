@@ -15,6 +15,8 @@
  *   - elle n'avait ni badge de source ni légende.
  */
 import { WIND_SETTINGS } from '@/config/engine';
+import { intlLocale } from '@/i18n';
+import { windBound } from '@/core/legendBounds';
 import { meteoHourKey } from '@/core/meteoTimeTravel';
 import { fetchMeteoGrids } from '@/core/meteoClient';
 import { LAYER_RADIUS_SCALE } from '@/config/layerConfig';
@@ -149,8 +151,9 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     // La palette même des particules, bornes tirées de son domaine.
     legendGradient: {
       css: paletteToCss(WIND_PALETTE),
-      loText: `${WIND_DOMAIN.min} km/h`,
-      hiText: `${WIND_DOMAIN.max}+ km/h`,
+      loText: () => windBound(WIND_DOMAIN.min, { locale: intlLocale() }),
+      hiText: () =>
+        windBound(WIND_DOMAIN.max, { saturates: true, locale: intlLocale() }),
     },
     setVisible: (visible) => {
       wanted = visible;

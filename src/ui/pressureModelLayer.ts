@@ -6,6 +6,8 @@ import {
   PRESSURE_PALETTE,
   scalarGridToRGBA,
 } from '@/core/meteoPalette';
+import { intlLocale } from '@/i18n';
+import { pressureBound } from '@/core/legendBounds';
 import { setupMeteoModelLayer } from './meteoModelLayer';
 import { getEarth, type WeatherLayerHandle } from './earthLayer';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -27,8 +29,8 @@ export function setupPressureModelLayer(
     targetLayer: 'thermal',
     legendGradient: {
       css: paletteToCss(PRESSURE_PALETTE),
-      loKey: 'weather.pressureModel.lo',
-      hiKey: 'weather.pressureModel.hi',
+      loText: () => pressureBound(PRESSURE_DOMAIN.min, intlLocale()),
+      hiText: () => pressureBound(PRESSURE_DOMAIN.max, intlLocale()),
     },
     encodeGrid: (grid) =>
       scalarGridToRGBA(grid, PRESSURE_PALETTE, {

@@ -412,17 +412,11 @@ export const fr: Record<MessageKey, string> = {
   'weather.precip.legendHi': 'Intense',
   'weather.precipModel.note':
     'Pluie modélisée : mondiale sans trou, passé + prévision. Les zones sèches restent transparentes.',
-  'weather.precipModel.lo': '0,1 mm/h',
-  'weather.precipModel.hi': '20+ mm/h',
   'weather.thermalModel.note':
     "Température de l'air à 2 m modélisée : mondiale sans trou, passé + prévision.",
-  'weather.thermalModel.lo': '−40 °C',
-  'weather.thermalModel.hi': '+45 °C',
   'weather.pressureModel': 'Pression (modèle)',
   'weather.pressureModel.note':
     'Pression au niveau de la mer affichée en carte de couleurs (hPa).',
-  'weather.pressureModel.lo': '960 hPa',
-  'weather.pressureModel.hi': '1060 hPa',
   'weather.humidityModel': 'Humidité (modèle)',
   'weather.humidityModel.note':
     'Humidité relative à 2 m modélisée, en pourcentage.',

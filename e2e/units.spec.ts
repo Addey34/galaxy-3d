@@ -58,3 +58,36 @@ test('Jupiter’s card follows the unit switch, live', async ({ page }) => {
   await expect(stats).toContainText(unit('km'));
   await expect(stats).toContainText('m/s²');
 });
+
+/**
+ * Les légendes de la météo suivent le même bouton : la barre des températures de modèle passe de
+ * « −40 °C … +45 °C » à « −40 °F … +113 °F », celle du vent de km/h à mph. Le texte des bornes
+ * est lu dans le DOM (le détail d'une couche inactive est replié, donc non visible).
+ */
+test('weather legends follow the unit switch, live', async ({ page }) => {
+  await page.goto('/?body=earth');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  await page.locator('#weather-trigger').click();
+  const legends = page.locator('#weather-layers .wl-legend-labels');
+  await expect(legends.first()).toBeAttached({ timeout: 30_000 });
+  const read = async (): Promise<string> =>
+    (await legends.allTextContents())
+      .join(' | ')
+      .split(String.fromCharCode(160))
+      .join(' ');
+
+  const metric = await read();
+  expect(metric).toContain('km/h');
+  expect(metric).toContain('hPa');
+  expect(metric).toContain('mm/h');
+  expect(metric).toContain('°C');
+
+  await page.locator('#settings-trigger').click();
+  await page.locator('#units-toggle').check();
+  await expect.poll(read).toContain('mph');
+  const imperial = await read();
+  expect(imperial).toContain('inHg');
+  expect(imperial).toContain('in/h');
+  expect(imperial).toContain('°F');
+  expect(imperial).not.toMatch(/km\/h|hPa|mm\/h|°C/);
+});
