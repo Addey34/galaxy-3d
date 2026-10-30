@@ -38,6 +38,7 @@ import { kelvinWithConversion, superscript } from '@/core/numberText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { BodyInfoPanel } from './bodyInfo';
+import { setCitationText } from './citationLinks';
 
 const formatDay = (iso: string): string =>
   formatIsoDay(iso.slice(0, 10), getLocale(), intlLocale());
@@ -183,7 +184,7 @@ export function setupAtmosphereBlock(
     body.replaceChildren(table, local, adjusted);
     // La CITATION que le PDS demande (le paquet et son DOI) et l'article de l'équipe, tels que
     // l'archive les publie, avec la date de lecture.
-    note.textContent = t('bi.atmosphere.citation', {
+    const citation = t('bi.atmosphere.citation', {
       authors: profile.bundle.authors,
       year: String(profile.bundle.year),
       title: profile.bundle.title,
@@ -191,11 +192,17 @@ export function setupAtmosphereBlock(
       reference: profile.reference.text,
       date: formatDay(profile.bundle.retrieved),
     });
-    if (profile.latitudeSource)
-      note.textContent += ` ${t('bi.atmosphere.site', {
-        title: profile.latitudeSource.title,
-        doi: profile.latitudeSource.doi,
-      })}`;
+    const site = profile.latitudeSource
+      ? ` ${t('bi.atmosphere.site', {
+          title: profile.latitudeSource.title,
+          doi: profile.latitudeSource.doi,
+        })}`
+      : '';
+    // Les DOI sont des liens `doi.org` : un identifiant stable qu'on peut suivre.
+    setCitationText(note, citation + site, [
+      profile.bundle.doi,
+      ...(profile.latitudeSource ? [profile.latitudeSource.doi] : []),
+    ]);
   };
 
   const render = (current: string): void => {
