@@ -507,6 +507,31 @@ export const en = {
   // avant, l'anglais non. Le code écrivait « 3D shape model : … » dans les quatre langues,
   // c'est-à-dire une règle française appliquée à l'anglais.
   'bi.creditLine': '{label}: {value}',
+  'bi.color': 'Colour: {nature}',
+  'bi.color.natural': 'natural',
+  'bi.color.natural.hint':
+    'Visible-light colours, close to what the eye would see.',
+  'bi.color.colorized': 'tinted',
+  'bi.color.colorized.hint':
+    'A grey map tinted with colour measured separately: the tint is real, its fine detail is not.',
+  'bi.color.monochrome': 'grey levels',
+  'bi.color.monochrome.hint':
+    'A single-band image: this surface is shown in shades of grey, not in colour.',
+  'bi.color.infrared': 'near infrared',
+  'bi.color.infrared.hint':
+    'Imaged in near-infrared light: the colours are not what the eye would see.',
+  'bi.color.radar': 'radar',
+  'bi.color.radar.hint':
+    'Radar reflectivity: clouds hide the surface in visible light, so there is no colour to show.',
+  'bi.color.false-color': 'false colour',
+  'bi.color.false-color.hint':
+    'Colours assigned to bands that are not visible red, green and blue: they are not what the eye would see.',
+  'bi.color.generated': 'generated',
+  'bi.color.generated.hint':
+    'Texture produced by this project: no spacecraft has imaged this surface.',
+  'bi.color.illustrative': 'illustrative',
+  'bi.color.illustrative.hint':
+    'A representative or retouched rendering, not a resolved image of the surface.',
   'bi.fictional': 'Illustrative surface',
   'bi.fictional.hint':
     'No spacecraft has resolved this surface, so the texture is illustrative, not a scientific map.',

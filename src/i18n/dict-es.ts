@@ -493,6 +493,31 @@ export const es: Record<MessageKey, string> = {
   'bi.modelCredit': 'Modelo de forma 3D',
   'bi.colourCredit': 'Color de superficie',
   'bi.creditLine': '{label}: {value}',
+  'bi.color': 'Color: {nature}',
+  'bi.color.natural': 'tonos naturales',
+  'bi.color.natural.hint':
+    'Colores en luz visible, cercanos a lo que vería el ojo.',
+  'bi.color.colorized': 'teñida',
+  'bi.color.colorized.hint':
+    'Un mapa en grises teñido con un color medido aparte: el tinte es real, su detalle fino no.',
+  'bi.color.monochrome': 'niveles de gris',
+  'bi.color.monochrome.hint':
+    'Una imagen de una sola banda: esta superficie se muestra en tonos de gris, no en color.',
+  'bi.color.infrared': 'infrarrojo cercano',
+  'bi.color.infrared.hint':
+    'Imagen tomada en luz infrarroja cercana: los colores no son los que vería el ojo.',
+  'bi.color.radar': 'imagen de radar',
+  'bi.color.radar.hint':
+    'Reflectividad de radar: las nubes ocultan la superficie en luz visible, así que no hay color que mostrar.',
+  'bi.color.false-color': 'falso color',
+  'bi.color.false-color.hint':
+    'Colores asignados a bandas que no son el rojo, el verde y el azul visibles: no son los que vería el ojo.',
+  'bi.color.generated': 'generada',
+  'bi.color.generated.hint':
+    'Textura producida por este proyecto: ninguna sonda ha captado esta superficie.',
+  'bi.color.illustrative': 'ilustrativa',
+  'bi.color.illustrative.hint':
+    'Una representación típica o retocada, no una imagen resuelta de la superficie.',
   'bi.fictional': 'Superficie ilustrativa',
   'bi.fictional.hint':
     'Ninguna sonda ha resuelto esta superficie, así que la textura es ilustrativa, no un mapa científico.',
