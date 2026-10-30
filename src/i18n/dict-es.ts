@@ -162,6 +162,7 @@ export const es: Record<MessageKey, string> = {
   'events.tip.peak': 'Máximo visible cerca de {lat}, {lon}',
   'events.tip.obscuration': '{percent} % oscurecido en el máximo',
   'events.tip.goto': 'Haga clic para viajar a esta fecha',
+  'events.source': 'Fechas calculadas con Astronomy Engine, en UTC.',
 
   // ── Bascule de mode ──
   'mode.group': 'Modo de visualización',
@@ -490,7 +491,7 @@ export const es: Record<MessageKey, string> = {
 
   // ── Fiche d'info (bodyInfo) ──
   'bi.live.label': 'Distancia desde usted',
-  'bi.more': 'Saber más',
+  'bi.more': 'Saber más (Wikipedia)',
   'bi.modelCredit': 'Modelo de forma 3D',
   'bi.colourCredit': 'Color de superficie',
   'bi.creditLine': '{label}: {value}',

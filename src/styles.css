@@ -2333,6 +2333,12 @@ button {
   color: var(--ink-dim);
   font-variant-numeric: tabular-nums;
 }
+.events-source {
+  margin: var(--sp-2) 0 0;
+  padding: 0 var(--sp-2);
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+}
 .events-empty {
   padding: var(--sp-3) var(--sp-2);
   color: var(--ink-faint);

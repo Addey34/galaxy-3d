@@ -15,6 +15,7 @@
  * satellites à l'ouverture de celle de leur parent (`config/discovery.ts`).
  */
 import {
+  DISCOVERY_SOURCE_HOSTS,
   loadDiscovery,
   loadRefutedClaims,
   loadSatelliteDiscoveries,
@@ -40,6 +41,7 @@ import {
 } from '@/core/nameAdoption';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
+import { safeExternalUrl } from '@/utils/safeUrl';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { BodyInfoPanel } from './bodyInfo';
 
@@ -78,6 +80,28 @@ const SOURCE_LABEL: Record<DiscoveryClaim['source'], string> = {
   'jpl-planets': 'JPL',
   'nasa-science': 'NASA Science',
 };
+
+/**
+ * La mention d'une source : un lien quand l'adresse est https et d'un hôte connu
+ * (`DISCOVERY_SOURCE_HOSTS`), sinon le même texte sans lien. Comme la liste « Sources » de la fiche,
+ * une adresse refusée n'ôte pas la citation, elle ôte seulement le lien.
+ */
+function sourceLink(url: string, text: string): HTMLElement {
+  const href = safeExternalUrl(url, DISCOVERY_SOURCE_HOSTS);
+  if (!href) {
+    const plain = document.createElement('span');
+    plain.className = 'bi-discovery-source';
+    plain.textContent = text;
+    return plain;
+  }
+  const link = document.createElement('a');
+  link.className = 'bi-discovery-source';
+  link.href = href;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.textContent = text;
+  return link;
+}
 
 /** Ce que l'affirmation date, dans la langue courante. */
 function claimText(claim: DiscoveryClaim): string {
@@ -224,16 +248,15 @@ export function setupDiscoveryBlock(
         span.textContent = who;
         li.append(span);
       }
-      const source = document.createElement('a');
-      source.className = 'bi-discovery-source';
-      source.href = claim.url;
-      source.target = '_blank';
-      source.rel = 'noopener noreferrer';
-      source.textContent = t('bi.discovery.according', {
-        source: SOURCE_LABEL[claim.source],
-        date: formatDay(claim.retrieved),
-      });
-      li.append(source);
+      li.append(
+        sourceLink(
+          claim.url,
+          t('bi.discovery.according', {
+            source: SOURCE_LABEL[claim.source],
+            date: formatDay(claim.retrieved),
+          })
+        )
+      );
       claimsEl.append(li);
     }
 
@@ -327,16 +350,15 @@ export function setupDiscoveryBlock(
                 : []),
             ];
       refutedEl.append(document.createTextNode(`${sentences.join(' ')} `));
-      const source = document.createElement('a');
-      source.className = 'bi-discovery-source';
-      source.href = claim.url;
-      source.target = '_blank';
-      source.rel = 'noopener noreferrer';
-      source.textContent = t('bi.discovery.according', {
-        source: `${claim.cite} (arXiv)`,
-        date: formatDay(claim.retrieved),
-      });
-      refutedEl.append(source);
+      refutedEl.append(
+        sourceLink(
+          claim.url,
+          t('bi.discovery.according', {
+            source: `${claim.cite} (arXiv)`,
+            date: formatDay(claim.retrieved),
+          })
+        )
+      );
     }
     refutedEl.hidden = refutedEl.childNodes.length === 0;
 

@@ -151,6 +151,7 @@ export const fr: Record<MessageKey, string> = {
   'events.tip.peak': 'Pic visible près de {lat}, {lon}',
   'events.tip.obscuration': '{percent} % obscurci au maximum',
   'events.tip.goto': 'Cliquer pour voyager à cette date',
+  'events.source': 'Dates calculées avec Astronomy Engine, en UTC.',
 
   // ── Bascule de mode ──
   'mode.group': 'Mode d’affichage',
@@ -477,7 +478,7 @@ export const fr: Record<MessageKey, string> = {
   'fullscreen.title': 'Plein écran',
 
   // ── Fiche d'info (bodyInfo) ──
-  'bi.more': 'En savoir plus',
+  'bi.more': 'En savoir plus (Wikipédia)',
   'bi.modelCredit': 'Modèle de forme 3D',
   'bi.colourCredit': 'Couleur de surface',
   'bi.creditLine': '{label} : {value}',

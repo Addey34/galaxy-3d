@@ -147,7 +147,9 @@ export function setupAstronomicalEvents(
   body.className = 'surface-body';
   const list = document.createElement('div');
   list.className = 'events-list';
-  body.append(list);
+  const source = document.createElement('p');
+  source.className = 'events-source';
+  body.append(list, source);
   panel.append(header, body);
   document.body.append(panel);
 
@@ -168,6 +170,7 @@ export function setupAstronomicalEvents(
     title.textContent = t('events.title');
     toggle?.setAttribute('aria-label', t('events.open'));
     close.setAttribute('aria-label', t('events.close'));
+    source.textContent = t('events.source');
     list.replaceChildren();
 
     const events = findUpcomingAstronomicalEvents(om.simulationDate, {
