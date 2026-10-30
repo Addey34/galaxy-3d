@@ -10,7 +10,7 @@ export type SecondaryOverlayId =
 export interface OverlayCoordinator {
   register(id: SecondaryOverlayId, close: () => void): () => void;
   requestOpen(id: SecondaryOverlayId): void;
-  /** Ferme toute surface contextuelle ouverte (ex. clic sur le scrim, Échap global). */
+  /** Ferme toute surface contextuelle ouverte (ex. Échap global, début d'une visite). */
   closeAll(): void;
   onOpen(listener: (id: SecondaryOverlayId | null) => void): () => void;
 }

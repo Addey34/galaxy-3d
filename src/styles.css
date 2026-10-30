@@ -729,7 +729,7 @@ button {
 /* ============================================================================
    SURFACES CONTEXTUELLES — un seul style, une seule à la fois.
    Ancrées près de leur déclencheur sur desktop ; deviennent des feuilles
-   ancrées en bas sur mobile (voir media query). Le scrim gère la fermeture.
+   ancrées en bas sur mobile (voir media query). Fermeture par la croix ou Échap, jamais par un geste sur la scène.
    ============================================================================ */
 
 .surface {
@@ -2776,7 +2776,8 @@ body.is-capturing #loader {
       transform: translateY(0);
     }
   }
-  /* Le scrim s'assombrit sur mobile (les feuilles doivent se détacher du fond). */
+  /* Le scrim s'assombrit sur mobile (les feuilles doivent se détacher du fond). Il laisse passer
+     les gestes (pointer-events: none) : il ne ferme rien. */
   #surface-scrim:not([hidden]) {
     background: rgba(0, 0, 0, 0.35);
   }

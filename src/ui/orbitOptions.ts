@@ -480,7 +480,7 @@ export function setupOrbitOptions(
   onAccentChange(buildTable);
 
   // Surface contextuelle : ouverte par le déclencheur du dock, fermée par sa croix,
-  // le scrim ou une autre surface (coordinateur). Démarre masquée.
+  // Échap ou une autre surface (coordinateur). Démarre masquée.
   const triggerBtn =
     document.querySelector<HTMLButtonElement>('#settings-trigger');
   const closeBtn = panel.querySelector<HTMLButtonElement>('.surface-close');
