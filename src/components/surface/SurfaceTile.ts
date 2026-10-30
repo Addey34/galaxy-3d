@@ -54,6 +54,8 @@ export class SurfaceTile {
   private readonly _releaseMaterial?: (material: THREE.Material) => void;
   /** Instant (ms) où le fondu d'entrée a commencé, ou `null` hors fondu. */
   private _fadeStart: number | null = null;
+  /** Posé mais RETENU à l'opacité 0, en attente de la révélation du groupe (`core/tileReveal.ts`). */
+  private _held = false;
 
   constructor(params: {
     index: TileIndex;
@@ -147,7 +149,19 @@ export class SurfaceTile {
    */
   /** Le carreau est-il en train d'apparaître ? Lu par le moteur et par le signal d'occupation. */
   get fading(): boolean {
-    return this._fadeStart !== null;
+    return this._fadeStart !== null || this._held;
+  }
+
+  /** Le carreau attend-il la révélation de son groupe ? */
+  get held(): boolean {
+    return this._held;
+  }
+
+  /** Lève la rétention : le fondu commence à `nowMs`, le même instant pour tout le groupe. */
+  startFade(nowMs: number): void {
+    if (!this._held) return;
+    this._held = false;
+    this._fadeStart = nowMs;
   }
 
   /**
@@ -156,6 +170,7 @@ export class SurfaceTile {
    * compile avec `OPAQUE` ou sans), et un carreau fini doit se comporter comme avant le fondu.
    */
   advanceFade(nowMs: number): boolean {
+    if (this._held) return true;
     if (this._fadeStart === null) return false;
     const opacity = tileFadeOpacity(nowMs - this._fadeStart);
     const material = this._material;
@@ -173,7 +188,7 @@ export class SurfaceTile {
   setTexture(
     texture: THREE.Texture,
     compare?: THREE.Texture,
-    fadeFromMs?: number
+    fadeFromMs?: number | 'hold'
   ): void {
     for (const image of compare ? [texture, compare] : [texture]) {
       image.colorSpace = THREE.SRGBColorSpace;
@@ -197,7 +212,9 @@ export class SurfaceTile {
       setCompareMap(material, compare);
     }
     if (fadeFromMs !== undefined) {
-      this._fadeStart = fadeFromMs;
+      // 'hold' : posé mais invisible jusqu'à `startFade` (révélation groupée).
+      if (fadeFromMs === 'hold') this._held = true;
+      else this._fadeStart = fadeFromMs;
       material.transparent = true;
       material.opacity = 0;
     }

@@ -34,6 +34,7 @@
  *     complet.
  */
 import { tileToneRatio } from '@/config/tileGain';
+import { shouldReveal } from '@/core/tileReveal';
 import type { Figure } from '@/core/ellipsoid';
 import type { OceanMatch } from '@/core/oceanMatch';
 import * as THREE from 'three';
@@ -305,6 +306,11 @@ export class PlanetarySurfaceEngine {
   private readonly _tiles = new Map<string, SurfaceTile>();
   /** Carreaux en fondu d'entrée : évite de parcourir `_tiles` à chaque image au repos. */
   private _fadingTiles = 0;
+  /** Carreaux posés mais retenus, révélés ensemble (`core/tileReveal.ts`). */
+  private readonly _held = new Set<SurfaceTile>();
+  private _heldSinceMs: number | null = null;
+  /** Carreaux voulus pas encore posés, à la dernière passe de `update`. */
+  private _missing = 0;
   private readonly _pending = new Map<string, AbortController>();
   private readonly _queue: TileIndex[] = [];
   private readonly _failed = new Set<string>();
@@ -461,6 +467,7 @@ export class PlanetarySurfaceEngine {
     if (hasStale) {
       for (const [key, tile] of this._tiles)
         if (key.startsWith(current)) {
+          this._held.delete(tile);
           tile.dispose();
           this._tiles.delete(key);
           this._relief.delete(key);
@@ -681,6 +688,7 @@ export class PlanetarySurfaceEngine {
     // couche datée) restent, eux, jusqu'à ce que la nouvelle soit complète.
     const missing = tiles.filter((index) => !this._tiles.has(this._key(index)));
     const complete = missing.length === 0;
+    this._missing = missing.length;
     const current = this._prefix();
     for (const [key, tile] of this._tiles) {
       if (wanted.has(key)) continue;
@@ -690,6 +698,7 @@ export class PlanetarySurfaceEngine {
         !complete &&
         (stale || (index !== null && missing.some((m) => overlaps(m, index))));
       if (!needed) {
+        this._held.delete(tile);
         tile.dispose();
         this._tiles.delete(key);
         this._relief.delete(key);
@@ -1003,6 +1012,8 @@ export class PlanetarySurfaceEngine {
     for (const tile of this._tiles.values()) tile.dispose();
     this._tiles.clear();
     this._fadingTiles = 0;
+    this._held.clear();
+    this._heldSinceMs = null;
     this._relief.clear();
     this._staleTileset = null;
     this._staleCompare = null;
@@ -1293,11 +1304,32 @@ export class PlanetarySurfaceEngine {
   private _advanceFades(): void {
     if (this._fadingTiles === 0) return;
     const now = performance.now();
+    this._revealHeld(now);
     let fading = 0;
     for (const tile of this._tiles.values()) {
       if (tile.advanceFade(now)) fading += 1;
     }
     this._fadingTiles = fading;
+  }
+
+  /**
+   * Montre d'un coup les carreaux retenus quand `shouldReveal` le décide : le même instant de
+   * départ pour tous, donc un fondu commun et non une surface qui pousse carreau par carreau.
+   */
+  private _revealHeld(nowMs: number): void {
+    if (this._held.size === 0 || this._heldSinceMs === null) return;
+    if (
+      !shouldReveal({
+        heldSinceMs: this._heldSinceMs,
+        nowMs,
+        missing: this._missing,
+        inFlight: this._pending.size + this._queue.length,
+      })
+    )
+      return;
+    for (const tile of this._held) tile.startFade(nowMs);
+    this._held.clear();
+    this._heldSinceMs = null;
   }
 
   /**
@@ -1408,11 +1440,15 @@ export class PlanetarySurfaceEngine {
       tile.setTexture(
         texture,
         compareBitmap ? textureOf(compareBitmap) : undefined,
-        prefersReducedMotion() ? undefined : performance.now()
+        prefersReducedMotion() ? undefined : 'hold'
       );
       host.attachSpinningChild(tile.mesh);
       this._tiles.set(key, tile);
       if (tile.fading) this._fadingTiles += 1;
+      if (tile.held) {
+        this._held.add(tile);
+        this._heldSinceMs ??= performance.now();
+      }
       if (relief) {
         this._relief.set(key, { level: relief.level, entry: relief.entry });
         this._applyShellScale();

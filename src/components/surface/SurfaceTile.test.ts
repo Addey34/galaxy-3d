@@ -227,3 +227,37 @@ describe('fondu d’entrée d’un carreau', () => {
     expect(tile.advanceFade(5000)).toBe(false);
   });
 });
+
+describe('SurfaceTile retenu (révélation groupée)', () => {
+  function heldTile() {
+    const material = new THREE.MeshBasicMaterial();
+    const tile = new SurfaceTile({
+      index: { level: 3, row: 1, column: 2 },
+      radius: 1,
+      shape: WMTS_EQUIRECTANGULAR_2x1,
+      material,
+    });
+    tile.setTexture(new THREE.Texture(), undefined, 'hold');
+    return { tile, material };
+  }
+
+  it('reste à l’opacité 0 tant qu’on ne lève pas la rétention, et dit qu’il attend', () => {
+    const { tile, material } = heldTile();
+    expect(tile.held).toBe(true);
+    expect(tile.fading).toBe(true);
+    expect(material.opacity).toBe(0);
+    expect(tile.advanceFade(10_000)).toBe(true);
+    expect(material.opacity).toBe(0);
+  });
+
+  it('se fond depuis l’instant commun de startFade, puis redevient opaque', () => {
+    const { tile, material } = heldTile();
+    tile.startFade(5000);
+    expect(tile.held).toBe(false);
+    expect(tile.advanceFade(5000)).toBe(true);
+    expect(material.opacity).toBe(0);
+    expect(tile.advanceFade(5000 + 10_000)).toBe(false);
+    expect(material.opacity).toBe(1);
+    expect(material.transparent).toBe(false);
+  });
+});
