@@ -21,6 +21,7 @@
     "maxLevel": 4
   },
   "publishedPixelsPerDegree": 32,
+  "optIn": true,
   "acquired": {
     "interval": [["2004-07-01T00:00:00Z", "2017-04-30T23:59:59Z"]]
   },

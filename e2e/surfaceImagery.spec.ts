@@ -557,7 +557,7 @@ test('paints Venus from a PNG tile set, ten levels deep', async ({ page }) => {
  * universitaire (LPG, CNRS / Nantes), ce qui rend son crédit affiché plus intéressant à vérifier
  * que celui des autres.
  */
-for (const { body, layer, extension } of [
+for (const { body, layer, extension, optIn } of [
   {
     body: 'mercury',
     layer: 'Mercury_MESSENGER_MDIS_Basemap_BDR_Mosaic_Global_166m',
@@ -572,6 +572,7 @@ for (const { body, layer, extension } of [
     body: 'titan',
     layer: 'Titan_global_32ppd_ColorRatio_v2',
     extension: 'png',
+    optIn: true,
   },
   {
     body: 'europa',
@@ -608,6 +609,15 @@ for (const { body, layer, extension } of [
     await expect(page.locator('#surface-probe')).toContainText(body, {
       timeout: 30_000,
     });
+
+    // Une mosaïque `optIn` (fausses couleurs) ne se pose qu'une fois choisie.
+    if (optIn) {
+      await page.locator('#settings-trigger').click();
+      await openSettingsTab(page, 'image');
+      await page.locator('#surface-body-imagery').selectOption('off');
+      await page.locator('#surface-body-imagery').selectOption('auto');
+      await page.locator('#orbit-options .surface-close').click();
+    }
 
     await zoomIn(page);
     const badge = page.locator('#surface-imagery');
@@ -837,4 +847,30 @@ test('hides the imagery of one body only, and offers the choice only where a mos
   await page.locator('#settings-trigger').click();
   await openSettingsTab(page, 'image');
   await expect(page.locator('#surface-body-imagery-wrapper')).toBeHidden();
+});
+
+test('keeps an opt-in mosaic (Titan false colours) off until it is chosen', async ({
+  page,
+}) => {
+  await prepareSurfacePage(page);
+  const requests = await serveTiles(page);
+  await boot(page, '?mode=explo&body=titan');
+  await zoomIn(page);
+  await page.waitForTimeout(3000);
+  expect(requests.filter((r) => r.url().includes('trek.nasa.gov'))).toEqual([]);
+
+  await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
+  const select = page.locator('#surface-body-imagery');
+  await expect(select).toHaveValue('off');
+  await select.selectOption('auto');
+  await page.locator('#orbit-options .surface-close').click();
+  await expect
+    .poll(
+      () => requests.filter((r) => r.url().includes('trek.nasa.gov')).length,
+      {
+        timeout: 30_000,
+      }
+    )
+    .toBeGreaterThan(0);
 });

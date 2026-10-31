@@ -71,6 +71,8 @@ export interface SurfaceTileset {
   edition?: number;
   /** Couleurs d'océan de la mosaïque et de la base, si la fiche les harmonise (cf. fiche). */
   oceanMatch?: OceanMatch;
+  /** Mosaïque posée seulement si on la choisit (cf. fiche, `optIn`). */
+  optIn?: true;
 }
 
 function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
@@ -105,6 +107,7 @@ function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
     verified: fiche.verified,
     ...(fiche.edition !== undefined ? { edition: fiche.edition } : {}),
     ...(fiche.oceanMatch ? { oceanMatch: fiche.oceanMatch } : {}),
+    ...(fiche.optIn ? { optIn: true as const } : {}),
     ...(time
       ? {
           domainsUrl: time.domains
