@@ -4,10 +4,10 @@
       "id": "paris-bdtopo",
       "body": "earth",
       "bboxLonLat": [
-        2.32,
-        48.85,
-        2.36,
-        48.87
+        2.224,
+        48.815,
+        2.47,
+        48.902
       ],
       "manifest": "assets/buildings/paris-bdtopo/manifest.json"
     },
