@@ -874,3 +874,46 @@ test('keeps an opt-in mosaic (Titan false colours) off until it is chosen', asyn
     )
     .toBeGreaterThan(0);
 });
+
+/**
+ * Le bandeau de provenance couvrait 28 % d'un écran de 390 x 844 (mesuré en production le
+ * 2026-10-31). Les lignes descriptives se replient (d'office sur téléphone) ; la ligne de CRÉDIT,
+ * exigée par les licences, reste visible dans les deux états.
+ */
+for (const [label, width, height, foldedAtStart] of [
+  ['phone', 390, 844, true],
+  ['desktop', 1280, 720, false],
+] as const) {
+  test(`folds the imagery details on a ${label} and never the credit`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await prepareSurfacePage(page);
+    await serveTiles(page);
+    await boot(
+      page,
+      '?debug-surface&mode=explo&body=charon&date=2015-07-14T12:00:00Z'
+    );
+    await zoomIn(page);
+    const badge = page.locator('#surface-imagery');
+    await expect(badge).toBeVisible({ timeout: 30_000 });
+    const detail = badge.locator('.si-detail');
+    const credit = badge.locator('.si-credit');
+    const toggle = badge.locator('.si-toggle');
+    await expect(credit).toBeVisible();
+    await expect(toggle).toHaveAttribute(
+      'aria-expanded',
+      String(!foldedAtStart)
+    );
+    if (foldedAtStart) await expect(detail).toBeHidden();
+    else await expect(detail).toBeVisible();
+    await toggle.click();
+    await expect(toggle).toHaveAttribute(
+      'aria-expanded',
+      String(foldedAtStart)
+    );
+    if (foldedAtStart) await expect(detail).toBeVisible();
+    else await expect(detail).toBeHidden();
+    await expect(credit).toBeVisible();
+  });
+}

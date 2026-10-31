@@ -372,6 +372,8 @@ export const fr: Record<MessageKey, string> = {
   'surface.imagery.acquiredOneMonth': 'images de {month}',
   'surface.imagery.oversampled':
     'affichée {factor} fois plus grande que la mosaïque publiée ({published} px/degré)',
+  'surface.imagery.details': 'Détails',
+  'surface.imagery.hideDetails': 'Masquer les détails',
   'surface.imagery.oceanMatched':
     "couleur de l'océan ramenée à celle de la texture de base",
   'surface.relief.headline': 'Relief {title} à {resolution}/pixel',

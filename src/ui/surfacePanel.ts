@@ -242,7 +242,35 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   const buildingsLine = document.createElement('span');
   buildingsLine.className = 'si-buildings';
   buildingsLine.hidden = true;
-  badge.append(headline, detail, compareLine, relief, buildingsLine, credit);
+  // Les lignes DESCRIPTIVES (dates, relief, édition comparée) se replient ; l'en-tête, les bâtiments
+  // et la ligne de CRÉDIT, que les licences exigent d'afficher, restent toujours visibles. Replié
+  // d'office sur un téléphone (mesuré le 2026-10-31 : le bandeau couvrait 28 % de l'écran à 390 x
+  // 844), ouvert ailleurs. Non persistant, comme le reste du contenu de la scène.
+  const detailToggle = document.createElement('button');
+  detailToggle.type = 'button';
+  detailToggle.className = 'si-toggle';
+  let folded = window.matchMedia('(max-width: 640px)').matches;
+  const renderFold = (): void => {
+    badge.classList.toggle('is-folded', folded);
+    detailToggle.setAttribute('aria-expanded', String(!folded));
+    detailToggle.textContent = t(
+      folded ? 'surface.imagery.details' : 'surface.imagery.hideDetails'
+    );
+  };
+  detailToggle.addEventListener('click', () => {
+    folded = !folded;
+    renderFold();
+    placeBadge();
+  });
+  badge.append(
+    headline,
+    detailToggle,
+    detail,
+    compareLine,
+    relief,
+    buildingsLine,
+    credit
+  );
   document.body.append(badge);
 
   let enabled = readStored();
@@ -254,6 +282,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   let state: SurfaceImageryState | null = null;
 
   const renderLabels = (): void => {
+    renderFold();
     switchLabel.textContent = t('settings.surfaceImagery');
     checkbox.setAttribute('aria-label', t('settings.surfaceImagery'));
     baseLabel.textContent = t('settings.surfaceEarthBase');
