@@ -875,6 +875,33 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
 
   let visible = false;
 
+  // REPLI SUR TÉLÉPHONE : à l'ouverture par une sélection la fiche ne montre que l'en-tête et la
+  // distance, car ouverte en entier elle couvrait 43 % d'un écran de 390 x 844 et la moitié haute
+  // du corps visé (mesuré en production le 2026-10-31). Ouverte par le bouton ⓘ, ou sur grand
+  // écran, elle reste entière. Non persistant.
+  const narrowQuery = window.matchMedia('(max-width: 640px)');
+  const compactToggle = document.createElement('button');
+  compactToggle.type = 'button';
+  compactToggle.className = 'bi-toggle';
+  const compactLabel = document.createElement('span');
+  compactLabel.setAttribute('aria-hidden', 'true');
+  compactToggle.append(compactLabel);
+  closeBtn.before(compactToggle);
+  let compact = false;
+  const renderCompact = (): void => {
+    panel.classList.toggle('is-compact', compact);
+    compactToggle.setAttribute('aria-expanded', String(!compact));
+    const label = t(compact ? 'bi.expand' : 'bi.collapse');
+    compactToggle.setAttribute('aria-label', label);
+    compactToggle.title = label;
+    compactLabel.textContent = compact ? '▾' : '▴';
+  };
+  compactToggle.addEventListener('click', () => {
+    compact = !compact;
+    renderCompact();
+  });
+  renderCompact();
+
   const setVisible = (next: boolean): void => {
     visible = next;
     panel.hidden = !next;
@@ -931,6 +958,8 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     if (visible) collapse();
     else if (currentName) {
       coordinator?.requestOpen('body-info');
+      compact = false;
+      renderCompact();
       setVisible(true);
     }
   });
@@ -1157,6 +1186,8 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     // La sélection ouvre la fiche : sur toutes tailles, la surface s'affiche (elle est
     // désormais compacte et n'occulte pas la scène). L'utilisateur peut la fermer.
     coordinator?.requestOpen('body-info');
+    compact = narrowQuery.matches;
+    renderCompact();
     setVisible(true);
     adoptOrphanedFocus();
     // Neuf corps : on repart d'un bloc live masqué (updateLive le remplira à la frame
@@ -1170,6 +1201,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   // description) même si elle est momentanément fermée — son contenu reste ainsi à jour pour
   // sa prochaine réouverture. Le bloc live se réactualise seul à la frame suivante.
   onLocaleChange(() => {
+    renderCompact();
     if (currentName) render(currentName);
     updatePosition(lastPosition);
     refreshWhenCardTextArrives();

@@ -495,6 +495,8 @@ export const fr: Record<MessageKey, string> = {
   'bi.modelCredit': 'Modèle de forme 3D',
   'bi.colourCredit': 'Couleur de surface',
   'bi.creditLine': '{label} : {value}',
+  'bi.expand': 'Afficher tous les détails',
+  'bi.collapse': 'Afficher moins',
   'bi.live.label': 'Distance depuis vous',
   'bi.color': 'Couleur : {nature}',
   'bi.color.natural': 'naturelle',

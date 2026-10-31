@@ -498,6 +498,8 @@ export const ptBR: Record<MessageKey, string> = {
   'fullscreen.title': 'Tela cheia',
 
   // ── Fiche d'info (bodyInfo) ──
+  'bi.expand': 'Mostrar todos os detalhes',
+  'bi.collapse': 'Mostrar menos',
   'bi.live.label': 'Distância de você',
   'bi.more': 'Saber mais (Wikipédia)',
   'bi.modelCredit': 'Modelo de forma 3D',

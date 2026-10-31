@@ -1099,6 +1099,34 @@ button {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
 }
+.bi-toggle {
+  margin-top: -0.15rem;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  border: 0;
+  border-radius: var(--r-md, 0.5rem);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+  display: none;
+}
+@media (max-width: 640px) {
+  .bi-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Replié : l'en-tête et la distance seulement (le corps visé reste visible). */
+  #body-info.is-compact .bi-body > :not(.bi-live) {
+    display: none;
+  }
+  #body-info.is-compact.has-hero .bi-header {
+    padding-bottom: var(--sp-2);
+  }
+  #body-info.is-compact.has-hero::before {
+    display: none;
+  }
+}
 .bi-body {
   position: relative;
   z-index: 1;

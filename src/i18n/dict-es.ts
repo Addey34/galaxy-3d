@@ -503,6 +503,8 @@ export const es: Record<MessageKey, string> = {
   'fullscreen.title': 'Pantalla completa',
 
   // ── Fiche d'info (bodyInfo) ──
+  'bi.expand': 'Mostrar todos los detalles',
+  'bi.collapse': 'Mostrar menos',
   'bi.live.label': 'Distancia desde usted',
   'bi.more': 'Saber más (Wikipedia)',
   'bi.modelCredit': 'Modelo de forma 3D',
