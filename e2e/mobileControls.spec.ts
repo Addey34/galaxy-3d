@@ -73,7 +73,15 @@ test.describe('téléphone étroit', () => {
   }) => {
     await boot(page);
     await page.locator('#time-readout').tap();
-    await page.waitForTimeout(600);
+    // Attendre l'ÉTAT, pas 600 ms : sur un coureur lent le clic arrive tard, et la transition de
+    // 0,32 s de la zone étendue n'était pas finie quand on mesurait (hauteur 188,4 puis 200,3 px,
+    // une ligne de plus, run 41084365906).
+    await expect(page.locator('#time-panel')).toHaveClass(/is-expanded/);
+    await page.waitForFunction(
+      () =>
+        document.getElementById('time-panel')!.getAnimations({ subtree: true })
+          .length === 0
+    );
     const seen = new Set<string>();
     for (let v = 0; v <= 100; v += 2) {
       seen.add(
@@ -108,6 +116,9 @@ test.describe('clavier', () => {
     // dans le champ de recherche, Espace s'écrit
     await page.keyboard.press('/');
     await expect(page.locator('#body-palette')).toBeVisible();
+    // Visible n'est pas focalisé : tapé avant, le « m » se perdait (« ars saturne », run
+    // 41098587290). Même attente que le test de la recherche plus haut.
+    await expect(page.locator('#palette-input')).toBeFocused();
     await page.keyboard.type('mars saturne');
     await expect(play).not.toHaveClass(/is-paused/);
     await expect(page.locator('#palette-input')).toHaveValue('mars saturne');
