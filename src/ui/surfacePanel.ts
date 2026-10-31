@@ -452,6 +452,31 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     }
     badge.style.top = '';
     badge.style.bottom = `${Math.max(0, window.innerHeight - top + gapPx + noticeHeight)}px`;
+    clearRightPanel(gapPx);
+  }
+
+  /**
+   * La fiche du corps, ancrée à droite, recouvre le bandeau (z-index 80 contre 5) : mesuré en
+   * production le 2026-10-31, 320 px de ses 376 masqués à 1280 x 720 et à 1024 x 768, donc la
+   * ligne de crédit que les conditions des fournisseurs demandent d'afficher était illisible. Si
+   * les deux se recouvrent, le bandeau recule à gauche de la fiche, mesurée, jamais supposée.
+   */
+  function clearRightPanel(gapPx: number): void {
+    badge.style.right = '';
+    const panel = document.querySelector<HTMLElement>(
+      '#body-info:not([hidden])'
+    );
+    if (!panel) return;
+    const own = badge.getBoundingClientRect();
+    const other = panel.getBoundingClientRect();
+    if (other.width <= 0 || other.left < window.innerWidth / 2) return;
+    const overlaps =
+      own.left < other.right &&
+      own.right > other.left &&
+      own.top < other.bottom &&
+      own.bottom > other.top;
+    if (overlaps)
+      badge.style.right = `${Math.max(0, window.innerWidth - other.left + gapPx)}px`;
   }
 
   const onState = (next: SurfaceImageryState | null): void => {
@@ -762,11 +787,23 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   // taille ou disparaît, on relit sa position réelle (cf. `ui/ephemerisNotice`).
   window.addEventListener(NOTICE_CHANGED, placeBadge);
   window.addEventListener(TOUR_CLEARANCE_CHANGED, placeBadge);
+  // La fiche du corps s'ouvre et se ferme sans événement : on relit sa position quand elle change.
+  const bodyInfoPanel = document.getElementById('body-info');
+  const panelWatcher = bodyInfoPanel ? new MutationObserver(placeBadge) : null;
+  if (bodyInfoPanel && panelWatcher) {
+    panelWatcher.observe(bodyInfoPanel, {
+      attributes: true,
+      attributeFilter: ['hidden', 'class'],
+    });
+    bodyInfoPanel.addEventListener('transitionend', placeBadge);
+  }
   const unsubscribe = api.animationSystem.onFrame(tick);
 
   return {
     dispose: () => {
       unsubscribe();
+      panelWatcher?.disconnect();
+      bodyInfoPanel?.removeEventListener('transitionend', placeBadge);
       window.removeEventListener('resize', placeBadge);
       window.removeEventListener(TOUR_CLEARANCE_CHANGED, placeBadge);
       engine?.dispose();
