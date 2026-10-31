@@ -5,6 +5,7 @@ import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { allBodies } from '@/config/catalog';
+import { KM_PER_AU, SQRT_K } from './ScaleService';
 import {
   ARRIVAL_MIN_RADII,
   educArrivalDistance,
@@ -124,6 +125,24 @@ describe('distances d’apparition des couches', () => {
           educArrivalDistance(cd.educ, config.radius) / config.radius;
         if (radii < ARRIVAL_MIN_RADII - 1e-9)
           tooClose.push(`${name} ${radii.toFixed(2)}`);
+      }
+      expect(checked).toBeGreaterThan(60);
+      expect(tooClose).toEqual([]);
+    });
+
+    it('chaque corps du catalogue arrive aussi à ce cadrage en Explo', () => {
+      const tooClose: string[] = [];
+      let checked = 0;
+      for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
+        const cd = config.cameraDistance;
+        const radiusKm = config.realData?.radiusKm;
+        if (!cd || !radiusKm) continue;
+        checked++;
+        const radii = cd.explo / ((radiusKm / KM_PER_AU) * SQRT_K);
+        // Une demi-rayon de marge au-dessus du plus lointain seuil : le rayon de cadrage de
+        // quelques fiches (Lune, Titania) diffère de `radiusKm` de moins de 0,1 %.
+        if (radii < GAZETTEER_LOAD_RADII + 0.5)
+          tooClose.push(`${name} ${radii.toFixed(3)}`);
       }
       expect(checked).toBeGreaterThan(60);
       expect(tooClose).toEqual([]);

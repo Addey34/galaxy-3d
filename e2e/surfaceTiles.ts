@@ -83,14 +83,17 @@ export async function zoomIn(page: Page, delta = -12_000): Promise<void> {
  * partent qu'à l'approche (sous 2,5 rayons au champ de référence), donc PENDANT la descente du
  * scénario, en concurrence avec les carreaux. Sur un processeur lent en rendu logiciel c'est ce
  * qui a fait échouer trois scénarios de `surfaceImageryEarth.spec.ts` (images de 1,5 à 3 s, 43
- * carreaux en vol, run 40152691568). Un premier cran, mesuré, amène la caméra à 2,14 rayons depuis
- * l'arrivée (7 rayons) : le 8k s'y charge, on attend le calme, puis on finit la course.
+ * carreaux en vol, run 40152691568). Un premier cran, mesuré, amène la caméra à 2,2 rayons depuis
+ * l'arrivée : le 8k s'y charge, on attend le calme, puis on finit la course. La molette est
+ * exponentielle (3,6e-4 par unité, relevé sur deux arrêts mesurés) : -3900 depuis les 9 rayons
+ * d'arrivée (`core/layerDistances.ts`, depuis le 2026-10-31) donne 2,21 rayons ; c'était -3300
+ * depuis 7 rayons (2,14).
  */
 export async function zoomInSettling(
   page: Page,
   rest = -12_000
 ): Promise<void> {
-  await zoomIn(page, -3300);
+  await zoomIn(page, -3900);
   await waitForCalmMainThread(page, { budgetMs: 3000, timeoutMs: 120_000 });
   await zoomIn(page, rest);
 }

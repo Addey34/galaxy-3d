@@ -9,9 +9,10 @@
  * le fondu des orbites (`core/orbitFade.ts`) et le fond lointain de la Terre (`core/farBase.ts`)
  * gardent leur module, leurs valeurs sont relues ici pour que la table soit complète.
  *
- * Le cadrage par défaut d'un corps (`cameraDistance`) n'est PAS ici : en Explo il vaut 7 rayons,
- * en Éduc il est écrit corps par corps (4,4 à 27,8 rayons, mesuré le 2026-10-30), et c'est lui
- * qui décide de ce qu'un corps montre à son arrivée.
+ * Le cadrage d'ARRIVÉE d'un corps (`cameraDistance`) suit `ARRIVAL_MIN_RADII`, plus bas : en Explo
+ * il vaut ce nombre de rayons pour tous (`exploCameraDistance`), en Éduc la fiche de chaque corps
+ * l'écrit et `educArrivalDistance` le relève au besoin. C'est lui qui décide de ce qu'un corps
+ * montre à son arrivée.
  *
  * Tout changement de valeur se juge à l'écran ET se relit contre `layerDistances.test.ts`.
  */
@@ -58,7 +59,8 @@ const ARRIVAL_MARGIN_RADII = 1;
  * Un corps cadré plus près arrivait avec sa mosaïque et ses noms déjà posés (Titan à 4,55 rayons :
  * un patch de tuiles en fausses couleurs sur le gris de la base, vingt noms de formations), alors
  * qu'un autre cadré à 10 rayons arrivait nu. Mesuré le 2026-10-30 : en Éduc le cadrage écrit à la
- * main allait de 4,4 à 27,8 rayons ; en Explo il vaut 7 pour tous (`exploCameraDistance`).
+ * main allait de 4,4 à 27,8 rayons ; en Explo il valait 7 pour tous (`exploCameraDistance`, devenu
+ * `ARRIVAL_MIN_RADII` le 2026-10-31).
  */
 export const ARRIVAL_MIN_RADII =
   Math.max(
