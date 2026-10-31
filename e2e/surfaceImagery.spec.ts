@@ -838,3 +838,46 @@ test('hides the imagery of one body only, and offers the choice only where a mos
   await openSettingsTab(page, 'image');
   await expect(page.locator('#surface-body-imagery-wrapper')).toBeHidden();
 });
+
+/**
+ * La fiche du corps, ancrée à droite, recouvrait le bandeau de crédit de l'imagerie (z-index 80
+ * contre 5) : mesuré en production le 2026-10-31, 320 px de ses 376 masqués à 1280 x 720 et à
+ * 1024 x 768. Le bandeau recule maintenant à gauche de la fiche.
+ */
+for (const [width, height] of [
+  [1280, 720],
+  [1024, 768],
+]) {
+  test(`keeps the imagery credit clear of the body panel at ${width}x${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: width!, height: height! });
+    await prepareSurfacePage(page);
+    await serveTiles(page);
+    await boot(
+      page,
+      '?debug-surface&mode=explo&body=charon&date=2015-07-14T12:00:00Z'
+    );
+    await zoomIn(page);
+    const badge = page.locator('#surface-imagery');
+    await expect(badge).toBeVisible({ timeout: 30_000 });
+    const panel = page.locator('#body-info');
+    await expect(panel).toBeVisible();
+    await expect
+      .poll(
+        async () => {
+          const a = await badge.boundingBox();
+          const b = await panel.boundingBox();
+          if (!a || !b) return 'absent';
+          const overlap =
+            a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y;
+          return overlap ? 'overlap' : 'clear';
+        },
+        { timeout: 15_000 }
+      )
+      .toBe('clear');
+  });
+}
