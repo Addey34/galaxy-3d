@@ -659,9 +659,10 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   });
   // Un cran modéré, mesuré : -4000 amène la caméra à 1,66 rayon, où l'imagerie est demandée et
   // où le fond de loin règne encore (`core/farBase.ts`). -3600 s'arrête à 1,92 rayon sans rien
-  // demander, -4400 à 1,44, -5200 au plancher de la texture livrée. En deux temps depuis le
-  // 2026-10-25 : -3300 (le 8k se pose dans le calme), puis -700, soit -4000 en tout.
-  await zoomInSettling(page, -700);
+  // demander, -4400 à 1,44, -5200 au plancher de la texture livrée (mesures depuis l'arrivée à 7
+  // rayons). Depuis le 2026-10-31 l'arrivée est à 9 rayons : -4700 donnent 1,66. En deux temps
+  // depuis le 2026-10-25 : -3900 (le 8k se pose dans le calme, 2,21 rayons), puis -800.
+  await zoomInSettling(page, -800);
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
     timeout: 60_000,

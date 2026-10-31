@@ -15,6 +15,7 @@
  */
 
 import * as THREE from 'three';
+import { ARRIVAL_MIN_RADII } from './layerDistances';
 
 export type ScaleMode = 'educ' | 'explo';
 
@@ -69,8 +70,10 @@ export const educRadius = (distanceAU: number): number =>
 /**
  * Distance caméra en mode Explo depuis le rayon physique en km.
  * Formule : (radiusKm / AU_KM) × SQRT_K × VIEW_FACTOR
- * VIEW_FACTOR = 7 → angle apparent ~8° (confortable).
+ * VIEW_FACTOR = `ARRIVAL_MIN_RADII` (9 rayons, demi-angle apparent ~6,4°) : l'arrivée est au-dessus
+ * de tous les seuils des couches de surface (`core/layerDistances.ts`), comme en Éduc. C'était 7
+ * (~8°) : sous le seuil des noms (8), donc des noms déjà posés à l'arrivée en Explo.
  */
-const VIEW_FACTOR = 7;
+const VIEW_FACTOR = ARRIVAL_MIN_RADII;
 export const exploCameraDistance = (radiusKm: number): number =>
   (radiusKm / KM_PER_AU) * SQRT_K * VIEW_FACTOR;

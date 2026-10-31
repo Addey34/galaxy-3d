@@ -65,6 +65,16 @@ export async function boot(page: Page, query: string): Promise<void> {
   // mesure est écrite. Sans cette attente, la molette de `zoomIn` part pendant que le thread
   // est encore saturé, et le moteur de surface commence sa descente en retard.
   await waitForCalmMainThread(page);
+  // L'arrivée est à 9 rayons (`core/layerDistances.ts`, depuis le 2026-10-31), AU-DESSUS des 8 où
+  // le moteur de surface se charge ; à 7 il se chargeait pendant l'attente du calme ci-dessus.
+  // Les scénarios qui sautent d'un seul geste jusqu'au sol le chargeaient alors PENDANT la
+  // descente, avec les textures 8k et les carreaux : plus de 30 s sur un coureur lent, tout
+  // `surfaceImageryEarth.spec.ts` rouge en CI. Un cran de -600 (7,25 rayons) rétablit l'ancien
+  // état de départ, moteur chargé.
+  if (query.includes('body=')) {
+    await zoomIn(page, -600);
+    await waitForCalmMainThread(page);
+  }
 }
 
 /** Un cran de molette très ample : OrbitControls met la distance à l'échelle `0,95^(…)`. */
@@ -83,8 +93,11 @@ export async function zoomIn(page: Page, delta = -12_000): Promise<void> {
  * partent qu'à l'approche (sous 2,5 rayons au champ de référence), donc PENDANT la descente du
  * scénario, en concurrence avec les carreaux. Sur un processeur lent en rendu logiciel c'est ce
  * qui a fait échouer trois scénarios de `surfaceImageryEarth.spec.ts` (images de 1,5 à 3 s, 43
- * carreaux en vol, run 40152691568). Un premier cran, mesuré, amène la caméra à 2,14 rayons depuis
- * l'arrivée (7 rayons) : le 8k s'y charge, on attend le calme, puis on finit la course.
+ * carreaux en vol, run 40152691568). Un premier cran, mesuré, amène la caméra à 2,2 rayons depuis
+ * l'arrivée : le 8k s'y charge, on attend le calme, puis on finit la course. La molette est
+ * exponentielle (3,6e-4 par unité, relevé sur deux arrêts mesurés) : -3300 depuis les 7,25 rayons
+ * que `boot` laisse (arrivée à 9 rayons moins son cran de -600) donne 2,21 rayons ; c'était 2,14
+ * depuis l'arrivée à 7.
  */
 export async function zoomInSettling(
   page: Page,

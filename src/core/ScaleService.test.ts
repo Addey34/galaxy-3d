@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ARRIVAL_MIN_RADII } from './layerDistances';
 import * as THREE from 'three';
 import {
   educRadius,
@@ -55,9 +56,9 @@ describe('helpers', () => {
   });
 
   it('exploCameraDistance derives from physical radius in km', () => {
-    // Terre : 6371 km → (6371 / KM_PER_AU) × SQRT_K × 7
+    // Terre : 6371 km → (6371 / KM_PER_AU) × SQRT_K × ARRIVAL_MIN_RADII (9 rayons)
     expect(exploCameraDistance(6371)).toBeCloseTo(
-      (6371 / KM_PER_AU) * SQRT_K * 7,
+      (6371 / KM_PER_AU) * SQRT_K * ARRIVAL_MIN_RADII,
       12
     );
   });
