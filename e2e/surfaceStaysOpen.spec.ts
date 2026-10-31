@@ -73,7 +73,7 @@ for (const [label, viewport, hasTouch] of [
         }
 
         // Échap ferme quand le focus est dans la surface (écouteur posé sur le panneau).
-        await panel.locator('button').first().focus();
+        await panel.locator('button:visible').first().focus();
         await page.keyboard.press('Escape');
         await expect(panel, 'Échap ferme toujours').toBeHidden();
       });
