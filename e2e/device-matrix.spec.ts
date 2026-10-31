@@ -28,10 +28,23 @@ test.beforeEach(async ({ page }) => {
 });
 
 /** Luminance (0 à 255) au 90e centile des pixels du canvas, lue sur une capture de la page. */
-async function canvasLuminance(page: Page, label: string): Promise<number> {
+async function canvasLuminance(
+  page: Page,
+  label: string,
+  options: { sceneOnly?: boolean } = {}
+): Promise<number> {
   const device = test.info().project.name;
   mkdirSync(`${OUT}/${device}`, { recursive: true });
+  // `sceneOnly` : sans les surfaces ni les docks. La fiche ouverte portait un bandeau d'image (la
+  // carte du corps) qui comptait pour la clarté ; repliée sur téléphone (2026-10-31) elle ne la
+  // porte plus, et la Terre passait de plus de 25 à 12,9 alors que le globe n'avait pas changé.
+  const hide = options.sceneOnly
+    ? await page.addStyleTag({
+        content: '.surface, .dock { visibility: hidden !important; }',
+      })
+    : null;
   const png = await page.screenshot({ path: `${OUT}/${device}/${label}.png` });
+  await hide?.evaluate((el) => (el as Element).remove());
   const { data } = await sharp(png)
     .removeAlpha()
     .raw()
@@ -41,7 +54,7 @@ async function canvasLuminance(page: Page, label: string): Promise<number> {
     ys.push(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]);
   }
   ys.sort((a, b) => a - b);
-  return ys[Math.floor(0.9 * (ys.length - 1))];
+  return ys[Math.floor(0.995 * (ys.length - 1))];
 }
 
 /** Le pire débordement horizontal de la page, en pixels, rogné ou non. */
@@ -77,7 +90,9 @@ for (const [body, floor] of [
     await page.waitForTimeout(8_000);
 
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
-    expect(await canvasLuminance(page, body)).toBeGreaterThan(floor);
+    expect(
+      await canvasLuminance(page, body, { sceneOnly: true })
+    ).toBeGreaterThan(floor);
     // Les refus réseau volontaires (services coupés) ne sont pas des défauts du produit.
     const own = errors.filter(
       (e) => !/ERR_FAILED|Failed to load resource|net::|aborted/i.test(e)

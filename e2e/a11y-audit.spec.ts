@@ -10,6 +10,7 @@ import { es } from '../src/i18n/dict-es';
 import { fr } from '../src/i18n/dict-fr';
 import { ptBR } from '../src/i18n/dict-pt-BR';
 import { openSettingsTab } from './settingsTab';
+import { unfoldBodyCard } from './bodyCard';
 
 /** La mention « débit limité » de chaque langue, LUE dans les dictionnaires, jamais recopiée. */
 const SPEED_LIMITED: Record<string, string> = {
@@ -359,6 +360,7 @@ test.describe('mobile viewport', () => {
       await page.goto('/?body=titan');
       await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
       const card = page.locator('#body-info');
+      await unfoldBodyCard(page);
       await expect(card).toBeVisible();
       const missions = card.locator('.bi-missions');
       await expect(missions).toBeVisible({ timeout: 15_000 });
@@ -415,6 +417,7 @@ test.describe('mobile viewport', () => {
       await page.goto('/?body=neptune');
       await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
       const card = page.locator('#body-info');
+      await unfoldBodyCard(page);
       await expect(card).toBeVisible();
       // Les deux intervalles et la note, dans la langue choisie : la ligne est bien rendue.
       await expect(card.locator('.bi-stats')).toContainText(/19[.,]1/);
@@ -455,6 +458,7 @@ test.describe('mobile viewport', () => {
       await page.goto('/?body=mars');
       await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
       const card = page.locator('#body-info');
+      await unfoldBodyCard(page);
       await expect(card).toBeVisible();
       await expect(card.locator('.bi-stats')).toContainText(/6[.,]36\s*mbar/);
       await expect(card.locator('.bi-stats')).toContainText(/0[.,]016/);
@@ -494,6 +498,7 @@ test.describe('mobile viewport', () => {
       // 60 s et non 30 : le démarrage sur Jupiter charge sa texture 4k, et le premier passage à
       // froid a dépassé 30 s deux fois sur deux en local (les suivants, en cache, non).
       await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+      await unfoldBodyCard(page);
       const block = page.locator('#body-info .bi-atmosphere');
       await expect(block).toBeVisible({ timeout: 15_000 });
       await block.evaluate((el) => {
@@ -540,6 +545,7 @@ test.describe('mobile viewport', () => {
       await page.goto('/?body=titan');
       await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
       const card = page.locator('#body-info');
+      await unfoldBodyCard(page);
       await expect(card.locator('.bi-stats')).toContainText(/1[.,]467/);
       const block = card.locator('.bi-atmosphere');
       await expect(block).toBeVisible({ timeout: 15_000 });
@@ -585,6 +591,7 @@ test.describe('mobile viewport', () => {
     await page.goto('/?body=saturn');
     await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
     const card = page.locator('#body-info');
+    await unfoldBodyCard(page);
     await expect(card.locator('.bi-stats')).toContainText('por debajo de 30°');
     // La mesure de l'absence d'un profil (lot 51) : le bloc reste, et dit pourquoi.
     await expect(card.locator('.bi-atmosphere')).toContainText(
@@ -629,6 +636,7 @@ test.describe('mobile viewport', () => {
       await page.goto('/?body=bepicolombo');
       await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
       const card = page.locator('#body-info');
+      await unfoldBodyCard(page);
       await expect(card).toBeVisible();
       const instruments = card.locator('.bi-instruments');
       await expect(instruments).toBeVisible({ timeout: 15_000 });
@@ -689,6 +697,7 @@ test.describe('mobile viewport', () => {
       await page.goto(`/moon/?date=${MOON_SCENE_DATE}`);
       await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
       const card = page.locator('#body-info');
+      await unfoldBodyCard(page);
       await expect(card).toBeVisible();
       const places = card.locator('.bi-places');
       await expect(places).toBeVisible({ timeout: 15_000 });
@@ -770,6 +779,8 @@ test.describe('mobile viewport, discovery block', () => {
       }, locale);
       await page.goto(path);
       await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+      await expect(page.locator('#body-info')).toBeVisible({ timeout: 15_000 });
+      await unfoldBodyCard(page);
       const discovery = page.locator('#body-info .bi-discovery');
       await expect(discovery).toBeVisible({ timeout: 15_000 });
       await expect(
