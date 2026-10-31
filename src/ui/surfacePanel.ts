@@ -137,6 +137,8 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   // Le choix ne persiste pas, comme le reste du contenu de la scène ; il n'est proposé que pour un
   // corps qui a une mosaïque publiée (`refreshBodyControls`).
   const hiddenBodies = new Set<string>();
+  // Corps dont l'utilisateur a déjà choisi : une mosaïque `optIn` n'est masquée d'office qu'avant.
+  const chosenBodies = new Set<string>();
   const bodyWrapper = document.createElement('label');
   bodyWrapper.id = 'surface-body-imagery-wrapper';
   bodyWrapper.className = 'settings-switch';
@@ -470,7 +472,9 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       SURFACE_TILESETS: new Map<string, unknown>(),
     }));
     if (controlsFor !== name) return; // la cible a changé pendant le chargement
-    bodyWrapper.hidden = !SURFACE_TILESETS.has(name);
+    const tileset = SURFACE_TILESETS.get(name) as { optIn?: true } | undefined;
+    bodyWrapper.hidden = tileset === undefined;
+    if (tileset?.optIn && !chosenBodies.has(name)) hiddenBodies.add(name);
     bodySelect.value = hiddenBodies.has(name) ? 'off' : 'auto';
   };
 
@@ -709,6 +713,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   bodySelect.addEventListener('change', () => {
     const name = controlsFor;
     if (!name) return;
+    chosenBodies.add(name);
     if (bodySelect.value === 'off') hiddenBodies.add(name);
     else hiddenBodies.delete(name);
   });

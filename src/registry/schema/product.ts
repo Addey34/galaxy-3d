@@ -287,6 +287,13 @@ const imageryTileset = z
      */
     regional: z.literal(true).optional(),
     /**
+     * MOSAÏQUE À CHOISIR (2026-10-31) : ses couleurs ne sont pas celles de l'oeil (rapports de
+     * bandes infrarouges, prises de vue de dates différentes) et elle recouvre une base
+     * continue ; le corps ne la montre donc qu'une fois choisie dans les Réglages (imagerie du
+     * corps ciblé : « Automatique »), au lieu de la poser d'office. La base reste affichée.
+     */
+    optIn: z.literal(true).optional(),
+    /**
      * HARMONISATION DE L'OCÉAN (2026-10-19) : l'océan de cette mosaïque n'a pas la couleur de la
      * texture de base du corps (celui du Blue Marble de GIBS vaut (2, 5, 20), celui de la texture
      * livrée (63, 82, 110)), et le remplacer carreau après carreau assombrissait l'eau de la scène.

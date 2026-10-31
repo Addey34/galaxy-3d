@@ -487,6 +487,10 @@
           "type": "boolean",
           "const": true
         },
+        "optIn": {
+          "type": "boolean",
+          "const": true
+        },
         "oceanMatch": {
           "type": "object",
           "properties": {
