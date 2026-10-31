@@ -8,12 +8,16 @@
  * voulu soit là ; tous se fondent alors ENSEMBLE, du même instant.
  *
  * La rétention ne doit jamais bloquer la descente : au bout de `REVEAL_MAX_WAIT_MS` ce qui est
- * arrivé se montre, même s'il en manque (service lent, carreau en échec). Piloté par le TEMPS,
+ * arrivé se montre, même s'il en manque (service lent, carreau en échec). Le plafond était de
+ * 1,5 s (2026-10-30), plus court que l'arrivée d'un groupe mesurée à 3,4 à 4,7 s : la révélation
+ * partielle se déclenchait presque toujours, et des îlots poussaient un à un dans le champ.
+ * Il vaut 8 s depuis le 2026-10-31 (immersion d'abord) ; une panne totale libère déjà le groupe
+ * sans attendre (`inFlight === 0`). NON réglé sur téléphone ni GPU réel. Piloté par le TEMPS,
  * comme le fondu (`core/tileFade.ts`) : en rendu logiciel une image dure plusieurs secondes.
  */
 
 /** Attente maximale d'un groupe de carreaux retenus, en millisecondes. */
-export const REVEAL_MAX_WAIT_MS = 1500;
+export const REVEAL_MAX_WAIT_MS = 8000;
 
 export interface RevealState {
   /** Instant (ms) où le premier carreau du groupe a été retenu. */
