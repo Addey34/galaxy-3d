@@ -514,6 +514,8 @@ export const en = {
   'fullscreen.title': 'Fullscreen',
 
   // ── Fiche d'info (bodyInfo) ──
+  'bi.expand': 'Show all details',
+  'bi.collapse': 'Show less',
   'bi.live.label': 'Distance from you',
   'bi.more': 'Learn more (Wikipedia)',
   'bi.modelCredit': '3D shape model',
