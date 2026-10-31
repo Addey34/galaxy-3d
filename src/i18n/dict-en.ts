@@ -396,6 +396,8 @@ export const en = {
   'surface.imagery.acquiredOneMonth': 'images from {month}',
   'surface.imagery.oversampled':
     'shown {factor}x larger than the published mosaic ({published} px/degree)',
+  'surface.imagery.details': 'Details',
+  'surface.imagery.hideDetails': 'Hide details',
   'surface.imagery.oceanMatched':
     'ocean colour brought back to that of the base texture',
   'surface.relief.headline': 'Relief {title} at {resolution}/pixel',

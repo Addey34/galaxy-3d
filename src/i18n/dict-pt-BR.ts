@@ -380,6 +380,8 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.imagery.acquiredOneMonth': 'imagens de {month}',
   'surface.imagery.oversampled':
     'exibida {factor} vezes maior que o mosaico publicado ({published} px/grau)',
+  'surface.imagery.details': 'Detalhes',
+  'surface.imagery.hideDetails': 'Ocultar detalhes',
   'surface.imagery.oceanMatched': 'cor do oceano levada à da textura de base',
   'surface.relief.headline': 'Relevo {title} a {resolution}/pixel',
   'surface.relief.area': 'área nomeada {name}',

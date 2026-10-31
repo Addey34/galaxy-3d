@@ -2644,6 +2644,30 @@ button {
 .surface-imagery-badge[hidden] {
   display: none;
 }
+.surface-imagery-badge .si-toggle {
+  align-self: flex-start;
+  pointer-events: auto;
+  margin: 0.1rem 0;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md, 0.5rem);
+  background: transparent;
+  color: var(--ink-dim);
+  font: inherit;
+  cursor: pointer;
+}
+.surface-imagery-badge.is-folded .si-detail,
+.surface-imagery-badge.is-folded .si-compare,
+.surface-imagery-badge.is-folded .si-relief {
+  display: none;
+}
+@media (max-width: 640px) {
+  /* Le crédit est exigé : il reste entier, un peu plus serré. */
+  .surface-imagery-badge .si-credit {
+    font-size: 0.62rem;
+    line-height: 1.2;
+  }
+}
 .surface-imagery-badge .si-headline {
   color: var(--ink);
   font-weight: 600;
