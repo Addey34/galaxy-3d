@@ -31,6 +31,6 @@
     "sourceResolution": "21600×10800 (environ 1,85 km/pixel à l'équateur)",
     "projection": "equirectangular",
     "qualityClass": "native-candidate",
-    "note": "Famille NASA Blue Marble (domaine public), version exacte et date non établies : comparée le 2026-10-28 aux mois de Blue Marble Next Generation (2004), elle n'en reproduit aucun (Sahara 203 contre 141 à 148 en luminance, corrélation 0,88 avec juillet et août). Le fichier cité par sourceUrl n'a pas pu être relu (Wikimedia répondait 503). Un remplacement par VIIRS 2025 a été essayé et rejeté (résidus de nuages, voile gris)."
+    "note": "Blue Marble « Land Surface, Shallow Water, and Shaded Topography » de 2002 (Reto Stockli, NASA GSFC, compositions de Robert Simmon ; NASA Visible Earth, id 57752 d'apres la page Wikimedia Commons du fichier cite, domaine public), PAS la Blue Marble Next Generation de 2004. Lu le 2026-10-31 : pages NASA Earth Observatory BlueMarble_2002 et Scientific Visualization Studio 30614 (terres et eau peu profonde issues d'observations MODIS sans nuages de juin a septembre 2001, topographie ombree USGS EROS) ; la page Visible Earth 57752 elle-meme n'a pas pu etre lue (redirigee). Cela explique la mesure du 2026-10-28 : comparee aux mois de la Next Generation, elle n'en reproduit aucun (Sahara 203 contre 141 a 148 en luminance, correlation 0,88 avec juillet et aout). Un remplacement par VIIRS 2025 a ete essaye et rejete (residus de nuages, voile gris)."
   }
 }
