@@ -431,17 +431,26 @@ const IMPORTS = [
   {
     body: 'titan',
     layer: 'surface',
-    src: `${V1}/titan/Titan_ISS_P19658_Mosaic_Global_4km.tif`,
-    resolutions: ['4k', '2k', '1k'],
-    fillHoles: true, // trous documentés aux hautes latitudes nord
-    // Centrée sur 180° Est (étiquette ou mesure du 2026-10-04) : livrée tournée d'un demi-tour
-    // jusqu'à cette date. Voir `src/config/textureOrientation.test.ts`.
+    // Mosaïque contrôlée USGS 702 m/pixel (938 nm, 23 048 x 11 524), jeu de données
+    // DOI 10.5066/P14FAEKS publié en 2026, « marked with CC0 1.0 Universal » (lu à la source le
+    // 2026-10-31). Remplace la mosaïque 4005 m, qui avait des raccords visibles et des lacunes
+    // aux latitudes moyennes nord. Étiquette ISIS : CenterLongitude = 180, équirectangulaire.
+    // Fichier PNG 8 bits du même jeu (73 Mo), retéléchargement :
+    // https://www.sciencebase.gov/catalog/item/68a5107ad4be02198e361c35
+    src: `${V1}/titan/titan_controlled_global_702m.png`,
+    // 2k et 1k : le 4k ne porte que 0,24 % de variance de plus que le 2k, sous le plancher de
+    // 0,25 % de `textureLadder.test.ts` (mesure du 2026-10-31), et la couche de tuiles VIMS de
+    // Titan (8192 px) doit rester plus fine que la base (`surfaceTilesets.test.ts`).
+    resolutions: ['2k', '1k'],
+    fillHoles: true, // 0,2 % de pixels noirs, surtout au pôle sud
+    // Centrée sur 180° Est (étiquette ISIS) : livrée tournée d'un demi-tour. Voir
+    // `src/config/textureOrientation.test.ts`.
     centerLongitude: 180,
     tint: null,
-    source:
-      'https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m',
+    source: 'https://www.sciencebase.gov/catalog/item/68a5107ad4be02198e361c35',
     license: 'public-domain',
-    credit: 'USGS Astrogeology / NASA-JPL-Caltech / SSI (Cassini ISS)',
+    credit:
+      'USGS Astrogeology Science Center, NASA/JPL-Caltech/SSI (Cassini ISS)',
     tier: 'free',
   },
   {

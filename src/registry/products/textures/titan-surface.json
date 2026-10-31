@@ -10,12 +10,12 @@
   "links": [
     {
       "rel": "license",
-      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+      "href": "https://creativecommons.org/publicdomain/zero/1.0/"
     }
   ],
   "providers": [
     {
-      "name": "USGS Astrogeology / NASA-JPL-Caltech / SSI (Cassini ISS 4005m)",
+      "name": "USGS Astrogeology Science Center / NASA-JPL-Caltech / SSI (Cassini ISS, controlled global mosaic 702 m)",
       "roles": [
         "producer"
       ]
@@ -26,24 +26,24 @@
   "filled": true,
   "lineage": {
     "status": "ready",
-    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/8ee17e4e-26c6-4e22-9c23-bc9a4c7ed35e/resource/c3f3006c-3174-4716-920f-44f5dc749a4a/download/titan_iss_p19658_mosaic_global_1024.jpg",
-    "sourcePage": "https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m",
+    "downloadUrl": "https://www.sciencebase.gov/catalog/item/68a5107ad4be02198e361c35",
+    "sourcePage": "https://doi.org/10.5066/P14FAEKS",
     "projection": "equirectangular",
-    "sourceResolution": "4.005 km/pixel; official 1024 px JPEG sample",
-    "maxQuality": "1k",
+    "sourceResolution": "702 m/pixel; 23048 x 11524, 938 nm",
+    "maxQuality": "2k",
     "outputBase": "titan/titanSurface",
     "license": "public-domain",
     "credit": "USGS Astrogeology Science Center, NASA/JPL-Caltech/SSI"
   },
   "review": {
     "status": "ready",
-    "processing": "direct-jpeg-sample",
-    "downloadUrl": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Titan_ISS_P19658_Mosaic_Global_4km.tif",
-    "sourcePage": "https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m",
-    "sourceResolution": "4.005 km/pixel global Cassini ISS mosaic",
+    "processing": "import-textures",
+    "downloadUrl": "https://www.sciencebase.gov/catalog/item/68a5107ad4be02198e361c35",
+    "sourcePage": "https://doi.org/10.5066/P14FAEKS",
+    "sourceResolution": "702 m/pixel controlled global Cassini ISS mosaic, 938 nm",
     "projection": "equirectangular",
     "qualityClass": "derived",
-    "note": "Official Cassini ISS methane-window global mosaic. The northern mid-latitudes contain documented coverage gaps; the 1k sample is used without artificial upscaling. Lot 16 : largeur lue a l'etiquette PDS3 (LINE_SAMPLES = 4040), d'ou le plafond a 2k, ou Titan est deja. La fiche citait un apercu de 1024 px, mais le 2k livre porte bien du detail que son 1k n'a pas : l'import venait de la mosaique complete. Les produits Cassini plus fins existent mais ne conviennent pas : le globe ISS a 450 m/pixel ne couvre que 65 S a 45 N, et les mosaiques SAR sont du radar, pas une carte optique. ORIENTATION corrigee le 2026-10-04 : la carte etait livree tournee d'un demi-tour (source centree sur 180, cadrage garde a l'import) ; etiquette CenterLongitude = 180.0 (et la couche Trek ISS du meme produit sert ce cadrage en declarant -180..180 : Menrva y tombe a +180) ; contre les tuiles VIMS de l'application : 0,482 apres contre 0,313 avant. Paliers livres roules d'une demi-largeur. Garde : src/config/textureOrientation.test.ts.",
-    "sourcePixelWidth": 4040
+    "note": "Jeu de donnees USGS « Geodetically improved images and mosaics of Titan via rigorous photogrammetric control of Cassini ISS data » (DOI 10.5066/P14FAEKS, 2026), marque CC0 1.0 Universal sur la page de publication lue le 2026-10-31. Fichier PNG 8 bits du meme jeu (23048 x 11524), etiquette ISIS lue : Equirectangular, CenterLongitude 180, rayon 2575 km. Remplace la mosaique 4005 m (P19658), dont les raccords etaient visibles et qui laissait des lacunes aux latitudes moyennes nord ; mesure le 2026-10-31 : 0,2 % de pixels noirs sur la sphere (2,7 % entre -90 et -60 degres), contre 0,0 % pour l'ancienne livree, dont les trous etaient remplis par extension. ORIENTATION : source centree sur 180, paliers livres roules d'une demi-largeur (garde : src/config/textureOrientation.test.ts). Echelle livree 1k et 2k : le 4k ne porte que 0,24 % de variance de plus que le 2k, sous le plancher de 0,25 % de textureLadder.test.ts (mesure du 2026-10-31), et la couche de tuiles VIMS de Titan (8192 px) doit rester plus fine que la base (surfaceTilesets.test.ts).",
+    "sourcePixelWidth": 23048
   }
 }
