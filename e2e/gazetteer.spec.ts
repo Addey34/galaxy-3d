@@ -74,6 +74,8 @@ test('charge le répertoire d’un corps À L’APPROCHE, et écrit ses noms', a
   const overlay = page.locator('#gazetteer-overlay');
   await expect(overlay).toHaveClass(/is-visible/);
 
+  // La Lune arrive à 9 rayons (`core/layerDistances.ts`), au-dessus du seuil des noms : on
+  // approche par pas de 1 200 (un pas de 6 000 saute jusqu'au plancher d'approche, où rien n'est écrit).
   // On approche jusqu'à ce que la couche ait écrit quelque chose. Le compte est PUBLIÉ par la
   // couche elle-même, comme les autres couches d'instrument le font.
   const box = await page.locator('canvas').first().boundingBox();
@@ -82,7 +84,7 @@ test('charge le répertoire d’un corps À L’APPROCHE, et écrit ses noms', a
     const drawn = Number((await overlay.getAttribute('data-names')) ?? '0');
     if (drawn > 0) break;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.wheel(0, -6000);
+    await page.mouse.wheel(0, -1200);
     await page.waitForTimeout(400);
   }
   expect(

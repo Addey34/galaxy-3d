@@ -26,6 +26,23 @@ async function boot(page: Page, query: string, locale = 'en'): Promise<void> {
   await waitForCalmMainThread(page);
 }
 
+/**
+ * La Terre arrive désormais À 9 RAYONS (`core/layerDistances.ts`, lot D) : au-dessus du seuil des
+ * noms (8), donc sans nom posé. On approche à la molette jusqu'à ce que la couche en écrive, comme
+ * le test de la Lune (`gazetteer.spec.ts`) ; ces tests supposaient l'arrivée déjà « à l'approche ».
+ */
+async function approachUntilNamed(page: Page): Promise<void> {
+  const overlay = page.locator('#gazetteer-overlay');
+  const box = await page.locator('canvas').first().boundingBox();
+  if (!box) throw new Error('canvas absent');
+  for (let i = 0; i < 14; i += 1) {
+    if (Number((await overlay.getAttribute('data-names')) ?? '0') > 0) return;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, -1200);
+    await page.waitForTimeout(400);
+  }
+}
+
 test('ne demande pas les noms de la Terre au démarrage', async ({ page }) => {
   const asked: string[] = [];
   page.on('request', (r) => {
@@ -43,6 +60,7 @@ test('écrit les noms de la Terre à l’approche, dans la langue de l’interfa
     if (r.url().includes(EARTH_NAMES)) asked.push(r.url());
   });
   await boot(page, `?body=earth&date=${SCENE_DATE}`, 'fr');
+  await approachUntilNamed(page);
   const overlay = page.locator('#gazetteer-overlay');
   await expect(overlay).toHaveClass(/is-visible/);
   // Les noms se lisent quand le fichier est arrivé : on attend la couche, pas une durée.
@@ -64,6 +82,7 @@ test('un nom caché par un autre corps n’est pas écrit', async ({ page }) => 
   // Au 2026-08-10 à midi, la visite de la Terre place la Lune devant l'Amérique du Sud (capture
   // lue le 2026-10-16) : « Rio de Janeiro » s'écrivait par-dessus la Lune.
   await boot(page, '?body=earth&date=2026-08-10T12:00:00Z', 'fr');
+  await approachUntilNamed(page);
   const overlay = page.locator('#gazetteer-overlay');
   await expect
     .poll(

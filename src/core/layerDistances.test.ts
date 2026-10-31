@@ -3,7 +3,11 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import { CELESTIAL_CONFIG } from '@/config/bodies';
+import { allBodies } from '@/config/catalog';
 import {
+  ARRIVAL_MIN_RADII,
+  educArrivalDistance,
   GAZETTEER_LOAD_RADII,
   LAYER_DISTANCES,
   RELIEF_TESSELLATION_ENTER_RADII,
@@ -86,5 +90,43 @@ describe('distances d’apparition des couches', () => {
       visit(source);
     }
     expect(offenders).toEqual([]);
+  });
+
+  describe('arrivée d’un corps en Éduc', () => {
+    it('relève un cadrage trop proche, laisse un cadrage lointain', () => {
+      // Titan : 4,55 rayons écrits (2,5 pour un rayon de 0,55) -> relevé à 8 rayons.
+      expect(educArrivalDistance(2.5, 0.55)).toBeCloseTo(
+        ARRIVAL_MIN_RADII * 0.55
+      );
+      // Europe (10 rayons) et un petit corps (20 rayons) ne bougent pas.
+      expect(educArrivalDistance(1.2, 0.12)).toBe(1.2);
+      expect(educArrivalDistance(2, 0.1)).toBe(2);
+      // Sans rayon exploitable, la valeur de la fiche est gardée.
+      expect(educArrivalDistance(3, 0)).toBe(3);
+    });
+
+    it('l’arrivée est au-dessus de tous les seuils des couches de surface', () => {
+      // Strictement au-dessus, avec une marge : pas d'arrivée pile sur un seuil.
+      expect(ARRIVAL_MIN_RADII).toBeGreaterThan(TILE_ENGINE_ENTER_RADII);
+      expect(ARRIVAL_MIN_RADII).toBeGreaterThan(GAZETTEER_LOAD_RADII);
+      expect(ARRIVAL_MIN_RADII).toBeGreaterThan(SURFACE_PANEL_LOAD_RADII);
+      expect(ARRIVAL_MIN_RADII).toBe(9);
+    });
+
+    it('chaque corps du catalogue arrive sans mosaïque ni noms posés', () => {
+      const tooClose: string[] = [];
+      let checked = 0;
+      for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
+        const cd = config.cameraDistance;
+        if (!cd || !(config.radius > 0)) continue;
+        checked++;
+        const radii =
+          educArrivalDistance(cd.educ, config.radius) / config.radius;
+        if (radii < ARRIVAL_MIN_RADII - 1e-9)
+          tooClose.push(`${name} ${radii.toFixed(2)}`);
+      }
+      expect(checked).toBeGreaterThan(60);
+      expect(tooClose).toEqual([]);
+    });
   });
 });
