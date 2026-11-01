@@ -1,0 +1,526 @@
+{
+  "id": "amsterdam-overture",
+  "title": "Bâtiments de Amsterdam, Overture Maps",
+  "body": "earth",
+  "format": "GXBD",
+  "version": 1,
+  "zoom": 14,
+  "directory": "assets/buildings/amsterdam-overture/9468dce211",
+  "source": {
+    "name": "Overture Maps Foundation, thème buildings",
+    "typeName": "overture buildings",
+    "floorsFactor": {
+      "metresPerFloor": 3.875,
+      "pairs": 13899
+    },
+    "release": "2026-09-23.1",
+    "datasets": {
+      "Microsoft ML Buildings": 3384,
+      "OpenStreetMap": 162876
+    },
+    "license": "Open Database License 1.0",
+    "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors and Microsoft Global ML Building Footprints, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/",
+    "readFrom": "2026-11-01",
+    "readTo": "2026-11-01"
+  },
+  "bboxLonLat": [
+    4.8,
+    52.32,
+    4.99,
+    52.41
+  ],
+  "totals": {
+    "tiles": 79,
+    "bytes": 6000523,
+    "sourceFeatures": 164686,
+    "polygons": 164689,
+    "skippedNonPolygon": 0,
+    "skippedNoFootprint": 0,
+    "verticesAtMarginEdge": 12,
+    "heightAboveRange": 0,
+    "byOrigin": {
+      "absent": 58902,
+      "measured": 0,
+      "interpolated": 0,
+      "derivedFromFloors": 3319,
+      "unspecified": 102468
+    }
+  },
+  "tiles": [
+    {
+      "column": 8410,
+      "row": 5381,
+      "buildings": 144,
+      "bytes": 4468
+    },
+    {
+      "column": 8410,
+      "row": 5382,
+      "buildings": 181,
+      "bytes": 15635
+    },
+    {
+      "column": 8410,
+      "row": 5383,
+      "buildings": 1221,
+      "bytes": 42911
+    },
+    {
+      "column": 8410,
+      "row": 5384,
+      "buildings": 1539,
+      "bytes": 45177
+    },
+    {
+      "column": 8410,
+      "row": 5385,
+      "buildings": 1706,
+      "bytes": 54310
+    },
+    {
+      "column": 8410,
+      "row": 5386,
+      "buildings": 3090,
+      "bytes": 95154
+    },
+    {
+      "column": 8410,
+      "row": 5387,
+      "buildings": 247,
+      "bytes": 7985
+    },
+    {
+      "column": 8410,
+      "row": 5388,
+      "buildings": 11,
+      "bytes": 697
+    },
+    {
+      "column": 8411,
+      "row": 5381,
+      "buildings": 227,
+      "bytes": 11445
+    },
+    {
+      "column": 8411,
+      "row": 5382,
+      "buildings": 663,
+      "bytes": 62093
+    },
+    {
+      "column": 8411,
+      "row": 5383,
+      "buildings": 3357,
+      "bytes": 111523
+    },
+    {
+      "column": 8411,
+      "row": 5384,
+      "buildings": 2305,
+      "bytes": 80423
+    },
+    {
+      "column": 8411,
+      "row": 5385,
+      "buildings": 3921,
+      "bytes": 130591
+    },
+    {
+      "column": 8411,
+      "row": 5386,
+      "buildings": 3130,
+      "bytes": 100494
+    },
+    {
+      "column": 8411,
+      "row": 5387,
+      "buildings": 335,
+      "bytes": 10093
+    },
+    {
+      "column": 8411,
+      "row": 5388,
+      "buildings": 37,
+      "bytes": 1327
+    },
+    {
+      "column": 8412,
+      "row": 5381,
+      "buildings": 296,
+      "bytes": 30408
+    },
+    {
+      "column": 8412,
+      "row": 5382,
+      "buildings": 545,
+      "bytes": 37167
+    },
+    {
+      "column": 8412,
+      "row": 5383,
+      "buildings": 3726,
+      "bytes": 119922
+    },
+    {
+      "column": 8412,
+      "row": 5384,
+      "buildings": 4139,
+      "bytes": 133453
+    },
+    {
+      "column": 8412,
+      "row": 5385,
+      "buildings": 4386,
+      "bytes": 143830
+    },
+    {
+      "column": 8412,
+      "row": 5386,
+      "buildings": 1387,
+      "bytes": 47897
+    },
+    {
+      "column": 8412,
+      "row": 5387,
+      "buildings": 484,
+      "bytes": 14236
+    },
+    {
+      "column": 8412,
+      "row": 5388,
+      "buildings": 50,
+      "bytes": 1830
+    },
+    {
+      "column": 8413,
+      "row": 5381,
+      "buildings": 207,
+      "bytes": 12621
+    },
+    {
+      "column": 8413,
+      "row": 5382,
+      "buildings": 1389,
+      "bytes": 75271
+    },
+    {
+      "column": 8413,
+      "row": 5383,
+      "buildings": 4398,
+      "bytes": 144914
+    },
+    {
+      "column": 8413,
+      "row": 5384,
+      "buildings": 6688,
+      "bytes": 238436
+    },
+    {
+      "column": 8413,
+      "row": 5385,
+      "buildings": 5488,
+      "bytes": 210808
+    },
+    {
+      "column": 8413,
+      "row": 5386,
+      "buildings": 3606,
+      "bytes": 136378
+    },
+    {
+      "column": 8413,
+      "row": 5387,
+      "buildings": 2192,
+      "bytes": 85316
+    },
+    {
+      "column": 8413,
+      "row": 5388,
+      "buildings": 874,
+      "bytes": 32462
+    },
+    {
+      "column": 8414,
+      "row": 5381,
+      "buildings": 1608,
+      "bytes": 47884
+    },
+    {
+      "column": 8414,
+      "row": 5382,
+      "buildings": 893,
+      "bytes": 47115
+    },
+    {
+      "column": 8414,
+      "row": 5383,
+      "buildings": 5241,
+      "bytes": 216451
+    },
+    {
+      "column": 8414,
+      "row": 5384,
+      "buildings": 6642,
+      "bytes": 304034
+    },
+    {
+      "column": 8414,
+      "row": 5385,
+      "buildings": 6792,
+      "bytes": 261708
+    },
+    {
+      "column": 8414,
+      "row": 5386,
+      "buildings": 3353,
+      "bytes": 138111
+    },
+    {
+      "column": 8414,
+      "row": 5387,
+      "buildings": 1136,
+      "bytes": 46944
+    },
+    {
+      "column": 8414,
+      "row": 5388,
+      "buildings": 39,
+      "bytes": 1913
+    },
+    {
+      "column": 8415,
+      "row": 5381,
+      "buildings": 2845,
+      "bytes": 84051
+    },
+    {
+      "column": 8415,
+      "row": 5382,
+      "buildings": 5144,
+      "bytes": 168356
+    },
+    {
+      "column": 8415,
+      "row": 5383,
+      "buildings": 2846,
+      "bytes": 113966
+    },
+    {
+      "column": 8415,
+      "row": 5384,
+      "buildings": 3196,
+      "bytes": 164848
+    },
+    {
+      "column": 8415,
+      "row": 5385,
+      "buildings": 5467,
+      "bytes": 219841
+    },
+    {
+      "column": 8415,
+      "row": 5386,
+      "buildings": 4286,
+      "bytes": 166758
+    },
+    {
+      "column": 8415,
+      "row": 5387,
+      "buildings": 946,
+      "bytes": 27826
+    },
+    {
+      "column": 8415,
+      "row": 5388,
+      "buildings": 216,
+      "bytes": 5468
+    },
+    {
+      "column": 8416,
+      "row": 5381,
+      "buildings": 1809,
+      "bytes": 60167
+    },
+    {
+      "column": 8416,
+      "row": 5382,
+      "buildings": 4223,
+      "bytes": 134737
+    },
+    {
+      "column": 8416,
+      "row": 5383,
+      "buildings": 1230,
+      "bytes": 52782
+    },
+    {
+      "column": 8416,
+      "row": 5384,
+      "buildings": 3420,
+      "bytes": 137300
+    },
+    {
+      "column": 8416,
+      "row": 5385,
+      "buildings": 5224,
+      "bytes": 200352
+    },
+    {
+      "column": 8416,
+      "row": 5386,
+      "buildings": 3382,
+      "bytes": 108190
+    },
+    {
+      "column": 8416,
+      "row": 5387,
+      "buildings": 1796,
+      "bytes": 65964
+    },
+    {
+      "column": 8416,
+      "row": 5388,
+      "buildings": 176,
+      "bytes": 5260
+    },
+    {
+      "column": 8417,
+      "row": 5381,
+      "buildings": 165,
+      "bytes": 5031
+    },
+    {
+      "column": 8417,
+      "row": 5382,
+      "buildings": 4312,
+      "bytes": 120868
+    },
+    {
+      "column": 8417,
+      "row": 5383,
+      "buildings": 1417,
+      "bytes": 49907
+    },
+    {
+      "column": 8417,
+      "row": 5384,
+      "buildings": 1196,
+      "bytes": 49736
+    },
+    {
+      "column": 8417,
+      "row": 5385,
+      "buildings": 1021,
+      "bytes": 36767
+    },
+    {
+      "column": 8417,
+      "row": 5386,
+      "buildings": 6290,
+      "bytes": 185702
+    },
+    {
+      "column": 8417,
+      "row": 5387,
+      "buildings": 4173,
+      "bytes": 143583
+    },
+    {
+      "column": 8417,
+      "row": 5388,
+      "buildings": 544,
+      "bytes": 16364
+    },
+    {
+      "column": 8418,
+      "row": 5381,
+      "buildings": 93,
+      "bytes": 2891
+    },
+    {
+      "column": 8418,
+      "row": 5382,
+      "buildings": 116,
+      "bytes": 2856
+    },
+    {
+      "column": 8418,
+      "row": 5383,
+      "buildings": 815,
+      "bytes": 25565
+    },
+    {
+      "column": 8418,
+      "row": 5384,
+      "buildings": 617,
+      "bytes": 27403
+    },
+    {
+      "column": 8418,
+      "row": 5385,
+      "buildings": 2803,
+      "bytes": 80537
+    },
+    {
+      "column": 8418,
+      "row": 5386,
+      "buildings": 3502,
+      "bytes": 101818
+    },
+    {
+      "column": 8418,
+      "row": 5387,
+      "buildings": 2625,
+      "bytes": 99855
+    },
+    {
+      "column": 8418,
+      "row": 5388,
+      "buildings": 662,
+      "bytes": 18810
+    },
+    {
+      "column": 8419,
+      "row": 5382,
+      "buildings": 11,
+      "bytes": 345
+    },
+    {
+      "column": 8419,
+      "row": 5383,
+      "buildings": 65,
+      "bytes": 2347
+    },
+    {
+      "column": 8419,
+      "row": 5384,
+      "buildings": 112,
+      "bytes": 3360
+    },
+    {
+      "column": 8419,
+      "row": 5385,
+      "buildings": 79,
+      "bytes": 2345
+    },
+    {
+      "column": 8419,
+      "row": 5386,
+      "buildings": 12,
+      "bytes": 356
+    },
+    {
+      "column": 8419,
+      "row": 5387,
+      "buildings": 19,
+      "bytes": 593
+    },
+    {
+      "column": 8419,
+      "row": 5388,
+      "buildings": 161,
+      "bytes": 4183
+    }
+  ]
+}

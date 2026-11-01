@@ -84,6 +84,14 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
     '« Lille » s’écrit pareil en anglais et dans la langue concernée',
   'bi.cities.name.nantes-bdtopo':
     '« Nantes » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.newyork-overture':
+    '« New York » s’écrit pareil en anglais et dans les langues concernées',
+  'bi.cities.name.amsterdam-overture':
+    '« Amsterdam » s’écrit pareil en anglais et dans les langues concernées',
+  'bi.cities.name.chicago-overture':
+    '« Chicago » s’écrit pareil en anglais et dans les langues concernées',
+  'bi.cities.name.sydney-overture':
+    '« Sydney » s’écrit pareil en anglais et dans les langues concernées',
   'bi.cities.name.paris-bdtopo':
     '« Paris » s’écrit pareil en anglais, français et portugais',
   'bi.cities.name.berlin-lod2':
