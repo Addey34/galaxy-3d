@@ -1038,6 +1038,14 @@
           <div class="bi-atmosphere-body"></div>
           <p class="bi-atmosphere-note"></p>
         </details>
+        <!-- Les villes dont les bâtiments sont livrés en 3D, et le moyen d'y plonger (la Terre
+             seulement). Rempli par ui/citiesBlock.ts, qui lit l'index publié à la demande :
+             rien n'est demandé au démarrage. -->
+        <details class="bi-cities" hidden open>
+          <summary><span class="bi-cities-label"></span></summary>
+          <p class="bi-cities-hint"></p>
+          <ul class="bi-cities-list"></ul>
+        </details>
         <!-- Missions que le registre de contexte du PDS déclare sur ce corps, leur intervalle
              et leur état à la date de la scène. Remplie par ui/missionsBlock.ts, qui charge
              l'index et la liste À LA DEMANDE : rien n'est demandé au démarrage. -->

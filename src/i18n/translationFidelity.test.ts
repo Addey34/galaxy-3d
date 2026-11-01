@@ -69,6 +69,13 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   // Bornes de légende : un nombre et une unité du SI, rien à traduire.
   'weather.humidityModel.lo': 'nombre + unité SI',
   'weather.humidityModel.hi': 'nombre + unité SI',
+  // Noms de villes : le nom français, espagnol ou portugais est celui de l'anglais.
+  'bi.cities.name.paris-bdtopo':
+    '« Paris » s’écrit pareil en anglais, français et portugais',
+  'bi.cities.name.berlin-lod2':
+    '« Berlin » s’écrit pareil en anglais et en français',
+  'bi.cities.name.nairobi-overture':
+    '« Nairobi » s’écrit pareil en anglais, français et espagnol',
   // Noms propres et abréviations partagées.
   'credits.models.list':
     'noms de missions et d’organismes, sans mot à traduire',

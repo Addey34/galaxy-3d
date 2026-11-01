@@ -115,6 +115,14 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'bi.places.announce': '{name}, instrumentos: {count}',
   'bi.places.uncovered':
     'Pegadas de observações só foram encontradas, no Orbital Data Explorer da NASA, para estes corpos: {bodies}. Nenhum serviço público de pegadas foi encontrado para este corpo.',
+  'bi.cities.label': 'Cidades em 3D',
+  'bi.cities.hint':
+    'Cidades cujos edifícios são desenhados em 3D quando você se aproxima. Escolha uma para mergulhar nela.',
+  'bi.cities.go': 'Mergulhar em {city}',
+  'bi.cities.diving': 'Mergulhando em {city}',
+  'bi.cities.name.paris-bdtopo': 'Paris',
+  'bi.cities.name.berlin-lod2': 'Berlim',
+  'bi.cities.name.nairobi-overture': 'Nairóbi',
   'bi.places.note':
     'Pegadas lidas no Orbital Data Explorer da NASA (PDS Geosciences Node), produtos criados até {date}. Um produto cuja pegada também cobre o antípoda da formação, como um mapa global, não é contado.',
 };

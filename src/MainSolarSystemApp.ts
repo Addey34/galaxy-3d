@@ -71,7 +71,7 @@ import { spacecraftPlacer } from './core/instrumentPlacement';
 import { NAVIGABLE_TARGETS } from './config/navigable';
 import { SPACECRAFT_MISSIONS } from './config/spacecraft';
 import { setupBodyPicker } from './ui/bodyPicker';
-import { setupPlaceDive } from './ui/placeDive';
+import { registerPlaceDive, setupPlaceDive } from './ui/placeDive';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
@@ -566,6 +566,7 @@ function wireChrome(): {
     const placeDive = setupPlaceDive(cameraSystem, sceneSystem, (body) =>
       body === EARTH_NAMES_BODY ? earthRadiusKm : gazetteerRadii.get(body)
     );
+    registerPlaceDive(placeDive.diveUntilReached);
     setupBodyPicker(
       sceneSystem.scene,
       cameraSystem.camera,

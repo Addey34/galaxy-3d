@@ -20,6 +20,7 @@ import { LOCALES } from './locales';
  */
 const DEFERRED_READERS: Record<string, string> = {
   'ui/atmosphereBlock.ts': 'cardBlocks',
+  'ui/citiesBlock.ts': 'cardBlocks',
   'ui/discoveryBlock.ts': 'cardBlocks',
   'ui/instrumentsBlock.ts': 'cardBlocks',
   'ui/missionsBlock.ts': 'cardBlocks',

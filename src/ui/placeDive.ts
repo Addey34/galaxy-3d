@@ -28,10 +28,30 @@ export type DivePlace = Pick<
 /** Durée du vol de la dernière approche, en ms (nulle sous `prefers-reduced-motion`). */
 const DIVE_DURATION_MS = 1600;
 
+/** Combien de temps (ms) une plongée persistante rejoue le vol avant d'y renoncer. */
+const PERSIST_MS = 60_000;
+
+/** Cadence (ms) à laquelle une plongée persistante vérifie qu'elle est arrivée. */
+const PERSIST_INTERVAL_MS = 700;
+
 /** Écart toléré entre la distance voulue et la distance obtenue, avant de dire « arrivée ». */
 const REACHED_TOLERANCE = 1.05;
 
 /** Plus court chemin entre deux azimuts, en degrés. */
+/**
+ * Le geste de plonger, offert aux blocs de la fiche (`ui/citiesBlock`) qui n'ont pas la caméra :
+ * la racine de composition le branche une fois la plongée construite, un bloc le demande.
+ */
+let requested: ((place: DivePlace) => boolean) | null = null;
+
+export function registerPlaceDive(dive: (place: DivePlace) => boolean): void {
+  requested = dive;
+}
+
+export function requestPlaceDive(place: DivePlace): boolean {
+  return requested ? requested(place) : false;
+}
+
 export function shortestAzimuthDelta(from: number, to: number): number {
   return ((((to - from) % 360) + 540) % 360) - 180;
 }
@@ -45,6 +65,13 @@ export function setupPlaceDive(
   radiusKm: (body: string) => number | undefined
 ): {
   dive: (place: DivePlace) => boolean;
+  /**
+   * Plonge puis REJOUE la plongée à mesure que les carreaux arrivent, jusqu'à la distance voulue :
+   * les bornes d'approche suivent la finesse de l'imagerie DÉJÀ servie (voir `reached`), donc un
+   * seul vol s'arrête haut. Un geste de l'utilisateur sur la scène l'interrompt, et elle renonce
+   * après `PERSIST_MS` plutôt que de lutter indéfiniment.
+   */
+  diveUntilReached: (place: DivePlace) => boolean;
   /**
    * Plonge sur un lieu NOMMÉ, sans l'avoir sous les yeux (une visite guidée). `frameKm` remplace
    * la taille qu'on lui connaît : la Terre n'en a pas (le niveau de zoom d'un nom de Natural
@@ -177,5 +204,38 @@ export function setupPlaceDive(
     return wanted > 0 && !!view && view.distance <= wanted * REACHED_TOLERANCE;
   };
 
-  return { dive, diveToName, isDiving: () => frame !== 0, reached };
+  let persistTimer: number | null = null;
+  let halted = false;
+  const halt = (): void => {
+    halted = true;
+    if (persistTimer !== null) window.clearInterval(persistTimer);
+    persistTimer = null;
+  };
+  canvas.addEventListener('pointerdown', halt);
+  canvas.addEventListener('wheel', halt, { passive: true });
+
+  const diveUntilReached = (place: DivePlace): boolean => {
+    if (persistTimer !== null) window.clearInterval(persistTimer);
+    persistTimer = null;
+    if (!dive(place)) return false;
+    halted = false;
+    const startedAt = performance.now();
+    persistTimer = window.setInterval(() => {
+      if (halted || reached() || performance.now() - startedAt > PERSIST_MS) {
+        halt();
+        return;
+      }
+      // Encore en vol : on laisse finir. Sinon on rejoue, la borne d'approche a pu descendre.
+      if (frame === 0) dive(place);
+    }, PERSIST_INTERVAL_MS);
+    return true;
+  };
+
+  return {
+    dive,
+    diveUntilReached,
+    diveToName,
+    isDiving: () => frame !== 0,
+    reached,
+  };
 }

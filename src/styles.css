@@ -3893,3 +3893,44 @@ body.is-capturing #loader {
   margin: 0.3rem 0;
   overflow-wrap: anywhere;
 }
+/* Villes en 3D (la fiche de la Terre) : des boutons, pas du texte discret, parce que c'est une
+   ACTION (plonger sur la ville) et que rien d'autre n'y mène. Cible tactile de 2,5 rem. */
+.bi-cities {
+  margin: var(--sp-2) 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+.bi-cities[hidden] {
+  display: none;
+}
+.bi-cities summary {
+  cursor: pointer;
+  color: var(--ink);
+}
+.bi-cities-hint {
+  margin: var(--sp-1) 0;
+  color: var(--ink-faint);
+}
+.bi-cities-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bi-city {
+  min-height: 2.5rem;
+  padding: 0 var(--sp-3);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.bi-city:hover,
+.bi-city:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+}
