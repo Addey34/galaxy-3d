@@ -348,6 +348,20 @@ export class PlanetarySurfaceEngine {
   private _measuredGroundKm: number | null = null;
   /** Clés des carreaux voulus à la dernière passe. */
   private _wanted = new Set<string>();
+  /**
+   * CARREAUX RETENUS (2026-11-01) : un carreau que la vue quitte n'est plus détruit sur-le-champ, il
+   * est MASQUÉ et gardé. En bougeant, un carreau quitté puis retrouvé (un va-et-vient, un virage) se
+   * rechargeait et se refondait, d'où l'effet « activé, désactivé » vu en navigation rapprochée.
+   * Borné en nombre (`retainedLimit`) et en durée (`RETAIN_MS`) : la mémoire GPU ne dérive pas.
+   */
+  private readonly _retained = new Map<
+    string,
+    {
+      tile: SurfaceTile;
+      relief: { level: number; entry: HeightCoverageEntry } | undefined;
+      atMs: number;
+    }
+  >();
 
   constructor(options: {
     budget: TileBudget;
@@ -680,6 +694,11 @@ export class PlanetarySurfaceEngine {
     // jamais « complète », et la règle d'avant (garder tout tant qu'elle ne l'est pas) aurait
     // laissé les carreaux s'accumuler. Ceux d'une génération précédente (un autre jour d'une
     // couche datée) restent, eux, jusqu'à ce que la nouvelle soit complète.
+    // Un carreau voulu et RETENU revient tel quel : ni requête, ni fondu.
+    for (const index of tiles) {
+      const key = this._key(index);
+      if (!this._tiles.has(key)) this._revive(key);
+    }
     const missing = tiles.filter((index) => !this._tiles.has(this._key(index)));
     const complete = missing.length === 0;
     this._missing = missing.length;
@@ -693,22 +712,19 @@ export class PlanetarySurfaceEngine {
         (stale || (index !== null && missing.some((m) => overlaps(m, index))));
       if (!needed) {
         this._held.delete(tile);
-        tile.dispose();
         this._tiles.delete(key);
+        const relief = this._relief.get(key);
         this._relief.delete(key);
+        // Un carreau encore en fondu n'est pas peint : le garder montrerait un état à moitié fait.
+        if (stale || tile.fading) tile.dispose();
+        else this._retain(key, tile, relief);
       }
     }
+    this._trimRetained();
     if (complete) {
       this._staleTileset = null;
       this._staleCompare = null;
     }
-    for (const [key, controller] of this._pending) {
-      if (!wanted.has(key)) {
-        controller.abort();
-        this._pending.delete(key);
-      }
-    }
-
     this._queue.length = 0;
     for (const index of tiles) {
       const key = this._key(index);
@@ -719,6 +735,20 @@ export class PlanetarySurfaceEngine {
       )
         continue;
       this._queue.push(index);
+    }
+    // Un chargement en vol que la vue n'a plus n'est ANNULÉ que dans la mesure où il faut libérer
+    // des créneaux aux tuiles voulues (le plus ancien d'abord) ; les autres vont au bout et seront
+    // retenus. Mesuré : ~30 % des requêtes d'un va-et-vient étaient des téléchargements commencés
+    // puis jetés, puis refaits au retour.
+    const slots = this._budget.maxConcurrentLoads;
+    let toFree =
+      Math.min(this._queue.length, slots) - (slots - this._pending.size);
+    for (const [key, controller] of this._pending) {
+      if (toFree <= 0) break;
+      if (wanted.has(key)) continue;
+      controller.abort();
+      this._pending.delete(key);
+      toFree -= 1;
     }
     this._pump();
 
@@ -985,11 +1015,64 @@ export class PlanetarySurfaceEngine {
     };
   }
 
+  /** Nombre de carreaux masqués gardés : le budget de carreaux du palier, borné. */
+  private get _retainedLimit(): number {
+    const size = this._tileset?.matrix.tileSizePx ?? 256;
+    // Octets GPU d'une image de carreau avec ses mipmaps (RGBA, +1/3).
+    const bytes = size * size * 4 * (4 / 3);
+    const byBytes = Math.floor(RETAIN_BYTES / bytes);
+    return Math.max(12, Math.min(byBytes, 4 * this._budget.maxTiles));
+  }
+
+  private _retain(
+    key: string,
+    tile: SurfaceTile,
+    relief: { level: number; entry: HeightCoverageEntry } | undefined
+  ): void {
+    tile.mesh.visible = false;
+    this._retained.set(key, { tile, relief, atMs: performance.now() });
+  }
+
+  /** Remet un carreau retenu en place ; faux s'il n'y en a pas (ou plus). */
+  private _revive(key: string): boolean {
+    const kept = this._retained.get(key);
+    if (!kept) return false;
+    this._retained.delete(key);
+    kept.tile.mesh.visible = true;
+    this._tiles.set(key, kept.tile);
+    if (kept.relief) this._relief.set(key, kept.relief);
+    return true;
+  }
+
+  /** Détruit les retenus trop anciens, d'une autre génération, ou au-delà de la limite (plus vieux d'abord). */
+  private _trimRetained(): void {
+    if (this._retained.size === 0) return;
+    const now = performance.now();
+    const current = this._prefix();
+    for (const [key, kept] of this._retained) {
+      if (!key.startsWith(current) || now - kept.atMs > RETAIN_MS) {
+        kept.tile.dispose();
+        this._retained.delete(key);
+      }
+    }
+    // L'ordre d'insertion d'une Map est l'ordre de sortie : le plus ancien d'abord.
+    for (const [key, kept] of this._retained) {
+      if (this._retained.size <= this._retainedLimit) break;
+      kept.tile.dispose();
+      this._retained.delete(key);
+    }
+  }
+
   private _clear(): void {
     this._host?.setMeasuredGroundRadiusKm?.(null);
     this._measuredGroundKm = null;
     this._wanted = new Set();
-    if (this._tiles.size === 0 && this._pending.size === 0 && !this._state)
+    if (
+      this._tiles.size === 0 &&
+      this._retained.size === 0 &&
+      this._pending.size === 0 &&
+      !this._state
+    )
       return;
     this._dropEverything();
     if (this._state !== null) {
@@ -1005,6 +1088,8 @@ export class PlanetarySurfaceEngine {
     this._failed.clear();
     for (const tile of this._tiles.values()) tile.dispose();
     this._tiles.clear();
+    for (const kept of this._retained.values()) kept.tile.dispose();
+    this._retained.clear();
     this._fadingTiles = 0;
     this._held.clear();
     this._heldSinceMs = null;
@@ -1431,12 +1516,22 @@ export class PlanetarySurfaceEngine {
           ? { heights: relief.heights, skirtDepth: relief.skirtDepth }
           : {}),
       });
+      // Arrivé après que la vue l'a quitté : posé SANS fondu, masqué, gardé pour le retour.
+      const stillWanted = this._wanted.has(key);
       tile.setTexture(
         texture,
         compareBitmap ? textureOf(compareBitmap) : undefined,
-        prefersReducedMotion() ? undefined : 'hold'
+        stillWanted && !prefersReducedMotion() ? 'hold' : undefined
       );
       host.attachSpinningChild(tile.mesh);
+      if (!stillWanted) {
+        this._retain(
+          key,
+          tile,
+          relief ? { level: relief.level, entry: relief.entry } : undefined
+        );
+        return;
+      }
       this._tiles.set(key, tile);
       if (tile.fading) this._fadingTiles += 1;
       if (tile.held) {
@@ -1462,6 +1557,11 @@ export class PlanetarySurfaceEngine {
     }
   }
 }
+
+/** Durée maximale de rétention d'un carreau masqué, en ms. */
+const RETAIN_MS = 45_000;
+/** Mémoire d'images que les carreaux masqués ont le droit de garder (hors relief). */
+const RETAIN_BYTES = 64 * 1024 * 1024;
 
 function tileKey(index: TileIndex): string {
   return `${index.level}/${index.row}/${index.column}`;
