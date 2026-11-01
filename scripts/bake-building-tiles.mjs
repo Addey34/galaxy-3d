@@ -311,8 +311,8 @@ async function readOverture(set) {
         join(ROOT, 'scripts', 'overture-buildings.py'),
         '--release',
         release,
-        '--bbox',
-        `${x0},${y0},${x1},${y1}`,
+        // `--bbox=…` d'un seul tenant : argparse prend « -74.03,… » pour une option.
+        `--bbox=${x0},${y0},${x1},${y1}`,
         '--out',
         file,
       ],

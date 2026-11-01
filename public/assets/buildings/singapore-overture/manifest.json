@@ -1,0 +1,257 @@
+{
+  "id": "singapore-overture",
+  "title": "Bâtiments de Singapour, Overture Maps",
+  "body": "earth",
+  "format": "GXBD",
+  "version": 1,
+  "zoom": 14,
+  "directory": "assets/buildings/singapore-overture/3e0ef7857b",
+  "source": {
+    "name": "Overture Maps Foundation, thème buildings",
+    "typeName": "overture buildings",
+    "floorsFactor": {
+      "metresPerFloor": 3.75,
+      "pairs": 1412
+    },
+    "release": "2026-09-23.1",
+    "datasets": {
+      "Google Open Buildings": 18840,
+      "Microsoft ML Buildings": 5220,
+      "OpenStreetMap": 48901
+    },
+    "license": "Open Database License 1.0",
+    "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors, Google Open Buildings (CC BY 4.0) and Microsoft Global ML Building Footprints, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/",
+    "readFrom": "2026-11-01",
+    "readTo": "2026-11-01"
+  },
+  "bboxLonLat": [
+    103.78,
+    1.25,
+    103.92,
+    1.35
+  ],
+  "totals": {
+    "tiles": 34,
+    "bytes": 2610404,
+    "sourceFeatures": 72961,
+    "polygons": 73040,
+    "skippedNonPolygon": 0,
+    "skippedNoFootprint": 0,
+    "verticesAtMarginEdge": 0,
+    "heightAboveRange": 0,
+    "byOrigin": {
+      "absent": 57840,
+      "measured": 0,
+      "interpolated": 0,
+      "derivedFromFloors": 12789,
+      "unspecified": 2411
+    }
+  },
+  "tiles": [
+    {
+      "column": 12915,
+      "row": 8130,
+      "buildings": 842,
+      "bytes": 25390
+    },
+    {
+      "column": 12915,
+      "row": 8131,
+      "buildings": 4033,
+      "bytes": 126715
+    },
+    {
+      "column": 12915,
+      "row": 8132,
+      "buildings": 2953,
+      "bytes": 116843
+    },
+    {
+      "column": 12915,
+      "row": 8133,
+      "buildings": 1986,
+      "bytes": 65546
+    },
+    {
+      "column": 12915,
+      "row": 8134,
+      "buildings": 279,
+      "bytes": 8745
+    },
+    {
+      "column": 12916,
+      "row": 8130,
+      "buildings": 113,
+      "bytes": 2899
+    },
+    {
+      "column": 12916,
+      "row": 8131,
+      "buildings": 4812,
+      "bytes": 139512
+    },
+    {
+      "column": 12916,
+      "row": 8132,
+      "buildings": 2790,
+      "bytes": 108074
+    },
+    {
+      "column": 12916,
+      "row": 8133,
+      "buildings": 1985,
+      "bytes": 98163
+    },
+    {
+      "column": 12916,
+      "row": 8134,
+      "buildings": 913,
+      "bytes": 45819
+    },
+    {
+      "column": 12916,
+      "row": 8135,
+      "buildings": 58,
+      "bytes": 2090
+    },
+    {
+      "column": 12917,
+      "row": 8130,
+      "buildings": 429,
+      "bytes": 14895
+    },
+    {
+      "column": 12917,
+      "row": 8131,
+      "buildings": 3275,
+      "bytes": 102717
+    },
+    {
+      "column": 12917,
+      "row": 8132,
+      "buildings": 3813,
+      "bytes": 145367
+    },
+    {
+      "column": 12917,
+      "row": 8133,
+      "buildings": 2871,
+      "bytes": 124277
+    },
+    {
+      "column": 12917,
+      "row": 8134,
+      "buildings": 1073,
+      "bytes": 35227
+    },
+    {
+      "column": 12917,
+      "row": 8135,
+      "buildings": 122,
+      "bytes": 6298
+    },
+    {
+      "column": 12918,
+      "row": 8130,
+      "buildings": 1514,
+      "bytes": 63154
+    },
+    {
+      "column": 12918,
+      "row": 8131,
+      "buildings": 2921,
+      "bytes": 142683
+    },
+    {
+      "column": 12918,
+      "row": 8132,
+      "buildings": 5187,
+      "bytes": 171757
+    },
+    {
+      "column": 12918,
+      "row": 8133,
+      "buildings": 2691,
+      "bytes": 90689
+    },
+    {
+      "column": 12918,
+      "row": 8134,
+      "buildings": 541,
+      "bytes": 15411
+    },
+    {
+      "column": 12918,
+      "row": 8135,
+      "buildings": 125,
+      "bytes": 6559
+    },
+    {
+      "column": 12919,
+      "row": 8130,
+      "buildings": 3412,
+      "bytes": 111224
+    },
+    {
+      "column": 12919,
+      "row": 8131,
+      "buildings": 3658,
+      "bytes": 142338
+    },
+    {
+      "column": 12919,
+      "row": 8132,
+      "buildings": 2852,
+      "bytes": 107792
+    },
+    {
+      "column": 12919,
+      "row": 8133,
+      "buildings": 745,
+      "bytes": 22551
+    },
+    {
+      "column": 12920,
+      "row": 8130,
+      "buildings": 676,
+      "bytes": 24768
+    },
+    {
+      "column": 12920,
+      "row": 8131,
+      "buildings": 2730,
+      "bytes": 105146
+    },
+    {
+      "column": 12920,
+      "row": 8132,
+      "buildings": 7831,
+      "bytes": 242649
+    },
+    {
+      "column": 12920,
+      "row": 8133,
+      "buildings": 38,
+      "bytes": 1082
+    },
+    {
+      "column": 12921,
+      "row": 8130,
+      "buildings": 205,
+      "bytes": 5431
+    },
+    {
+      "column": 12921,
+      "row": 8131,
+      "buildings": 2936,
+      "bytes": 97212
+    },
+    {
+      "column": 12921,
+      "row": 8132,
+      "buildings": 2631,
+      "bytes": 91381
+    }
+  ]
+}
