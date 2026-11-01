@@ -12,6 +12,83 @@
       "manifest": "assets/buildings/paris-bdtopo/manifest.json"
     },
     {
+      "id": "lyon-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        4.77,
+        45.7,
+        4.93,
+        45.81
+      ],
+      "manifest": "assets/buildings/lyon-bdtopo/manifest.json"
+    },
+    {
+      "id": "marseille-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        5.32,
+        43.25,
+        5.46,
+        43.36
+      ],
+      "manifest": "assets/buildings/marseille-bdtopo/manifest.json"
+    },
+    {
+      "id": "toulouse-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        1.37,
+        43.55,
+        1.5,
+        43.66
+      ],
+      "manifest": "assets/buildings/toulouse-bdtopo/manifest.json"
+    },
+    {
+      "id": "nice-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        7.19,
+        43.64,
+        7.32,
+        43.74
+      ],
+      "manifest": "assets/buildings/nice-bdtopo/manifest.json"
+    },
+    {
+      "id": "bordeaux-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        -0.65,
+        44.8,
+        -0.52,
+        44.9
+      ],
+      "manifest": "assets/buildings/bordeaux-bdtopo/manifest.json"
+    },
+    {
+      "id": "lille-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        3,
+        50.6,
+        3.12,
+        50.67
+      ],
+      "manifest": "assets/buildings/lille-bdtopo/manifest.json"
+    },
+    {
+      "id": "nantes-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        -1.64,
+        47.18,
+        -1.5,
+        47.27
+      ],
+      "manifest": "assets/buildings/nantes-bdtopo/manifest.json"
+    },
+    {
       "id": "berlin-lod2",
       "body": "earth",
       "bboxLonLat": [

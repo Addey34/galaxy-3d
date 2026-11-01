@@ -70,6 +70,20 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'weather.humidityModel.lo': 'nombre + unité SI',
   'weather.humidityModel.hi': 'nombre + unité SI',
   // Noms de villes : le nom français, espagnol ou portugais est celui de l'anglais.
+  'bi.cities.name.lyon-bdtopo':
+    '« Lyon » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.marseille-bdtopo':
+    '« Marseille » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.toulouse-bdtopo':
+    '« Toulouse » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.nice-bdtopo':
+    '« Nice » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.bordeaux-bdtopo':
+    '« Bordeaux » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.lille-bdtopo':
+    '« Lille » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.nantes-bdtopo':
+    '« Nantes » s’écrit pareil en anglais et dans la langue concernée',
   'bi.cities.name.paris-bdtopo':
     '« Paris » s’écrit pareil en anglais, français et portugais',
   'bi.cities.name.berlin-lod2':
