@@ -14,7 +14,7 @@ import {
   type BuildingSetIndex,
 } from '@/config/buildingSets';
 import { EARTH_NAMES_BODY } from '@/core/earthNames';
-import { onLocaleChange, t } from '@/i18n';
+import { intlLocale, onLocaleChange, t } from '@/i18n';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { BodyInfoPanel } from './bodyInfo';
 import { getAnnouncer } from './announcer';
@@ -54,12 +54,16 @@ export function setupCitiesBlock(
 
   const render = (): void => {
     if (!index) return;
-    const earth = index.sets.filter((set) => set.body === EARTH_NAMES_BODY);
+    // Triées par NOM dans la langue active : l'ordre de l'index est celui de la priorité des jeux.
+    const collator = new Intl.Collator(intlLocale());
+    const earth = index.sets
+      .filter((set) => set.body === EARTH_NAMES_BODY)
+      .map((set) => ({ set, city: t(cityNameKey(set.id)) }))
+      .sort((a, b) => collator.compare(a.city, b.city));
     label.textContent = `${t('bi.cities.label')} (${earth.length})`;
     hint.textContent = t('bi.cities.hint');
     list.replaceChildren();
-    for (const set of earth) {
-      const city = t(cityNameKey(set.id));
+    for (const { set, city } of earth) {
       const { lon, lat } = centreOf(set.bboxLonLat);
       const button = document.createElement('button');
       button.type = 'button';

@@ -1,8 +1,21 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { encodeBuildingTile, HEIGHT_ORIGIN } from '@/core/buildingTile';
 import { unfoldBodyCard } from './bodyCard';
-import { boot, prepareSurfacePage, TILE_JPEG } from './surfaceTiles';
+import { cardEn } from '../src/i18n/dict-card-en';
+import { boot, HERE, prepareSurfacePage, TILE_JPEG } from './surfaceTiles';
+
+/** Les villes livrées, lues dans l'index publié, par nom anglais. */
+const index = JSON.parse(
+  readFileSync(join(HERE, '../public/assets/buildings/index.json'), 'utf8')
+) as { sets: { id: string }[] };
+const CITIES = index.sets
+  .map(
+    (set) => cardEn[`bi.cities.name.${set.id}` as keyof typeof cardEn] as string
+  )
+  .sort((a, b) => a.localeCompare(b, 'en'));
 
 /**
  * LE BLOC « VILLES EN 3D » DE LA FICHE DE LA TERRE : la liste vient de l'index PUBLIÉ, chaque ville
@@ -72,12 +85,10 @@ test('lists the delivered cities on the Earth card, and nowhere else', async ({
   await boot(page, '?mode=educ&body=earth');
   const block = page.locator('#body-info .bi-cities');
   await expect(block).toBeVisible({ timeout: 30_000 });
-  await expect(block.locator('.bi-cities-label')).toHaveText('3D cities (3)');
-  await expect(block.locator('.bi-city')).toHaveText([
-    'Paris',
-    'Berlin',
-    'Nairobi',
-  ]);
+  await expect(block.locator('.bi-cities-label')).toHaveText(
+    `3D cities (${CITIES.length})`
+  );
+  await expect(block.locator('.bi-city')).toHaveText(CITIES);
 
   // Les autres corps n'en ont pas.
   await boot(page, '?mode=educ&body=mars');
