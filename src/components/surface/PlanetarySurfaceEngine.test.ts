@@ -197,6 +197,116 @@ describe('ce que le moteur demande', () => {
  * carreau serait exactement l'erreur que la phase 9C a payée sur l'imagerie. Et un relief
  * indisponible ne doit pas emporter l'imagerie avec lui.
  */
+describe('les carreaux quittés restent en mémoire un temps', () => {
+  /** La même caméra qu'au-dessus, mais sur un autre méridien du même équateur. */
+  function cameraOver(longitudeDeg: number, altitudeKm: number) {
+    const camera = new THREE.PerspectiveCamera(55, 1.6, 1e-6, 1000);
+    geographicToLocalDirection(0, longitudeDeg, camera.position).multiplyScalar(
+      1 + altitudeKm / RADIUS_KM
+    );
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+    return camera;
+  }
+
+  it('retrouver un endroit quitté ne redemande rien et le montre aussitôt', async () => {
+    const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile,
+    });
+    const host = makeHost();
+    engine.attach(host, TILESET, RADIUS_KM);
+
+    const home = cameraOver(0, 8);
+    // Le fondu d'entrée doit être fini : un carreau encore en fondu n'est jamais retenu.
+    await vi.waitFor(
+      () => {
+        engine.update(home, 800);
+        expect(fetchTile.mock.calls.length).toBeGreaterThan(0);
+        expect(meshes(host).filter((m) => m.visible).length).toBeGreaterThan(0);
+        expect(engine.busyCount).toBe(0);
+      },
+      { timeout: 4000 }
+    );
+    const first = new Set(meshes(host).map((m) => m.name));
+    const requested = fetchTile.mock.calls.length;
+
+    // On s'éloigne vers un autre méridien : les carreaux d'origine sortent de la vue.
+    const away = cameraOver(120, 8);
+    await vi.waitFor(
+      () => {
+        engine.update(away, 800);
+        expect(fetchTile.mock.calls.length).toBeGreaterThan(requested);
+        expect(engine.busyCount).toBe(0);
+      },
+      { timeout: 4000 }
+    );
+    // Ils sont MASQUÉS, pas détruits : toujours dans le groupe.
+    const hidden = meshes(host).filter((m) => !m.visible);
+    expect(hidden.length).toBeGreaterThan(0);
+    expect(hidden.every((m) => first.has(m.name))).toBe(true);
+
+    // Retour : plus aucune requête, et les mêmes maillages redeviennent visibles.
+    const afterAway = fetchTile.mock.calls.length;
+    engine.update(home, 800);
+    expect(fetchTile.mock.calls.length).toBe(afterAway);
+    const back = meshes(host).filter((m) => m.visible && first.has(m.name));
+    expect(back.length).toBeGreaterThan(0);
+    engine.dispose();
+  });
+});
+
+describe('un chargement que la vue a quitté', () => {
+  it('va au bout quand il reste des créneaux, puis attend le retour masqué', async () => {
+    const resolvers: ((image: ImageBitmap) => void)[] = [];
+    const signals: AbortSignal[] = [];
+    const fetchTile = vi.fn<TileFetcher>(
+      (_url, signal) =>
+        new Promise<ImageBitmap>((resolve) => {
+          signals.push(signal as AbortSignal);
+          resolvers.push(resolve);
+        })
+    );
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 200 },
+      fetchTile,
+    });
+    const host = makeHost();
+    engine.attach(host, TILESET, RADIUS_KM);
+
+    const at = (longitudeDeg: number) => {
+      const camera = new THREE.PerspectiveCamera(55, 1.6, 1e-6, 1000);
+      geographicToLocalDirection(
+        0,
+        longitudeDeg,
+        camera.position
+      ).multiplyScalar(1 + 8 / RADIUS_KM);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld();
+      return camera;
+    };
+    engine.update(at(0), 800);
+    await vi.waitFor(() => expect(fetchTile).toHaveBeenCalled());
+    const homeCount = fetchTile.mock.calls.length;
+
+    // La vue part ailleurs AVANT que rien n'ait répondu : de la place reste, donc rien n'est annulé.
+    engine.update(at(120), 800);
+    await vi.waitFor(() =>
+      expect(fetchTile.mock.calls.length).toBeGreaterThan(homeCount)
+    );
+    expect(signals.slice(0, homeCount).every((s) => !s.aborted)).toBe(true);
+
+    // Les images du premier endroit arrivent : posées masquées, jamais visibles.
+    for (const resolve of resolvers.slice(0, homeCount)) resolve(bitmap());
+    await vi.waitFor(() =>
+      expect(meshes(host).length).toBeGreaterThanOrEqual(homeCount)
+    );
+    expect(meshes(host).filter((m) => m.visible)).toHaveLength(0);
+    engine.dispose();
+  });
+});
+
 describe('le relief sous les carreaux', () => {
   /** Une tuile de hauteurs encodée au format du cuiseur, plate à l'altitude donnée. */
   const heightTileBytes = (
