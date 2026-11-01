@@ -16,6 +16,7 @@
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { BodyInfoPanel } from './bodyInfo';
 import { setupAtmosphereBlock } from './atmosphereBlock';
+import { setupCitiesBlock } from './citiesBlock';
 import { setupDiscoveryBlock } from './discoveryBlock';
 import { setupInstrumentsBlock } from './instrumentsBlock';
 import { setupMissionsBlock } from './missionsBlock';
@@ -24,6 +25,7 @@ import { setupPlacesBlock } from './placesBlock';
 export function setupCardBlocks(api: PublicAPI, bodyInfo: BodyInfoPanel): void {
   setupDiscoveryBlock(api, bodyInfo);
   setupAtmosphereBlock(api, bodyInfo);
+  setupCitiesBlock(api, bodyInfo);
   setupMissionsBlock(api, bodyInfo);
   setupInstrumentsBlock(api, bodyInfo);
   setupPlacesBlock(api, bodyInfo);

@@ -117,6 +117,14 @@ export const cardEs: Record<CardMessageKey, string> = {
   'bi.places.announce': '{name}, instrumentos: {count}',
   'bi.places.uncovered':
     'Solo se encontraron huellas de observaciones, en el Orbital Data Explorer de la NASA, para estos cuerpos: {bodies}. No se encontró ningún servicio público de huellas para este cuerpo.',
+  'bi.cities.label': 'Ciudades en 3D',
+  'bi.cities.hint':
+    'Ciudades cuyos edificios se dibujan en 3D al acercarse. Elija una para sumergirse en ella.',
+  'bi.cities.go': 'Sumergirse en {city}',
+  'bi.cities.diving': 'Descendiendo a {city}',
+  'bi.cities.name.paris-bdtopo': 'París',
+  'bi.cities.name.berlin-lod2': 'Berlín',
+  'bi.cities.name.nairobi-overture': 'Nairobi',
   'bi.places.note':
     'Huellas leídas en el Orbital Data Explorer de la NASA (PDS Geosciences Node), productos creados hasta el {date}. No se cuenta un producto cuya huella cubre también el antípoda de la formación, como un mapa global.',
 };

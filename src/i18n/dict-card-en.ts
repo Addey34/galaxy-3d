@@ -136,6 +136,14 @@ export const cardEn = {
   'bi.places.announce': '{name}, instruments: {count}',
   'bi.places.uncovered':
     'Footprints of individual observations were found, in NASA’s Orbital Data Explorer, only for these bodies: {bodies}. No public footprint service was found for this body.',
+  'bi.cities.label': '3D cities',
+  'bi.cities.hint':
+    'Cities whose buildings are drawn in 3D when you come close. Pick one to fly down to it.',
+  'bi.cities.go': 'Fly down to {city}',
+  'bi.cities.diving': 'Flying down to {city}',
+  'bi.cities.name.paris-bdtopo': 'Paris',
+  'bi.cities.name.berlin-lod2': 'Berlin',
+  'bi.cities.name.nairobi-overture': 'Nairobi',
   'bi.places.note':
     'Footprints read in NASA’s Orbital Data Explorer (PDS Geosciences Node), products created up to {date}. A product whose footprint also covers the antipode of the formation, such as a global map, is not counted.',
 };

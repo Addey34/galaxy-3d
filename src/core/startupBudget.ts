@@ -396,6 +396,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       'les bâtiments 3D (lot 63, C.3b) : le fil vers la couche, importé par `surfacePanel` quand la caméra est BASSE sur un corps (sous 300 km), jamais au démarrage.',
   },
   {
+    chunk: 'buildingSets',
+    reason:
+      "l'index et les manifestes des jeux de bâtiments (`config/buildingSets`), partagés par la couche de bâtiments (`buildingsOverlay`) et le bloc « Villes en 3D » de la fiche (`citiesBlock`, dans `cardBlocks`) : Vite l'en a sorti en morceau commun, et il n'est chargé qu'avec l'un des deux.",
+  },
+  {
     chunk: 'galaxyData',
     reason:
       "les adresses et le décodage du service de données (`core/galaxyData`), partagés par le client météo (`galaxyDataClient`) et par les bâtiments (`buildingsOverlay`) : Vite l'en a sorti en morceau commun au lot 63, et il n'est chargé qu'avec l'un des deux.",
