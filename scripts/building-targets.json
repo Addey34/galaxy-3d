@@ -16,7 +16,7 @@
         "pageSize": 3000,
         "minIntervalMs": 1100
       },
-      "bboxLonLat": [2.32, 48.85, 2.36, 48.87],
+      "bboxLonLat": [2.224, 48.815, 2.47, 48.902],
       "zoom": 14,
       "height": {
         "field": "hauteur",
