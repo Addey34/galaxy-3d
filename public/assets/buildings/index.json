@@ -15,10 +15,10 @@
       "id": "berlin-lod2",
       "body": "earth",
       "bboxLonLat": [
-        13.34901,
-        52.50062,
-        13.3942,
-        52.52818
+        13.04758,
+        52.31644,
+        13.78209,
+        52.68556
       ],
       "manifest": "assets/buildings/berlin-lod2/manifest.json"
     },
