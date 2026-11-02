@@ -15,9 +15,10 @@
  * en cache sur disque et DATÉE à son arrivée (`.at` à côté), donc `--offline` rejoue exactement
  * les mêmes octets et la date de lecture publiée est celle de la source.
  *
- * Trois familles de source, choisies par `source.kind` : `wfs` (BD TOPO), `citygml-zip` (modèle
- * de ville en carreaux ZIP, Berlin LoD2) et `overture-parquet` (Overture Maps, lu par DuckDB dans
- * `scripts/overture-buildings.py`). Toutes rendent la même forme intermédiaire, des objets GeoJSON
+ * Cinq familles de source, choisies par `source.kind` : `wfs` (BD TOPO), `citygml-zip` (modèle
+ * de ville en carreaux ZIP, Berlin LoD2), `overture-parquet` (Overture Maps, lu par DuckDB dans
+ * `scripts/overture-buildings.py`), `bag3d-ogc` (3DBAG, Pays-Bas) et `socrata-geojson` (NYC Open
+ * Data, hauteurs en pieds). Toutes rendent la même forme intermédiaire, des objets GeoJSON
  * (emprise extérieure, hauteur, méthode de la hauteur), et partagent tout le reste.
  *
  * Un jeu `unpublished: true` est cuit mais son manifeste reste dans `.cache/unpublished-buildings/` :
@@ -475,6 +476,84 @@ async function readBag3d(set) {
   return { features, oldest, newest };
 }
 
+/** Un pied international, en mètres (définition exacte). */
+const FOOT_IN_METRES = 0.3048;
+
+/**
+ * Un jeu Socrata (NYC Open Data) en GeoJSON WGS84 : l'empreinte est publiée telle quelle, la hauteur
+ * du toit au-dessus du sol est en PIEDS. Les codes de type et les statuts écartés sont déclarés dans
+ * la recette (triangles provisoires, auvents, installations temporaires, démolis), jamais en dur.
+ * Pages ordonnées par `:id` : un `offset` sur un ordre stable ne saute ni ne répète une ligne tant que
+ * le jeu ne bouge pas (il est mis à jour chaque semaine, donc une cuisson dure moins qu'une semaine).
+ */
+async function readSocrata(set) {
+  const {
+    endpoint,
+    pageSize,
+    minIntervalMs,
+    idField,
+    excludeFeatureCodes,
+    excludeStatuses,
+  } = set.source;
+  const fields = [
+    'the_geom',
+    idField,
+    'height_roof',
+    'feature_code',
+    'last_status_type',
+  ];
+  const features = [];
+  const seen = new Set();
+  const dropped = new Map();
+  let oldest = null;
+  let newest = null;
+  let withHeight = 0;
+  for (let offset = 0; ; offset += pageSize) {
+    const url = new URL(endpoint);
+    url.searchParams.set('$select', fields.join(','));
+    url.searchParams.set('$order', ':id');
+    url.searchParams.set('$limit', String(pageSize));
+    if (offset > 0) url.searchParams.set('$offset', String(offset));
+    const { json, at } = await fetchPage(url.toString(), minIntervalMs);
+    if (oldest === null || at < oldest) oldest = at;
+    if (newest === null || at > newest) newest = at;
+    for (const f of json.features) {
+      const props = f.properties ?? {};
+      const id = props[idField];
+      if (!f.geometry || id === undefined || seen.has(id)) continue;
+      seen.add(id);
+      if (
+        excludeFeatureCodes.includes(Number(props.feature_code)) ||
+        excludeStatuses.includes(props.last_status_type)
+      ) {
+        const why = `${props.feature_code} ${props.last_status_type}`;
+        dropped.set(why, (dropped.get(why) ?? 0) + 1);
+        continue;
+      }
+      const feet = Number(props.height_roof);
+      const measured = Number.isFinite(feet) && feet > 0;
+      if (measured) withHeight++;
+      features.push({
+        type: 'Feature',
+        id,
+        geometry: f.geometry,
+        properties: {
+          hauteur: measured ? feet * FOOT_IN_METRES : null,
+          methode: measured ? 'measured' : 'none',
+        },
+      });
+    }
+    console.log(
+      `  Socrata décalage ${offset} : ${features.length} bâtiments retenus`
+    );
+    if (json.features.length < pageSize) break;
+  }
+  console.log(
+    `  Socrata : ${features.length} bâtiments retenus, ${withHeight} avec hauteur ; écartés ${JSON.stringify(Object.fromEntries(dropped))}`
+  );
+  return { features, oldest, newest };
+}
+
 async function readWfs(set) {
   const [lon0, lat0, lon1, lat1] = set.bboxLonLat;
   const base = new URL(set.source.endpoint);
@@ -529,7 +608,9 @@ async function bakeSet(set) {
       ? await readOverture(set)
       : set.source.kind === 'bag3d-ogc'
         ? await readBag3d(set)
-        : await readWfs(set);
+        : set.source.kind === 'socrata-geojson'
+          ? await readSocrata(set)
+          : await readWfs(set);
 
   // Rangement : un bâtiment va dans la tuile de son centre (moyenne des sommets de son anneau).
   const tiles = new Map();

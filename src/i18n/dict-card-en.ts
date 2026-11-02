@@ -148,7 +148,7 @@ export const cardEn = {
   'bi.cities.name.bordeaux-bdtopo': 'Bordeaux',
   'bi.cities.name.lille-bdtopo': 'Lille',
   'bi.cities.name.nantes-bdtopo': 'Nantes',
-  'bi.cities.name.newyork-overture': 'New York',
+  'bi.cities.name.newyork-opendata': 'New York',
   'bi.cities.name.london-overture': 'London',
   'bi.cities.name.amsterdam-3dbag': 'Amsterdam',
   'bi.cities.name.rotterdam-3dbag': 'Rotterdam',

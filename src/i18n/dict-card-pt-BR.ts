@@ -127,7 +127,7 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'bi.cities.name.bordeaux-bdtopo': 'Bordéus',
   'bi.cities.name.lille-bdtopo': 'Lille',
   'bi.cities.name.nantes-bdtopo': 'Nantes',
-  'bi.cities.name.newyork-overture': 'Nova York',
+  'bi.cities.name.newyork-opendata': 'Nova York',
   'bi.cities.name.london-overture': 'Londres',
   'bi.cities.name.amsterdam-3dbag': 'Amsterdã',
   'bi.cities.name.rotterdam-3dbag': 'Roterdã',
