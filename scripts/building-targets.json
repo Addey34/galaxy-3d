@@ -4995,9 +4995,9 @@
         "excludeStatuses": [
           "Demolition"
         ],
-        "license": "Public data of the City of New York (Admin. Code 23-502, no license requirement or restriction on use)",
+        "license": "Public data of the City of New York (Admin. Code 23-502 d, as amended by Local Law 251 of 2017: no restrictions on use; a third party may be asked to identify the source, the version and any modifications)",
         "licenseUrl": "https://opendata.cityofnewyork.us/open-data-law/",
-        "attribution": "Building Footprints, NYC Open Data, Office of Technology and Innovation (OTI), City of New York, https://data.cityofnewyork.us/City-Government/Building/5zhs-2jue. Footprints and roof heights (feet converted to metres) extracted from the source."
+        "attribution": "Building Footprints, NYC Open Data, Office of Technology and Innovation (OTI), City of New York, https://data.cityofnewyork.us/City-Government/Building/5zhs-2jue. Dataset updated weekly by the source; version read on 2026-11-02. Footprints and roof heights (feet converted to metres) extracted from the source."
       },
       "bboxLonLat": [
         -74.26,
