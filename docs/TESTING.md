@@ -10,6 +10,7 @@
 | `pnpm verify`     | typecheck + lint + `format:check` + Vitest | gate local rapide |
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
 | `pnpm test:e2e`   | scénarios Playwright Chromium/WebGL     | long              |
+| `pnpm test:android` | les villes en 3D sur le Chrome d'un téléphone Android VIRTUEL (SDK et AVD par `ANDROID_SDK_ROOT`, `ANDROID_AVD_HOME`, `ANDROID_AVD`) : ouvre la production, touche le bouton de la ville, attend les bâtiments, mesure l'intervalle entre images ; GPU de la machine, donc un plancher de régression et PAS la fluidité d'un téléphone ; refuse le rendu logiciel ; hors CI | long |
 | `pnpm test:mobile` | matrice Pixel 7 (Chromium, vrai GPU) et iPhone 15 (WebKit) : démarrage, débordement, luminance du canvas, visite du Nil ; captures dans `reports/mobile/`, hors CI ; `MOBILE_SOFTWARE=1` pour le rendu logiciel | moyen |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
 | `pnpm budget:startup` | budget du démarrage, famille JavaScript (exige un build) | court |
