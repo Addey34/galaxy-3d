@@ -73,6 +73,7 @@ const {
   tileOfLonLat,
 } = await loader.ssrLoadModule('/src/core/buildingTile.ts');
 const { utmToLonLat } = await loader.ssrLoadModule('/src/core/utm.ts');
+const { rdToLonLat } = await loader.ssrLoadModule('/src/core/rijksdriehoek.ts');
 await loader.close();
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -286,7 +287,7 @@ async function readCityGml(set) {
 }
 
 /** Les faits que la lecture d'Overture publie au manifeste (facteur par étage mesuré, version). */
-const overtureFacts = new Map();
+const sourceFacts = new Map();
 
 async function readOverture(set) {
   const { release } = set.source;
@@ -326,7 +327,7 @@ async function readOverture(set) {
   console.log(
     `  Overture ${json.release} : ${json.features.length} bâtiments, facteur par étage ${JSON.stringify(json.floorsFactor)}, méthodes ${JSON.stringify(json.counts)}`
   );
-  overtureFacts.set(set.id, {
+  sourceFacts.set(set.id, {
     floorsFactor: json.floorsFactor,
     release: json.release,
     // Jeux sources PRÉSENTS dans la boîte (bâtiments par jeu) : `buildingAttribution.test.ts` les
@@ -334,6 +335,144 @@ async function readOverture(set) {
     datasets: json.datasets,
   });
   return { features: json.features, oldest: json.readAt, newest: json.readAt };
+}
+
+/**
+ * 3DBAG (Pays-Bas) par son API OGC Features : l'empreinte est le LoD 0 de chaque bâtiment (RD, donc
+ * convertie), la hauteur est le toit médian moins le sol, les deux issus du lidar de l'AHN. Un
+ * bâtiment dont l'un des deux manque, ou dont la différence n'est pas positive, reste sans hauteur
+ * (`none`, emprise à plat) : rien n'est déduit des étages.
+ */
+const BAG3D_PAGE = 100;
+/** Côté d'une case de lecture, en mètres RD. */
+const BAG3D_CELL = 2000;
+/** Statuts du registre BAG d'un pand qui n'est pas (ou plus) un bâtiment debout. */
+const BAG3D_NOT_STANDING = new Set([
+  'Pand gesloopt',
+  'Niet gerealiseerd pand',
+  'Pand ten onrechte opgevoerd',
+  'Bouwvergunning verleend',
+]);
+
+async function readBag3d(set) {
+  const { endpoint, bboxRd, release } = set.source;
+  if (!OFFLINE) {
+    // La version de la collection se LIT à la source : une mise à jour change les hauteurs sans
+    // changer l'adresse, et la recette déclare celle sur laquelle elle a été mesurée.
+    const meta = await (await fetch(`${endpoint}?f=json`)).json();
+    if (meta.version?.collection !== release)
+      throw new Error(
+        `3DBAG : la collection est en ${meta.version?.collection}, la recette déclare ${release}`
+      );
+  }
+  const [x0, y0, x1, y1] = bboxRd;
+  // La boîte RD doit tomber sur la boîte WGS84 de la recette (à 0,01° près) : un RD recopié de
+  // travers cuirait une autre ville sans une erreur.
+  const [lonA, latA] = rdToLonLat(x0, y0);
+  const [lonB, latB] = rdToLonLat(x1, y1);
+  const [lon0, lat0, lon1, lat1] = set.bboxLonLat;
+  for (const [got, want] of [
+    [lonA, lon0],
+    [latA, lat0],
+    [lonB, lon1],
+    [latB, lat1],
+  ])
+    if (Math.abs(got - want) > 0.01)
+      throw new Error(
+        `3DBAG : bboxRd ${bboxRd} ne tombe pas sur bboxLonLat ${set.bboxLonLat}`
+      );
+
+  const features = [];
+  const seen = new Set();
+  const statuses = new Map();
+  let oldest = null;
+  let newest = null;
+  let withHeight = 0;
+  // MESURÉ : l'API répond 500 à une boîte de plusieurs km (elle compte tout avant de répondre) ;
+  // on parcourt des cases carrées, et un bâtiment à cheval sur deux cases est dédoublonné par son
+  // identifiant.
+  const cells = [];
+  for (let cx = x0; cx < x1; cx += BAG3D_CELL)
+    for (let cy = y0; cy < y1; cy += BAG3D_CELL)
+      cells.push([
+        cx,
+        cy,
+        Math.min(cx + BAG3D_CELL, x1),
+        Math.min(cy + BAG3D_CELL, y1),
+      ]);
+  let cellIndex = 0;
+  for (const [cx0, cy0, cx1, cy1] of cells) {
+    cellIndex++;
+    for (let offset = 0; ; offset += BAG3D_PAGE) {
+      const url = new URL(`${endpoint}/items`);
+      url.searchParams.set('bbox', `${cx0},${cy0},${cx1},${cy1}`);
+      url.searchParams.set('limit', String(BAG3D_PAGE));
+      // MESURÉ : `offset=0` écrit répond 500, l'absence de paramètre répond 200.
+      if (offset > 0) url.searchParams.set('offset', String(offset));
+      const { json, at } = await fetchPage(
+        url.toString(),
+        set.source.minIntervalMs
+      );
+      if (oldest === null || at < oldest) oldest = at;
+      if (newest === null || at > newest) newest = at;
+      if (json.features.length === 0) break;
+      // MESURÉ : un `offset` au-delà du total répond 500, pas une liste vide.
+      const lastPage = offset + BAG3D_PAGE >= json.numberMatched;
+      const { scale, translate } = json.metadata.transform;
+      for (const f of json.features) {
+        const building = Object.values(f.CityObjects).find(
+          (o) => o.type === 'Building'
+        );
+        const id = building?.attributes?.identificatie;
+        if (!building || seen.has(id)) continue;
+        seen.add(id);
+        const status = building.attributes.status;
+        statuses.set(status, (statuses.get(status) ?? 0) + 1);
+        if (BAG3D_NOT_STANDING.has(status)) continue;
+        const footprint = building.geometry.find((g) => g.lod === '0');
+        if (!footprint) continue;
+        const polygons = footprint.boundaries.map((surface) =>
+          surface.slice(0, 1).map((ring) => {
+            const lonLat = ring.map((i) => {
+              const v = f.vertices[i];
+              return rdToLonLat(
+                v[0] * scale[0] + translate[0],
+                v[1] * scale[1] + translate[1]
+              );
+            });
+            return [...lonLat, lonLat[0]];
+          })
+        );
+        const roof = building.attributes.b3_h_dak_50p;
+        const ground = building.attributes.b3_h_maaiveld;
+        const height =
+          typeof roof === 'number' && typeof ground === 'number'
+            ? roof - ground
+            : null;
+        const measured = height !== null && height > 0;
+        if (measured) withHeight++;
+        features.push({
+          type: 'Feature',
+          id,
+          geometry: { type: 'MultiPolygon', coordinates: polygons },
+          properties: {
+            hauteur: measured ? height : null,
+            methode: measured ? 'lidar' : 'none',
+          },
+        });
+      }
+      if (lastPage) break;
+    }
+    if (cellIndex % 10 === 0)
+      console.log(
+        `  3DBAG case ${cellIndex} / ${cells.length} : ${features.length} bâtiments`
+      );
+  }
+  console.log(
+    `  3DBAG ${release} : ${features.length} bâtiments retenus, ${withHeight} avec hauteur ; statuts ${JSON.stringify(Object.fromEntries(statuses))}`
+  );
+  sourceFacts.set(set.id, { release });
+  return { features, oldest, newest };
 }
 
 async function readWfs(set) {
@@ -388,7 +527,9 @@ async function bakeSet(set) {
     ? await readCityGml(set)
     : set.source.kind === 'overture-parquet'
       ? await readOverture(set)
-      : await readWfs(set);
+      : set.source.kind === 'bag3d-ogc'
+        ? await readBag3d(set)
+        : await readWfs(set);
 
   // Rangement : un bâtiment va dans la tuile de son centre (moyenne des sommets de son anneau).
   const tiles = new Map();
@@ -493,7 +634,7 @@ async function bakeSet(set) {
     source: {
       name: set.source.name,
       typeName: set.source.typeName ?? set.source.dataset,
-      ...(overtureFacts.get(set.id) ?? {}),
+      ...(sourceFacts.get(set.id) ?? {}),
       license: set.source.license,
       licenseUrl: set.source.licenseUrl,
       attribution: set.source.attribution,

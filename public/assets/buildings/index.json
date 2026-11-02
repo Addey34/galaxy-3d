@@ -133,7 +133,7 @@
       "manifest": "assets/buildings/london-overture/manifest.json"
     },
     {
-      "id": "amsterdam-overture",
+      "id": "amsterdam-3dbag",
       "body": "earth",
       "bboxLonLat": [
         4.8,
@@ -141,7 +141,40 @@
         4.99,
         52.41
       ],
-      "manifest": "assets/buildings/amsterdam-overture/manifest.json"
+      "manifest": "assets/buildings/amsterdam-3dbag/manifest.json"
+    },
+    {
+      "id": "rotterdam-3dbag",
+      "body": "earth",
+      "bboxLonLat": [
+        4.38,
+        51.88,
+        4.58,
+        51.96
+      ],
+      "manifest": "assets/buildings/rotterdam-3dbag/manifest.json"
+    },
+    {
+      "id": "denhaag-3dbag",
+      "body": "earth",
+      "bboxLonLat": [
+        4.22,
+        52.03,
+        4.4,
+        52.11
+      ],
+      "manifest": "assets/buildings/denhaag-3dbag/manifest.json"
+    },
+    {
+      "id": "utrecht-3dbag",
+      "body": "earth",
+      "bboxLonLat": [
+        5.06,
+        52.05,
+        5.17,
+        52.12
+      ],
+      "manifest": "assets/buildings/utrecht-3dbag/manifest.json"
     },
     {
       "id": "chicago-overture",
