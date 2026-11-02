@@ -5040,17 +5040,25 @@
       }
     },
     {
-      "id": "amsterdam-overture",
-      "title": "Bâtiments de Amsterdam, Overture Maps",
+      "id": "amsterdam-3dbag",
+      "title": "Bâtiments de Amsterdam, 3DBAG",
       "body": "earth",
       "source": {
-        "kind": "overture-parquet",
-        "name": "Overture Maps Foundation, thème buildings",
-        "dataset": "overture buildings",
-        "release": "2026-09-23.1",
-        "license": "Open Database License 1.0",
-        "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
-        "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors and Microsoft Global ML Building Footprints, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/"
+        "kind": "bag3d-ogc",
+        "name": "3DBAG (TU Delft et 3DGI), couche pand",
+        "dataset": "3DBAG pand",
+        "endpoint": "https://api.3dbag.nl/collections/pand",
+        "release": "v2023.10.08",
+        "minIntervalMs": 300,
+        "bboxRd": [
+          114960,
+          481500,
+          127980,
+          491430
+        ],
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "© 3DBAG by tudelft3d and 3DGI, licensed CC BY 4.0, https://docs.3dbag.nl/en/copyright. Footprints and heights extracted from the source and converted to WGS84."
       },
       "bboxLonLat": [
         4.8,
@@ -5064,8 +5072,120 @@
         "methodField": "methode",
         "originByMethod": {
           "lidar": "measured",
-          "tagged": "unspecified",
-          "floors": "derivedFromFloors",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "rotterdam-3dbag",
+      "title": "Bâtiments de Rotterdam, 3DBAG",
+      "body": "earth",
+      "source": {
+        "kind": "bag3d-ogc",
+        "name": "3DBAG (TU Delft et 3DGI), couche pand",
+        "dataset": "3DBAG pand",
+        "endpoint": "https://api.3dbag.nl/collections/pand",
+        "release": "v2023.10.08",
+        "minIntervalMs": 300,
+        "bboxRd": [
+          85640,
+          432860,
+          99520,
+          441600
+        ],
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "© 3DBAG by tudelft3d and 3DGI, licensed CC BY 4.0, https://docs.3dbag.nl/en/copyright. Footprints and heights extracted from the source and converted to WGS84."
+      },
+      "bboxLonLat": [
+        4.38,
+        51.88,
+        4.58,
+        51.96
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "denhaag-3dbag",
+      "title": "Bâtiments de La Haye, 3DBAG",
+      "body": "earth",
+      "source": {
+        "kind": "bag3d-ogc",
+        "name": "3DBAG (TU Delft et 3DGI), couche pand",
+        "dataset": "3DBAG pand",
+        "endpoint": "https://api.3dbag.nl/collections/pand",
+        "release": "v2023.10.08",
+        "minIntervalMs": 300,
+        "bboxRd": [
+          74900,
+          449710,
+          87380,
+          458440
+        ],
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "© 3DBAG by tudelft3d and 3DGI, licensed CC BY 4.0, https://docs.3dbag.nl/en/copyright. Footprints and heights extracted from the source and converted to WGS84."
+      },
+      "bboxLonLat": [
+        4.22,
+        52.03,
+        4.4,
+        52.11
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "utrecht-3dbag",
+      "title": "Bâtiments de Utrecht, 3DBAG",
+      "body": "earth",
+      "source": {
+        "kind": "bag3d-ogc",
+        "name": "3DBAG (TU Delft et 3DGI), couche pand",
+        "dataset": "3DBAG pand",
+        "endpoint": "https://api.3dbag.nl/collections/pand",
+        "release": "v2023.10.08",
+        "minIntervalMs": 300,
+        "bboxRd": [
+          132550,
+          451340,
+          140130,
+          459110
+        ],
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "© 3DBAG by tudelft3d and 3DGI, licensed CC BY 4.0, https://docs.3dbag.nl/en/copyright. Footprints and heights extracted from the source and converted to WGS84."
+      },
+      "bboxLonLat": [
+        5.06,
+        52.05,
+        5.17,
+        52.12
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
           "none": "absent"
         },
         "otherMethods": "unspecified"
