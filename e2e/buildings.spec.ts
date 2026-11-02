@@ -90,6 +90,8 @@ const CITIES: {
   lat: number;
   credit: string[];
   mode?: 'educ' | 'explo';
+  /** Le nom de la ville désigne aussi un lieu d'un autre corps : on part du bouton de la fiche. */
+  viaCitiesBlock?: boolean;
 }[] = [
   {
     city: 'Paris',
@@ -122,9 +124,41 @@ const CITIES: {
     lat: -1.285,
     credit: ['Overture Maps Foundation', 'Open Database License (ODbL)'],
   },
+  {
+    city: 'Amsterdam',
+    set: 'amsterdam-3dbag',
+    lon: 4.8936,
+    lat: 52.3731,
+    credit: ['3DBAG by tudelft3d and 3DGI', 'CC BY 4.0'],
+    // « Amsterdam » est aussi un lieu de Mars : le premier résultat de la palette n'est pas la Terre.
+    viaCitiesBlock: true,
+  },
+  {
+    city: 'New York',
+    set: 'newyork-opendata',
+    lon: -73.9855,
+    lat: 40.758,
+    credit: ['NYC Open Data', 'City of New York'],
+  },
 ];
 
-for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
+/** L'adresse de crédit que l'attribution d'un jeu rend cliquable, quand il en porte une. */
+const CREDIT_LINKS: Record<string, string> = {
+  'nairobi-overture': 'https://opendatacommons.org/licenses/odbl/1-0/',
+  'amsterdam-3dbag': 'https://docs.3dbag.nl/en/copyright',
+  'newyork-opendata':
+    'https://data.cityofnewyork.us/City-Government/Building/5zhs-2jue',
+};
+
+for (const {
+  city,
+  set,
+  lon,
+  lat,
+  credit,
+  mode = 'educ',
+  viaCitiesBlock = false,
+} of CITIES) {
   test(`draws the buildings of ${city} in ${mode} mode, says where their heights come from, and asks for nothing from afar`, async ({
     page,
   }) => {
@@ -205,10 +239,15 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
     expect(tileUrls, 'tuiles demandées avant toute approche').toEqual([]);
     await expect(page.locator('.si-buildings')).toBeHidden();
 
-    // Viser Paris par la recherche, comme le ferait un visiteur.
-    await page.locator('#body-search-trigger').click();
-    await page.locator('#palette-input').fill(city);
-    await page.locator('#palette-hit-0').click();
+    if (viaCitiesBlock) {
+      // Le bouton de la fiche de la Terre, comme le ferait un visiteur qui y cherche la ville.
+      await page.locator('.bi-city', { hasText: city }).click();
+    } else {
+      // Viser la ville par la recherche, comme le ferait un visiteur.
+      await page.locator('#body-search-trigger').click();
+      await page.locator('#palette-input').fill(city);
+      await page.locator('#palette-hit-0').click();
+    }
 
     const canvas = page.locator('canvas').first();
     await expect
@@ -280,13 +319,11 @@ for (const { city, set, lon, lat, credit, mode = 'educ' } of CITIES) {
     await expect(line).toContainText('3D buildings');
     await expect(line).toContainText('measured');
     for (const piece of credit) await expect(line).toContainText(piece);
-    // Une adresse de licence dans l'attribution (ODbL) est un lien sûr, pas du texte à recopier.
-    if (set === 'nairobi-overture') {
+    // Une adresse de crédit dans l'attribution (licence, page de la source) est un lien sûr, pas du
+    // texte à recopier.
+    if (CREDIT_LINKS[set]) {
       const link = line.locator('.si-buildings-credit a');
-      await expect(link).toHaveAttribute(
-        'href',
-        'https://opendatacommons.org/licenses/odbl/1-0/'
-      );
+      await expect(link).toHaveAttribute('href', CREDIT_LINKS[set]);
       await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     }
     // Une pastille ne porte jamais seule l'information : un libellé la suit.
