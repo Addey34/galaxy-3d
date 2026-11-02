@@ -82,23 +82,45 @@ test.describe('téléphone étroit', () => {
         document.getElementById('time-panel')!.getAnimations({ subtree: true })
           .length === 0
     );
-    const seen = new Set<string>();
+    // On garde, pour CHAQUE valeur, la géométrie ET ce qui a pu la changer (libellé de vitesse,
+    // hauteur de chaque rangée) : le saut de 188,4 à 200,3 px vu deux fois en CI n'a jamais pu
+    // être reproduit en local (stable à 190,4 px, frein CPU x6, police élargie, balayage lent),
+    // donc le prochain échec doit dire LUI-MÊME à quelle valeur et pourquoi.
+    const rows: { value: number; geometry: string; detail: string }[] = [];
     for (let v = 0; v <= 100; v += 2) {
-      seen.add(
+      rows.push(
         await page.evaluate((value) => {
           const range = document.getElementById(
             'speed-range'
           ) as HTMLInputElement;
           range.value = String(value);
           range.dispatchEvent(new Event('input', { bubbles: true }));
-          const r = document
-            .getElementById('time-panel')!
-            .getBoundingClientRect();
-          return `${r.x.toFixed(1)}|${r.y.toFixed(1)}|${r.width.toFixed(1)}|${r.height.toFixed(1)}`;
+          const panel = document.getElementById('time-panel')!;
+          const r = panel.getBoundingClientRect();
+          const label = document.getElementById('speed-value')!;
+          const rowHeights = [...panel.querySelectorAll<HTMLElement>('*')]
+            .filter((el) => el.getBoundingClientRect().height > 0)
+            .filter(
+              (el) => el.parentElement === panel || el.id === 'time-readout'
+            )
+            .map(
+              (el) =>
+                `${el.id || el.className}:${el.getBoundingClientRect().height.toFixed(1)}`
+            );
+          return {
+            value,
+            geometry: `${r.x.toFixed(1)}|${r.y.toFixed(1)}|${r.width.toFixed(1)}|${r.height.toFixed(1)}`,
+            detail: `libellé « ${label.textContent} » ${label.getBoundingClientRect().height.toFixed(1)} px ; ${rowHeights.join(', ')}`,
+          };
         }, v)
       );
     }
-    expect([...seen], 'géométries de la barre').toHaveLength(1);
+    const NL = String.fromCharCode(10);
+    const geometries = new Set(rows.map((row) => row.geometry));
+    expect(
+      [...geometries],
+      `géométries de la barre, par valeur du curseur :${NL}${rows.map((row) => `${row.value} ${row.geometry} ${row.detail}`).join(NL)}`
+    ).toHaveLength(1);
   });
 });
 
