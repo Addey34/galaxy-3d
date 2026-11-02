@@ -36,8 +36,16 @@ const SITE_ORIGIN = (): string =>
 /** Marge autour d'un jeu où l'on prépare déjà ses tuiles (une tuile déborde de son emprise). */
 const COVERAGE_MARGIN_DEG = 0.02;
 
-/** Hôtes des licences dont une adresse peut apparaître dans l'attribution d'un jeu. */
-const LICENCE_HOSTS: ReadonlySet<string> = new Set(['opendatacommons.org']);
+/**
+ * Hôtes dont une adresse peut apparaître dans l'attribution d'un jeu (licence ou page de crédit
+ * exigée par la source). Une adresse d'un autre hôte reste du texte. Chaque manifeste publié est
+ * confronté à cette liste par `buildingCreditLinks.test.ts`.
+ */
+export const LICENCE_HOSTS: ReadonlySet<string> = new Set([
+  'opendatacommons.org',
+  'docs.3dbag.nl',
+  'data.cityofnewyork.us',
+]);
 
 export interface BuildingTarget extends BuildingHost {
   worldPointToGeographic(worldPoint: import('three').Vector3): {
