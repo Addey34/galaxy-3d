@@ -4974,6 +4974,198 @@
         },
         "otherMethods": "unspecified"
       }
+    },
+    {
+      "id": "newyork-overture",
+      "title": "Bâtiments de New York, Overture Maps",
+      "body": "earth",
+      "source": {
+        "kind": "overture-parquet",
+        "name": "Overture Maps Foundation, thème buildings",
+        "dataset": "overture buildings",
+        "release": "2026-09-23.1",
+        "license": "Open Database License 1.0",
+        "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors, Microsoft Global ML Building Footprints and USGS Lidar, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/"
+      },
+      "bboxLonLat": [
+        -74.03,
+        40.68,
+        -73.93,
+        40.8
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
+          "tagged": "unspecified",
+          "floors": "derivedFromFloors",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "london-overture",
+      "title": "Bâtiments de Londres, Overture Maps",
+      "body": "earth",
+      "source": {
+        "kind": "overture-parquet",
+        "name": "Overture Maps Foundation, thème buildings",
+        "dataset": "overture buildings",
+        "release": "2026-09-23.1",
+        "license": "Open Database License 1.0",
+        "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors and Microsoft Global ML Building Footprints, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/"
+      },
+      "bboxLonLat": [
+        -0.2,
+        51.47,
+        -0.02,
+        51.54
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
+          "tagged": "unspecified",
+          "floors": "derivedFromFloors",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "amsterdam-overture",
+      "title": "Bâtiments de Amsterdam, Overture Maps",
+      "body": "earth",
+      "source": {
+        "kind": "overture-parquet",
+        "name": "Overture Maps Foundation, thème buildings",
+        "dataset": "overture buildings",
+        "release": "2026-09-23.1",
+        "license": "Open Database License 1.0",
+        "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors and Microsoft Global ML Building Footprints, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/"
+      },
+      "bboxLonLat": [
+        4.8,
+        52.32,
+        4.99,
+        52.41
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
+          "tagged": "unspecified",
+          "floors": "derivedFromFloors",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "chicago-overture",
+      "title": "Bâtiments de Chicago, Overture Maps",
+      "body": "earth",
+      "source": {
+        "kind": "overture-parquet",
+        "name": "Overture Maps Foundation, thème buildings",
+        "dataset": "overture buildings",
+        "release": "2026-09-23.1",
+        "license": "Open Database License 1.0",
+        "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors, Microsoft Global ML Building Footprints and USGS Lidar, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/"
+      },
+      "bboxLonLat": [
+        -87.72,
+        41.82,
+        -87.58,
+        41.93
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
+          "tagged": "unspecified",
+          "floors": "derivedFromFloors",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "singapore-overture",
+      "title": "Bâtiments de Singapour, Overture Maps",
+      "body": "earth",
+      "source": {
+        "kind": "overture-parquet",
+        "name": "Overture Maps Foundation, thème buildings",
+        "dataset": "overture buildings",
+        "release": "2026-09-23.1",
+        "license": "Open Database License 1.0",
+        "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors, Google Open Buildings (CC BY 4.0) and Microsoft Global ML Building Footprints, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/"
+      },
+      "bboxLonLat": [
+        103.78,
+        1.25,
+        103.92,
+        1.35
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
+          "tagged": "unspecified",
+          "floors": "derivedFromFloors",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "sydney-overture",
+      "title": "Bâtiments de Sydney, Overture Maps",
+      "body": "earth",
+      "source": {
+        "kind": "overture-parquet",
+        "name": "Overture Maps Foundation, thème buildings",
+        "dataset": "overture buildings",
+        "release": "2026-09-23.1",
+        "license": "Open Database License 1.0",
+        "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "Contains information from Overture Maps Foundation, OpenStreetMap contributors and Microsoft Global ML Building Footprints, which is made available here under the Open Database License (ODbL), https://opendatacommons.org/licenses/odbl/1-0/"
+      },
+      "bboxLonLat": [
+        151.15,
+        -33.92,
+        151.28,
+        -33.82
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode",
+        "originByMethod": {
+          "lidar": "measured",
+          "tagged": "unspecified",
+          "floors": "derivedFromFloors",
+          "none": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
     }
   ]
 }

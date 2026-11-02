@@ -109,6 +109,72 @@
         -1.17
       ],
       "manifest": "assets/buildings/nairobi-overture/manifest.json"
+    },
+    {
+      "id": "newyork-overture",
+      "body": "earth",
+      "bboxLonLat": [
+        -74.03,
+        40.68,
+        -73.93,
+        40.8
+      ],
+      "manifest": "assets/buildings/newyork-overture/manifest.json"
+    },
+    {
+      "id": "london-overture",
+      "body": "earth",
+      "bboxLonLat": [
+        -0.2,
+        51.47,
+        -0.02,
+        51.54
+      ],
+      "manifest": "assets/buildings/london-overture/manifest.json"
+    },
+    {
+      "id": "amsterdam-overture",
+      "body": "earth",
+      "bboxLonLat": [
+        4.8,
+        52.32,
+        4.99,
+        52.41
+      ],
+      "manifest": "assets/buildings/amsterdam-overture/manifest.json"
+    },
+    {
+      "id": "chicago-overture",
+      "body": "earth",
+      "bboxLonLat": [
+        -87.72,
+        41.82,
+        -87.58,
+        41.93
+      ],
+      "manifest": "assets/buildings/chicago-overture/manifest.json"
+    },
+    {
+      "id": "singapore-overture",
+      "body": "earth",
+      "bboxLonLat": [
+        103.78,
+        1.25,
+        103.92,
+        1.35
+      ],
+      "manifest": "assets/buildings/singapore-overture/manifest.json"
+    },
+    {
+      "id": "sydney-overture",
+      "body": "earth",
+      "bboxLonLat": [
+        151.15,
+        -33.92,
+        151.28,
+        -33.82
+      ],
+      "manifest": "assets/buildings/sydney-overture/manifest.json"
     }
   ]
 }
