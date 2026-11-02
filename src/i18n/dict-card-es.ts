@@ -129,7 +129,7 @@ export const cardEs: Record<CardMessageKey, string> = {
   'bi.cities.name.bordeaux-bdtopo': 'Burdeos',
   'bi.cities.name.lille-bdtopo': 'Lila',
   'bi.cities.name.nantes-bdtopo': 'Nantes',
-  'bi.cities.name.newyork-overture': 'Nueva York',
+  'bi.cities.name.newyork-opendata': 'Nueva York',
   'bi.cities.name.london-overture': 'Londres',
   'bi.cities.name.amsterdam-3dbag': 'Ámsterdam',
   'bi.cities.name.rotterdam-3dbag': 'Róterdam',

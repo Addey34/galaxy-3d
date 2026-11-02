@@ -111,15 +111,15 @@
       "manifest": "assets/buildings/nairobi-overture/manifest.json"
     },
     {
-      "id": "newyork-overture",
+      "id": "newyork-opendata",
       "body": "earth",
       "bboxLonLat": [
-        -74.03,
-        40.68,
-        -73.93,
-        40.8
+        -74.26,
+        40.49,
+        -73.7,
+        40.92
       ],
-      "manifest": "assets/buildings/newyork-overture/manifest.json"
+      "manifest": "assets/buildings/newyork-opendata/manifest.json"
     },
     {
       "id": "london-overture",
