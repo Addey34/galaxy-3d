@@ -12,6 +12,7 @@ import type { MessageKey } from '@/i18n/locales';
 import { onLocaleChange, t } from '@/i18n';
 import type { ConstellationNames } from './constellationNames';
 import type { DeepSkyLayer } from './deepSkyLayer';
+import type { MeteorLayer } from './meteorLayer';
 import type { ExoplanetCard } from './exoplanetCard';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
@@ -71,6 +72,8 @@ export interface SkyLayerEnvironment {
   camera: PerspectiveCamera;
   canvas: HTMLElement;
   coordinator: OverlayCoordinator;
+  /** Date de la scène : les pluies de météores ne sont actives qu'à certaines dates. */
+  simulationDate: () => Date;
 }
 
 export function setupSkyLayerToggles(
@@ -83,6 +86,7 @@ export function setupSkyLayerToggles(
   let wanted = false;
   let names: Promise<ConstellationNames | null> | null = null;
   let deep: Promise<DeepSkyLayer | null> | null = null;
+  let meteors: Promise<MeteorLayer | null> | null = null;
   mount({
     id: 'constellations-toggle',
     labelKey: 'settings.constellations',
@@ -122,4 +126,58 @@ export function setupSkyLayerToggles(
         )).then((l) => l?.setActive(on));
     },
   });
+  // Les pluies de météores : la case dit combien de pluies sont actives à la date de la scène.
+  // (Il y en a toujours au moins une, gardé par `core/meteors.test.ts` : pas d'état « aucune ».)
+  let meteorTimer = 0;
+  let meteorStatus: HTMLElement | null = null;
+  let meteorLayer: MeteorLayer | null = null;
+  let meteorOn = false;
+  const showMeteorStatus = (layer: MeteorLayer | null, on: boolean): void => {
+    meteorLayer = layer;
+    meteorOn = on;
+    if (!meteorStatus) return;
+    const count = layer?.activeCount() ?? 0;
+    const text =
+      on && count > 0
+        ? t('settings.meteors.active', { count: String(count) })
+        : '';
+    if (meteorStatus.textContent !== text) meteorStatus.textContent = text;
+    meteorStatus.hidden = text === '';
+  };
+  mount({
+    id: 'meteors-toggle',
+    labelKey: 'settings.meteors',
+    ready: () => true,
+    set: (on) => {
+      window.clearInterval(meteorTimer);
+      if (on || meteors)
+        void (meteors ??= import('./meteorLayer').then((m) =>
+          m.setupMeteorLayer({ starfield, ...environment })
+        )).then((l) => {
+          if (!l) {
+            // Le fichier est illisible : la case se décoche au lieu de promettre une couche.
+            meteors = null;
+            const box = document.getElementById(
+              'meteors-toggle'
+            ) as HTMLInputElement | null;
+            if (box) box.checked = false;
+            return;
+          }
+          l.setActive(on);
+          showMeteorStatus(l, on);
+          if (on && l)
+            meteorTimer = window.setInterval(
+              () => showMeteorStatus(l, true),
+              1000
+            );
+        });
+      else showMeteorStatus(null, false);
+    },
+  });
+  meteorStatus = document.createElement('p');
+  meteorStatus.id = 'meteors-status';
+  meteorStatus.className = 'settings-hint';
+  meteorStatus.hidden = true;
+  document.getElementById('meteors-toggle-wrapper')?.after(meteorStatus);
+  onLocaleChange(() => showMeteorStatus(meteorLayer, meteorOn));
 }

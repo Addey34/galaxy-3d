@@ -271,6 +271,7 @@ export const en = {
     'Stars: HYG database v4.4 (Hipparcos, Yale Bright Star and Gliese catalogues), selected to magnitude 6.5 and converted to compact units,',
   'credits.exoplanets': 'Exoplanets',
   'credits.deepsky': 'Deep sky',
+  'credits.meteors': 'Meteor showers',
   'credits.satellites': 'Satellites',
   'credits.data': 'Data',
   'credits.privacy': 'Privacy',
@@ -390,6 +391,9 @@ export const en = {
   'settings.constellations': 'Constellation lines',
   'settings.exoplanets': 'Exoplanet host stars',
   'settings.deepsky': 'Deep-sky objects',
+  'settings.meteors': 'Meteor showers',
+  'settings.meteors.active':
+    '{count} meteor shower(s) active on this date, radiants from the IAU Meteor Data Center.',
   'settings.satellites': 'Satellites in orbit',
   'settings.satellites.loading': 'Loading orbital elements…',
   'settings.satellites.valid':
