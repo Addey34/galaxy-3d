@@ -22,6 +22,9 @@
 	# dans son chemin).
 	@manifest path */manifest.json
 	header @manifest Cache-Control "public, max-age=300"
+	# Les éléments orbitaux des satellites sont réécrits toutes les 3 h : cinq minutes de cache, comme le manifeste.
+	@satellites path /satellites/*.json
+	header @satellites Cache-Control "public, max-age=300"
 	@field path *.bin
 	# `?` : une valeur PAR DÉFAUT, posée seulement si la réponse n'en porte pas. Un 503 du serveur
 	# d'archive (`no-store`) ne doit pas devenir immuable un an parce que son chemin finit en .bin.

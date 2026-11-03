@@ -69,6 +69,9 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   // Bornes de légende : un nombre et une unité du SI, rien à traduire.
   // « Transit » est aussi le terme français de la méthode de détection.
   'exo.method.transit': '« transit » est aussi le terme français',
+  // Intitulé de crédit : « satellites » s’écrit pareil en anglais et en français.
+  'credits.satellites':
+    '« Satellites » s’écrit pareil en anglais et en français',
   'weather.humidityModel.lo': 'nombre + unité SI',
   'weather.humidityModel.hi': 'nombre + unité SI',
   // Noms de villes : le nom français, espagnol ou portugais est celui de l'anglais.

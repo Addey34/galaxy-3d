@@ -5,6 +5,6 @@ FROM python:3.12-slim
 RUN pip install --no-cache-dir eccodes==2.* eccodeslib numpy numcodecs \
  && python -c "import eccodes; print(eccodes.codes_get_api_version())"
 WORKDIR /app
-COPY ingest.py era5.py ./
-RUN python ingest.py --self-test && python era5.py --self-test
+COPY ingest.py era5.py satellites.py ./
+RUN python ingest.py --self-test && python era5.py --self-test && python satellites.py --self-test
 CMD ["python", "ingest.py", "--loop"]

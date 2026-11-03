@@ -7303,6 +7303,53 @@ demande rien tant qu'elle est éteinte, porte un badge et une légende tirée de
 particules (`WIND_PALETTE`), et estompe ses particules au calme au lieu de les pousser. Le palier
 de qualité `low` s'en passe, comme de la pluie modélisée : l'advection se calcule sur le CPU.
 
+## Les satellites artificiels (2026-11-03)
+
+Couche optionnelle (case « Satellites en orbite », Réglages, scène), éteinte par défaut et jamais
+mémorisée : les stations et les satellites brillants de CelesTrak, dessinés comme des POINTS. Un
+satellite mesure de quelques mètres à une centaine de mètres, donc moins qu'un pixel à toute
+distance où l'on voit la Terre : couche 2D d'instrument, jamais un mesh, aucune taille de scène
+(invariant de réalisme de l'exploration).
+
+**D'où viennent les éléments : le service de données, jamais CelesTrak.** Des éléments moyens
+(OMM, format JSON de CelesTrak) ne valent que quelques jours autour de leur époque : un instantané
+livré avec le site serait faux en une semaine. CelesTrak répond avec CORS ouvert mais ne met ses
+données à jour qu'une fois toutes les 2 heures (lu à la source le 2026-11-03, page des formats GP,
+qui décrit aussi des blocages temporaires d'adresse après 50 erreurs HTTP en 2 heures) : un
+navigateur par visiteur dépasserait cette limite dès que le trafic grandit. `services/galaxy-data/
+satellites.py` (conteneur `galaxy-data-satellites`) lit les groupes `stations` et `visual` toutes
+les 3 h et réécrit atomiquement `satellites/elements.json` (173 objets, 63 Ko le 2026-11-03), servi
+par le Caddy du service avec `max-age=300`. Une réponse vide, qui n'est pas du JSON ou dont un champ
+manque ne remplace jamais l'ancien fichier ; un objet est écrit une fois, sous son premier groupe
+(`stations` avant `visual`). L'hôte est déjà dans le `connect-src` : aucune CSP à changer.
+
+**Le calcul.** `ui/satelliteLayer` (morceau paresseux, chargé à la première activation, fichier
+demandé UNE fois) lit le fichier par `core/satellites.parseSatelliteFile` (un objet à champ illisible
+est écarté et compté, un fichier sans objet lisible lève), propage chaque objet par SGP4
+(`satellite.js` **6.0.2, épinglée** : la 7 embarque du WebAssembly à `await` de haut niveau que le
+build PWA refuse, « Module format iife does not support top-level await »), passe le vecteur TEME à
+l'équateur J2000 par `Rotation_EQD_EQJ` (≈ 0,37° en 2026, soit ~45 km en orbite basse : l'oublier
+déplacerait chaque satellite d'autant ; TEME diffère de l'équateur vrai de la date de l'équation des
+équinoxes, ≈ 1″, une trentaine de mètres, très sous l'erreur de SGP4), puis `equatorialToScene` et la
+règle des sondes en orbite (`core/instrumentPlacement.placeInstrument` avec la Terre pour parent :
+vraie position en Explo, règle des lunes en Éducatif, morph interpolé). Les points derrière la Terre
+sont masqués par `ScreenOcclusion`. Seules les stations portent leur nom, posé par `LabelSpace`.
+
+**La validité n'est pas extrapolée.** `ELEMENT_VALIDITY_DAYS` (7) de part et d'autre de l'époque :
+SGP4 dérive de l'ordre de 1 à 3 km par jour en orbite basse. Hors fenêtre l'objet n'est pas dessiné,
+et quand AUCUN objet ne vaut (voyage vers 1900, par exemple), la ligne d'état sous la case le dit au
+lieu de laisser une couche vide muette. Si le service ne répond pas, la case se décoche et le dit.
+`e2e/satelliteLayer.spec.ts` sert une lecture RÉELLE de CelesTrak (`e2e/satellites.fixture.json`) ;
+les tests unitaires confrontent la propagation à des témoins physiques (altitude 380 à 450 km, vitesse
+7,55 à 7,75 km/s, latitude bornée par l'inclinaison de l'ISS) et la garde de validité a été falsifiée
+(`withinValidity` rendue toujours vraie : deux tests rougissent).
+
+**Limites.** Les satellites ne sont pas cliquables (pas de fiche, pas d'entrée dans la palette) ; 173
+objets seulement (groupes `stations` et `visual`) ; la phase d'éclairement par le Soleil n'est pas
+modélisée (un satellite dans l'ombre de la Terre est peint comme les autres, tant qu'il n'est pas
+masqué par le globe). Coût au démarrage : la case, ses cinq phrases et le crédit en 4 langues sont
+dans le démarrage par nature (marge du budget JS : 2 317 o sur 1 305 000 après ce lot).
+
 ## Architecture météo
 
 Trois frontières simples (le plan directeur complet avec l'historique des décisions et des
