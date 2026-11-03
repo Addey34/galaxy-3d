@@ -1,5 +1,5 @@
 {
-  "$comment": "Cibles du cuiseur de tuiles de bâtiments (pnpm buildings:bake), lues par scripts/bake-building-tiles.mjs. DONNÉE, jamais du code. Un jeu = UNE source (l'ODbL interdit de mélanger des contenus incompatibles dans une base dérivée, clause 4.4 d). Ajouter une zone = ajouter une entrée. Mesures du lot 63 dans docs/private/MICRO_LOT63.md.",
+  "$comment": "Cibles du cuiseur de tuiles de bâtiments (pnpm buildings:bake), lues par scripts/bake-building-tiles.mjs. DONNÉE, jamais du code. Un jeu = UNE source (l'ODbL interdit de mélanger des contenus incompatibles dans une base dérivée, clause 4.4 d). Ajouter une zone = ajouter une entrée. Mesures du lot 63 dans docs/private/MICRO_LOT63.md. BD TOPO, méthode « Corrélation » rangée sous « measured » (2026-11-03) : la source déclare elle-même une précision altimétrique de 1 m pour tous ses bâtiments de cette méthode (champ precision_altimetrique, 5 836 sur 5 836 lus sur Grenoble, Montpellier, Strasbourg et Lille), meilleure que la Photogrammétrie (1,5 m) déjà rangée sous « measured » ; la définition textuelle du descriptif de contenu IGN n'a PAS été lue. « BDTopo » (1,5 m, 1 % des bâtiments) reste sous « unspecified », son sens n'étant pas établi.",
   "sets": [
     {
       "id": "paris-bdtopo",
@@ -28,6 +28,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -61,6 +62,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -94,6 +96,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -127,6 +130,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -160,6 +164,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -193,6 +198,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -226,6 +232,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -259,6 +266,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -292,6 +300,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -325,6 +334,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -358,6 +368,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -391,6 +402,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -424,6 +436,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -457,6 +470,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -490,6 +504,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -523,6 +538,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -556,6 +572,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },
@@ -589,6 +606,7 @@
         "methodField": "methode_d_acquisition_altimetrique",
         "originByMethod": {
           "Photogrammétrie": "measured",
+          "Corrélation": "measured",
           "Interpolation bâti BDTopo": "interpolated",
           "Pas de Z": "absent"
         },

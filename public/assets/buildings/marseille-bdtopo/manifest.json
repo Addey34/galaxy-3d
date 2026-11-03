@@ -5,7 +5,7 @@
   "format": "GXBD",
   "version": 1,
   "zoom": 14,
-  "directory": "assets/buildings/marseille-bdtopo/0a6d968aa7",
+  "directory": "assets/buildings/marseille-bdtopo/84d6ccc81e",
   "source": {
     "name": "BD TOPO, Institut national de l'information géographique et forestière",
     "typeName": "BDTOPO_V3:batiment",
@@ -32,10 +32,10 @@
     "heightAboveRange": 0,
     "byOrigin": {
       "absent": 2835,
-      "measured": 6561,
+      "measured": 124112,
       "interpolated": 64858,
       "derivedFromFloors": 0,
-      "unspecified": 118763
+      "unspecified": 1212
     }
   },
   "tiles": [

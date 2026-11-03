@@ -5,7 +5,7 @@
   "format": "GXBD",
   "version": 1,
   "zoom": 14,
-  "directory": "assets/buildings/montpellier-bdtopo/2f6d72d101",
+  "directory": "assets/buildings/montpellier-bdtopo/3d2da00bdc",
   "source": {
     "name": "BD TOPO, Institut national de l'information géographique et forestière",
     "typeName": "BDTOPO_V3:batiment",
@@ -32,10 +32,10 @@
     "heightAboveRange": 0,
     "byOrigin": {
       "absent": 573,
-      "measured": 5456,
+      "measured": 41916,
       "interpolated": 35040,
       "derivedFromFloors": 0,
-      "unspecified": 37062
+      "unspecified": 602
     }
   },
   "tiles": [

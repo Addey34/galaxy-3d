@@ -5,7 +5,7 @@
   "format": "GXBD",
   "version": 1,
   "zoom": 14,
-  "directory": "assets/buildings/nice-bdtopo/62d5aa5ddb",
+  "directory": "assets/buildings/nice-bdtopo/4436e3a709",
   "source": {
     "name": "BD TOPO, Institut national de l'information géographique et forestière",
     "typeName": "BDTOPO_V3:batiment",
@@ -32,10 +32,10 @@
     "heightAboveRange": 0,
     "byOrigin": {
       "absent": 494,
-      "measured": 2836,
+      "measured": 30386,
       "interpolated": 24370,
       "derivedFromFloors": 0,
-      "unspecified": 29190
+      "unspecified": 1640
     }
   },
   "tiles": [

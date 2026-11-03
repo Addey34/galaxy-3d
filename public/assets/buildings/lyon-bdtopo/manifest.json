@@ -5,7 +5,7 @@
   "format": "GXBD",
   "version": 1,
   "zoom": 14,
-  "directory": "assets/buildings/lyon-bdtopo/0e0e56dde6",
+  "directory": "assets/buildings/lyon-bdtopo/6c569f9e5b",
   "source": {
     "name": "BD TOPO, Institut national de l'information géographique et forestière",
     "typeName": "BDTOPO_V3:batiment",
@@ -32,10 +32,10 @@
     "heightAboveRange": 0,
     "byOrigin": {
       "absent": 1628,
-      "measured": 9309,
+      "measured": 79323,
       "interpolated": 49379,
       "derivedFromFloors": 0,
-      "unspecified": 71052
+      "unspecified": 1038
     }
   },
   "tiles": [
