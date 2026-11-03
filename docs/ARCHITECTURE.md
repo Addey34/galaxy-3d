@@ -7350,6 +7350,49 @@ modélisée (un satellite dans l'ombre de la Terre est peint comme les autres, t
 masqué par le globe). Coût au démarrage : la case, ses cinq phrases et le crédit en 4 langues sont
 dans le démarrage par nature (marge du budget JS : 2 317 o sur 1 305 000 après ce lot).
 
+## Les pluies de météores (2026-11-03)
+
+Couche optionnelle (case « Pluies de météores », Réglages, scène), éteinte par défaut et jamais
+mémorisée : les RADIANTS des pluies annuelles établies de l'IAU Meteor Data Center. Un radiant est
+une DIRECTION (le point du ciel d'où les météores semblent venir) : ni distance, ni taille de scène,
+ni taux horaire (la source n'en donne pas).
+
+**La source et la règle de choix** (`pnpm meteors:generate`, `scripts/generate-meteors.mjs`). Le
+fichier `streamestablisheddata2026.txt` contient plusieurs SOLUTIONS par pluie (776 lignes pour 172
+pluies, lu le 2026-11-03, mis à jour par le Centre le 2026-10-23). Une pluie est retenue si au moins
+une de ses solutions est dite `annual` (une pluie épisodique ne se dessine pas à date fixe : écartées
+`PHO` et `PIS`). Sa solution retenue est celle de plus grand `AdNo` qui porte tout ce qu'il faut pour
+la placer ET la dater : début et fin d'activité, longitude solaire moyenne DANS cette fenêtre,
+radiant, vitesse géocentrique. La clause « dans la fenêtre » est venue d'une mesure : les Southern
+Librids-Lupids portent une moyenne hors de leur propre fenêtre, une solution qui se contredit (la
+pluie est écartée et comptée). Résultat : 169 pluies, 13 071 o. **Aucune durée par défaut n'est
+inventée** : sans fenêtre d'activité déclarée, une pluie n'est pas dessinée. Le Centre ne publie
+aucun texte de licence sur les pages lues ; il demande une citation (Jenniskens et al. 2020, Jopek et
+Kanuchova 2017), affichée dans l'aide, `/sources` et les mentions tierces. L'empreinte SHA-256 du
+fichier lu est scellée dans le résultat. Le générateur échoue si les TÉMOINS sortent de leur
+tolérance : Perséides (λ☉ ≈ 140°, radiant ≈ 48°, +58°), Géminides (≈ 262°, 113°, +32°),
+Quadrantides (≈ 283°, 230°, +50°), indépendants de la règle de choix.
+
+**Le calcul** (`core/meteors.ts`, pur ; `components/celestial/MeteorRadiants.ts` ; `ui/meteorLayer.ts`,
+morceau paresseux chargé à la première activation, fichier demandé UNE fois). La date de la scène
+décide seule : la longitude solaire J2000 est celle d'Astronomy Engine (écliptique VRAI de la date)
+moins la précession générale en longitude (IAU 2006, ≈ 0,375° en 2026), parce que la source est en
+J2000. Une pluie est active quand cette longitude tombe dans sa fenêtre (passage de 360° à 0° géré).
+Son radiant est la position publiée à la longitude moyenne, déplacée de la dérive quotidienne
+publiée (°/jour) multipliée par l'écart en jours, BORNÉ à la fenêtre : une dérive linéaire n'est pas
+prolongée au-delà de ce que la source décrit. Une dérive absente vaut « le radiant ne bouge pas »,
+pas une dérive nulle mesurée. Les radiants inactifs ne sont pas dessinés et leur nom ne s'écrit pas.
+Chaque date de l'année a au moins une pluie active (2 à 28, mesuré par pas de 0,5° ; gardé par
+`core/meteors.test.ts` : l'état « aucune pluie » n'existe donc pas dans l'interface).
+
+**Mesures et limites.** Le test confronte le fichier à des dates connues (Perséides actives le 12
+août et pas en mars, Géminides le 14 décembre, Quadrantides le 3 janvier et pas en juillet), à
+l'équinoxe de mars 2026 (14:46 UTC) pour la longitude solaire, et à la dérive (Géminides, une
+semaine avant le pic). Les radiants près du pôle dérivent vite en ascension droite (6°/jour mesuré
+pour epsilon-Ursae Minorids) : c'est géométrique, pas une erreur. Les radiants ne sont pas
+cliquables, n'ont pas de fiche, et la couche ne dit rien du taux d'activité. Coût au démarrage : la
+case, deux phrases et le crédit en 4 langues (marge du budget JS : 1 018 o sur 1 305 000 après ce lot).
+
 ## Architecture météo
 
 Trois frontières simples (le plan directeur complet avec l'historique des décisions et des

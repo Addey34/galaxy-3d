@@ -245,6 +245,7 @@ export const fr: Record<MessageKey, string> = {
     'Étoiles : base HYG v4.4 (catalogues Hipparcos, Yale Bright Star et Gliese), sélection jusqu’à la magnitude 6,5 et conversion d’unités,',
   'credits.exoplanets': 'Exoplanètes',
   'credits.deepsky': 'Ciel profond',
+  'credits.meteors': 'Pluies de météores',
   'credits.satellites': 'Satellites',
   'credits.data': 'Données',
   'credits.privacy': 'Confidentialité',
@@ -365,6 +366,9 @@ export const fr: Record<MessageKey, string> = {
   'settings.constellations': 'Figures des constellations',
   'settings.exoplanets': 'Étoiles à exoplanètes',
   'settings.deepsky': 'Objets du ciel profond',
+  'settings.meteors': 'Pluies de météores',
+  'settings.meteors.active':
+    '{count} pluie(s) de météores active(s) à cette date, radiants de l’IAU Meteor Data Center.',
   'settings.satellites': 'Satellites en orbite',
   'settings.satellites.loading': 'Chargement des éléments orbitaux…',
   'settings.satellites.valid':

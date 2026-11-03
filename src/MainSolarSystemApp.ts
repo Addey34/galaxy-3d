@@ -516,6 +516,7 @@ function wireChrome(): {
       camera: cameraSystem.camera,
       canvas: cameraSystem.renderer.domElement,
       coordinator: overlayCoordinator,
+      simulationDate: () => orbitalMechanics.simulationDate,
     });
     // Les satellites d'après le service de données : `earth` et la règle de position sont ceux des
     // sondes en orbite (`placeInstrument`), la couche elle-même n'est chargée qu'à l'activation.

@@ -398,6 +398,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'meteorLayer',
+    reason:
+      "la couche des pluies de météores (2026-11-03) : radiants (`MeteorRadiants`), noms et calendrier d'activité (`core/meteors`, longitude solaire par Astronomy Engine), importée par `ui/skyLayerToggles` à la première activation de la case « Pluies de météores », éteinte au démarrage. Elle lit `sky/meteors.json` une seule fois.",
+  },
+  {
     chunk: 'satelliteLayer',
     reason:
       'la couche des satellites (2026-11-03) : SGP4 (`satellite.js` 6.0.2, JavaScript pur : la 7 embarque du WebAssembly à `await` de haut niveau que le build PWA refuse), propagation et peinture 2D des stations et des satellites brillants, importée par `ui/satelliteToggle` à la première activation de la case « Satellites en orbite », éteinte au démarrage.',

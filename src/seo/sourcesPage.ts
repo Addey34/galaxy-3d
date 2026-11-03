@@ -45,6 +45,7 @@ import {
 import { displayNameResolver, type EphemerisManifest } from './methodologyPage';
 import { renderMarkdown } from './markdown';
 import FLYBY_PLAN from '@/config/flybyEncounters.json';
+import METEORS from '../../public/assets/sky/meteors.json';
 import { citationSection, type CitationMetadata } from './citation';
 import { blockLabel, cardBlockSourceRows } from './cardBlockSources';
 
@@ -1745,6 +1746,34 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         es: 'Cada estrella está en su posición catalogada, con el color que da su índice B−V. Su posición en otra fecha sigue su movimiento propio y su velocidad radial en línea recta a velocidad constante: un buen modelo durante siglos, peor durante milenios, donde no se modelan el potencial galáctico ni las estrellas compañeras. El brillo sigue siendo el de hoy. Las estrellas se desvanecen bajo un cielo diurno. Si el archivo no se puede leer, la aplicación recurre a una dispersión de puntos al azar y lo registra. La Vía Láctea detrás de ellas es una textura (véase la tabla de texturas), girada a coordenadas galácticas.',
         'pt-BR':
           'Cada estrela está na sua posição catalogada, com a cor dada pelo seu índice B−V. A posição em outra data segue o seu movimento próprio e a sua velocidade radial em linha reta a velocidade constante: um bom modelo ao longo de séculos, pior ao longo de milênios, em que o potencial galáctico e as estrelas companheiras não são modelados. O brilho continua sendo o de hoje. As estrelas se apagam sob um céu de dia. Se o arquivo não puder ser lido, o aplicativo recorre a uma dispersão de pontos ao acaso e registra isso. A Via Láctea atrás delas é uma textura (veja a tabela de texturas), girada para coordenadas galácticas.',
+      })}</p>`
+    )
+  );
+
+  const mdc = link(METEORS.source.url, escapeHtml(METEORS.source.name));
+  const meteorCount = escapeHtml(String(METEORS.count));
+  const meteorDropped = escapeHtml(
+    String(METEORS.dropped.notAnnual + METEORS.dropped.noCompleteSolution)
+  );
+  sections.push(
+    docSection(
+      'meteors',
+      L({
+        en: 'Meteor showers',
+        fr: 'Les pluies de météores',
+        es: 'Las lluvias de meteoros',
+        'pt-BR': 'As chuvas de meteoros',
+      }),
+      `<p>${L({
+        en: `The optional meteor-shower layer (off by default) draws the radiants of ${meteorCount} annual showers, from ${mdc}, file last updated by the Data Center on ${escapeHtml(METEORS.source.updated)} and read on ${escapeHtml(METEORS.source.retrieved)}. The file holds several solutions per shower; each shower keeps its most recently added solution that carries everything needed to place and date it: the beginning and end of its activity, its mean solar longitude (inside that window), its radiant and its geocentric velocity. ${meteorDropped} showers of the file are left out: those the source does not call annual, and any without a consistent solution. The Data Center states no licence on the pages read; it asks to cite Jenniskens et al. (2020) and Jopek and Kanuchova (2017), which the help window and the third-party notices below do.`,
+        fr: `La couche optionnelle des pluies de météores (éteinte par défaut) dessine les radiants de ${meteorCount} pluies annuelles, d’après ${mdc}, fichier mis à jour pour la dernière fois par le Centre le ${escapeHtml(METEORS.source.updated)} et lu le ${escapeHtml(METEORS.source.retrieved)}. Le fichier contient plusieurs solutions par pluie ; chaque pluie garde sa solution la plus récemment ajoutée qui porte tout ce qu’il faut pour la placer et la dater : début et fin de son activité, longitude solaire moyenne (comprise dans cette fenêtre), radiant et vitesse géocentrique. ${meteorDropped} pluies du fichier sont écartées : celles que la source ne dit pas annuelles, et celles sans solution cohérente. Le Centre ne déclare aucune licence sur les pages lues ; il demande de citer Jenniskens et al. (2020) et Jopek et Kanuchova (2017), ce que font la fenêtre d’aide et les mentions tierces plus bas.`,
+        es: `La capa opcional de lluvias de meteoros (apagada por defecto) dibuja los radiantes de ${meteorCount} lluvias anuales, según ${mdc}, archivo actualizado por última vez por el Centro el ${escapeHtml(METEORS.source.updated)} y leído el ${escapeHtml(METEORS.source.retrieved)}. El archivo contiene varias soluciones por lluvia; cada lluvia conserva su solución añadida más recientemente que lleva todo lo necesario para situarla y fecharla: inicio y fin de su actividad, longitud solar media (dentro de esa ventana), radiante y velocidad geocéntrica. Quedan fuera ${meteorDropped} lluvias del archivo: las que la fuente no llama anuales y las que no tienen una solución coherente. El Centro no declara ninguna licencia en las páginas leídas; pide citar a Jenniskens et al. (2020) y a Jopek y Kanuchova (2017), lo que hacen la ventana de ayuda y los avisos de terceros más abajo.`,
+        'pt-BR': `A camada opcional de chuvas de meteoros (desligada por padrão) desenha os radiantes de ${meteorCount} chuvas anuais, segundo ${mdc}, arquivo atualizado pela última vez pelo Centro em ${escapeHtml(METEORS.source.updated)} e lido em ${escapeHtml(METEORS.source.retrieved)}. O arquivo contém várias soluções por chuva; cada chuva guarda a sua solução adicionada mais recentemente que traz tudo o que é preciso para posicioná-la e datá-la: início e fim da sua atividade, longitude solar média (dentro dessa janela), radiante e velocidade geocêntrica. Ficam de fora ${meteorDropped} chuvas do arquivo: as que a fonte não chama de anuais e as sem solução coerente. O Centro não declara nenhuma licença nas páginas lidas; pede para citar Jenniskens et al. (2020) e Jopek e Kanuchova (2017), o que fazem a janela de ajuda e os avisos de terceiros abaixo.`,
+      })}</p><p>${L({
+        en: `A radiant is a direction only: the point of the sky the meteors seem to come from. It has no distance and no size in the scene, and the source gives no hourly rate, so none is shown. A shower is drawn only while the solar longitude of the scene date (J2000, computed by Astronomy Engine) lies inside its activity window, and its radiant moves with the daily drift the source publishes, never beyond the window. Every date of the year has at least one active shower. Names are those of the source, written the same way in every language.`,
+        fr: `Un radiant n’est qu’une direction : le point du ciel d’où les météores semblent venir. Il n’a ni distance ni taille dans la scène, et la source ne donne aucun taux horaire, donc aucun n’est affiché. Une pluie n’est dessinée que tant que la longitude solaire de la date de la scène (J2000, calculée par Astronomy Engine) tombe dans sa fenêtre d’activité, et son radiant suit la dérive quotidienne que publie la source, sans jamais dépasser la fenêtre. Chaque date de l’année a au moins une pluie active. Les noms sont ceux de la source, écrits de la même façon dans toutes les langues.`,
+        es: `Un radiante es solo una dirección: el punto del cielo de donde parecen venir los meteoros. No tiene distancia ni tamaño en la escena, y la fuente no da ninguna tasa horaria, así que no se muestra ninguna. Una lluvia solo se dibuja mientras la longitud solar de la fecha de la escena (J2000, calculada por Astronomy Engine) está dentro de su ventana de actividad, y su radiante sigue la deriva diaria que publica la fuente, sin pasar nunca de la ventana. Cada fecha del año tiene al menos una lluvia activa. Los nombres son los de la fuente, escritos igual en todos los idiomas.`,
+        'pt-BR': `Um radiante é apenas uma direção: o ponto do céu de onde os meteoros parecem vir. Não tem distância nem tamanho na cena, e a fonte não dá nenhuma taxa horária, então nenhuma é exibida. Uma chuva só é desenhada enquanto a longitude solar da data da cena (J2000, calculada pelo Astronomy Engine) estiver dentro da sua janela de atividade, e o seu radiante segue a deriva diária que a fonte publica, sem jamais passar da janela. Cada data do ano tem pelo menos uma chuva ativa. Os nomes são os da fonte, escritos igual em todos os idiomas.`,
       })}</p>`
     )
   );

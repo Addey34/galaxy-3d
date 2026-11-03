@@ -528,6 +528,15 @@ Harold Corwin's NGC/IC Positions and Notes (<http://haroldcorwin.net/ngcic/index
   data on single levels from 1940 to present*, ECMWF, doi:10.24381/cds.adbb2d47. Generated using
   Copernicus Climate Change Service information.
 
+**Meteor showers.** The radiants come from the IAU Meteor Data Center, established meteor showers
+(<https://www.ta3.sk/IAUC22DB/MDC2022/index.php>, file `streamestablisheddata2026.txt`, last
+updated by the Data Center on 2026-10-23, read on 2026-11-03; SHA-256 sealed in
+`public/assets/sky/meteors.json`). The pages read state no licence text. The file asks to cite
+Jenniskens, P., Jopek, T.J., Janches, D., Hajdukova, M., Kokhirova, G.I., Rudawska, R. (2020),
+Planetary and Space Science 182, 104821, and Jopek, T.J., Kanuchova, Z. (2017), Planetary and
+Space Science 143, 3-6, which the app's help window does. `public/assets/sky/meteors.json` is an
+adaptation (one solution kept per shower, units unchanged).
+
 **Satellites** are fetched at runtime and are not bundled. The orbital elements are the GP data
 (OMM format) of CelesTrak (<https://celestrak.org/>, Dr. T.S. Kelso), which CelesTrak builds from
 the data of the 18th Space Defense Squadron distributed by Space-Track. The pages of CelesTrak read
