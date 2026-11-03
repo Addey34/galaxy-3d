@@ -491,6 +491,8 @@ export class AnimationSystem {
   private _render(): void {
     // Recentre le champ d'étoiles sur la caméra (décor à l'infini, cf. Starfield).
     this.starfield?.followCamera(this.camera.position);
+    if (this.orbitalMechanics)
+      this.starfield?.setDate(this.orbitalMechanics.simulationDate);
     this._fadeStarsUnderDaylight();
     // En session XR : rendu direct obligatoire, l'EffectComposer (bloom) n'a pas de chemin
     // stéréo/multiview dans cette version de Three.js. Sinon, le composer prend le relais

@@ -196,10 +196,11 @@ export class SceneSystem {
         Logger.warn('[SceneSystem] Starfield texture failed', err)
       );
 
-    // Vraies étoiles ponctuelles (points ronds) par-dessus la Voie lactée de fond :
-    // nettes et rondes, indépendantes de la compression JPEG du fond.
+    // Le ciel réel : les étoiles du catalogue HYG (magnitude <= 6,5) par-dessus la Voie lactée
+    // de fond, nettes et rondes, indépendantes de la compression JPEG du fond.
     this._starfield = new Starfield();
     this.scene.add(this._starfield.points);
+    void this._starfield.load();
   }
 
   /**

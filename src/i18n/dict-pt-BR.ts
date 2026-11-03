@@ -248,6 +248,9 @@ export const ptBR: Record<MessageKey, string> = {
   'credits.models': 'Modelos de forma 3D',
   'credits.models.list':
     'NASA PDS: NEAR (Eros), Hayabusa (Itokawa), Galileo (Ida, Gaspra) · ISAS/JAXA: Hayabusa2 (Ryugu) · NASA/Goddard SVS: OSIRIS-REx (Bennu)',
+  'credits.sky': 'Céu',
+  'credits.sky.list':
+    'Estrelas: base HYG v4.4 (catálogos Hipparcos, Yale Bright Star e Gliese), seleção até a magnitude 6,5 e conversão de unidades,',
   'credits.data': 'Dados',
   'credits.privacy': 'Privacidade',
   'credits.methodology': 'Metodologia',

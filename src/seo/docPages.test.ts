@@ -119,6 +119,31 @@ const methodology = methodologyPages({
  * l'application (`parseSmallBodyDataset`) sur le fichier que le build livre : un compte de
  * lignes brutes dirait 8000 quand le panneau en affiche 6965.
  */
+function skyCatalogue() {
+  const file = JSON.parse(
+    readFileSync(resolve(ROOT, 'public/assets/sky/stars.json'), 'utf-8')
+  ) as {
+    count: number;
+    source: {
+      name: string;
+      url: string;
+      license: string;
+      licenseUrl: string;
+      retrieved: string;
+      magnitudeLimit: number;
+    };
+  };
+  return {
+    count: file.count,
+    magnitudeLimit: file.source.magnitudeLimit,
+    retrieved: file.source.retrieved,
+    name: file.source.name,
+    url: file.source.url,
+    license: file.source.license,
+    licenseUrl: file.source.licenseUrl,
+  };
+}
+
 function smallBodySnapshot(): { retrieved: string; count: number } {
   const dataset = parseSmallBodyDataset(
     JSON.parse(
@@ -174,6 +199,7 @@ const sourcesInput: SourcesInput = {
   // Lu dans le fichier livré, comme le fait le plugin Vite : la page cite sa date, et une
   // valeur retapée ici ne prouverait rien de ce qui est publié.
   smallBodies: smallBodySnapshot(),
+  sky: skyCatalogue(),
   heightfields: shippedHeightfields(),
   buildings: shippedBuildings(),
 };

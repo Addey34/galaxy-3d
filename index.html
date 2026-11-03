@@ -150,7 +150,8 @@
          titre de premier niveau à l'écran, ce H1 sert le SEO/l'accessibilité sans dupliquer
          visuellement le <title>. -->
     <h1 class="sr-only">
-      Galaxy: Real-Time Interactive 3D Solar System. Explore the Planets, Moons and Dwarf Planets
+      Galaxy: Real-Time Interactive 3D Solar System. Explore the Planets, Moons
+      and Dwarf Planets
     </h1>
     <!-- Repli sans JavaScript : la scène 3D exige WebGL + JS, mais un résumé du contenu reste
          indexable même si un crawler n'exécute pas le script (budget de rendu dépassé, etc.). -->
@@ -943,12 +944,12 @@
       </div>
       <!-- Résultats groupés, générés depuis CELESTIAL_CONFIG par ui/bodyPalette. -->
       <div
-          id="palette-results"
-          class="palette-results"
-          role="listbox"
-          aria-label="Search results"
-          data-i18n-aria="a11y.paletteResults"
-        ></div>
+        id="palette-results"
+        class="palette-results"
+        role="listbox"
+        aria-label="Search results"
+        data-i18n-aria="a11y.paletteResults"
+      ></div>
     </aside>
 
     <!-- ─── Fiche d'un corps ───────────────────────────────────────────────── -->
@@ -1116,7 +1117,9 @@
       hidden
     >
       <header class="surface-header">
-        <h2 class="surface-title" data-i18n="settings.title">Display settings</h2>
+        <h2 class="surface-title" data-i18n="settings.title">
+          Display settings
+        </h2>
         <button
           class="surface-close"
           type="button"
@@ -1178,8 +1181,8 @@
             ></p>
           </div>
           <p class="oo-table-hint" data-i18n="settings.tableHint">
-            A column header sets the whole column, a group row its group, a
-            row one object. Spacecraft and interstellar objects start hidden.
+            A column header sets the whole column, a group row its group, a row
+            one object. Spacecraft and interstellar objects start hidden.
           </p>
           <table class="oo-table" id="settings-table">
             <caption class="sr-only" data-i18n="settings.tableCaption">
@@ -1336,8 +1339,8 @@
             Offline use
           </h4>
           <p class="oo-table-hint" data-i18n="offline.hint">
-            Download every ephemeris file so the app can place the bodies at
-            any date without a network. Nothing is downloaded until you ask.
+            Download every ephemeris file so the app can place the bodies at any
+            date without a network. Nothing is downloaded until you ask.
           </p>
         </section>
       </div>
@@ -1408,7 +1411,9 @@
           >) · ECMWF ERA5 (Copernicus Climate Change Service).
         </p>
         <details class="wl-citations">
-          <summary data-i18n="weather.citations.summary">Data citations</summary>
+          <summary data-i18n="weather.citations.summary">
+            Data citations
+          </summary>
           <!-- Citations lues le 2026-10-30 dans les fiches de couche de GIBS (nasa-gibs/worldview,
                config/default/common/config/metadata/layers) et la politique d'utilisation des
                données d'Earthdata. La phrase de remerciement est celle que GIBS demande, citée en
@@ -1416,9 +1421,9 @@
                (weatherAttribution.test.ts). -->
           <p class="wl-note">
             <q lang="en"
-              >We acknowledge the use of imagery provided by services from NASA's
-              Global Imagery Browse Services (GIBS), part of NASA's Earth Science
-              Data and Information System (ESDIS).</q
+              >We acknowledge the use of imagery provided by services from
+              NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth
+              Science Data and Information System (ESDIS).</q
             >
             <a
               href="https://www.earthdata.nasa.gov/engage/open-data-services-software-policies/data-use-policy"
@@ -1430,22 +1435,106 @@
           </p>
           <ul class="wl-citation-list">
             <li>
-              <span data-i18n="weather.citations.clouds">Clouds (true-colour imagery)</span>:
-              VIIRS SNPP, <a href="https://doi.org/10.5067/VIIRS/VNP02IMG_NRT.002" target="_blank" rel="noopener noreferrer">VNP02IMG_NRT</a>, <a href="https://doi.org/10.5067/VIIRS/VNP02MOD_NRT.002" target="_blank" rel="noopener noreferrer">VNP02MOD_NRT</a>, <a href="https://doi.org/10.5067/VIIRS/VNP03IMG_NRT.002" target="_blank" rel="noopener noreferrer">VNP03IMG_NRT</a>, <a href="https://doi.org/10.5067/VIIRS/VNP03MOD_NRT.002" target="_blank" rel="noopener noreferrer">VNP03MOD_NRT</a> ; MODIS Terra, Aqua, <a href="https://doi.org/10.5067/MODIS/MOD02QKM.061" target="_blank" rel="noopener noreferrer">MOD02QKM</a>, <a href="https://doi.org/10.5067/MODIS/MOD02HKM.061" target="_blank" rel="noopener noreferrer">MOD02HKM</a>, <a href="https://doi.org/10.5067/MODIS/MOD021KM.061" target="_blank" rel="noopener noreferrer">MOD021KM</a>, <a href="https://doi.org/10.5067/MODIS/MYD02QKM.061" target="_blank" rel="noopener noreferrer">MYD02QKM</a>, <a href="https://doi.org/10.5067/MODIS/MYD02HKM.061" target="_blank" rel="noopener noreferrer">MYD02HKM</a>, <a href="https://doi.org/10.5067/MODIS/MYD021KM.061" target="_blank" rel="noopener noreferrer">MYD021KM</a>
+              <span data-i18n="weather.citations.clouds"
+                >Clouds (true-colour imagery)</span
+              >: VIIRS SNPP,
+              <a
+                href="https://doi.org/10.5067/VIIRS/VNP02IMG_NRT.002"
+                target="_blank"
+                rel="noopener noreferrer"
+                >VNP02IMG_NRT</a
+              >,
+              <a
+                href="https://doi.org/10.5067/VIIRS/VNP02MOD_NRT.002"
+                target="_blank"
+                rel="noopener noreferrer"
+                >VNP02MOD_NRT</a
+              >,
+              <a
+                href="https://doi.org/10.5067/VIIRS/VNP03IMG_NRT.002"
+                target="_blank"
+                rel="noopener noreferrer"
+                >VNP03IMG_NRT</a
+              >,
+              <a
+                href="https://doi.org/10.5067/VIIRS/VNP03MOD_NRT.002"
+                target="_blank"
+                rel="noopener noreferrer"
+                >VNP03MOD_NRT</a
+              >
+              ; MODIS Terra, Aqua,
+              <a
+                href="https://doi.org/10.5067/MODIS/MOD02QKM.061"
+                target="_blank"
+                rel="noopener noreferrer"
+                >MOD02QKM</a
+              >,
+              <a
+                href="https://doi.org/10.5067/MODIS/MOD02HKM.061"
+                target="_blank"
+                rel="noopener noreferrer"
+                >MOD02HKM</a
+              >,
+              <a
+                href="https://doi.org/10.5067/MODIS/MOD021KM.061"
+                target="_blank"
+                rel="noopener noreferrer"
+                >MOD021KM</a
+              >,
+              <a
+                href="https://doi.org/10.5067/MODIS/MYD02QKM.061"
+                target="_blank"
+                rel="noopener noreferrer"
+                >MYD02QKM</a
+              >,
+              <a
+                href="https://doi.org/10.5067/MODIS/MYD02HKM.061"
+                target="_blank"
+                rel="noopener noreferrer"
+                >MYD02HKM</a
+              >,
+              <a
+                href="https://doi.org/10.5067/MODIS/MYD021KM.061"
+                target="_blank"
+                rel="noopener noreferrer"
+                >MYD021KM</a
+              >
             </li>
             <li>
               <span data-i18n="weather.citations.precip">Rain</span>: IMERG,
-              <a href="https://doi.org/10.5067/GPM/IMERG/3B-HH-E/07" target="_blank" rel="noopener noreferrer">GPM_3IMERGHHE</a>,
-              <a href="https://doi.org/10.5067/GPM/IMERG/3B-HH/07" target="_blank" rel="noopener noreferrer">GPM_3IMERGHH</a>
+              <a
+                href="https://doi.org/10.5067/GPM/IMERG/3B-HH-E/07"
+                target="_blank"
+                rel="noopener noreferrer"
+                >GPM_3IMERGHHE</a
+              >,
+              <a
+                href="https://doi.org/10.5067/GPM/IMERG/3B-HH/07"
+                target="_blank"
+                rel="noopener noreferrer"
+                >GPM_3IMERGHH</a
+              >
               <span data-i18n="weather.citations.precipNote"></span>
             </li>
             <li>
-              <span data-i18n="weather.citations.thermal">Air temperature</span>: MERRA-2,
-              GMAO, <a href="https://doi.org/10.5067/AP1B0BA5PD2K" target="_blank" rel="noopener noreferrer">M2TMNXSLV</a>
+              <span data-i18n="weather.citations.thermal">Air temperature</span
+              >: MERRA-2, GMAO,
+              <a
+                href="https://doi.org/10.5067/AP1B0BA5PD2K"
+                target="_blank"
+                rel="noopener noreferrer"
+                >M2TMNXSLV</a
+              >
             </li>
             <li>
-              <span data-i18n="weather.citations.sea">Sea temperature</span>: GHRSST MUR,
-              JPL MUR MEaSUREs Project, <a href="https://doi.org/10.5067/GHGMR-4FJ04" target="_blank" rel="noopener noreferrer">MUR-JPL-L4-GLOB-v4.1</a>
+              <span data-i18n="weather.citations.sea">Sea temperature</span>:
+              GHRSST MUR, JPL MUR MEaSUREs Project,
+              <a
+                href="https://doi.org/10.5067/GHGMR-4FJ04"
+                target="_blank"
+                rel="noopener noreferrer"
+                >MUR-JPL-L4-GLOB-v4.1</a
+              >
             </li>
           </ul>
         </details>
@@ -1519,7 +1608,9 @@
       hidden
     >
       <header class="surface-header">
-        <h2 class="surface-title" data-i18n="help.title">Help, tips &amp; credits</h2>
+        <h2 class="surface-title" data-i18n="help.title">
+          Help, tips &amp; credits
+        </h2>
         <button
           class="surface-close"
           type="button"
@@ -1574,7 +1665,9 @@
             >
           </li>
           <li>
-            <span class="help-key" data-i18n="help.shortcut.space.key">Space</span>
+            <span class="help-key" data-i18n="help.shortcut.space.key"
+              >Space</span
+            >
             <span data-i18n="help.shortcut.space.text">play / pause time</span>
           </li>
           <li>
@@ -1586,7 +1679,9 @@
             <span data-i18n="help.shortcut.today.text">back to now</span>
           </li>
           <li>
-            <span class="help-key" data-i18n="help.shortcut.fullscreen.key">F</span>
+            <span class="help-key" data-i18n="help.shortcut.fullscreen.key"
+              >F</span
+            >
             <span data-i18n="help.shortcut.fullscreen.text">full screen</span>
           </li>
           <li>
@@ -1678,14 +1773,46 @@
           </p>
           <dl class="credits-list">
             <dt data-i18n="credits.textures">Textures</dt>
-            <dd data-i18n="credits.textures.list">USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0; the 2016 edition CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modified) · Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modified).</dd>
+            <dd data-i18n="credits.textures.list">
+              USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope
+              (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT
+              Services GmbH (CC BY-NC-SA 4.0; the 2016 edition CC BY 4.0) · IGN
+              BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip
+              Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modified) ·
+              Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0
+              IGO, modified).
+            </dd>
             <dt data-i18n="credits.fictional">Illustrative surfaces</dt>
             <dd data-i18n="credits.fictional.list">
               Bodies never mapped globally have an illustrative texture, not a
               scientific map; the body card says so, and Sources lists them.
             </dd>
             <dt data-i18n="credits.models">3D shape models</dt>
-            <dd data-i18n="credits.models.list">NASA PDS: NEAR (Eros), Hayabusa (Itokawa), Galileo (Ida, Gaspra) · ISAS/JAXA: Hayabusa2 (Ryugu) · NASA/Goddard SVS: OSIRIS-REx (Bennu)</dd>
+            <dd data-i18n="credits.models.list">
+              NASA PDS: NEAR (Eros), Hayabusa (Itokawa), Galileo (Ida, Gaspra) ·
+              ISAS/JAXA: Hayabusa2 (Ryugu) · NASA/Goddard SVS: OSIRIS-REx
+              (Bennu)
+            </dd>
+            <dt data-i18n="credits.sky">Sky</dt>
+            <dd>
+              <span data-i18n="credits.sky.list"
+                >Stars: HYG database v4.4 (Hipparcos, Yale Bright Star and
+                Gliese catalogues), selected to magnitude 6.5 and converted to
+                compact units,</span
+              >
+              <a
+                href="https://creativecommons.org/licenses/by-sa/4.0/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >CC BY-SA 4.0</a
+              >
+              (<a
+                href="https://codeberg.org/astronexus/hyg"
+                target="_blank"
+                rel="noopener noreferrer"
+                >codeberg.org/astronexus/hyg</a
+              >)
+            </dd>
             <dt data-i18n="credits.data">Data</dt>
             <dd>
               Astronomy Engine · NASA/JPL Horizons · JPL Small-Body Database ·
