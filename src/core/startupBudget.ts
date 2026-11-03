@@ -358,8 +358,15 @@ export const EPHEMERIS_STARTUP_BUDGET_BYTES = 1_800_000;
  * 9 267 octets (17E). La marge couvre donc environ huit lots de cette taille. Au-delà, ce n'est
  * plus de la croissance ordinaire et quelqu'un doit regarder — ce qui est exactement le service
  * qu'un budget rend.
+ *
+ * RELEVÉ DE 1 300 000 À 1 305 000 le 2026-11-03 (ciel profond). La marge des lots du ciel réel avait
+ * fondu à 448 octets, puis les noms des constellations l'ont réduite à ~50 côté CI (le build de la CI
+ * pèse ~158 o de plus qu'en local). Le ciel profond ajoute au démarrage ce qui NE PEUT PAS se charger
+ * à la demande : une case dans les réglages, son libellé et le crédit de la source, en quatre langues
+ * (475 o mesurés), tandis que le fichier, les repères et les noms sont dans un morceau hors démarrage
+ * (`NON_BOOT_CHUNKS`). +5 000 o couvrent une dizaine de cases de cette taille ; au-delà, regarder.
  */
-export const JAVASCRIPT_STARTUP_BUDGET_BYTES = 1_300_000;
+export const JAVASCRIPT_STARTUP_BUDGET_BYTES = 1_305_000;
 
 /**
  * Les morceaux que le démarrage charge par import DYNAMIQUE, nommés avec leur raison.
@@ -390,6 +397,16 @@ export interface BootDynamicChunk {
  * à trancher, et un morceau retiré d'une liste tombe dans le vide, où le script le voit.
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
+  {
+    chunk: 'deepSkyLayer',
+    reason:
+      'la couche du ciel profond (2026-11-03) : repères et noms des objets NGC/IC, importée par `ui/skyLayerToggles` à la première activation de la case « Objets du ciel profond », éteinte au démarrage.',
+  },
+  {
+    chunk: 'skyLabels',
+    reason:
+      "le noyau des noms 2D écrits sur le ciel (projection, évitement, boucle d'images), partagé par `constellationNames` et `deepSkyLayer`, deux morceaux hors démarrage : Rollup en fait un morceau commun.",
+  },
   {
     chunk: 'constellationNames',
     reason:
