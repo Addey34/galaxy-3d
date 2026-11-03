@@ -5,7 +5,7 @@
   "format": "GXBD",
   "version": 1,
   "zoom": 14,
-  "directory": "assets/buildings/grenoble-bdtopo/582e15d6c8",
+  "directory": "assets/buildings/grenoble-bdtopo/2790167a84",
   "source": {
     "name": "BD TOPO, Institut national de l'information géographique et forestière",
     "typeName": "BDTOPO_V3:batiment",
@@ -32,10 +32,10 @@
     "heightAboveRange": 0,
     "byOrigin": {
       "absent": 1127,
-      "measured": 3093,
+      "measured": 29827,
       "interpolated": 20002,
       "derivedFromFloors": 0,
-      "unspecified": 27002
+      "unspecified": 268
     }
   },
   "tiles": [

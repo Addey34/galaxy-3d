@@ -5,7 +5,7 @@
   "format": "GXBD",
   "version": 1,
   "zoom": 14,
-  "directory": "assets/buildings/reims-bdtopo/296f7c3ea8",
+  "directory": "assets/buildings/reims-bdtopo/8eeaa41812",
   "source": {
     "name": "BD TOPO, Institut national de l'information géographique et forestière",
     "typeName": "BDTOPO_V3:batiment",
@@ -32,10 +32,10 @@
     "heightAboveRange": 0,
     "byOrigin": {
       "absent": 755,
-      "measured": 1246,
+      "measured": 25949,
       "interpolated": 38046,
       "derivedFromFloors": 0,
-      "unspecified": 25079
+      "unspecified": 376
     }
   },
   "tiles": [
