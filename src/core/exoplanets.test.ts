@@ -92,3 +92,43 @@ describe('systemAsStar', () => {
     expect(row[3]).toBeNull();
   });
 });
+
+describe('METHOD_KEYS', () => {
+  it('couvrent chaque méthode du fichier livré, et chaque clé existe dans les quatre langues', async () => {
+    const { METHOD_KEYS } = await import('@/ui/exoplanetCard');
+    const dictionaries = {
+      en: (await import('@/i18n/dict-card-en')).cardEn,
+      fr: (await import('@/i18n/dict-card-fr')).cardFr,
+      es: (await import('@/i18n/dict-card-es')).cardEs,
+      'pt-BR': (await import('@/i18n/dict-card-pt-BR')).cardPtBR,
+    } as Record<string, Record<string, string>>;
+    const used = new Set(file.systems.flatMap((s) => s[7].map((p) => p[5])));
+    for (const method of used) {
+      if (method === null) continue;
+      expect(
+        METHOD_KEYS[method],
+        `méthode sans phrase : ${method}`
+      ).toBeDefined();
+    }
+    for (const [locale, dict] of Object.entries(dictionaries))
+      for (const key of Object.values(METHOD_KEYS))
+        expect(dict[key], `${locale} / ${key}`).toBeTruthy();
+  });
+
+  it('toute clé exo.* écrite dans la fiche existe dans les quatre langues', async () => {
+    const { readFileSync } = await import('node:fs');
+    const source = readFileSync('src/ui/exoplanetCard.ts', 'utf8');
+    const keys = [...new Set(source.match(/'exo\.[A-Za-z.]+'/g) ?? [])].map(
+      (k) => k.slice(1, -1)
+    );
+    expect(keys.length).toBeGreaterThan(10);
+    const dictionaries = [
+      (await import('@/i18n/dict-card-en')).cardEn,
+      (await import('@/i18n/dict-card-fr')).cardFr,
+      (await import('@/i18n/dict-card-es')).cardEs,
+      (await import('@/i18n/dict-card-pt-BR')).cardPtBR,
+    ] as Record<string, string>[];
+    for (const dict of dictionaries)
+      for (const key of keys) expect(dict[key], key).toBeTruthy();
+  });
+});

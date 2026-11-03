@@ -3934,3 +3934,55 @@ body.is-capturing #loader {
 .bi-city:focus-visible {
   background: rgba(255, 255, 255, 0.14);
 }
+
+/* ─── Fiche d'un système d'exoplanètes (surface contextuelle, chargée à la demande) ─── */
+.surface--exoplanet {
+  overflow: hidden;
+}
+.exo-body {
+  overflow-y: auto;
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+}
+.exo-planets {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.exo-planet-name {
+  margin: 0 0 var(--sp-1);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.exo-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.15rem var(--sp-3);
+  margin: 0;
+  font-size: 0.85rem;
+}
+.exo-facts dt {
+  color: var(--ink-dim);
+}
+.exo-facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.exo-source {
+  margin: var(--sp-3) 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+.exo-search {
+  display: grid;
+  gap: var(--sp-1);
+  padding: var(--sp-1) 0;
+}
+.exo-search input {
+  min-width: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
