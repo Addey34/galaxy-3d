@@ -446,6 +446,45 @@ names its source and the date of the snapshot. The application makes no request 
 at runtime: it answers a browser without the cross-origin header a browser needs to accept the
 reply, so the layer was empty in production for as long as it queried the service directly.
 
+**The sky** (`public/assets/sky/`). The stars come from the HYG database v4.4
+(<https://codeberg.org/astronexus/hyg>, Hipparcos, Yale Bright Star and Gliese catalogues),
+licensed under CC BY-SA 4.0 (<https://creativecommons.org/licenses/by-sa/4.0/>), read on
+2026-11-03. `stars.json` is an adaptation (a selection down to magnitude 6.5, hours converted to
+degrees, values rounded) and is shared under the same licence by `scripts/generate-star-catalogue.mjs`.
+The constellation figures come from d3-celestial by Olaf Frohn
+(<https://github.com/ofrohn/d3-celestial>), file `data/constellations.lines.json` at commit
+`d2e20e104b86429d90ac8227a5b021262b45d75a` and names from `data/constellations.json` at commit
+`b56735c22935b7bde41a944a74e0f780ca0c6dfa`, redistributed here as lists of star indices by
+`scripts/generate-constellations.mjs`, under its BSD 3-Clause licence, reproduced as that licence
+requires:
+
+> Copyright (c) 2015, Olaf Frohn
+> All rights reserved.
+>
+> Redistribution and use in source and binary forms, with or without modification, are permitted
+> provided that the following conditions are met:
+>
+> 1. Redistributions of source code must retain the above copyright notice, this list of
+>    conditions and the following disclaimer.
+>
+> 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+>    conditions and the following disclaimer in the documentation and/or other materials provided
+>    with the distribution.
+>
+> 3. Neither the name of the copyright holder nor the names of its contributors may be used to
+>    endorse or promote products derived from this software without specific prior written
+>    permission.
+>
+> THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+> IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+> FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+> CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+> CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+> SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+> THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+> OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+> POSSIBILITY OF SUCH DAMAGE.
+
 **Earth weather layers** are fetched at runtime and are not bundled either:
 
 - NASA GIBS (EOSDIS): VIIRS and MODIS cloud imagery, IMERG precipitation, MERRA-2 surface air

@@ -262,6 +262,16 @@ export interface SourcesInput {
    * Catalogue d'étoiles livré, LU dans `public/assets/sky/stars.json` : compte, magnitude limite,
    * date de lecture et licence ne se retapent pas ici.
    */
+  /** Figures des constellations livrées, LUES dans `public/assets/sky/constellations.json`. */
+  constellations: {
+    count: number;
+    name: string;
+    url: string;
+    linesCommit: string;
+    license: string;
+    licenseUrl: string;
+    maxSeparationDeg: number;
+  };
   sky: {
     count: number;
     magnitudeLimit: number;
@@ -1669,6 +1679,9 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   const sky = input.sky;
   const skyLicence = link(sky.licenseUrl, 'CC BY-SA 4.0');
   const skySource = link(sky.url, escapeHtml(sky.name));
+  const cons = input.constellations;
+  const consSource = link(cons.url, escapeHtml(cons.name));
+  const consLicence = link(cons.licenseUrl, escapeHtml(cons.license));
   sections.push(
     docSection(
       'sky',
@@ -1683,6 +1696,11 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         fr: `Les ${escapeHtml(String(sky.count))} étoiles dessinées dans le ciel, jusqu’à la magnitude ${escapeHtml(String(sky.magnitudeLimit).replace('.', ','))} (la limite de l’œil nu), viennent de ${skySource}, relue le ${escapeHtml(sky.retrieved)}. Le fichier livré est une adaptation de cette base (une sélection par magnitude, et une conversion des heures en degrés et des unités) : il est donc partagé sous la même licence, ${skyLicence}, avec le crédit donné dans la fenêtre d’aide.`,
         es: `Las ${escapeHtml(String(sky.count))} estrellas dibujadas en el cielo, hasta la magnitud ${escapeHtml(String(sky.magnitudeLimit).replace('.', ','))} (el límite del ojo desnudo), proceden de ${skySource}, leída el ${escapeHtml(sky.retrieved)}. El archivo entregado es una adaptación de esa base (una selección por magnitud y una conversión de horas a grados y de unidades), así que se comparte bajo la misma licencia, ${skyLicence}, con el crédito dado en la ventana de ayuda.`,
         'pt-BR': `As ${escapeHtml(String(sky.count))} estrelas desenhadas no céu, até a magnitude ${escapeHtml(String(sky.magnitudeLimit).replace('.', ','))} (o limite do olho nu), vêm de ${skySource}, lida em ${escapeHtml(sky.retrieved)}. O arquivo entregue é uma adaptação dessa base (uma seleção por magnitude e uma conversão de horas em graus e de unidades), por isso é compartilhado sob a mesma licença, ${skyLicence}, com o crédito dado na janela de ajuda.`,
+      })}</p><p>${L({
+        en: `The optional constellation lines (${escapeHtml(String(cons.count))} figures, off by default) come from ${consSource}, commit ${escapeHtml(cons.linesCommit.slice(0, 7))}, under its ${consLicence} licence (full text in the third-party notices below). Its author states that the lines come from the IAU constellations page with some modifications of their own: they are a customary drawing, not an official IAU definition (the IAU defines only the boundaries). Each line vertex is attached to the nearest star of the catalogue, within ${escapeHtml(String(cons.maxSeparationDeg))}°, so the figures follow the stars when the date changes.`,
+        fr: `Les lignes de constellations facultatives (${escapeHtml(String(cons.count))} figures, éteintes par défaut) viennent de ${consSource}, commit ${escapeHtml(cons.linesCommit.slice(0, 7))}, sous sa licence ${consLicence} (texte intégral dans les mentions tierces plus bas). Son auteur indique que les lignes viennent de la page des constellations de l’UAI avec quelques modifications de sa main : c’est un tracé d’usage, pas une définition officielle de l’UAI (l’UAI ne définit que les frontières). Chaque sommet d’une ligne est rattaché à l’étoile la plus proche du catalogue, à ${escapeHtml(String(cons.maxSeparationDeg).replace('.', ','))}° près, si bien que les figures suivent les étoiles quand la date change.`,
+        es: `Las líneas de constelaciones opcionales (${escapeHtml(String(cons.count))} figuras, apagadas por defecto) proceden de ${consSource}, commit ${escapeHtml(cons.linesCommit.slice(0, 7))}, bajo su licencia ${consLicence} (texto completo en los avisos de terceros más abajo). Su autor indica que las líneas vienen de la página de constelaciones de la UAI con algunas modificaciones propias: es un trazado habitual, no una definición oficial de la UAI (la UAI solo define los límites). Cada vértice de una línea se une a la estrella más cercana del catálogo, a menos de ${escapeHtml(String(cons.maxSeparationDeg).replace('.', ','))}°, de modo que las figuras siguen a las estrellas cuando cambia la fecha.`,
+        'pt-BR': `As linhas de constelações opcionais (${escapeHtml(String(cons.count))} figuras, desligadas por padrão) vêm de ${consSource}, commit ${escapeHtml(cons.linesCommit.slice(0, 7))}, sob a sua licença ${consLicence} (texto integral nos avisos de terceiros mais abaixo). O seu autor indica que as linhas vêm da página de constelações da UAI com algumas modificações próprias: é um traçado usual, não uma definição oficial da UAI (a UAI define apenas os limites). Cada vértice de uma linha é ligado à estrela mais próxima do catálogo, a menos de ${escapeHtml(String(cons.maxSeparationDeg).replace('.', ','))}°, de modo que as figuras seguem as estrelas quando a data muda.`,
       })}</p><p>${L({
         en: 'Each star sits at its catalogued position, with the colour given by its B−V index. Its position at another date follows its proper motion and radial velocity in a straight line at constant speed: a good model over centuries, a poorer one over millennia, where the galactic potential and companion stars are not modelled. The brightness stays the one of today. The stars fade under a daylight sky. If the file cannot be read, the app falls back to a random scatter of points and logs it. The Milky Way behind them is a texture (see the textures table), rotated into galactic coordinates.',
         fr: 'Chaque étoile est à sa position cataloguée, avec la couleur que donne son indice B−V. Sa position à une autre date suit son mouvement propre et sa vitesse radiale en ligne droite à vitesse constante : un bon modèle sur des siècles, un moins bon sur des millénaires, où le potentiel galactique et les étoiles compagnes ne sont pas modélisés. L’éclat reste celui d’aujourd’hui. Les étoiles s’effacent sous un ciel de jour. Si le fichier est illisible, l’application retombe sur un semis de points au hasard et le journalise. La Voie lactée derrière elles est une texture (voir le tableau des textures), tournée en coordonnées galactiques.',

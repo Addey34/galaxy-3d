@@ -359,6 +359,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
   'settings.gazetteer': 'Noms de la surface',
   'settings.eventLabels': 'Étiquettes des événements',
+  'settings.constellations': 'Figures des constellations',
   'settings.keepAppearance': 'Garder les nuages et la pluie visibles de près',
   'settings.surfaceEarthBase': 'Sol de la Terre',
   'settings.surfaceEarthBase.mosaic': 'Mosaïque Blue Marble (2004)',

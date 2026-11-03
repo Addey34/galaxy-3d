@@ -366,6 +366,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.colorblind': 'Cores de órbita adaptadas ao daltonismo',
   'settings.gazetteer': 'Nomes da superfície',
   'settings.eventLabels': 'Rótulos dos eventos',
+  'settings.constellations': 'Figuras das constelações',
   'settings.keepAppearance': 'Manter as nuvens e a chuva visíveis de perto',
   'settings.surfaceEarthBase': 'Solo da Terra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',

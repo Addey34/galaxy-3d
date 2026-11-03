@@ -370,6 +370,7 @@ export const es: Record<MessageKey, string> = {
   'settings.colorblind': 'Colores de órbita adaptados al daltonismo',
   'settings.gazetteer': 'Nombres de la superficie',
   'settings.eventLabels': 'Etiquetas de los eventos',
+  'settings.constellations': 'Figuras de las constelaciones',
   'settings.keepAppearance': 'Mantener las nubes y la lluvia visibles de cerca',
   'settings.surfaceEarthBase': 'Suelo de la Tierra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
