@@ -7350,6 +7350,27 @@ modélisée (un satellite dans l'ombre de la Terre est peint comme les autres, t
 masqué par le globe). Coût au démarrage : la case, ses cinq phrases et le crédit en 4 langues sont
 dans le démarrage par nature (marge du budget JS : 2 317 o sur 1 305 000 après ce lot).
 
+## La fiche d'un objet du ciel profond (2026-11-03)
+
+La case « Objets du ciel profond » charge `ui/deepSkyLayer` (repères et noms) ; à sa première
+activation elle charge aussi `ui/deepSkyCard`, un morceau à part, avec la fiche et sa recherche. La
+fiche s'ouvre par un clic (ou un tap) sur un repère, ou par la recherche d'une désignation (« NGC
+224 »), d'un numéro Messier (« M 31 ») ou d'un nom d'usage. Elle ne lit que `public/assets/sky/deepsky.json` :
+désignation, Messier, constellation, ascension droite et déclinaison J2000, magnitude visuelle,
+taille apparente, type OpenNGC traduit ; une valeur absente se dit « non publiée », la distance
+n'existe pas dans le catalogue et n'est ni dessinée ni affichée. Sa source est citée avec la date
+de lecture et la licence lues dans le fichier.
+
+La sélection compare des DIRECTIONS (`core/skyPick`, partagé avec la fiche des exoplanètes) : le
+rayon du clic part de la caméra et les repères sont centrés sur elle. Les phrases vivent dans
+`dict-card-*` (hors démarrage). Une surface contextuelle parmi les autres : `deepsky-card` dans le
+coordinateur, fermée par Échap ou par l'ouverture d'une autre.
+
+**Ce qu'elle ne fait pas, et pourquoi.** Elle ne centre pas la caméra sur l'objet. Mesuré le
+2026-11-03 : `OrbitControls` garde la CIBLE au centre de l'écran, donc regarder un point du ciel place
+la planète suivie devant lui (à 0,05 unité de la caméra pour Neptune) et un clic au centre ouvre la
+fiche de la planète. Centrer demanderait de déplacer la cible ou de décaler la vue : autre chantier.
+
 ## Les pluies de météores (2026-11-03)
 
 Couche optionnelle (case « Pluies de météores », Réglages, scène), éteinte par défaut et jamais
