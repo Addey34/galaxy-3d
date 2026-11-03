@@ -243,6 +243,7 @@ export const fr: Record<MessageKey, string> = {
   'credits.sky': 'Ciel',
   'credits.sky.list':
     'Étoiles : base HYG v4.4 (catalogues Hipparcos, Yale Bright Star et Gliese), sélection jusqu’à la magnitude 6,5 et conversion d’unités,',
+  'credits.exoplanets': 'Exoplanètes',
   'credits.data': 'Données',
   'credits.privacy': 'Confidentialité',
   'credits.methodology': 'Méthodologie',
@@ -360,6 +361,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.gazetteer': 'Noms de la surface',
   'settings.eventLabels': 'Étiquettes des événements',
   'settings.constellations': 'Figures des constellations',
+  'settings.exoplanets': 'Étoiles à exoplanètes',
   'settings.keepAppearance': 'Garder les nuages et la pluie visibles de près',
   'settings.surfaceEarthBase': 'Sol de la Terre',
   'settings.surfaceEarthBase.mosaic': 'Mosaïque Blue Marble (2004)',

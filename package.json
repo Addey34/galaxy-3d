@@ -37,6 +37,7 @@
     "smallbodies:generate": "node scripts/generate-small-body-dataset.mjs",
     "stars:generate": "node scripts/generate-star-catalogue.mjs",
     "constellations:generate": "node scripts/generate-constellations.mjs",
+    "exoplanets:generate": "node scripts/generate-exoplanets.mjs",
     "shapes:generate": "node scripts/generate-shape-models.mjs",
     "pose:spice": "node scripts/spice-pose.mjs",
     "smallbodies:age": "node scripts/check-small-body-snapshot-age.mjs",

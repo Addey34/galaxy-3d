@@ -251,6 +251,7 @@ export const ptBR: Record<MessageKey, string> = {
   'credits.sky': 'Céu',
   'credits.sky.list':
     'Estrelas: base HYG v4.4 (catálogos Hipparcos, Yale Bright Star e Gliese), seleção até a magnitude 6,5 e conversão de unidades,',
+  'credits.exoplanets': 'Exoplanetas',
   'credits.data': 'Dados',
   'credits.privacy': 'Privacidade',
   'credits.methodology': 'Metodologia',
@@ -367,6 +368,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.gazetteer': 'Nomes da superfície',
   'settings.eventLabels': 'Rótulos dos eventos',
   'settings.constellations': 'Figuras das constelações',
+  'settings.exoplanets': 'Estrelas com exoplanetas',
   'settings.keepAppearance': 'Manter as nuvens e a chuva visíveis de perto',
   'settings.surfaceEarthBase': 'Solo da Terra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',

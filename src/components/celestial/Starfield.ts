@@ -18,7 +18,9 @@
 import * as THREE from 'three';
 import { markGlowSource } from '@/components/systems/glowSelection';
 import { GLOW_GAINS } from '@/config/engine';
-import { OBLIQUITY_RAD } from '@/core/frames';
+import { equatorialToSceneInto } from '@/core/frames';
+import type { ExoplanetHosts } from './ExoplanetHosts';
+import type { ExoplanetFile } from '@/core/exoplanets';
 import { segmentIndices, type ConstellationFile } from '@/core/constellations';
 import {
   starAppearance,
@@ -38,11 +40,9 @@ const REFRESH_YEARS = 0.25;
 const FALLBACK_COUNT = 2500;
 export const STAR_CATALOGUE_URL = '/assets/sky/stars.json';
 export const CONSTELLATIONS_URL = '/assets/sky/constellations.json';
+export const EXOPLANETS_URL = '/assets/sky/exoplanets.json';
 /** Opacité des figures : un fil discret, jamais un trait qui masque le ciel. */
 const CONSTELLATION_OPACITY = 0.35;
-
-const COS_OBL = Math.cos(OBLIQUITY_RAD);
-const SIN_OBL = Math.sin(OBLIQUITY_RAD);
 
 const vertexShader = /* glsl */ `
   attribute float size;
@@ -84,6 +84,9 @@ export class Starfield {
   });
   private lines: THREE.LineSegments | null = null;
   private constellationsOn = false;
+  private exoplanets: ExoplanetHosts | null = null;
+  private exoplanetsOn = false;
+  private fade = 1;
 
   constructor() {
     this.geometry = new THREE.BufferGeometry();
@@ -139,6 +142,7 @@ export class Starfield {
         throw new Error('catalogue vide');
       this.setCatalogue(file.stars);
       await this.loadConstellations(fetchImpl);
+      await this.loadExoplanets(fetchImpl);
     } catch (err) {
       Logger.warn(
         '[Starfield] catalogue réel illisible, semis procédural de repli',
@@ -157,6 +161,40 @@ export class Starfield {
     } catch (err) {
       Logger.warn('[Starfield] figures des constellations illisibles', err);
     }
+  }
+
+  /** Les systèmes d'exoplanètes sont facultatifs : un échec les omet, le ciel reste intact. */
+  private async loadExoplanets(fetchImpl: typeof fetch): Promise<void> {
+    try {
+      const res = await fetchImpl(EXOPLANETS_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const file = (await res.json()) as ExoplanetFile;
+      // Hors du chemin de démarrage : la classe des repères ne se charge qu'avec leurs données.
+      const { ExoplanetHosts } = await import('./ExoplanetHosts');
+      this.attachExoplanets(new ExoplanetHosts(file.systems));
+    } catch (err) {
+      Logger.warn('[Starfield] systèmes d’exoplanètes illisibles', err);
+    }
+  }
+
+  /** Pose les repères des systèmes d'exoplanètes sur le ciel (le chargement les construit). */
+  attachExoplanets(hosts: ExoplanetHosts): void {
+    this.exoplanets?.dispose();
+    this.exoplanets = hosts;
+    this.exoplanets.points.visible = this.exoplanetsOn;
+    this.exoplanets.setOpacity(this.fade);
+    this.points.add(this.exoplanets.points);
+    if (Number.isFinite(this.years)) this.exoplanets.setYears(this.years);
+  }
+
+  /** Montre ou cache les repères des systèmes d'exoplanètes (éteints par défaut, jamais mémorisés). */
+  setExoplanetsVisible(on: boolean): void {
+    this.exoplanetsOn = on;
+    if (this.exoplanets) this.exoplanets.points.visible = on;
+  }
+
+  get hasExoplanets(): boolean {
+    return this.exoplanets !== null;
   }
 
   /** Pose les figures sur les étoiles chargées : elles partagent leur tampon de positions. */
@@ -231,21 +269,21 @@ export class Starfield {
     const position = this.geometry.getAttribute(
       'position'
     ) as THREE.BufferAttribute;
+    const array = position.array as Float32Array;
     const out = this.scratch;
     for (let i = 0; i < this.stars.length; i++) {
       starDirection(this.stars[i]!, years, out);
-      // equatorialToScene, en ligne : (x, y, z) → (x, −y·sin ε + z·cos ε, −(y·cos ε + z·sin ε))
-      const x = out[0]!;
-      const y = out[1]!;
-      const z = out[2]!;
-      position.setXYZ(
-        i,
-        x * SKY_RADIUS,
-        (-y * SIN_OBL + z * COS_OBL) * SKY_RADIUS,
-        -(y * COS_OBL + z * SIN_OBL) * SKY_RADIUS
+      equatorialToSceneInto(
+        out[0]!,
+        out[1]!,
+        out[2]!,
+        SKY_RADIUS,
+        array,
+        i * 3
       );
     }
     position.needsUpdate = true;
+    this.exoplanets?.setYears(years);
   }
 
   /** Repli : 2 500 points au hasard. À ne jamais prendre pour le ciel. */
@@ -290,6 +328,8 @@ export class Starfield {
   setVisibility(fraction: number): void {
     this.material.uniforms['opacity']!.value = fraction;
     this.lineMaterial.opacity = CONSTELLATION_OPACITY * fraction;
+    this.fade = fraction;
+    this.exoplanets?.setOpacity(fraction);
     this.points.visible = fraction > 0 && this._source !== 'none';
   }
 
@@ -297,6 +337,7 @@ export class Starfield {
     this.geometry.dispose();
     this.material.dispose();
     this.lineMaterial.dispose();
+    this.exoplanets?.dispose();
     this.lines?.geometry.dispose();
   }
 }
