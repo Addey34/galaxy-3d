@@ -142,6 +142,29 @@ function exoplanetsCatalogue() {
   };
 }
 
+function deepskyCatalogue() {
+  const file = JSON.parse(
+    readFileSync(resolve(ROOT, 'public/assets/sky/deepsky.json'), 'utf-8')
+  ) as {
+    count: number;
+    objects: (number | string | null)[][];
+    source: {
+      name: string;
+      url: string;
+      commit: string;
+      license: string;
+      licenseUrl: string;
+      retrieved: string;
+      vLimit: number;
+    };
+  };
+  return {
+    count: file.count,
+    messier: file.objects.filter((o) => o[1] !== null).length,
+    ...file.source,
+  };
+}
+
 function constellationsCatalogue() {
   const file = JSON.parse(
     readFileSync(
@@ -244,6 +267,7 @@ const sourcesInput: SourcesInput = {
   smallBodies: smallBodySnapshot(),
   sky: skyCatalogue(),
   constellations: constellationsCatalogue(),
+  deepsky: deepskyCatalogue(),
   exoplanets: exoplanetsCatalogue(),
   heightfields: shippedHeightfields(),
   buildings: shippedBuildings(),

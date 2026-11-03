@@ -496,6 +496,26 @@ As the archive asks (<https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge
 The archive also asks to cite Christiansen et al. (2025), published in the Planetary Science
 Journal, as its reference paper.
 
+**Deep sky** (`public/assets/sky/deepsky.json`). A selection from OpenNGC by Mattia Verga
+(<https://github.com/mattiaverga/OpenNGC>), file `database_files/NGC.csv` at commit
+`be3cd6c5498806a2fbb2f7e0452ef802dbb02be0`, licensed under CC BY-SA 4.0
+(<https://creativecommons.org/licenses/by-sa/4.0/>, `.reuse/dep5` of that commit, read on
+2026-11-03). `deepsky.json` is an adaptation (the Messier objects and the objects of catalogued V
+magnitude 10 or brighter, coordinates converted to degrees, values rounded) and is shared under the
+same licence by `scripts/generate-deepsky.mjs`. As OpenNGC asks in its README, for the data it
+merges:
+
+> This research has made use of the NASA/IPAC Extragalactic Database (NED) which is operated by the
+> Jet Propulsion Laboratory, California Institute of Technology, under contract with the National
+> Aeronautics and Space Administration.
+>
+> We acknowledge the usage of the HyperLeda database (http://leda.univ-lyon1.fr)
+>
+> This research has made use of the SIMBAD database, operated at CDS, Strasbourg, France
+
+It also lists the HEASARC tables (messier, mwsc, lbn, plnebulae, lmcextobj and smcclustrs) and
+Harold Corwin's NGC/IC Positions and Notes (<http://haroldcorwin.net/ngcic/index.html>).
+
 **Earth weather layers** are fetched at runtime and are not bundled either:
 
 - NASA GIBS (EOSDIS): VIIRS and MODIS cloud imagery, IMERG precipitation, MERRA-2 surface air

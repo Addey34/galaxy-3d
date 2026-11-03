@@ -11,6 +11,7 @@ import type { Starfield } from '@/components/celestial/Starfield';
 import type { MessageKey } from '@/i18n/locales';
 import { onLocaleChange, t } from '@/i18n';
 import type { ConstellationNames } from './constellationNames';
+import type { DeepSkyLayer } from './deepSkyLayer';
 import type { ExoplanetCard } from './exoplanetCard';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
@@ -81,6 +82,7 @@ export function setupSkyLayerToggles(
   let card: Promise<ExoplanetCard> | null = null;
   let wanted = false;
   let names: Promise<ConstellationNames | null> | null = null;
+  let deep: Promise<DeepSkyLayer | null> | null = null;
   mount({
     id: 'constellations-toggle',
     labelKey: 'settings.constellations',
@@ -106,6 +108,18 @@ export function setupSkyLayerToggles(
         );
       }
       void card?.then((c) => c.setActive(wanted));
+    },
+  });
+  mount({
+    id: 'deepsky-toggle',
+    labelKey: 'settings.deepsky',
+    ready: () => true,
+    set: (on) => {
+      // Fichier et repères n'existent pas au démarrage : ils se chargent à la première activation.
+      if (on || deep)
+        void (deep ??= import('./deepSkyLayer').then((m) =>
+          m.setupDeepSkyLayer({ starfield, ...environment })
+        )).then((l) => l?.setActive(on));
     },
   });
 }

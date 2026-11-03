@@ -37,7 +37,7 @@ for (const [label, viewport] of [
     await openSettingsTab(page, 'scene');
     await page.locator('#constellations-toggle').check();
 
-    const visible = page.locator('.constellation-name:visible');
+    const visible = page.locator('.constellation-names-item:visible');
     await expect
       .poll(() => visible.count(), { timeout: 15_000 })
       .toBeGreaterThan(0);
