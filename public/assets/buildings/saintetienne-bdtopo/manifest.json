@@ -1,0 +1,253 @@
+{
+  "id": "saintetienne-bdtopo",
+  "title": "Bâtiments de Saint-Étienne, BD TOPO (IGN)",
+  "body": "earth",
+  "format": "GXBD",
+  "version": 1,
+  "zoom": 14,
+  "directory": "assets/buildings/saintetienne-bdtopo/da8b134f19",
+  "source": {
+    "name": "BD TOPO, Institut national de l'information géographique et forestière",
+    "typeName": "BDTOPO_V3:batiment",
+    "license": "Licence Ouverte 2.0",
+    "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+    "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+    "readFrom": "2026-11-03",
+    "readTo": "2026-11-03"
+  },
+  "bboxLonLat": [
+    4.3272,
+    45.4047,
+    4.4472,
+    45.4747
+  ],
+  "totals": {
+    "tiles": 35,
+    "bytes": 1744325,
+    "sourceFeatures": 47123,
+    "polygons": 47123,
+    "skippedNonPolygon": 0,
+    "skippedNoFootprint": 0,
+    "verticesAtMarginEdge": 0,
+    "heightAboveRange": 0,
+    "byOrigin": {
+      "absent": 773,
+      "measured": 1848,
+      "interpolated": 20263,
+      "derivedFromFloors": 0,
+      "unspecified": 24239
+    }
+  },
+  "tiles": [
+    {
+      "column": 8388,
+      "row": 5863,
+      "buildings": 37,
+      "bytes": 1315
+    },
+    {
+      "column": 8388,
+      "row": 5864,
+      "buildings": 91,
+      "bytes": 3141
+    },
+    {
+      "column": 8388,
+      "row": 5865,
+      "buildings": 128,
+      "bytes": 4520
+    },
+    {
+      "column": 8388,
+      "row": 5866,
+      "buildings": 11,
+      "bytes": 397
+    },
+    {
+      "column": 8388,
+      "row": 5867,
+      "buildings": 6,
+      "bytes": 194
+    },
+    {
+      "column": 8389,
+      "row": 5863,
+      "buildings": 657,
+      "bytes": 23623
+    },
+    {
+      "column": 8389,
+      "row": 5864,
+      "buildings": 1345,
+      "bytes": 45575
+    },
+    {
+      "column": 8389,
+      "row": 5865,
+      "buildings": 1586,
+      "bytes": 54522
+    },
+    {
+      "column": 8389,
+      "row": 5866,
+      "buildings": 181,
+      "bytes": 6103
+    },
+    {
+      "column": 8389,
+      "row": 5867,
+      "buildings": 123,
+      "bytes": 4117
+    },
+    {
+      "column": 8390,
+      "row": 5863,
+      "buildings": 2491,
+      "bytes": 86509
+    },
+    {
+      "column": 8390,
+      "row": 5864,
+      "buildings": 1679,
+      "bytes": 60841
+    },
+    {
+      "column": 8390,
+      "row": 5865,
+      "buildings": 1303,
+      "bytes": 42481
+    },
+    {
+      "column": 8390,
+      "row": 5866,
+      "buildings": 438,
+      "bytes": 15558
+    },
+    {
+      "column": 8390,
+      "row": 5867,
+      "buildings": 917,
+      "bytes": 31563
+    },
+    {
+      "column": 8391,
+      "row": 5863,
+      "buildings": 2314,
+      "bytes": 89998
+    },
+    {
+      "column": 8391,
+      "row": 5864,
+      "buildings": 2811,
+      "bytes": 109897
+    },
+    {
+      "column": 8391,
+      "row": 5865,
+      "buildings": 6359,
+      "bytes": 259197
+    },
+    {
+      "column": 8391,
+      "row": 5866,
+      "buildings": 3004,
+      "bytes": 111436
+    },
+    {
+      "column": 8391,
+      "row": 5867,
+      "buildings": 1346,
+      "bytes": 50146
+    },
+    {
+      "column": 8392,
+      "row": 5863,
+      "buildings": 1453,
+      "bytes": 49675
+    },
+    {
+      "column": 8392,
+      "row": 5864,
+      "buildings": 2021,
+      "bytes": 74795
+    },
+    {
+      "column": 8392,
+      "row": 5865,
+      "buildings": 4133,
+      "bytes": 150007
+    },
+    {
+      "column": 8392,
+      "row": 5866,
+      "buildings": 3436,
+      "bytes": 137812
+    },
+    {
+      "column": 8392,
+      "row": 5867,
+      "buildings": 904,
+      "bytes": 31592
+    },
+    {
+      "column": 8393,
+      "row": 5863,
+      "buildings": 872,
+      "bytes": 32264
+    },
+    {
+      "column": 8393,
+      "row": 5864,
+      "buildings": 1531,
+      "bytes": 52557
+    },
+    {
+      "column": 8393,
+      "row": 5865,
+      "buildings": 2111,
+      "bytes": 74249
+    },
+    {
+      "column": 8393,
+      "row": 5866,
+      "buildings": 1158,
+      "bytes": 48870
+    },
+    {
+      "column": 8393,
+      "row": 5867,
+      "buildings": 256,
+      "bytes": 8844
+    },
+    {
+      "column": 8394,
+      "row": 5863,
+      "buildings": 375,
+      "bytes": 12193
+    },
+    {
+      "column": 8394,
+      "row": 5864,
+      "buildings": 869,
+      "bytes": 30119
+    },
+    {
+      "column": 8394,
+      "row": 5865,
+      "buildings": 787,
+      "bytes": 27385
+    },
+    {
+      "column": 8394,
+      "row": 5866,
+      "buildings": 178,
+      "bytes": 6046
+    },
+    {
+      "column": 8394,
+      "row": 5867,
+      "buildings": 212,
+      "bytes": 6784
+    }
+  ]
+}

@@ -96,6 +96,14 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
     '« Toulon » s’écrit pareil en anglais et dans la langue concernée',
   'bi.cities.name.dijon-bdtopo':
     '« Dijon » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.angers-bdtopo':
+    '« Angers » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.reims-bdtopo':
+    '« Reims » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.nimes-bdtopo':
+    '« Nîmes » s’écrit pareil en anglais et dans la langue concernée',
+  'bi.cities.name.saintetienne-bdtopo':
+    '« Saint-Étienne » s’écrit pareil en anglais et dans la langue concernée',
   'bi.cities.name.newyork-opendata':
     '« New York » s’écrit pareil en anglais et dans les langues concernées',
   'bi.cities.name.chicago-overture':
