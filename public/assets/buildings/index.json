@@ -155,6 +155,50 @@
       "manifest": "assets/buildings/dijon-bdtopo/manifest.json"
     },
     {
+      "id": "angers-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        -0.6118,
+        47.4434,
+        -0.4918,
+        47.5134
+      ],
+      "manifest": "assets/buildings/angers-bdtopo/manifest.json"
+    },
+    {
+      "id": "reims-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        3.9717,
+        49.2233,
+        4.0917,
+        49.2933
+      ],
+      "manifest": "assets/buildings/reims-bdtopo/manifest.json"
+    },
+    {
+      "id": "nimes-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        4.3001,
+        43.8017,
+        4.4201,
+        43.8717
+      ],
+      "manifest": "assets/buildings/nimes-bdtopo/manifest.json"
+    },
+    {
+      "id": "saintetienne-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        4.3272,
+        45.4047,
+        4.4472,
+        45.4747
+      ],
+      "manifest": "assets/buildings/saintetienne-bdtopo/manifest.json"
+    },
+    {
       "id": "berlin-lod2",
       "body": "earth",
       "bboxLonLat": [
