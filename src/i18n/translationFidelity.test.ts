@@ -69,6 +69,11 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   // Bornes de légende : un nombre et une unité du SI, rien à traduire.
   // « Transit » est aussi le terme français de la méthode de détection.
   'exo.method.transit': '« transit » est aussi le terme français',
+  // « Messier » est le nom propre du catalogue (M 31) : il s’écrit pareil dans les quatre langues.
+  'deep.card.messier': '« Messier » est un nom propre, inchangé',
+  // « Constellation » s’écrit pareil en anglais et en français.
+  'deep.card.constellation':
+    '« constellation » s’écrit pareil en anglais et en français',
   // Intitulé de crédit : « satellites » s’écrit pareil en anglais et en français.
   'credits.satellites':
     '« Satellites » s’écrit pareil en anglais et en français',

@@ -12,6 +12,7 @@ import type { MessageKey } from '@/i18n/locales';
 import { onLocaleChange, t } from '@/i18n';
 import type { ConstellationNames } from './constellationNames';
 import type { DeepSkyLayer } from './deepSkyLayer';
+import type { DeepSkyCard } from './deepSkyCard';
 import type { MeteorLayer } from './meteorLayer';
 import type { ExoplanetCard } from './exoplanetCard';
 import type { OverlayCoordinator } from './overlayCoordinator';
@@ -86,6 +87,7 @@ export function setupSkyLayerToggles(
   let wanted = false;
   let names: Promise<ConstellationNames | null> | null = null;
   let deep: Promise<DeepSkyLayer | null> | null = null;
+  let deepCard: Promise<DeepSkyCard | null> | null = null;
   let meteors: Promise<MeteorLayer | null> | null = null;
   mount({
     id: 'constellations-toggle',
@@ -123,7 +125,19 @@ export function setupSkyLayerToggles(
       if (on || deep)
         void (deep ??= import('./deepSkyLayer').then((m) =>
           m.setupDeepSkyLayer({ starfield, ...environment })
-        )).then((l) => l?.setActive(on));
+        )).then((l) => {
+          l?.setActive(on);
+          // La fiche d'un objet se charge avec la couche, à sa première activation.
+          if (l && on && !deepCard)
+            deepCard = import('./deepSkyCard').then((m) =>
+              m.setupDeepSkyCard({
+                markers: l.markers,
+                file: l.file,
+                ...environment,
+              })
+            );
+          void deepCard?.then((c) => c?.setActive(on));
+        });
     },
   });
   // Les pluies de météores : la case dit combien de pluies sont actives à la date de la scène.

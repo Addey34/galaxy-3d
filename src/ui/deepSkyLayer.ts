@@ -20,7 +20,11 @@ import {
 
 export const DEEPSKY_URL = '/assets/sky/deepsky.json';
 
-export type DeepSkyLayer = SkyLabelLayer;
+/** La couche, plus ce dont la fiche d'un objet a besoin : les repères (sélection) et le fichier daté. */
+export interface DeepSkyLayer extends SkyLabelLayer {
+  markers: DeepSkyMarkers;
+  file: DeepSkyFile;
+}
 
 export interface DeepSkyLayerEnvironment {
   starfield: Starfield;
@@ -78,6 +82,8 @@ export async function setupDeepSkyLayer(
   );
 
   return {
+    markers,
+    file,
     setActive(on) {
       markers.points.visible = on;
       labels.setActive(on);

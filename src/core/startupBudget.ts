@@ -423,9 +423,19 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       'les noms des constellations (2026-11-03), couche 2D : importée par `ui/skyLayerToggles` à la première activation des figures, éteintes au démarrage. Elle lit `sky/constellations.json` (déjà en cache HTTP) et ne pèse rien au premier affichage.',
   },
   {
+    chunk: 'exoplanets',
+    reason:
+      "les constantes et la conversion de ligne de `core/exoplanets`, partagées par `ExoplanetHosts` et `exoplanetCard`, deux morceaux hors démarrage : Rollup en fait un morceau commun que `SolarSystemApp` n'appelle qu'à la lecture du fichier d'exoplanètes, après le premier affichage.",
+  },
+  {
     chunk: 'skyPick',
     reason:
-      "la sélection d'un point du ciel par sa direction (`core/skyPick`), partagée par les repères des exoplanètes (`ExoplanetHosts`) et par leur fiche (`exoplanetCard`), deux morceaux hors démarrage : Rollup en fait un morceau commun, qui ne se charge qu'avec eux.",
+      "la sélection d'un point du ciel par sa direction (`core/skyPick`), partagée par les repères des exoplanètes (`ExoplanetHosts`), ceux du ciel profond (`DeepSkyMarkers`) et leurs fiches, des morceaux hors démarrage : Rollup en fait un morceau commun, qui ne se charge qu'avec eux.",
+  },
+  {
+    chunk: 'deepSkyCard',
+    reason:
+      "la fiche d'un objet du ciel profond et sa recherche (2026-11-03) : importées par `ui/skyLayerToggles` à la première activation de la case « Objets du ciel profond », éteinte au démarrage. Elle porte ses phrases dans `dict-card-*` et attend `loadDeferredMessages()`.",
   },
   {
     chunk: 'exoplanetCard',

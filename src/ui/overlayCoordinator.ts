@@ -6,6 +6,7 @@ export type SecondaryOverlayId =
   | 'earth-events'
   | 'events'
   | 'exoplanet-card'
+  | 'deepsky-card'
   | 'help';
 
 export interface OverlayCoordinator {
