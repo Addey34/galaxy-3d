@@ -19,6 +19,7 @@ import * as THREE from 'three';
 import { markGlowSource } from '@/components/systems/glowSelection';
 import { GLOW_GAINS } from '@/config/engine';
 import { OBLIQUITY_RAD } from '@/core/frames';
+import { segmentIndices, type ConstellationFile } from '@/core/constellations';
 import {
   starAppearance,
   starColor,
@@ -36,6 +37,9 @@ const SKY_RADIUS = 2600;
 const REFRESH_YEARS = 0.25;
 const FALLBACK_COUNT = 2500;
 export const STAR_CATALOGUE_URL = '/assets/sky/stars.json';
+export const CONSTELLATIONS_URL = '/assets/sky/constellations.json';
+/** Opacité des figures : un fil discret, jamais un trait qui masque le ciel. */
+const CONSTELLATION_OPACITY = 0.35;
 
 const COS_OBL = Math.cos(OBLIQUITY_RAD);
 const SIN_OBL = Math.sin(OBLIQUITY_RAD);
@@ -71,6 +75,15 @@ export class Starfield {
   private years = Number.NaN;
   private readonly scratch = new Float64Array(3);
   private _source: 'none' | 'catalogue' | 'procedural' = 'none';
+  private readonly lineMaterial = new THREE.LineBasicMaterial({
+    color: 0x7f9fd0,
+    transparent: true,
+    opacity: CONSTELLATION_OPACITY,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  private lines: THREE.LineSegments | null = null;
+  private constellationsOn = false;
 
   constructor() {
     this.geometry = new THREE.BufferGeometry();
@@ -125,6 +138,7 @@ export class Starfield {
       if (!Array.isArray(file.stars) || file.stars.length === 0)
         throw new Error('catalogue vide');
       this.setCatalogue(file.stars);
+      await this.loadConstellations(fetchImpl);
     } catch (err) {
       Logger.warn(
         '[Starfield] catalogue réel illisible, semis procédural de repli',
@@ -132,6 +146,45 @@ export class Starfield {
       );
       this.setProcedural();
     }
+  }
+
+  /** Les figures sont facultatives : un échec les omet, il ne touche pas aux étoiles. */
+  private async loadConstellations(fetchImpl: typeof fetch): Promise<void> {
+    try {
+      const res = await fetchImpl(CONSTELLATIONS_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      this.setConstellations((await res.json()) as ConstellationFile);
+    } catch (err) {
+      Logger.warn('[Starfield] figures des constellations illisibles', err);
+    }
+  }
+
+  /** Pose les figures sur les étoiles chargées : elles partagent leur tampon de positions. */
+  setConstellations(file: Pick<ConstellationFile, 'constellations'>): void {
+    if (this._source !== 'catalogue') return;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', this.geometry.getAttribute('position'));
+    geometry.setIndex(
+      new THREE.BufferAttribute(segmentIndices(file, this.stars.length), 1)
+    );
+    this.lines?.geometry.dispose();
+    this.lines?.removeFromParent();
+    this.lines = new THREE.LineSegments(geometry, this.lineMaterial);
+    this.lines.name = 'constellations';
+    this.lines.frustumCulled = false;
+    this.lines.renderOrder = -1;
+    this.lines.visible = this.constellationsOn;
+    this.points.add(this.lines);
+  }
+
+  /** Montre ou cache les figures (couche optionnelle, éteinte par défaut, jamais mémorisée). */
+  setConstellationsVisible(on: boolean): void {
+    this.constellationsOn = on;
+    if (this.lines) this.lines.visible = on;
+  }
+
+  get hasConstellations(): boolean {
+    return this.lines !== null;
   }
 
   setCatalogue(stars: readonly StarRow[], date?: Date): void {
@@ -236,11 +289,14 @@ export class Starfield {
    */
   setVisibility(fraction: number): void {
     this.material.uniforms['opacity']!.value = fraction;
+    this.lineMaterial.opacity = CONSTELLATION_OPACITY * fraction;
     this.points.visible = fraction > 0 && this._source !== 'none';
   }
 
   dispose(): void {
     this.geometry.dispose();
     this.material.dispose();
+    this.lineMaterial.dispose();
+    this.lines?.geometry.dispose();
   }
 }

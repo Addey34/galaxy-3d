@@ -1049,6 +1049,26 @@ function bodyLandingPages() {
             licenseUrl: file.source.licenseUrl,
           };
         })();
+        // Figures des constellations livrées : la page cite le compte et la licence DU FICHIER.
+        const constellationsCatalogue = await (async () => {
+          const file = await readJson<{
+            count: number;
+            constellations: unknown[];
+            source: {
+              name: string;
+              url: string;
+              linesCommit: string;
+              license: string;
+              licenseUrl: string;
+              maxSeparationDeg: number;
+            };
+          }>('public/assets/sky/constellations.json');
+          if (file.constellations.length !== file.count || file.count === 0)
+            throw new Error(
+              'figures des constellations vides ou au compte faux'
+            );
+          return { count: file.count, ...file.source };
+        })();
         const smallBodySnapshot = (() => {
           const dataset = sbdb.parseSmallBodyDataset(
             smallBodyDatasetFile as Parameters<
@@ -1124,6 +1144,7 @@ function bodyLandingPages() {
             origin: SITE_ORIGIN,
             smallBodies: smallBodySnapshot,
             sky: skyCatalogue,
+            constellations: constellationsCatalogue,
             heightfields,
             buildings,
           }),

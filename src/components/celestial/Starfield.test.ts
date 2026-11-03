@@ -86,3 +86,47 @@ describe('Starfield', () => {
     expect(field.points.visible).toBe(true);
   });
 });
+
+describe('Starfield : figures des constellations', () => {
+  const FIGURES = { constellations: [{ id: 'X', name: 'X', lines: [[0, 1]] }] };
+
+  it('sont éteintes par défaut et ne se montrent que sur demande', () => {
+    const field = new Starfield();
+    field.setCatalogue([SIRIUS, POLE], J2000);
+    field.setConstellations(FIGURES);
+    expect(field.hasConstellations).toBe(true);
+    const lines = field.points.getObjectByName('constellations')!;
+    expect(lines.visible).toBe(false);
+    field.setConstellationsVisible(true);
+    expect(lines.visible).toBe(true);
+  });
+
+  it('suivent les étoiles : elles partagent le tampon de positions, donc la date les déplace', () => {
+    const field = new Starfield();
+    field.setCatalogue([SIRIUS, POLE], J2000);
+    field.setConstellations(FIGURES);
+    const lines = field.points.getObjectByName(
+      'constellations'
+    ) as THREE.LineSegments;
+    const attr = lines.geometry.getAttribute('position');
+    expect(attr).toBe(field.points.geometry.getAttribute('position'));
+    const before = new THREE.Vector3().fromBufferAttribute(attr, 0);
+    field.setDate(new Date(Date.UTC(5000, 0, 1)));
+    expect(
+      new THREE.Vector3().fromBufferAttribute(attr, 0).distanceTo(before)
+    ).toBeGreaterThan(50);
+  });
+
+  it("un fichier de figures illisible n'ôte rien aux étoiles", async () => {
+    const field = new Starfield();
+    const fetcher = vi.fn(async (url: RequestInfo | URL) =>
+      String(url).includes('constellations')
+        ? { ok: false, status: 404 }
+        : { ok: true, json: async () => ({ stars: [SIRIUS, POLE] }) }
+    );
+    await field.load(fetcher as unknown as typeof fetch);
+    expect(field.source).toBe('catalogue');
+    expect(field.hasConstellations).toBe(false);
+    expect(field.count).toBe(2);
+  });
+});

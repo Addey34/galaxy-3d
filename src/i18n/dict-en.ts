@@ -384,6 +384,7 @@ export const en = {
   'settings.colorblind': 'Color-blind friendly orbit colors',
   'settings.gazetteer': 'Surface names',
   'settings.eventLabels': 'Event labels',
+  'settings.constellations': 'Constellation lines',
   'settings.keepAppearance': 'Keep clouds and rain visible up close',
   'settings.surfaceEarthBase': 'Earth’s ground',
   'settings.surfaceEarthBase.mosaic': 'Blue Marble mosaic (2004)',
