@@ -60,7 +60,7 @@ import { EarthEventsOverlay } from './ui/earthEventsOverlay';
 import { GazetteerOverlay } from './ui/gazetteerOverlay';
 import { setupGazetteerToggle } from './ui/gazetteerToggle';
 import { setupEventLabelsToggle } from './ui/eventLabelsToggle';
-import { setupConstellationsToggle } from './ui/constellationsToggle';
+import { setupSkyLayerToggles } from './ui/skyLayerToggles';
 import { setupKeepAppearanceToggle } from './ui/keepAppearanceToggle';
 import gazetteerIndex from './config/gazetteerIndex.json';
 import { EARTH_NAMES_BODY } from './core/earthNames';
@@ -509,7 +509,7 @@ function wireChrome(): {
     gazetteerOverlay.mount();
     setupGazetteerToggle(gazetteerOverlay);
     setupEventLabelsToggle(earthEventsOverlay);
-    setupConstellationsToggle(sceneSystem.starfield);
+    setupSkyLayerToggles(sceneSystem.starfield);
     setupKeepAppearanceToggle();
     setupEarthEvents(
       api,

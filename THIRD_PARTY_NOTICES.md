@@ -485,6 +485,17 @@ requires:
 > OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 > POSSIBILITY OF SUCH DAMAGE.
 
+**Exoplanets** (`public/assets/sky/exoplanets.json`). A dated snapshot of the NASA Exoplanet
+Archive, table `pscomppars` (<https://exoplanetarchive.ipac.caltech.edu/>), taken by
+`scripts/generate-exoplanets.mjs`; the archive changes every day, and the file names its date.
+As the archive asks (<https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html>, read on
+2026-11-03):
+
+> This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.
+
+The archive also asks to cite Christiansen et al. (2025), published in the Planetary Science
+Journal, as its reference paper.
+
 **Earth weather layers** are fetched at runtime and are not bundled either:
 
 - NASA GIBS (EOSDIS): VIIRS and MODIS cloud imagery, IMERG precipitation, MERRA-2 surface air

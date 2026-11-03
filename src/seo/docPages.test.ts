@@ -119,6 +119,29 @@ const methodology = methodologyPages({
  * l'application (`parseSmallBodyDataset`) sur le fichier que le build livre : un compte de
  * lignes brutes dirait 8000 quand le panneau en affiche 6965.
  */
+function exoplanetsCatalogue() {
+  const file = JSON.parse(
+    readFileSync(resolve(ROOT, 'public/assets/sky/exoplanets.json'), 'utf-8')
+  ) as {
+    count: number;
+    source: {
+      name: string;
+      url: string;
+      acknowledgementUrl: string;
+      retrieved: string;
+      planets: number;
+    };
+  };
+  return {
+    count: file.count,
+    planets: file.source.planets,
+    retrieved: file.source.retrieved,
+    name: file.source.name,
+    url: file.source.url,
+    acknowledgementUrl: file.source.acknowledgementUrl,
+  };
+}
+
 function constellationsCatalogue() {
   const file = JSON.parse(
     readFileSync(
@@ -221,6 +244,7 @@ const sourcesInput: SourcesInput = {
   smallBodies: smallBodySnapshot(),
   sky: skyCatalogue(),
   constellations: constellationsCatalogue(),
+  exoplanets: exoplanetsCatalogue(),
   heightfields: shippedHeightfields(),
   buildings: shippedBuildings(),
 };

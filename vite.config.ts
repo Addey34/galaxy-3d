@@ -1069,6 +1069,30 @@ function bodyLandingPages() {
             );
           return { count: file.count, ...file.source };
         })();
+        // Systèmes d'exoplanètes livrés : la page cite les comptes et la date DU FICHIER.
+        const exoplanetsCatalogue = await (async () => {
+          const file = await readJson<{
+            count: number;
+            systems: unknown[];
+            source: {
+              name: string;
+              url: string;
+              acknowledgementUrl: string;
+              retrieved: string;
+              planets: number;
+            };
+          }>('public/assets/sky/exoplanets.json');
+          if (file.systems.length !== file.count || file.count === 0)
+            throw new Error("systèmes d'exoplanètes vides ou au compte faux");
+          return {
+            count: file.count,
+            planets: file.source.planets,
+            retrieved: file.source.retrieved,
+            name: file.source.name,
+            url: file.source.url,
+            acknowledgementUrl: file.source.acknowledgementUrl,
+          };
+        })();
         const smallBodySnapshot = (() => {
           const dataset = sbdb.parseSmallBodyDataset(
             smallBodyDatasetFile as Parameters<
@@ -1145,6 +1169,7 @@ function bodyLandingPages() {
             smallBodies: smallBodySnapshot,
             sky: skyCatalogue,
             constellations: constellationsCatalogue,
+            exoplanets: exoplanetsCatalogue,
             heightfields,
             buildings,
           }),

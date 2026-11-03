@@ -54,6 +54,23 @@ export function equatorialToScene(
 }
 
 /**
+ * `equatorialToScene` sans allocation, pour les nuages de milliers de points (étoiles, systèmes
+ * d'exoplanètes) : écrit `scale × (x, y, z)` converti dans `out` à partir de `offset`.
+ */
+export function equatorialToSceneInto(
+  x: number,
+  y: number,
+  z: number,
+  scale: number,
+  out: Float32Array | number[],
+  offset: number
+): void {
+  out[offset] = x * scale;
+  out[offset + 1] = (-y * SIN_OBL + z * COS_OBL) * scale;
+  out[offset + 2] = -(y * COS_OBL + z * SIN_OBL) * scale;
+}
+
+/**
  * Convertit un vecteur héliocentrique écliptique J2000 (AU) vers le repère Three.js.
  *
  * Les éléments orbitaux des petits corps (JPL Small-Body Database, Minor Planet Center)

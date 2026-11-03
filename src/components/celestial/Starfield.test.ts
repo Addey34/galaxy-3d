@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { equatorialToScene } from '@/core/frames';
 import type { StarRow } from '@/core/starCatalogue';
+import { ExoplanetHosts } from './ExoplanetHosts';
 import { Starfield } from './Starfield';
 
 // Sirius (J2000, 2,64 pc, fort mouvement propre) et une étoile fixe du pôle nord.
@@ -56,14 +57,14 @@ describe('Starfield', () => {
   it("ne recalcule rien tant que la date n'a pas avancé de plus d'un quart d'année", () => {
     const field = new Starfield();
     field.setCatalogue([SIRIUS], J2000);
-    const spy = vi.spyOn(
-      field.points.geometry.getAttribute('position'),
-      'setXYZ'
-    );
+    const position = field.points.geometry.getAttribute(
+      'position'
+    ) as THREE.BufferAttribute;
+    const version = position.version;
     field.setDate(new Date(J2000.getTime() + 10 * 86_400_000));
-    expect(spy).not.toHaveBeenCalled();
+    expect(position.version).toBe(version);
     field.setDate(new Date(J2000.getTime() + 400 * 86_400_000));
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(position.version).toBe(version + 1);
   });
 
   it('retombe sur le semis procédural, et le dit, quand le fichier est illisible', async () => {
@@ -127,6 +128,73 @@ describe('Starfield : figures des constellations', () => {
     await field.load(fetcher as unknown as typeof fetch);
     expect(field.source).toBe('catalogue');
     expect(field.hasConstellations).toBe(false);
+    expect(field.count).toBe(2);
+  });
+});
+
+describe("Starfield : systèmes d'exoplanètes", () => {
+  const SYSTEMS = [
+    [
+      'Proxima Cen',
+      217.4,
+      -62.68,
+      1.3,
+      11,
+      -3781,
+      769,
+      [['Proxima Cen b', 11.19, null, 0.05, 2016, 'Radial Velocity']],
+    ],
+    [
+      'Lointaine',
+      10,
+      20,
+      null,
+      null,
+      null,
+      null,
+      [['Lointaine b', 5, 1, 0.1, 2020, 'Transit']],
+    ],
+  ] as unknown as ConstructorParameters<typeof ExoplanetHosts>[0];
+
+  it('sont éteints par défaut, et ne se montrent que sur demande', () => {
+    const field = new Starfield();
+    field.setCatalogue([SIRIUS], J2000);
+    field.attachExoplanets(new ExoplanetHosts(SYSTEMS));
+    expect(field.hasExoplanets).toBe(true);
+    const hosts = field.points.getObjectByName('exoplanetHosts')!;
+    expect(hosts.visible).toBe(false);
+    field.setExoplanetsVisible(true);
+    expect(hosts.visible).toBe(true);
+  });
+
+  it('suivent la date : un hôte à fort mouvement propre bouge, pas un hôte sans mouvement', () => {
+    const field = new Starfield();
+    field.setCatalogue([SIRIUS], J2000);
+    field.attachExoplanets(new ExoplanetHosts(SYSTEMS));
+    const hosts = field.points.getObjectByName(
+      'exoplanetHosts'
+    ) as THREE.Points;
+    const attr = hosts.geometry.getAttribute('position');
+    const at = (i: number) => new THREE.Vector3().fromBufferAttribute(attr, i);
+    const p0 = at(0);
+    const f0 = at(1);
+    field.setDate(new Date(Date.UTC(7000, 0, 1)));
+    expect(at(0).distanceTo(p0)).toBeGreaterThan(50);
+    expect(at(1).distanceTo(f0)).toBeLessThan(0.01);
+  });
+
+  it("un fichier d'exoplanètes illisible n'ôte rien aux étoiles", async () => {
+    const field = new Starfield();
+    const fetcher = vi.fn(async (url: RequestInfo | URL) =>
+      String(url).includes('exoplanets')
+        ? { ok: false, status: 404 }
+        : String(url).includes('constellations')
+          ? { ok: false, status: 404 }
+          : { ok: true, json: async () => ({ stars: [SIRIUS, POLE] }) }
+    );
+    await field.load(fetcher as unknown as typeof fetch);
+    expect(field.source).toBe('catalogue');
+    expect(field.hasExoplanets).toBe(false);
     expect(field.count).toBe(2);
   });
 });

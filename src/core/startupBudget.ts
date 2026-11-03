@@ -391,6 +391,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'ExoplanetHosts',
+    reason:
+      "les repères des systèmes d'exoplanètes sur le ciel (2026-11-03) : importés par `Starfield` quand le fichier `sky/exoplanets.json` est lu, après le catalogue d'étoiles, jamais pour le premier affichage. La couche est éteinte par défaut ; sortie du démarrage pour rendre les 552 octets que le ciel réel avait pris au-delà du plafond.",
+  },
+  {
     chunk: 'buildingsOverlay',
     reason:
       'les bâtiments 3D (lot 63, C.3b) : le fil vers la couche, importé par `surfacePanel` quand la caméra est BASSE sur un corps (sous 300 km), jamais au démarrage.',

@@ -269,6 +269,7 @@ export const en = {
   'credits.sky': 'Sky',
   'credits.sky.list':
     'Stars: HYG database v4.4 (Hipparcos, Yale Bright Star and Gliese catalogues), selected to magnitude 6.5 and converted to compact units,',
+  'credits.exoplanets': 'Exoplanets',
   'credits.data': 'Data',
   'credits.privacy': 'Privacy',
   'credits.methodology': 'Methodology',
@@ -385,6 +386,7 @@ export const en = {
   'settings.gazetteer': 'Surface names',
   'settings.eventLabels': 'Event labels',
   'settings.constellations': 'Constellation lines',
+  'settings.exoplanets': 'Exoplanet host stars',
   'settings.keepAppearance': 'Keep clouds and rain visible up close',
   'settings.surfaceEarthBase': 'Earth’s ground',
   'settings.surfaceEarthBase.mosaic': 'Blue Marble mosaic (2004)',
