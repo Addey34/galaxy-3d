@@ -171,7 +171,9 @@ export class Starfield {
       const file = (await res.json()) as ExoplanetFile;
       // Hors du chemin de démarrage : la classe des repères ne se charge qu'avec leurs données.
       const { ExoplanetHosts } = await import('./ExoplanetHosts');
-      this.attachExoplanets(new ExoplanetHosts(file.systems));
+      this.attachExoplanets(
+        new ExoplanetHosts(file.systems, file.source.retrieved)
+      );
     } catch (err) {
       Logger.warn('[Starfield] systèmes d’exoplanètes illisibles', err);
     }
@@ -191,6 +193,15 @@ export class Starfield {
   setExoplanetsVisible(on: boolean): void {
     this.exoplanetsOn = on;
     if (this.exoplanets) this.exoplanets.points.visible = on;
+  }
+
+  /** Les repères (null tant que le fichier n'est pas lu) ; leur logique vit dans leur morceau. */
+  get exoplanetHosts(): ExoplanetHosts | null {
+    return this.exoplanets;
+  }
+
+  get exoplanetsVisible(): boolean {
+    return this.exoplanetsOn;
   }
 
   get hasExoplanets(): boolean {

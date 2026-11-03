@@ -5,6 +5,7 @@ export type SecondaryOverlayId =
   | 'weather-layers'
   | 'earth-events'
   | 'events'
+  | 'exoplanet-card'
   | 'help';
 
 export interface OverlayCoordinator {

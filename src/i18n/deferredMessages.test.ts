@@ -26,6 +26,7 @@ const DEFERRED_READERS: Record<string, string> = {
   'ui/missionsBlock.ts': 'cardBlocks',
   'ui/placesBlock.ts': 'cardBlocks',
   'ui/paletteSearch.ts': 'paletteSearch',
+  'ui/exoplanetCard.ts': 'exoplanetCard',
   'components/surface/compareCurtain.ts': 'compareCurtain',
 };
 

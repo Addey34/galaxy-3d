@@ -6,9 +6,12 @@
  * lecture persistent, le contenu de la scène jamais). Chaque case reste désactivée tant que son
  * fichier n'est pas chargé : les fichiers sont facultatifs, un échec laisse le ciel intact.
  */
+import type { PerspectiveCamera } from 'three';
 import type { Starfield } from '@/components/celestial/Starfield';
 import type { MessageKey } from '@/i18n/locales';
 import { onLocaleChange, t } from '@/i18n';
+import type { ExoplanetCard } from './exoplanetCard';
+import type { OverlayCoordinator } from './overlayCoordinator';
 
 interface SkyLayer {
   id: string;
@@ -61,8 +64,21 @@ function mount(layer: SkyLayer): void {
   }
 }
 
-export function setupSkyLayerToggles(starfield: Starfield | null): void {
+/** Ce dont la fiche d'un système a besoin : la caméra pour viser, le canvas pour cliquer, le coordinateur. */
+export interface SkyLayerEnvironment {
+  camera: PerspectiveCamera;
+  canvas: HTMLElement;
+  coordinator: OverlayCoordinator;
+}
+
+export function setupSkyLayerToggles(
+  starfield: Starfield | null,
+  environment: SkyLayerEnvironment
+): void {
   if (!starfield) return;
+  // La fiche n'existe pas au démarrage : elle se charge à la première activation de la couche.
+  let card: Promise<ExoplanetCard> | null = null;
+  let wanted = false;
   mount({
     id: 'constellations-toggle',
     labelKey: 'settings.constellations',
@@ -73,6 +89,15 @@ export function setupSkyLayerToggles(starfield: Starfield | null): void {
     id: 'exoplanets-toggle',
     labelKey: 'settings.exoplanets',
     ready: () => starfield.hasExoplanets,
-    set: (on) => starfield.setExoplanetsVisible(on),
+    set: (on) => {
+      starfield.setExoplanetsVisible(on);
+      wanted = on;
+      if (on && !card) {
+        card = import('./exoplanetCard').then((m) =>
+          m.setupExoplanetCard({ starfield, ...environment })
+        );
+      }
+      void card?.then((c) => c.setActive(wanted));
+    },
   });
 }

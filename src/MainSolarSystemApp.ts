@@ -121,6 +121,8 @@ const CONTEXTUAL_SURFACE_ANCHORS: Partial<
   },
   events: { trigger: '#events-trigger', panel: '#astronomical-events' },
   help: { trigger: '#help-btn', panel: '#help-popover' },
+  // La fiche d'un système se pose là où se pose celle d'un corps : même gabarit, même feuille mobile.
+  'exoplanet-card': { trigger: '#info-trigger', panel: '#exoplanet-card' },
 };
 
 function positionContextualSurface(id: SecondaryOverlayId): void {
@@ -509,7 +511,11 @@ function wireChrome(): {
     gazetteerOverlay.mount();
     setupGazetteerToggle(gazetteerOverlay);
     setupEventLabelsToggle(earthEventsOverlay);
-    setupSkyLayerToggles(sceneSystem.starfield);
+    setupSkyLayerToggles(sceneSystem.starfield, {
+      camera: cameraSystem.camera,
+      canvas: cameraSystem.renderer.domElement,
+      coordinator: overlayCoordinator,
+    });
     setupKeepAppearanceToggle();
     setupEarthEvents(
       api,

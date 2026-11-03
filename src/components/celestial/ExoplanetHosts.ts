@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { equatorialToSceneInto } from '@/core/frames';
 import type { ExoplanetSystem } from '@/core/exoplanets';
 import { systemAsStar } from '@/core/exoplanets';
+import { nearestDirection } from '@/core/skyPick';
 import { starDirection, type StarRow } from '@/core/starCatalogue';
 
 const SKY_RADIUS = 2600;
@@ -47,7 +48,11 @@ export class ExoplanetHosts {
   private readonly scratch = new Float64Array(3);
   private years = Number.NaN;
 
-  constructor(systems: readonly ExoplanetSystem[]) {
+  constructor(
+    systems: readonly ExoplanetSystem[],
+    /** Date de relevé de l'archive, citée par la fiche. */
+    readonly retrieved: string | null = null
+  ) {
     this.systems = systems;
     this.rows = systems.map(systemAsStar);
     this.geometry.setAttribute(
@@ -105,6 +110,26 @@ export class ExoplanetHosts {
   /** Part visible, 0 à 1 : sous un ciel de jour les repères s'effacent comme les étoiles. */
   setOpacity(fraction: number): void {
     this.material.uniforms['opacity']!.value = fraction;
+  }
+
+  /** Indice du repère le plus proche du rayon (vecteur unitaire de la scène), à `tolRad` près, ou -1. */
+  pick(ray: readonly [number, number, number], tolRad: number): number {
+    const position = this.geometry.getAttribute(
+      'position'
+    ) as THREE.BufferAttribute;
+    return nearestDirection(position.array, this.systems.length, ray, tolRad);
+  }
+
+  /** Le système visé par le rayon, ou null. */
+  pickSystem(
+    ray: readonly [number, number, number],
+    tolRad: number
+  ): ExoplanetSystem | null {
+    return this.systems[this.pick(ray, tolRad)] ?? null;
+  }
+
+  findSystem(name: string): ExoplanetSystem | null {
+    return this.systems.find((s) => s[0] === name) ?? null;
   }
 
   get count(): number {

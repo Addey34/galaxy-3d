@@ -391,6 +391,16 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'skyPick',
+    reason:
+      "la sélection d'un point du ciel par sa direction (`core/skyPick`), partagée par les repères des exoplanètes (`ExoplanetHosts`) et par leur fiche (`exoplanetCard`), deux morceaux hors démarrage : Rollup en fait un morceau commun, qui ne se charge qu'avec eux.",
+  },
+  {
+    chunk: 'exoplanetCard',
+    reason:
+      "la fiche d'un système d'exoplanètes et sa recherche (2026-11-03) : importées par `ui/skyLayerToggles` à la première activation de la couche « Étoiles à exoplanètes », éteinte au démarrage. Elle porte ses phrases dans `dict-card-*` et attend `loadDeferredMessages()`.",
+  },
+  {
     chunk: 'ExoplanetHosts',
     reason:
       "les repères des systèmes d'exoplanètes sur le ciel (2026-11-03) : importés par `Starfield` quand le fichier `sky/exoplanets.json` est lu, après le catalogue d'étoiles, jamais pour le premier affichage. La couche est éteinte par défaut ; sortie du démarrage pour rendre les 552 octets que le ciel réel avait pris au-delà du plafond.",
