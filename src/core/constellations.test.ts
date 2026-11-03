@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { constellationAnchor, distinctStars } from './constellationAnchor';
 import { segmentIndices, type ConstellationFile } from './constellations';
 import type { StarCatalogueFile, StarRow } from './starCatalogue';
 
@@ -95,5 +96,57 @@ describe('segmentIndices', () => {
         10
       )
     ).toThrow(/hors du catalogue/);
+  });
+});
+
+describe("ancre du nom d'une constellation", () => {
+  it('est la direction moyenne des étoiles, unitaire', () => {
+    const positions = [1, 0, 0, 0, 1, 0, 0, 0, 5];
+    const out: [number, number, number] = [0, 0, 0];
+    expect(constellationAnchor(positions, [0, 1], out)).toBe(true);
+    expect(out[0]).toBeCloseTo(Math.SQRT1_2);
+    expect(out[1]).toBeCloseTo(Math.SQRT1_2);
+    expect(Math.hypot(...out)).toBeCloseTo(1);
+  });
+
+  it("refuse quand les directions s'annulent (tour du ciel)", () => {
+    const out: [number, number, number] = [0, 0, 0];
+    expect(constellationAnchor([1, 0, 0, -1, 0, 0], [0, 1], out)).toBe(false);
+  });
+
+  it("ne compte chaque étoile qu'une fois", () => {
+    expect(
+      distinctStars([
+        [3, 4],
+        [4, 5, 3],
+      ])
+    ).toEqual([3, 4, 5]);
+  });
+
+  it('place chacune des 88 constellations livrées près de ses étoiles', () => {
+    const rad = Math.PI / 180;
+    const positions = stars.flatMap((s) => [
+      Math.cos(s[1] * rad) * Math.cos(s[0] * rad),
+      Math.cos(s[1] * rad) * Math.sin(s[0] * rad),
+      Math.sin(s[1] * rad),
+    ]);
+    const out: [number, number, number] = [0, 0, 0];
+    let placed = 0;
+    for (const c of file.constellations) {
+      const idx = distinctStars(c.lines);
+      if (!constellationAnchor(positions, idx, out)) continue;
+      placed++;
+      const nearest = Math.max(
+        ...idx.map(
+          (i) =>
+            positions[i * 3]! * out[0] +
+            positions[i * 3 + 1]! * out[1] +
+            positions[i * 3 + 2]! * out[2]
+        )
+      );
+      // au moins une étoile de la figure à moins de 60 degrés de l'ancre
+      expect(nearest).toBeGreaterThan(Math.cos(60 * rad));
+    }
+    expect(placed).toBeGreaterThanOrEqual(85);
   });
 });

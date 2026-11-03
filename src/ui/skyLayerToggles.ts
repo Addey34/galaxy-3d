@@ -10,6 +10,7 @@ import type { PerspectiveCamera } from 'three';
 import type { Starfield } from '@/components/celestial/Starfield';
 import type { MessageKey } from '@/i18n/locales';
 import { onLocaleChange, t } from '@/i18n';
+import type { ConstellationNames } from './constellationNames';
 import type { ExoplanetCard } from './exoplanetCard';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
@@ -79,11 +80,18 @@ export function setupSkyLayerToggles(
   // La fiche n'existe pas au démarrage : elle se charge à la première activation de la couche.
   let card: Promise<ExoplanetCard> | null = null;
   let wanted = false;
+  let names: Promise<ConstellationNames | null> | null = null;
   mount({
     id: 'constellations-toggle',
     labelKey: 'settings.constellations',
     ready: () => starfield.hasConstellations,
-    set: (on) => starfield.setConstellationsVisible(on),
+    set: (on) => {
+      starfield.setConstellationsVisible(on);
+      // Les noms se chargent à la première activation des figures, pas au démarrage.
+      void (names ??= import('./constellationNames').then((m) =>
+        m.setupConstellationNames({ starfield, ...environment })
+      )).then((n) => n?.setActive(on));
+    },
   });
   mount({
     id: 'exoplanets-toggle',
