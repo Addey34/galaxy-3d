@@ -1,0 +1,20 @@
+.constellation-names {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.constellation-name {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(160, 190, 235, 0.78);
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+  will-change: transform;
+}

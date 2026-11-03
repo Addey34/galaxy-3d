@@ -515,6 +515,7 @@ function wireChrome(): {
       camera: cameraSystem.camera,
       canvas: cameraSystem.renderer.domElement,
       coordinator: overlayCoordinator,
+      onFrame: (cb) => animationSystem.onFrame(cb),
     });
     setupKeepAppearanceToggle();
     setupEarthEvents(

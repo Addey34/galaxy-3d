@@ -391,6 +391,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'constellationNames',
+    reason:
+      'les noms des constellations (2026-11-03), couche 2D : importée par `ui/skyLayerToggles` à la première activation des figures, éteintes au démarrage. Elle lit `sky/constellations.json` (déjà en cache HTTP) et ne pèse rien au premier affichage.',
+  },
+  {
     chunk: 'skyPick',
     reason:
       "la sélection d'un point du ciel par sa direction (`core/skyPick`), partagée par les repères des exoplanètes (`ExoplanetHosts`) et par leur fiche (`exoplanetCard`), deux morceaux hors démarrage : Rollup en fait un morceau commun, qui ne se charge qu'avec eux.",
