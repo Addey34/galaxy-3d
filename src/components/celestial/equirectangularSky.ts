@@ -21,6 +21,7 @@
  * conversion lisait la source sans mipmaps.
  */
 import * as THREE from 'three';
+import { sceneToSkyImage } from '@/core/galactic';
 
 const vertexShader = /* glsl */ `
   varying vec3 vDirection;
@@ -38,10 +39,12 @@ const fragmentShader = /* glsl */ `
   uniform sampler2D map;
   uniform float intensity;
   uniform float lod;
+  uniform mat3 skyRotation;
   varying vec3 vDirection;
   #include <common>
   void main() {
-    vec2 uv = equirectUv( normalize( vDirection ) );
+    // La texture est en coordonnées galactiques : on lit la direction tournée (core/galactic.ts).
+    vec2 uv = equirectUv( normalize( skyRotation * vDirection ) );
     gl_FragColor = vec4( textureLod( map, uv, lod ).rgb * intensity, 1.0 );
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -81,6 +84,22 @@ export function createEquirectangularSky(texture: THREE.Texture): THREE.Mesh {
       map: { value: texture },
       intensity: { value: 1 },
       lod: { value: 0 },
+      // Matrice ligne par ligne ; Matrix3.set prend les lignes dans l'ordre, GLSL les colonnes.
+      skyRotation: {
+        value: new THREE.Matrix3().set(
+          ...(sceneToSkyImage() as [
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+            number,
+          ])
+        ),
+      },
     },
     vertexShader,
     fragmentShader,

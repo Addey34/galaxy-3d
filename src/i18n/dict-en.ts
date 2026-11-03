@@ -266,6 +266,9 @@ export const en = {
   'credits.models': '3D shape models',
   'credits.models.list':
     'NASA PDS: NEAR (Eros), Hayabusa (Itokawa), Galileo (Ida, Gaspra) · ISAS/JAXA: Hayabusa2 (Ryugu) · NASA/Goddard SVS: OSIRIS-REx (Bennu)',
+  'credits.sky': 'Sky',
+  'credits.sky.list':
+    'Stars: HYG database v4.4 (Hipparcos, Yale Bright Star and Gliese catalogues), selected to magnitude 6.5 and converted to compact units,',
   'credits.data': 'Data',
   'credits.privacy': 'Privacy',
   'credits.methodology': 'Methodology',

@@ -1023,6 +1023,32 @@ function bodyLandingPages() {
         // fichier : `parseSbdbRows` écarte les orbites non elliptiques et les lignes
         // incomplètes. Deux comptes pour une même chose, c'est une page qui contredit le
         // panneau — 8000 d'un côté, 6965 de l'autre.
+        // Catalogue d'étoiles livré : la page cite le compte et la licence DU FICHIER.
+        const skyCatalogue = await (async () => {
+          const file = await readJson<{
+            count: number;
+            stars: unknown[];
+            source: {
+              name: string;
+              url: string;
+              license: string;
+              licenseUrl: string;
+              retrieved: string;
+              magnitudeLimit: number;
+            };
+          }>('public/assets/sky/stars.json');
+          if (file.stars.length !== file.count || file.count === 0)
+            throw new Error("catalogue d'étoiles vide ou au compte faux");
+          return {
+            count: file.count,
+            magnitudeLimit: file.source.magnitudeLimit,
+            retrieved: file.source.retrieved,
+            name: file.source.name,
+            url: file.source.url,
+            license: file.source.license,
+            licenseUrl: file.source.licenseUrl,
+          };
+        })();
         const smallBodySnapshot = (() => {
           const dataset = sbdb.parseSmallBodyDataset(
             smallBodyDatasetFile as Parameters<
@@ -1097,6 +1123,7 @@ function bodyLandingPages() {
             updated: sourcesUpdated,
             origin: SITE_ORIGIN,
             smallBodies: smallBodySnapshot,
+            sky: skyCatalogue,
             heightfields,
             buildings,
           }),
@@ -1629,6 +1656,8 @@ export default defineConfig({
               url.pathname.startsWith('/assets/place-observations/') ||
               url.pathname.startsWith('/assets/search/') ||
               url.pathname.startsWith('/assets/atmosphere-profiles/') ||
+              // Le ciel réel (2026-11-03) : le catalogue d'étoiles, réécrit sous le même nom.
+              url.pathname.startsWith('/assets/sky/') ||
               // Lot 63 : l'index et les manifestes des bâtiments (les tuiles viennent du service
               // de données, une autre origine que ce motif ne voit pas).
               url.pathname.startsWith('/assets/buildings/'),

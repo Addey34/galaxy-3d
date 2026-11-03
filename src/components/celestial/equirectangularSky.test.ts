@@ -71,3 +71,29 @@ describe('le fond de ciel équirectangulaire', () => {
     expect(writers).toEqual([]);
   });
 });
+
+describe('la rotation galactique du fond', () => {
+  it("envoie le centre galactique au centre de l'image par le produit M * v que fait le shader", () => {
+    const sky = createEquirectangularSky(new THREE.Texture());
+    const m = (sky.material as THREE.ShaderMaterial).uniforms['skyRotation']!
+      .value as THREE.Matrix3;
+    // Centre galactique (ra 266,405°, dec −28,936°) dans la scène : equatorialToScene(x, y, z).
+    const ra = (266.4051 * Math.PI) / 180;
+    const dec = (-28.93617 * Math.PI) / 180;
+    const eq = [
+      Math.cos(dec) * Math.cos(ra),
+      Math.cos(dec) * Math.sin(ra),
+      Math.sin(dec),
+    ] as const;
+    const obl = (84_381.448 / 3600) * (Math.PI / 180);
+    const scene = new THREE.Vector3(
+      eq[0],
+      -eq[1] * Math.sin(obl) + eq[2] * Math.cos(obl),
+      -(eq[1] * Math.cos(obl) + eq[2] * Math.sin(obl))
+    );
+    const t = scene.clone().applyMatrix3(m);
+    // equirectUv : u = atan2(z, x) / 2π + 0.5, v = asin(y) / π + 0.5 : (0,5 ; 0,5) au centre.
+    expect(Math.atan2(t.z, t.x)).toBeCloseTo(0, 2);
+    expect(Math.asin(t.y)).toBeCloseTo(0, 2);
+  });
+});

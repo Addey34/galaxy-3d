@@ -258,6 +258,19 @@ export interface SourcesInput {
    * `public/assets/small-bodies/dataset.json` : ni la date ni le compte ne se retapent ici.
    */
   smallBodies: { retrieved: string; count: number };
+  /**
+   * Catalogue d'étoiles livré, LU dans `public/assets/sky/stars.json` : compte, magnitude limite,
+   * date de lecture et licence ne se retapent pas ici.
+   */
+  sky: {
+    count: number;
+    magnitudeLimit: number;
+    retrieved: string;
+    name: string;
+    url: string;
+    license: string;
+    licenseUrl: string;
+  };
   origin: string;
   /**
    * Hôtes que la CSP de production autorise en `connect-src` (`firebase.json`), hors `'self'`.
@@ -1651,6 +1664,35 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   );
 
   // ── Texte juridique complet ──
+  // Le ciel : le catalogue d'étoiles livré. Nombre, magnitude, date et licence viennent du
+  // fichier `public/assets/sky/stars.json` (via `input.sky`), aucun n'est retapé ici.
+  const sky = input.sky;
+  const skyLicence = link(sky.licenseUrl, 'CC BY-SA 4.0');
+  const skySource = link(sky.url, escapeHtml(sky.name));
+  sections.push(
+    docSection(
+      'sky',
+      L({
+        en: 'The sky: stars',
+        fr: 'Le ciel : les étoiles',
+        es: 'El cielo: las estrellas',
+        'pt-BR': 'O céu: as estrelas',
+      }),
+      `<p>${L({
+        en: `The ${escapeHtml(String(sky.count))} stars drawn in the sky, down to magnitude ${escapeHtml(String(sky.magnitudeLimit))} (the naked-eye limit), come from ${skySource}, read on ${escapeHtml(sky.retrieved)}. The shipped file is an adaptation of that database (a selection by magnitude, and a conversion of hours to degrees and of units), so it is shared under the same licence, ${skyLicence}, with the credit given in the help window.`,
+        fr: `Les ${escapeHtml(String(sky.count))} étoiles dessinées dans le ciel, jusqu’à la magnitude ${escapeHtml(String(sky.magnitudeLimit).replace('.', ','))} (la limite de l’œil nu), viennent de ${skySource}, relue le ${escapeHtml(sky.retrieved)}. Le fichier livré est une adaptation de cette base (une sélection par magnitude, et une conversion des heures en degrés et des unités) : il est donc partagé sous la même licence, ${skyLicence}, avec le crédit donné dans la fenêtre d’aide.`,
+        es: `Las ${escapeHtml(String(sky.count))} estrellas dibujadas en el cielo, hasta la magnitud ${escapeHtml(String(sky.magnitudeLimit).replace('.', ','))} (el límite del ojo desnudo), proceden de ${skySource}, leída el ${escapeHtml(sky.retrieved)}. El archivo entregado es una adaptación de esa base (una selección por magnitud y una conversión de horas a grados y de unidades), así que se comparte bajo la misma licencia, ${skyLicence}, con el crédito dado en la ventana de ayuda.`,
+        'pt-BR': `As ${escapeHtml(String(sky.count))} estrelas desenhadas no céu, até a magnitude ${escapeHtml(String(sky.magnitudeLimit).replace('.', ','))} (o limite do olho nu), vêm de ${skySource}, lida em ${escapeHtml(sky.retrieved)}. O arquivo entregue é uma adaptação dessa base (uma seleção por magnitude e uma conversão de horas em graus e de unidades), por isso é compartilhado sob a mesma licença, ${skyLicence}, com o crédito dado na janela de ajuda.`,
+      })}</p><p>${L({
+        en: 'Each star sits at its catalogued position, with the colour given by its B−V index. Its position at another date follows its proper motion and radial velocity in a straight line at constant speed: a good model over centuries, a poorer one over millennia, where the galactic potential and companion stars are not modelled. The brightness stays the one of today. The stars fade under a daylight sky. If the file cannot be read, the app falls back to a random scatter of points and logs it. The Milky Way behind them is a texture (see the textures table), rotated into galactic coordinates.',
+        fr: 'Chaque étoile est à sa position cataloguée, avec la couleur que donne son indice B−V. Sa position à une autre date suit son mouvement propre et sa vitesse radiale en ligne droite à vitesse constante : un bon modèle sur des siècles, un moins bon sur des millénaires, où le potentiel galactique et les étoiles compagnes ne sont pas modélisés. L’éclat reste celui d’aujourd’hui. Les étoiles s’effacent sous un ciel de jour. Si le fichier est illisible, l’application retombe sur un semis de points au hasard et le journalise. La Voie lactée derrière elles est une texture (voir le tableau des textures), tournée en coordonnées galactiques.',
+        es: 'Cada estrella está en su posición catalogada, con el color que da su índice B−V. Su posición en otra fecha sigue su movimiento propio y su velocidad radial en línea recta a velocidad constante: un buen modelo durante siglos, peor durante milenios, donde no se modelan el potencial galáctico ni las estrellas compañeras. El brillo sigue siendo el de hoy. Las estrellas se desvanecen bajo un cielo diurno. Si el archivo no se puede leer, la aplicación recurre a una dispersión de puntos al azar y lo registra. La Vía Láctea detrás de ellas es una textura (véase la tabla de texturas), girada a coordenadas galácticas.',
+        'pt-BR':
+          'Cada estrela está na sua posição catalogada, com a cor dada pelo seu índice B−V. A posição em outra data segue o seu movimento próprio e a sua velocidade radial em linha reta a velocidade constante: um bom modelo ao longo de séculos, pior ao longo de milênios, em que o potencial galáctico e as estrelas companheiras não são modelados. O brilho continua sendo o de hoje. As estrelas se apagam sob um céu de dia. Se o arquivo não puder ser lido, o aplicativo recorre a uma dispersão de pontos ao acaso e registra isso. A Via Láctea atrás delas é uma textura (veja a tabela de texturas), girada para coordenadas galácticas.',
+      })}</p>`
+    )
+  );
+
   sections.push(
     docSection(
       'notices',

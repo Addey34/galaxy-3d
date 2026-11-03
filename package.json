@@ -35,6 +35,7 @@
     "ephemeris:oblateness": "node scripts/publish-oblateness.mjs",
     "facts:snapshot": "node scripts/snapshot-fact-sources.mjs",
     "smallbodies:generate": "node scripts/generate-small-body-dataset.mjs",
+    "stars:generate": "node scripts/generate-star-catalogue.mjs",
     "shapes:generate": "node scripts/generate-shape-models.mjs",
     "pose:spice": "node scripts/spice-pose.mjs",
     "smallbodies:age": "node scripts/check-small-body-snapshot-age.mjs",
