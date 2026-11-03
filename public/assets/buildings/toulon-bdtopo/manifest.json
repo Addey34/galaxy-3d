@@ -1,0 +1,199 @@
+{
+  "id": "toulon-bdtopo",
+  "title": "Bâtiments de Toulon, BD TOPO (IGN)",
+  "body": "earth",
+  "format": "GXBD",
+  "version": 1,
+  "zoom": 14,
+  "directory": "assets/buildings/toulon-bdtopo/26d9a85b92",
+  "source": {
+    "name": "BD TOPO, Institut national de l'information géographique et forestière",
+    "typeName": "BDTOPO_V3:batiment",
+    "license": "Licence Ouverte 2.0",
+    "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+    "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+    "readFrom": "2026-11-03",
+    "readTo": "2026-11-03"
+  },
+  "bboxLonLat": [
+    5.87,
+    43.095,
+    5.99,
+    43.165
+  ],
+  "totals": {
+    "tiles": 26,
+    "bytes": 2566298,
+    "sourceFeatures": 71734,
+    "polygons": 71734,
+    "skippedNonPolygon": 0,
+    "skippedNoFootprint": 0,
+    "verticesAtMarginEdge": 0,
+    "heightAboveRange": 0,
+    "byOrigin": {
+      "absent": 787,
+      "measured": 1991,
+      "interpolated": 28567,
+      "derivedFromFloors": 0,
+      "unspecified": 40389
+    }
+  },
+  "tiles": [
+    {
+      "column": 8459,
+      "row": 6010,
+      "buildings": 26,
+      "bytes": 942
+    },
+    {
+      "column": 8459,
+      "row": 6011,
+      "buildings": 1721,
+      "bytes": 65047
+    },
+    {
+      "column": 8459,
+      "row": 6012,
+      "buildings": 2116,
+      "bytes": 74128
+    },
+    {
+      "column": 8459,
+      "row": 6013,
+      "buildings": 3424,
+      "bytes": 117280
+    },
+    {
+      "column": 8459,
+      "row": 6014,
+      "buildings": 3064,
+      "bytes": 109532
+    },
+    {
+      "column": 8460,
+      "row": 6010,
+      "buildings": 2824,
+      "bytes": 101816
+    },
+    {
+      "column": 8460,
+      "row": 6011,
+      "buildings": 7261,
+      "bytes": 253023
+    },
+    {
+      "column": 8460,
+      "row": 6012,
+      "buildings": 3473,
+      "bytes": 116947
+    },
+    {
+      "column": 8460,
+      "row": 6013,
+      "buildings": 279,
+      "bytes": 9113
+    },
+    {
+      "column": 8460,
+      "row": 6014,
+      "buildings": 1713,
+      "bytes": 61803
+    },
+    {
+      "column": 8461,
+      "row": 6010,
+      "buildings": 2372,
+      "bytes": 79648
+    },
+    {
+      "column": 8461,
+      "row": 6011,
+      "buildings": 4284,
+      "bytes": 152816
+    },
+    {
+      "column": 8461,
+      "row": 6012,
+      "buildings": 3507,
+      "bytes": 127389
+    },
+    {
+      "column": 8461,
+      "row": 6013,
+      "buildings": 397,
+      "bytes": 14171
+    },
+    {
+      "column": 8462,
+      "row": 6010,
+      "buildings": 897,
+      "bytes": 30311
+    },
+    {
+      "column": 8462,
+      "row": 6011,
+      "buildings": 1376,
+      "bytes": 53080
+    },
+    {
+      "column": 8462,
+      "row": 6012,
+      "buildings": 6573,
+      "bytes": 243607
+    },
+    {
+      "column": 8462,
+      "row": 6013,
+      "buildings": 3997,
+      "bytes": 146767
+    },
+    {
+      "column": 8463,
+      "row": 6010,
+      "buildings": 1177,
+      "bytes": 40943
+    },
+    {
+      "column": 8463,
+      "row": 6011,
+      "buildings": 1286,
+      "bytes": 47306
+    },
+    {
+      "column": 8463,
+      "row": 6012,
+      "buildings": 6767,
+      "bytes": 240729
+    },
+    {
+      "column": 8463,
+      "row": 6013,
+      "buildings": 3322,
+      "bytes": 122338
+    },
+    {
+      "column": 8464,
+      "row": 6010,
+      "buildings": 726,
+      "bytes": 25922
+    },
+    {
+      "column": 8464,
+      "row": 6011,
+      "buildings": 3973,
+      "bytes": 143439
+    },
+    {
+      "column": 8464,
+      "row": 6012,
+      "buildings": 2634,
+      "bytes": 96674
+    },
+    {
+      "column": 8464,
+      "row": 6013,
+      "buildings": 2545,
+      "bytes": 91527
+    }
+  ]
+}

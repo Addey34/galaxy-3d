@@ -266,6 +266,204 @@
       }
     },
     {
+      "id": "strasbourg-bdtopo",
+      "title": "Bâtiments de Strasbourg, BD TOPO (IGN)",
+      "body": "earth",
+      "source": {
+        "kind": "wfs",
+        "name": "BD TOPO, Institut national de l'information géographique et forestière",
+        "endpoint": "https://data.geopf.fr/wfs/ows",
+        "typeName": "BDTOPO_V3:batiment",
+        "license": "Licence Ouverte 2.0",
+        "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+        "pageSize": 3000,
+        "minIntervalMs": 1100
+      },
+      "bboxLonLat": [
+        7.6921,
+        48.5384,
+        7.8121,
+        48.6084
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode_d_acquisition_altimetrique",
+        "originByMethod": {
+          "Photogrammétrie": "measured",
+          "Interpolation bâti BDTopo": "interpolated",
+          "Pas de Z": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "montpellier-bdtopo",
+      "title": "Bâtiments de Montpellier, BD TOPO (IGN)",
+      "body": "earth",
+      "source": {
+        "kind": "wfs",
+        "name": "BD TOPO, Institut national de l'information géographique et forestière",
+        "endpoint": "https://data.geopf.fr/wfs/ows",
+        "typeName": "BDTOPO_V3:batiment",
+        "license": "Licence Ouverte 2.0",
+        "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+        "pageSize": 3000,
+        "minIntervalMs": 1100
+      },
+      "bboxLonLat": [
+        3.8167,
+        43.5758,
+        3.9367,
+        43.6458
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode_d_acquisition_altimetrique",
+        "originByMethod": {
+          "Photogrammétrie": "measured",
+          "Interpolation bâti BDTopo": "interpolated",
+          "Pas de Z": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "rennes-bdtopo",
+      "title": "Bâtiments de Rennes, BD TOPO (IGN)",
+      "body": "earth",
+      "source": {
+        "kind": "wfs",
+        "name": "BD TOPO, Institut national de l'information géographique et forestière",
+        "endpoint": "https://data.geopf.fr/wfs/ows",
+        "typeName": "BDTOPO_V3:batiment",
+        "license": "Licence Ouverte 2.0",
+        "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+        "pageSize": 3000,
+        "minIntervalMs": 1100
+      },
+      "bboxLonLat": [
+        -1.7378,
+        48.0823,
+        -1.6178,
+        48.1523
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode_d_acquisition_altimetrique",
+        "originByMethod": {
+          "Photogrammétrie": "measured",
+          "Interpolation bâti BDTopo": "interpolated",
+          "Pas de Z": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "grenoble-bdtopo",
+      "title": "Bâtiments de Grenoble, BD TOPO (IGN)",
+      "body": "earth",
+      "source": {
+        "kind": "wfs",
+        "name": "BD TOPO, Institut national de l'information géographique et forestière",
+        "endpoint": "https://data.geopf.fr/wfs/ows",
+        "typeName": "BDTOPO_V3:batiment",
+        "license": "Licence Ouverte 2.0",
+        "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+        "pageSize": 3000,
+        "minIntervalMs": 1100
+      },
+      "bboxLonLat": [
+        5.6645,
+        45.1535,
+        5.7845,
+        45.2235
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode_d_acquisition_altimetrique",
+        "originByMethod": {
+          "Photogrammétrie": "measured",
+          "Interpolation bâti BDTopo": "interpolated",
+          "Pas de Z": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "toulon-bdtopo",
+      "title": "Bâtiments de Toulon, BD TOPO (IGN)",
+      "body": "earth",
+      "source": {
+        "kind": "wfs",
+        "name": "BD TOPO, Institut national de l'information géographique et forestière",
+        "endpoint": "https://data.geopf.fr/wfs/ows",
+        "typeName": "BDTOPO_V3:batiment",
+        "license": "Licence Ouverte 2.0",
+        "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+        "pageSize": 3000,
+        "minIntervalMs": 1100
+      },
+      "bboxLonLat": [
+        5.87,
+        43.095,
+        5.99,
+        43.165
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode_d_acquisition_altimetrique",
+        "originByMethod": {
+          "Photogrammétrie": "measured",
+          "Interpolation bâti BDTopo": "interpolated",
+          "Pas de Z": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
+      "id": "dijon-bdtopo",
+      "title": "Bâtiments de Dijon, BD TOPO (IGN)",
+      "body": "earth",
+      "source": {
+        "kind": "wfs",
+        "name": "BD TOPO, Institut national de l'information géographique et forestière",
+        "endpoint": "https://data.geopf.fr/wfs/ows",
+        "typeName": "BDTOPO_V3:batiment",
+        "license": "Licence Ouverte 2.0",
+        "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+        "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+        "pageSize": 3000,
+        "minIntervalMs": 1100
+      },
+      "bboxLonLat": [
+        4.9815,
+        47.287,
+        5.1015,
+        47.357
+      ],
+      "zoom": 14,
+      "height": {
+        "field": "hauteur",
+        "methodField": "methode_d_acquisition_altimetrique",
+        "originByMethod": {
+          "Photogrammétrie": "measured",
+          "Interpolation bâti BDTopo": "interpolated",
+          "Pas de Z": "absent"
+        },
+        "otherMethods": "unspecified"
+      }
+    },
+    {
       "id": "berlin-lod2",
       "title": "Bâtiments de Berlin, modèle de ville LoD2 (Senatsverwaltung für Stadtentwicklung, Bauen und Wohnen)",
       "body": "earth",

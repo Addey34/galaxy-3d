@@ -1,0 +1,247 @@
+{
+  "id": "strasbourg-bdtopo",
+  "title": "Bâtiments de Strasbourg, BD TOPO (IGN)",
+  "body": "earth",
+  "format": "GXBD",
+  "version": 1,
+  "zoom": 14,
+  "directory": "assets/buildings/strasbourg-bdtopo/65bab08282",
+  "source": {
+    "name": "BD TOPO, Institut national de l'information géographique et forestière",
+    "typeName": "BDTOPO_V3:batiment",
+    "license": "Licence Ouverte 2.0",
+    "licenseUrl": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+    "attribution": "© IGN, BD TOPO, Licence Ouverte 2.0",
+    "readFrom": "2026-11-03",
+    "readTo": "2026-11-03"
+  },
+  "bboxLonLat": [
+    7.6921,
+    48.5384,
+    7.8121,
+    48.6084
+  ],
+  "totals": {
+    "tiles": 34,
+    "bytes": 1943960,
+    "sourceFeatures": 44148,
+    "polygons": 44148,
+    "skippedNonPolygon": 0,
+    "skippedNoFootprint": 0,
+    "verticesAtMarginEdge": 0,
+    "heightAboveRange": 0,
+    "byOrigin": {
+      "absent": 2751,
+      "measured": 638,
+      "interpolated": 28239,
+      "derivedFromFloors": 0,
+      "unspecified": 12520
+    }
+  },
+  "tiles": [
+    {
+      "column": 8542,
+      "row": 5653,
+      "buildings": 271,
+      "bytes": 12245
+    },
+    {
+      "column": 8542,
+      "row": 5654,
+      "buildings": 1718,
+      "bytes": 83370
+    },
+    {
+      "column": 8542,
+      "row": 5655,
+      "buildings": 2321,
+      "bytes": 106447
+    },
+    {
+      "column": 8542,
+      "row": 5656,
+      "buildings": 2257,
+      "bytes": 89339
+    },
+    {
+      "column": 8542,
+      "row": 5657,
+      "buildings": 1377,
+      "bytes": 61427
+    },
+    {
+      "column": 8542,
+      "row": 5658,
+      "buildings": 1116,
+      "bytes": 41052
+    },
+    {
+      "column": 8543,
+      "row": 5653,
+      "buildings": 843,
+      "bytes": 33645
+    },
+    {
+      "column": 8543,
+      "row": 5654,
+      "buildings": 2372,
+      "bytes": 95956
+    },
+    {
+      "column": 8543,
+      "row": 5655,
+      "buildings": 1662,
+      "bytes": 74018
+    },
+    {
+      "column": 8543,
+      "row": 5656,
+      "buildings": 1383,
+      "bytes": 51705
+    },
+    {
+      "column": 8543,
+      "row": 5657,
+      "buildings": 753,
+      "bytes": 31327
+    },
+    {
+      "column": 8543,
+      "row": 5658,
+      "buildings": 813,
+      "bytes": 32551
+    },
+    {
+      "column": 8544,
+      "row": 5653,
+      "buildings": 1255,
+      "bytes": 51281
+    },
+    {
+      "column": 8544,
+      "row": 5654,
+      "buildings": 2941,
+      "bytes": 123219
+    },
+    {
+      "column": 8544,
+      "row": 5655,
+      "buildings": 3585,
+      "bytes": 188375
+    },
+    {
+      "column": 8544,
+      "row": 5656,
+      "buildings": 1685,
+      "bytes": 70071
+    },
+    {
+      "column": 8544,
+      "row": 5657,
+      "buildings": 2094,
+      "bytes": 86782
+    },
+    {
+      "column": 8544,
+      "row": 5658,
+      "buildings": 251,
+      "bytes": 11129
+    },
+    {
+      "column": 8545,
+      "row": 5653,
+      "buildings": 550,
+      "bytes": 25390
+    },
+    {
+      "column": 8545,
+      "row": 5654,
+      "buildings": 1538,
+      "bytes": 71446
+    },
+    {
+      "column": 8545,
+      "row": 5655,
+      "buildings": 2435,
+      "bytes": 133493
+    },
+    {
+      "column": 8545,
+      "row": 5656,
+      "buildings": 3515,
+      "bytes": 150517
+    },
+    {
+      "column": 8545,
+      "row": 5657,
+      "buildings": 1059,
+      "bytes": 48461
+    },
+    {
+      "column": 8545,
+      "row": 5658,
+      "buildings": 1349,
+      "bytes": 55835
+    },
+    {
+      "column": 8546,
+      "row": 5653,
+      "buildings": 1047,
+      "bytes": 41981
+    },
+    {
+      "column": 8546,
+      "row": 5654,
+      "buildings": 1886,
+      "bytes": 81058
+    },
+    {
+      "column": 8546,
+      "row": 5655,
+      "buildings": 766,
+      "bytes": 36998
+    },
+    {
+      "column": 8546,
+      "row": 5656,
+      "buildings": 661,
+      "bytes": 30527
+    },
+    {
+      "column": 8546,
+      "row": 5657,
+      "buildings": 380,
+      "bytes": 15532
+    },
+    {
+      "column": 8546,
+      "row": 5658,
+      "buildings": 156,
+      "bytes": 5632
+    },
+    {
+      "column": 8547,
+      "row": 5653,
+      "buildings": 14,
+      "bytes": 534
+    },
+    {
+      "column": 8547,
+      "row": 5654,
+      "buildings": 74,
+      "bytes": 1990
+    },
+    {
+      "column": 8547,
+      "row": 5656,
+      "buildings": 18,
+      "bytes": 494
+    },
+    {
+      "column": 8547,
+      "row": 5657,
+      "buildings": 3,
+      "bytes": 133
+    }
+  ]
+}

@@ -89,6 +89,72 @@
       "manifest": "assets/buildings/nantes-bdtopo/manifest.json"
     },
     {
+      "id": "strasbourg-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        7.6921,
+        48.5384,
+        7.8121,
+        48.6084
+      ],
+      "manifest": "assets/buildings/strasbourg-bdtopo/manifest.json"
+    },
+    {
+      "id": "montpellier-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        3.8167,
+        43.5758,
+        3.9367,
+        43.6458
+      ],
+      "manifest": "assets/buildings/montpellier-bdtopo/manifest.json"
+    },
+    {
+      "id": "rennes-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        -1.7378,
+        48.0823,
+        -1.6178,
+        48.1523
+      ],
+      "manifest": "assets/buildings/rennes-bdtopo/manifest.json"
+    },
+    {
+      "id": "grenoble-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        5.6645,
+        45.1535,
+        5.7845,
+        45.2235
+      ],
+      "manifest": "assets/buildings/grenoble-bdtopo/manifest.json"
+    },
+    {
+      "id": "toulon-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        5.87,
+        43.095,
+        5.99,
+        43.165
+      ],
+      "manifest": "assets/buildings/toulon-bdtopo/manifest.json"
+    },
+    {
+      "id": "dijon-bdtopo",
+      "body": "earth",
+      "bboxLonLat": [
+        4.9815,
+        47.287,
+        5.1015,
+        47.357
+      ],
+      "manifest": "assets/buildings/dijon-bdtopo/manifest.json"
+    },
+    {
       "id": "berlin-lod2",
       "body": "earth",
       "bboxLonLat": [
