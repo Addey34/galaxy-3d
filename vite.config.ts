@@ -1069,6 +1069,29 @@ function bodyLandingPages() {
             );
           return { count: file.count, ...file.source };
         })();
+        // Ciel profond livré : la page cite le compte, le commit et la licence DU FICHIER.
+        const deepskyCatalogue = await (async () => {
+          const file = await readJson<{
+            count: number;
+            objects: (number | string | null)[][];
+            source: {
+              name: string;
+              url: string;
+              commit: string;
+              license: string;
+              licenseUrl: string;
+              retrieved: string;
+              vLimit: number;
+            };
+          }>('public/assets/sky/deepsky.json');
+          if (file.objects.length !== file.count || file.count === 0)
+            throw new Error('ciel profond vide ou au compte faux');
+          return {
+            count: file.count,
+            messier: file.objects.filter((o) => o[1] !== null).length,
+            ...file.source,
+          };
+        })();
         // Systèmes d'exoplanètes livrés : la page cite les comptes et la date DU FICHIER.
         const exoplanetsCatalogue = await (async () => {
           const file = await readJson<{
@@ -1169,6 +1192,7 @@ function bodyLandingPages() {
             smallBodies: smallBodySnapshot,
             sky: skyCatalogue,
             constellations: constellationsCatalogue,
+            deepsky: deepskyCatalogue,
             exoplanets: exoplanetsCatalogue,
             heightfields,
             buildings,
