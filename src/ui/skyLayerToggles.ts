@@ -70,8 +70,6 @@ export interface SkyLayerEnvironment {
   camera: PerspectiveCamera;
   canvas: HTMLElement;
   coordinator: OverlayCoordinator;
-  /** Rappel de fin d'image (`AnimationSystem.onFrame`) : les noms des constellations y suivent la caméra. */
-  onFrame: (cb: () => void) => () => void;
 }
 
 export function setupSkyLayerToggles(
@@ -90,10 +88,9 @@ export function setupSkyLayerToggles(
     set: (on) => {
       starfield.setConstellationsVisible(on);
       // Les noms se chargent à la première activation des figures, pas au démarrage.
-      if (on || names)
-        void (names ??= import('./constellationNames').then((m) =>
-          m.setupConstellationNames({ starfield, ...environment })
-        )).then((n) => n?.setActive(on));
+      void (names ??= import('./constellationNames').then((m) =>
+        m.setupConstellationNames({ starfield, ...environment })
+      )).then((n) => n?.setActive(on));
     },
   });
   mount({

@@ -6,7 +6,7 @@
  * dans la direction moyenne des étoiles de la figure, recalculée à chaque image sur les positions
  * COURANTES du tampon : le nom suit la figure quand la date change.
  *
- * Chargé à la première activation des figures (hors démarrage), puis piloté par `onFrame`. Inerte
+ * Chargé à la première activation des figures (hors démarrage), puis piloté par sa propre boucle d'images. Inerte
  * (aucune écriture DOM) tant que la couche est éteinte.
  */
 import * as THREE from 'three';
@@ -15,7 +15,9 @@ import { CONSTELLATIONS_URL } from '@/components/celestial/Starfield';
 import { constellationAnchor, distinctStars } from '@/core/constellationAnchor';
 import type { ConstellationFile } from '@/core/constellations';
 import Logger from '@/utils/Logger';
-import './constellationNames.css';
+
+/** Styles posés avec la couche (un `.css` importé ajouterait ses chaînes de préchargement au démarrage). */
+const STYLE = `.constellation-names { position: fixed; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; } .constellation-name { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(160, 190, 235, 0.78); text-shadow: 0 0 4px rgba(0, 0, 0, 0.9); will-change: transform; }`;
 
 export interface ConstellationNames {
   setActive(on: boolean): void;
@@ -34,7 +36,6 @@ export interface ConstellationNamesEnvironment {
   starfield: Starfield;
   camera: THREE.PerspectiveCamera;
   canvas: HTMLElement;
-  onFrame: (cb: () => void) => () => void;
 }
 
 export async function setupConstellationNames(
@@ -51,6 +52,9 @@ export async function setupConstellationNames(
     return null;
   }
 
+  const style = document.createElement('style');
+  style.textContent = STYLE;
+  document.head.append(style);
   const host = document.createElement('div');
   host.className = 'constellation-names';
   host.setAttribute('aria-hidden', 'true');
@@ -81,7 +85,7 @@ export async function setupConstellationNames(
   const LABEL_HEIGHT = 14;
   const GAP = 6;
   let active = false;
-  let off: (() => void) | null = null;
+  let raf = 0;
 
   const frame = (): void => {
     const position = env.starfield.points.geometry.getAttribute('position');
@@ -136,12 +140,15 @@ export async function setupConstellationNames(
       if (on === active) return;
       active = on;
       host.hidden = !on;
-      off?.();
-      off = null;
+      cancelAnimationFrame(raf);
       if (on) {
         // Les largeurs se mesurent une fois la couche visible (un élément masqué mesure 0).
         widths.clear();
-        off = env.onFrame(frame);
+        const loop = (): void => {
+          frame();
+          raf = requestAnimationFrame(loop);
+        };
+        loop();
       }
     },
   };
