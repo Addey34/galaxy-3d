@@ -245,6 +245,7 @@ export const fr: Record<MessageKey, string> = {
     'Étoiles : base HYG v4.4 (catalogues Hipparcos, Yale Bright Star et Gliese), sélection jusqu’à la magnitude 6,5 et conversion d’unités,',
   'credits.exoplanets': 'Exoplanètes',
   'credits.deepsky': 'Ciel profond',
+  'credits.satellites': 'Satellites',
   'credits.data': 'Données',
   'credits.privacy': 'Confidentialité',
   'credits.methodology': 'Méthodologie',
@@ -364,6 +365,14 @@ export const fr: Record<MessageKey, string> = {
   'settings.constellations': 'Figures des constellations',
   'settings.exoplanets': 'Étoiles à exoplanètes',
   'settings.deepsky': 'Objets du ciel profond',
+  'settings.satellites': 'Satellites en orbite',
+  'settings.satellites.loading': 'Chargement des éléments orbitaux…',
+  'settings.satellites.valid':
+    '{count} satellites aux éléments valides, lus chez CelesTrak le {date} UTC. Les éléments ne servent qu’autour de leur époque.',
+  'settings.satellites.outside':
+    'Aucun satellite affiché : cette date est hors de la validité des éléments orbitaux actuels.',
+  'settings.satellites.unavailable':
+    'Éléments orbitaux indisponibles pour le moment.',
   'settings.keepAppearance': 'Garder les nuages et la pluie visibles de près',
   'settings.surfaceEarthBase': 'Sol de la Terre',
   'settings.surfaceEarthBase.mosaic': 'Mosaïque Blue Marble (2004)',

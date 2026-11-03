@@ -26,7 +26,7 @@ export const SERVICE_ACCESS: Readonly<
 > = {
   'galaxy-data.adrianguichard.dev': {
     access: 'own-service',
-    why: 'Le modèle GFS de la NOAA, récupéré une fois par cycle, l’archive ERA5 construite une fois par heure demandée (lot 46), et le relief de la Terre (lot 48), servis à tous.',
+    why: 'Le modèle GFS de la NOAA, récupéré une fois par cycle, l’archive ERA5 construite une fois par heure demandée (lot 46), le relief de la Terre (lot 48) et les éléments orbitaux des satellites de CelesTrak, relus toutes les 3 h, servis à tous.',
   },
   'galaxy-static.galaxy-3d.workers.dev': {
     access: 'own-service',

@@ -19,6 +19,7 @@ de grille, et une grille mondiale l'épuisait (lot 46, 2026-10-12). Contrat :
 |---|---|
 | `galaxy-data-ingest` | `ingest.py --loop` : toutes les 30 min, publie le dernier cycle complet (f000 à f384, pas de 3 h), rattrape les analyses manquantes des dix derniers jours, lit la couverture d'ARCO-ERA5, élague (une analyse reste tant qu'ERA5T ne la couvre pas), réécrit le manifeste |
 | `galaxy-data-era5` | `era5.py --serve` : construit un champ d'archive MANQUANT (`era5/` ou `era5t/`), l'écrit, le rend. Plafonné : 600 morceaux lus par heure, trois à la fois (au-delà, 503), 4 Gio de cache |
+| `galaxy-data-satellites` | `satellites.py --loop` : toutes les 3 h (CelesTrak demande au plus une lecture par groupe et par 2 h), relit les groupes `stations` et `visual` en OMM/JSON et réécrit `satellites/elements.json` (173 objets, 63 Ko le 2026-11-03), atomiquement et seulement si la lecture est complète |
 | `galaxy-data-web` | Caddy interne : sert les fichiers, envoie les champs d'archive manquants à `galaxy-data-era5`, CORS limité à Galaxy et à `localhost`, cache court pour le manifeste, long et immuable pour les champs, aucun journal d'accès |
 
 Le Caddy partagé de la VM relaie `galaxy-data.adrianguichard.dev` vers `galaxy-data-web:80` et
@@ -30,7 +31,7 @@ Sur la VM (`ubuntu@82.70.233.45`), dans `/home/ubuntu/services/galaxy-data/` :
 
 ```bash
 # depuis le dépôt
-scp services/galaxy-data/{Dockerfile,compose.yaml,Caddyfile,ingest.py,era5.py} ubuntu@82.70.233.45:/home/ubuntu/services/galaxy-data/
+scp services/galaxy-data/{Dockerfile,compose.yaml,Caddyfile,ingest.py,era5.py,satellites.py} ubuntu@82.70.233.45:/home/ubuntu/services/galaxy-data/
 ssh ubuntu@82.70.233.45 'cd /home/ubuntu/services/galaxy-data && docker compose up -d --build'
 ```
 

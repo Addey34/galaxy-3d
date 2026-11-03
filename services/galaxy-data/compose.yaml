@@ -34,6 +34,21 @@ services:
       driver: json-file
       options: { max-size: "5m", max-file: "3" }
 
+  # Les éléments orbitaux de CelesTrak (stations, visual), relus toutes les 3 h : leur limite est
+  # d'une lecture par groupe et par 2 h. Il n'écrit que `satellites/elements.json`.
+  satellites:
+    build: .
+    container_name: galaxy-data-satellites
+    restart: unless-stopped
+    command: ["python", "satellites.py", "--loop"]
+    volumes:
+      - galaxy_data:/srv/galaxy-data
+    cpus: 0.1
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options: { max-size: "1m", max-file: "3" }
+
   web:
     image: caddy:2-alpine
     container_name: galaxy-data-web

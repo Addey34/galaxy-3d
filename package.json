@@ -116,6 +116,7 @@
   "dependencies": {
     "@tweenjs/tween.js": "^25.0.0",
     "astronomy-engine": "^2.1.19",
+    "satellite.js": "6.0.2",
     "three": "^0.176.0"
   }
 }

@@ -15,7 +15,7 @@ import type { DeepSkyLayer } from './deepSkyLayer';
 import type { ExoplanetCard } from './exoplanetCard';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
-interface SkyLayer {
+export interface SkyLayer {
   id: string;
   labelKey: MessageKey;
   ready: () => boolean;
@@ -26,7 +26,7 @@ interface SkyLayer {
 const POLL_MS = 500;
 const GIVE_UP_MS = 30_000;
 
-function mount(layer: SkyLayer): void {
+export function mount(layer: SkyLayer): void {
   const wrapper = document.createElement('label');
   wrapper.id = `${layer.id}-wrapper`;
   wrapper.className = 'settings-switch';

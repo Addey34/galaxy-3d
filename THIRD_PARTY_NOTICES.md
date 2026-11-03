@@ -528,6 +528,16 @@ Harold Corwin's NGC/IC Positions and Notes (<http://haroldcorwin.net/ngcic/index
   data on single levels from 1940 to present*, ECMWF, doi:10.24381/cds.adbb2d47. Generated using
   Copernicus Climate Change Service information.
 
+**Satellites** are fetched at runtime and are not bundled. The orbital elements are the GP data
+(OMM format) of CelesTrak (<https://celestrak.org/>, Dr. T.S. Kelso), which CelesTrak builds from
+the data of the 18th Space Defense Squadron distributed by Space-Track. The pages of CelesTrak read
+on 2026-11-03 state no licence text; the source is credited in the app's help window. CelesTrak
+updates its data once every 2 hours and asks not to read it more often, so Galaxy's own data service
+(`services/galaxy-data/satellites.py`) reads it every 3 hours and serves the same file to every
+visitor. Positions are computed by `satellite.js` 6.0.2 (<https://github.com/shashwatak/satellite-js>,
+MIT licence, Copyright (C) 2013 Shashwat Kandadai, UCSC Jack Baskin School of Engineering), an
+implementation of the SGP4 model.
+
 Orbital elements in the entity registry (`src/registry/entities/`) and interstellar registry (`src/registry/interstellar/`) (including
 1I/ʻOumuamua, 2I/Borisov and 3I/ATLAS) are derived from the live NASA/JPL Horizons API at a
 stated epoch by the scripts in `scripts/`; they are data values, not copied from a third-party

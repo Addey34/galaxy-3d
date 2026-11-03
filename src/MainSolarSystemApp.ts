@@ -61,6 +61,7 @@ import { GazetteerOverlay } from './ui/gazetteerOverlay';
 import { setupGazetteerToggle } from './ui/gazetteerToggle';
 import { setupEventLabelsToggle } from './ui/eventLabelsToggle';
 import { setupSkyLayerToggles } from './ui/skyLayerToggles';
+import { setupSatelliteToggle } from './ui/satelliteToggle';
 import { setupKeepAppearanceToggle } from './ui/keepAppearanceToggle';
 import gazetteerIndex from './config/gazetteerIndex.json';
 import { EARTH_NAMES_BODY } from './core/earthNames';
@@ -516,6 +517,16 @@ function wireChrome(): {
       canvas: cameraSystem.renderer.domElement,
       coordinator: overlayCoordinator,
     });
+    // Les satellites d'après le service de données : `earth` et la règle de position sont ceux des
+    // sondes en orbite (`placeInstrument`), la couche elle-même n'est chargée qu'à l'activation.
+    const earthConfig = CELESTIAL_CONFIG.bodies['earth'];
+    const satellites = earthConfig
+      ? setupSatelliteToggle({
+          earth: earthConfig,
+          earthHelioAU: (date) =>
+            orbitalMechanics.heliocentricAU('earth', date),
+        })
+      : null;
     setupKeepAppearanceToggle();
     setupEarthEvents(
       api,
@@ -699,6 +710,14 @@ function wireChrome(): {
         cameraSystem.camera,
         orbitalMechanics.simulationDate,
         morph,
+        labelSpace
+      );
+      // Après les sondes : un satellite est un point, ses noms prennent la place qui reste.
+      satellites?.update(
+        cameraSystem.camera,
+        orbitalMechanics.simulationDate,
+        morph,
+        occlusion,
         labelSpace
       );
       // APRÈS les couches globales : leurs libellés sont prioritaires dans la place commune,
