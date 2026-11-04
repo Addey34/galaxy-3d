@@ -56,6 +56,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # `discovery:generate` lit des PDF d'arXiv par `pdftotext` : sans lui le générateur plantait
+      # (« node:internal/child_process »), classé NON MESURÉ à chaque passage (2026-11-04).
+      - name: Install pdftotext (poppler-utils)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+
       # Code de sortie capturé SANS pipe : un pipe rend le code du DERNIER maillon.
       - name: Compare every generated dataset with its source
         id: drift

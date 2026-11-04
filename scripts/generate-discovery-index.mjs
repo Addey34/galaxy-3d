@@ -406,12 +406,22 @@ async function arxivPdfText(id) {
     if (!res.ok) throw new Error(`HTTP ${res.status} : ${source}`);
     const pdfPath = join(CACHE, `${cacheKey(source)}.pdf`);
     writeFileSync(pdfPath, Buffer.from(await res.arrayBuffer()));
-    writeFileSync(
-      path,
-      execFileSync('pdftotext', ['-layout', pdfPath, '-'], {
+    let text;
+    try {
+      text = execFileSync('pdftotext', ['-layout', pdfPath, '-'], {
         encoding: 'latin1',
-      })
-    );
+      });
+    } catch (error) {
+      // Un programme absent donnait une pile `node:internal/child_process` illisible, que le
+      // guetteur de dérive classait « non mesuré » sans dire pourquoi (2026-11-04).
+      if (error?.code === 'ENOENT')
+        throw new Error(
+          `pdftotext est introuvable (paquet poppler-utils) : impossible de lire ${source}`,
+          { cause: error }
+        );
+      throw error;
+    }
+    writeFileSync(path, text);
     stampNow(path);
   }
   return { text: readFileSync(path, 'latin1'), retrieved: stampOf(path) };
