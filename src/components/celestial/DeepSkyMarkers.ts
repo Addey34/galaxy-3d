@@ -5,7 +5,7 @@
  * systèmes d'exoplanètes. Positions fixes (J2000) : le catalogue ne donne pas de mouvement propre.
  * Ils s'effacent avec les étoiles sous un ciel de jour : l'opacité est lue sur le matériau des étoiles.
  */
-import { nearestDirection } from '@/core/skyPick';
+import { directionAt, nearestDirection } from '@/core/skyPick';
 import * as THREE from 'three';
 import { deepSkyDirection, type DeepSkyObject } from '@/core/deepsky';
 import { equatorialToSceneInto } from '@/core/frames';
@@ -87,14 +87,10 @@ export class DeepSkyMarkers {
 
   /** Direction (unitaire, repère de la scène) de l'objet `index`, lue dans le tampon des repères. */
   directionOf(index: number, out: [number, number, number]): boolean {
-    const a = (this.geometry.getAttribute('position') as THREE.BufferAttribute)
-      .array;
-    const n = Math.hypot(a[index * 3]!, a[index * 3 + 1]!, a[index * 3 + 2]!);
-    if (!(n > 0)) return false;
-    out[0] = a[index * 3]! / n;
-    out[1] = a[index * 3 + 1]! / n;
-    out[2] = a[index * 3 + 2]! / n;
-    return true;
+    const position = this.geometry.getAttribute(
+      'position'
+    ) as THREE.BufferAttribute;
+    return directionAt(position.array, index, out);
   }
 
   /** L'objet visé par le rayon (vecteur unitaire de la scène), à `tolRad` près, ou null. */

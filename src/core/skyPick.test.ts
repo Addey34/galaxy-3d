@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { angularToleranceRad, nearestDirection, searchNames } from './skyPick';
+import {
+  angularToleranceRad,
+  directionAt,
+  nearestDirection,
+  searchNames,
+} from './skyPick';
 
 const DEG = Math.PI / 180;
 const dir = (lonDeg: number, latDeg: number): [number, number, number] => [
@@ -65,5 +70,23 @@ describe('searchNames', () => {
     expect(searchNames(['X1', 'X1', 'X12'], 'x1', 10)).toEqual(['X1', 'X12']);
     expect(searchNames(names, 'k', 10)).toEqual([]);
     expect(searchNames(names, '  ', 10)).toEqual([]);
+  });
+});
+
+describe('directionAt', () => {
+  it('lit le point demandé et le ramène à une direction unitaire', () => {
+    const out: [number, number, number] = [0, 0, 0];
+    expect(directionAt([0, 0, 0, 3, 0, 4, 0, 0, 9], 1, out)).toBe(true);
+    expect(out[0]).toBeCloseTo(0.6, 12);
+    expect(out[1]).toBe(0);
+    expect(out[2]).toBeCloseTo(0.8, 12);
+    expect(Math.hypot(...out)).toBeCloseTo(1, 12);
+  });
+
+  it("refuse l'origine et un indice hors du tampon, sans toucher à la sortie", () => {
+    const out: [number, number, number] = [7, 7, 7];
+    expect(directionAt([0, 0, 0, 1, 0, 0], 0, out)).toBe(false);
+    expect(directionAt([0, 0, 0, 1, 0, 0], 2, out)).toBe(false);
+    expect(out).toEqual([7, 7, 7]);
   });
 });

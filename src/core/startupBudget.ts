@@ -430,7 +430,12 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
     chunk: 'SkyCenteringView',
     reason:
-      "le centrage de l'écran sur un objet du ciel (2026-11-04) : importé par `ui/deepSkyCard` à la première ouverture d'une fiche d'objet du ciel profond, jamais au démarrage, et branché tout seul sur la caméra : `CameraSystem` n'en sait rien. Sorti de `CameraSystem`, où ses points d'accroche faisaient dépasser le plafond (1 305 149 octets mesurés en CI).",
+      "le centrage de l'écran sur un objet du ciel (2026-11-04) : importé par `ui/cardCentering` à la première ouverture d'une fiche d'objet du ciel (ciel profond ou exoplanètes), jamais au démarrage, et branché tout seul sur la caméra : `CameraSystem` n'en sait rien. Sorti de `CameraSystem`, où ses points d'accroche faisaient dépasser le plafond (1 305 149 octets mesurés en CI).",
+  },
+  {
+    chunk: 'cardCentering',
+    reason:
+      "la fonction partagée par les fiches du ciel profond et des exoplanètes (2026-11-04) : elle ne fait que lire l'ancre et charger `SkyCenteringView` à la première ouverture d'une fiche. Morceau de la couche, activé par un réglage, jamais au démarrage.",
   },
   {
     chunk: 'skyPick',

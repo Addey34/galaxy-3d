@@ -135,5 +135,43 @@ for (const [label, viewport, hasTouch, area] of [
       await page.locator('#help-btn').dispatchEvent('click');
       await expect(card).toBeHidden();
     });
+
+    test('opening a card brings the system to the centre of the free area', async ({
+      page,
+    }) => {
+      test.setTimeout(240_000);
+      await boot(page);
+      await layerOn(page);
+      const search = page.locator('#exoplanets-search');
+      await search.fill('TRAPPIST');
+      await search.press('Enter');
+      const card = page.locator('#exoplanet-card');
+      await expect(card).toBeVisible();
+      await expect(card.locator('#exo-card-name')).toHaveText('TRAPPIST-1');
+
+      // Au bureau la fiche est un coin : le centre est libre. Sur téléphone elle couvre la largeur
+      // en haut : on vise le milieu entre son bord bas et la barre de temps (core/skyCentering).
+      const size = page.viewportSize()!;
+      const box = (await card.boundingBox())!;
+      const wide = box.width >= 0.6 * size.width;
+      const wantedY = wide
+        ? (box.y + box.height + size.height * 0.88) / 2
+        : size.height / 2;
+      // `data-sky-centered` (canvas) vaut 1 quand l'objet est arrivé : le centrage attend la fin d'un
+      // vol en cours et se charge à la première ouverture, aucune durée fixe n'est juste.
+      await expect(page.locator('canvas[data-sky-centered="1"]')).toBeAttached({
+        timeout: 60_000,
+      });
+
+      // Les systèmes n'ont pas de nom 2D : on ferme la fiche, puis on clique EXACTEMENT là où le
+      // système doit être. Centré, le clic rouvre sa fiche ; sans centrage il tombe sur Neptune
+      // (au centre de la vue) ou dans le vide, et la fiche reste fermée.
+      await page.keyboard.press('Escape');
+      await expect(card).toBeHidden();
+      if (hasTouch) await page.touchscreen.tap(size.width / 2, wantedY);
+      else await page.mouse.click(size.width / 2, wantedY);
+      await expect(card).toBeVisible({ timeout: 5_000 });
+      await expect(card.locator('#exo-card-name')).toHaveText('TRAPPIST-1');
+    });
   });
 }

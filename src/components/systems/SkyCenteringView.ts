@@ -52,15 +52,35 @@ export class SkyCenteringView {
   /** Dernier état appliqué à la caméra : `setViewOffset` n'est refait que si quelque chose change. */
   private key = '';
   private readonly size = new THREE.Vector2();
+  /** Publié sur le canvas : `data-sky-centered` vaut `1` une fois l'objet arrivé, `0` sinon (cf. `data-scene-moving`). */
+  private publish(value: '0' | '1'): void {
+    this.host.renderer.domElement.dataset['skyCentered'] = value;
+  }
   /** L'animation en cours (vol vers la vue centrée, ou retour) : seule celle-ci est arrêtée, jamais le groupe. */
   private animation: Tween<object> | null = null;
   /** Le corps suivi au moment du centrage : un autre corps, ou la vue d'ensemble, rend la vue d'origine. */
   private followed: unknown = null;
   private raf = 0;
+  /** Un geste des contrôles est en cours (de `start` à `end`). */
+  private gesture = false;
+  /** La vue d'origine est en train de revenir : évite de relancer le retour à chaque image du geste. */
+  private releasing = false;
 
   constructor(private readonly host: SkyCenteringHost) {
-    // Une rotation ou un zoom de l'utilisateur rend la vue d'origine.
-    host.controls.addEventListener('start', () => this.release());
+    // Une rotation ou un zoom rend la vue d'origine, mais PAS un simple clic : `start` arrive dès
+    // l'appui, et rendre la vue à ce moment-là déplacerait l'objet sous le doigt avant le relâchement,
+    // le clic sur l'objet centré raterait (instantané avec « réduire les animations »). On attend
+    // que la caméra BOUGE réellement sous le geste.
+    const { controls } = host;
+    controls.addEventListener('start', () => {
+      this.gesture = true;
+    });
+    controls.addEventListener('change', () => {
+      if (this.gesture) this.release();
+    });
+    controls.addEventListener('end', () => {
+      this.gesture = false;
+    });
   }
 
   /**
@@ -130,11 +150,14 @@ export class SkyCenteringView {
       anchorY: THREE.MathUtils.clamp(anchorY, ANCHOR_MIN, ANCHOR_MAX),
     };
     this.key = '';
+    this.releasing = false;
     this.followed = this.host.currentTarget;
+    this.publish('0');
     this.watch();
     if (prefersReducedMotion()) {
       this.state.k = 1;
       this.sync();
+      this.publish('1');
       return;
     }
     this.host.applyViewAngles(start.azimuthDeg, start.polarDeg, distance);
@@ -155,17 +178,20 @@ export class SkyCenteringView {
           );
         if (this.state) this.state.k = flight.t;
       })
+      .onComplete(() => this.publish('1'))
       .start();
   }
 
   /** Rend la vue d'origine : en douceur après un geste, d'un coup si `instant`. */
   release(instant = false): void {
     const state = this.state;
-    if (!state) return;
+    if (!state || this.releasing) return;
     if (instant || prefersReducedMotion() || state.k <= 0) {
       this.drop();
       return;
     }
+    this.releasing = true;
+    this.publish('0');
     const fade = { k: state.k };
     this.animation?.stop();
     this.animation = new TWEEN.Tween(fade, this.host.tweenGroup)
@@ -182,6 +208,8 @@ export class SkyCenteringView {
   drop(): void {
     this.animation?.stop();
     this.animation = null;
+    this.releasing = false;
+    this.publish('0');
     if (!this.state && this.key === '') return;
     this.state = null;
     this.key = '';

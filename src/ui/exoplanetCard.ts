@@ -3,13 +3,15 @@
  * recherche d'un nom (le chemin au clavier : un clic de souris n'est pas une interface).
  *
  * Chargée à la demande, à la première activation de la couche : elle n'existe pas au démarrage.
- * Elle ne dessine aucune planète et ne déplace pas la caméra ; elle LIT le fichier daté de la NASA
+ * Elle ne dessine aucune planète et ne quitte pas le corps suivi : à l'ouverture, l'objet est
+ * amené au centre de l'écran (`ui/cardCentering`) ; elle LIT le fichier daté de la NASA
  * (`core/exoplanets.ts`) et dit ce qu'il contient, sans rien inventer pour une valeur absente.
  * Une surface contextuelle parmi les autres : le coordinateur en garde une seule ouverte, et
  * Échap la ferme en rendant le focus à ce qui l'a ouverte.
  */
 import { Vector3, type PerspectiveCamera } from 'three';
 import type { Starfield } from '@/components/celestial/Starfield';
+import type { SkyCenteringHost } from '@/components/systems/SkyCenteringView';
 import {
   LIGHT_YEARS_PER_PARSEC,
   UNKNOWN_DISTANCE_PC,
@@ -20,6 +22,7 @@ import { angularToleranceRad, searchNames } from '@/core/skyPick';
 import { loadDeferredMessages } from '@/i18n/deferredMessages';
 import { getLocale, onLocaleChange, t } from '@/i18n';
 import { getAnnouncer } from './announcer';
+import { createCardCentering } from './cardCentering';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { syncSurfaceFocus } from './surfaceFocus';
 
@@ -56,6 +59,8 @@ interface Options {
   camera: PerspectiveCamera;
   canvas: HTMLElement;
   coordinator: OverlayCoordinator;
+  /** La caméra, pour centrer l'écran sur le système ouvert (`SkyCenteringView`, chargé à la première ouverture). */
+  centering?: SkyCenteringHost;
 }
 
 function number(value: number, digits = 3): string {
@@ -123,7 +128,8 @@ function distanceText(system: ExoplanetSystem): string {
 export async function setupExoplanetCard(
   options: Options
 ): Promise<ExoplanetCard> {
-  const { starfield, camera, canvas, coordinator } = options;
+  const { starfield, camera, canvas, coordinator, centering } = options;
+  const centerOn = createCardCentering(centering);
   // Les phrases de la fiche sont hors démarrage : `t()` rendrait les clés brutes sans elles.
   await loadDeferredMessages();
 
@@ -234,6 +240,12 @@ export async function setupExoplanetCard(
     getAnnouncer().announce(
       t('exo.card.opened', { name: system[0], count: system[7].length })
     );
+    // Un système choisi dans la liste ou au clic arrive au centre de l'écran.
+    const hosts = starfield.exoplanetHosts;
+    const index = hosts ? hosts.systems.indexOf(system) : -1;
+    const direction: [number, number, number] = [0, 0, 0];
+    if (hosts && index >= 0 && hosts.directionOf(index, direction))
+      centerOn(direction, card);
   }
 
   coordinator.register('exoplanet-card', () => {
