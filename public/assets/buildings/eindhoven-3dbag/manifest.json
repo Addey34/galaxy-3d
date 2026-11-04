@@ -1,0 +1,338 @@
+{
+  "id": "eindhoven-3dbag",
+  "title": "Bâtiments de Eindhoven, 3DBAG",
+  "body": "earth",
+  "format": "GXBD",
+  "version": 1,
+  "zoom": 14,
+  "directory": "assets/buildings/eindhoven-3dbag/03d8262041",
+  "source": {
+    "name": "3DBAG (TU Delft et 3DGI), couche pand",
+    "typeName": "3DBAG pand",
+    "release": "v2023.10.08",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "© 3DBAG by tudelft3d and 3DGI, licensed CC BY 4.0, https://docs.3dbag.nl/en/copyright. Footprints and heights extracted from the source and converted to WGS84.",
+    "readFrom": "2026-11-04",
+    "readTo": "2026-11-04"
+  },
+  "bboxLonLat": [
+    5.4,
+    51.4,
+    5.54,
+    51.48
+  ],
+  "totals": {
+    "tiles": 49,
+    "bytes": 4511850,
+    "sourceFeatures": 140610,
+    "polygons": 140610,
+    "skippedNonPolygon": 0,
+    "skippedNoFootprint": 0,
+    "verticesAtMarginEdge": 0,
+    "heightAboveRange": 0,
+    "byOrigin": {
+      "absent": 702,
+      "measured": 139908,
+      "interpolated": 0,
+      "derivedFromFloors": 0,
+      "unspecified": 0
+    }
+  },
+  "tiles": [
+    {
+      "column": 8437,
+      "row": 5450,
+      "buildings": 1,
+      "bytes": 51
+    },
+    {
+      "column": 8437,
+      "row": 5451,
+      "buildings": 18,
+      "bytes": 1370
+    },
+    {
+      "column": 8437,
+      "row": 5452,
+      "buildings": 279,
+      "bytes": 11669
+    },
+    {
+      "column": 8437,
+      "row": 5453,
+      "buildings": 969,
+      "bytes": 37635
+    },
+    {
+      "column": 8437,
+      "row": 5454,
+      "buildings": 1881,
+      "bytes": 61479
+    },
+    {
+      "column": 8437,
+      "row": 5455,
+      "buildings": 1700,
+      "bytes": 54360
+    },
+    {
+      "column": 8438,
+      "row": 5449,
+      "buildings": 1,
+      "bytes": 67
+    },
+    {
+      "column": 8438,
+      "row": 5450,
+      "buildings": 640,
+      "bytes": 25664
+    },
+    {
+      "column": 8438,
+      "row": 5451,
+      "buildings": 117,
+      "bytes": 6443
+    },
+    {
+      "column": 8438,
+      "row": 5452,
+      "buildings": 2410,
+      "bytes": 80086
+    },
+    {
+      "column": 8438,
+      "row": 5453,
+      "buildings": 4492,
+      "bytes": 155708
+    },
+    {
+      "column": 8438,
+      "row": 5454,
+      "buildings": 5465,
+      "bytes": 201747
+    },
+    {
+      "column": 8438,
+      "row": 5455,
+      "buildings": 1149,
+      "bytes": 45759
+    },
+    {
+      "column": 8439,
+      "row": 5450,
+      "buildings": 2342,
+      "bytes": 100526
+    },
+    {
+      "column": 8439,
+      "row": 5451,
+      "buildings": 144,
+      "bytes": 7016
+    },
+    {
+      "column": 8439,
+      "row": 5452,
+      "buildings": 5482,
+      "bytes": 156246
+    },
+    {
+      "column": 8439,
+      "row": 5453,
+      "buildings": 2886,
+      "bytes": 94778
+    },
+    {
+      "column": 8439,
+      "row": 5454,
+      "buildings": 5619,
+      "bytes": 190045
+    },
+    {
+      "column": 8439,
+      "row": 5455,
+      "buildings": 171,
+      "bytes": 7889
+    },
+    {
+      "column": 8440,
+      "row": 5450,
+      "buildings": 7082,
+      "bytes": 218610
+    },
+    {
+      "column": 8440,
+      "row": 5451,
+      "buildings": 9412,
+      "bytes": 266760
+    },
+    {
+      "column": 8440,
+      "row": 5452,
+      "buildings": 7013,
+      "bytes": 225543
+    },
+    {
+      "column": 8440,
+      "row": 5453,
+      "buildings": 7372,
+      "bytes": 226720
+    },
+    {
+      "column": 8440,
+      "row": 5454,
+      "buildings": 7149,
+      "bytes": 199919
+    },
+    {
+      "column": 8440,
+      "row": 5455,
+      "buildings": 1135,
+      "bytes": 36465
+    },
+    {
+      "column": 8441,
+      "row": 5450,
+      "buildings": 7188,
+      "bytes": 203840
+    },
+    {
+      "column": 8441,
+      "row": 5451,
+      "buildings": 6850,
+      "bytes": 198970
+    },
+    {
+      "column": 8441,
+      "row": 5452,
+      "buildings": 2214,
+      "bytes": 87654
+    },
+    {
+      "column": 8441,
+      "row": 5453,
+      "buildings": 6071,
+      "bytes": 233785
+    },
+    {
+      "column": 8441,
+      "row": 5454,
+      "buildings": 5422,
+      "bytes": 171746
+    },
+    {
+      "column": 8441,
+      "row": 5455,
+      "buildings": 1069,
+      "bytes": 45535
+    },
+    {
+      "column": 8442,
+      "row": 5450,
+      "buildings": 4086,
+      "bytes": 119782
+    },
+    {
+      "column": 8442,
+      "row": 5451,
+      "buildings": 1456,
+      "bytes": 58188
+    },
+    {
+      "column": 8442,
+      "row": 5452,
+      "buildings": 3368,
+      "bytes": 114220
+    },
+    {
+      "column": 8442,
+      "row": 5453,
+      "buildings": 7241,
+      "bytes": 205115
+    },
+    {
+      "column": 8442,
+      "row": 5454,
+      "buildings": 9569,
+      "bytes": 282543
+    },
+    {
+      "column": 8442,
+      "row": 5455,
+      "buildings": 218,
+      "bytes": 9510
+    },
+    {
+      "column": 8443,
+      "row": 5450,
+      "buildings": 337,
+      "bytes": 12979
+    },
+    {
+      "column": 8443,
+      "row": 5451,
+      "buildings": 1017,
+      "bytes": 35075
+    },
+    {
+      "column": 8443,
+      "row": 5452,
+      "buildings": 4756,
+      "bytes": 154908
+    },
+    {
+      "column": 8443,
+      "row": 5453,
+      "buildings": 2636,
+      "bytes": 82224
+    },
+    {
+      "column": 8443,
+      "row": 5454,
+      "buildings": 530,
+      "bytes": 22646
+    },
+    {
+      "column": 8443,
+      "row": 5455,
+      "buildings": 34,
+      "bytes": 1250
+    },
+    {
+      "column": 8444,
+      "row": 5450,
+      "buildings": 570,
+      "bytes": 20614
+    },
+    {
+      "column": 8444,
+      "row": 5451,
+      "buildings": 339,
+      "bytes": 13717
+    },
+    {
+      "column": 8444,
+      "row": 5452,
+      "buildings": 6,
+      "bytes": 254
+    },
+    {
+      "column": 8444,
+      "row": 5453,
+      "buildings": 261,
+      "bytes": 7915
+    },
+    {
+      "column": 8444,
+      "row": 5454,
+      "buildings": 413,
+      "bytes": 15563
+    },
+    {
+      "column": 8444,
+      "row": 5455,
+      "buildings": 30,
+      "bytes": 1262
+    }
+  ]
+}
