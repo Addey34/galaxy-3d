@@ -85,7 +85,8 @@ export class CameraSystem {
   private isAnimating = false;
   /** Actions différées jusqu'à la fin du vol en cours (cf. `whenSettled`). */
   private _whenSettled: (() => void)[] = [];
-  private currentTarget: {
+  /** Le corps suivi ; lu par `SkyCenteringView` (rayon, et détection d'un changement de corps). */
+  currentTarget: {
     name: string;
     group: THREE.Group;
     distance: number;
@@ -278,6 +279,7 @@ export class CameraSystem {
     targetPosition: THREE.Vector3,
     onArrive?: () => void
   ): void {
+    // Choisir un corps rend la vue à son corps : le décalage du centrage sur le ciel s'efface.
     // Un nouveau clic remplace le vol en cours. Sans cette annulation, plusieurs paires de
     // tweens écrivaient caméra/cible pendant les mêmes frames et produisaient un mouvement
     // latéral de va-et-vient lors d'une navigation rapide entre les planètes.

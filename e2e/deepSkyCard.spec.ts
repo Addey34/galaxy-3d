@@ -130,5 +130,63 @@ for (const [label, viewport, hasTouch, area] of [
       await page.keyboard.press('Escape');
       await expect(card).toBeHidden();
     });
+
+    test('opening a card brings the object to the centre of the free area', async ({
+      page,
+    }) => {
+      test.setTimeout(240_000);
+      await boot(page);
+      await layerOn(page);
+      const search = page.locator('#deepsky-search');
+      await search.fill('M 31');
+      await search.press('Enter');
+      const card = page.locator('#deepsky-card');
+      await expect(card).toBeVisible({ timeout: 15_000 });
+
+      // Le nom 2D de M 31 est posé sur sa direction : sa position EST celle de l'objet à l'écran.
+      const name = page.locator('.deepsky-names-item', { hasText: /^M 31/ });
+      const size = page.viewportSize()!;
+      // Au bureau la fiche est un coin : le centre est libre. Sur téléphone elle couvre la largeur
+      // en haut : on vise le milieu entre son bord bas et la barre de temps (core/skyCentering).
+      const box = (await card.boundingBox())!;
+      const wide = box.width >= 0.6 * size.width;
+      const wanted = wide
+        ? (box.y + box.height + size.height * 0.88) / 2
+        : size.height / 2;
+      await expect
+        .poll(
+          async () => {
+            const b = await name.boundingBox();
+            if (!b) return Number.POSITIVE_INFINITY;
+            const dx =
+              Math.abs(b.x + b.width / 2 - size.width / 2) / size.width;
+            const dy = Math.abs(b.y + b.height / 2 - wanted) / size.height;
+            return Math.max(dx, dy);
+          },
+          {
+            message: 'le nom de M 31 doit arriver au centre de la zone libre',
+            timeout: 30_000,
+          }
+        )
+        .toBeLessThan(0.04);
+
+      // Un geste rend la vue d'origine : le corps suivi revient au centre, l'objet s'en éloigne.
+      await page.mouse.move(size.width / 2, size.height * 0.75);
+      await page.mouse.down();
+      await page.mouse.move(size.width / 2 + 40, size.height * 0.75 + 10, {
+        steps: 4,
+      });
+      await page.mouse.up();
+      await expect
+        .poll(
+          async () => {
+            const b = await name.boundingBox();
+            if (!b) return 0;
+            return Math.abs(b.x + b.width / 2 - size.width / 2) / size.width;
+          },
+          { timeout: 10_000 }
+        )
+        .toBeGreaterThan(0.04);
+    });
   });
 }

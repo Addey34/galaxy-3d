@@ -8,6 +8,7 @@
  */
 import type { PerspectiveCamera } from 'three';
 import type { Starfield } from '@/components/celestial/Starfield';
+import type { SkyCenteringHost } from '@/components/systems/SkyCenteringView';
 import type { MessageKey } from '@/i18n/locales';
 import { onLocaleChange, t } from '@/i18n';
 import type { ConstellationNames } from './constellationNames';
@@ -75,6 +76,8 @@ export interface SkyLayerEnvironment {
   coordinator: OverlayCoordinator;
   /** Date de la scène : les pluies de météores ne sont actives qu'à certaines dates. */
   simulationDate: () => Date;
+  /** La caméra, que la fiche d'un objet du ciel passe au centrage de l'écran (`SkyCenteringView`). */
+  centering?: SkyCenteringHost;
 }
 
 export function setupSkyLayerToggles(
