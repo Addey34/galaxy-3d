@@ -126,6 +126,8 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
     '« Rotterdam » s’écrit pareil en anglais et dans les langues concernées',
   'bi.cities.name.utrecht-3dbag':
     '« Utrecht » s’écrit pareil en anglais et dans les langues concernées',
+  'bi.cities.name.eindhoven-3dbag':
+    '« Eindhoven » s’écrit pareil en anglais et dans les langues concernées',
   'bi.cities.name.paris-bdtopo':
     '« Paris » s’écrit pareil en anglais, français et portugais',
   'bi.cities.name.berlin-lod2':

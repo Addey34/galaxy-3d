@@ -195,6 +195,7 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'bi.cities.name.rotterdam-3dbag': 'Roterdã',
   'bi.cities.name.denhaag-3dbag': 'Haia',
   'bi.cities.name.utrecht-3dbag': 'Utrecht',
+  'bi.cities.name.eindhoven-3dbag': 'Eindhoven',
   'bi.cities.name.chicago-overture': 'Chicago',
   'bi.cities.name.singapore-overture': 'Singapura',
   'bi.cities.name.sydney-overture': 'Sydney',

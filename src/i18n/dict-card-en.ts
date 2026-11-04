@@ -216,6 +216,7 @@ export const cardEn = {
   'bi.cities.name.rotterdam-3dbag': 'Rotterdam',
   'bi.cities.name.denhaag-3dbag': 'The Hague',
   'bi.cities.name.utrecht-3dbag': 'Utrecht',
+  'bi.cities.name.eindhoven-3dbag': 'Eindhoven',
   'bi.cities.name.chicago-overture': 'Chicago',
   'bi.cities.name.singapore-overture': 'Singapore',
   'bi.cities.name.sydney-overture': 'Sydney',
