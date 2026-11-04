@@ -75,6 +75,11 @@ export interface SkyLayerEnvironment {
   coordinator: OverlayCoordinator;
   /** Date de la scène : les pluies de météores ne sont actives qu'à certaines dates. */
   simulationDate: () => Date;
+  /** Centre l'écran sur un point du ciel (direction unitaire de la scène), sans quitter le corps suivi. */
+  centerOn?: (
+    direction: readonly [number, number, number],
+    anchorY?: number
+  ) => void;
 }
 
 export function setupSkyLayerToggles(

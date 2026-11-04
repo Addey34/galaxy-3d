@@ -71,6 +71,7 @@ export function createSkyLabelLayer(
 
   const dir: [number, number, number] = [0, 0, 0];
   const world = new THREE.Vector3();
+  const view = new THREE.Vector3();
   const widths = new Map<Entry, number>();
   let active = false;
   let raf = 0;
@@ -89,10 +90,16 @@ export function createSkyLabelLayer(
           .set(dir[0], dir[1], dir[2])
           .multiplyScalar(radius)
           .applyMatrix4(options.sky.matrixWorld);
+        // Devant la caméra, et non « avant le plan lointain » : le ciel est à `radius` alors que le
+        // `far` de la caméra est adaptatif et peut rester plus court, ce qui masquait tout nom
+        // proche de l'axe de visée (celui de l'objet qu'on vient de centrer).
+        const inFront =
+          view.copy(world).applyMatrix4(options.camera.matrixWorldInverse).z <
+          0;
         world.project(options.camera);
         const x = ((world.x + 1) / 2) * width;
         const y = ((1 - world.y) / 2) * height + offsetY;
-        if (world.z < 1 && x > 0 && x < width && y > 0 && y < height) {
+        if (inFront && x > 0 && x < width && y > 0 && y < height) {
           let w = widths.get(e);
           if (w === undefined) {
             w = e.el.offsetWidth || e.item.text.length * 9;

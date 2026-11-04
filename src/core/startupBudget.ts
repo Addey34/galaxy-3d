@@ -428,6 +428,16 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "les constantes et la conversion de ligne de `core/exoplanets`, partagées par `ExoplanetHosts` et `exoplanetCard`, deux morceaux hors démarrage : Rollup en fait un morceau commun que `SolarSystemApp` n'appelle qu'à la lecture du fichier d'exoplanètes, après le premier affichage.",
   },
   {
+    chunk: 'SkyCenteringView',
+    reason:
+      "le centrage de l'écran sur un objet du ciel (2026-11-04) : importé par `CameraSystem.centerOnSkyDirection` à la première ouverture d'une fiche d'objet du ciel profond, jamais au démarrage. Sorti de `CameraSystem`, qui l'avait fait dépasser le plafond de 2 479 octets.",
+  },
+  {
+    chunk: 'skyCentering',
+    reason:
+      "les calculs purs du centrage sur le ciel (`core/skyCentering`), partagés par `SkyCenteringView` et `deepSkyCard`, deux morceaux hors démarrage : Rollup en fait un morceau commun, qui ne se charge qu'avec eux.",
+  },
+  {
     chunk: 'skyPick',
     reason:
       "la sélection d'un point du ciel par sa direction (`core/skyPick`), partagée par les repères des exoplanètes (`ExoplanetHosts`), ceux du ciel profond (`DeepSkyMarkers`) et leurs fiches, des morceaux hors démarrage : Rollup en fait un morceau commun, qui ne se charge qu'avec eux.",

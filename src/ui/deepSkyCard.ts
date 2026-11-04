@@ -8,6 +8,7 @@
  * (`core/deepsky.ts`) : ni distance ni taille de scène, une valeur absente se dit « non publiée ».
  * Une surface contextuelle parmi les autres : le coordinateur n'en garde qu'une ouverte.
  */
+import { freeBandAnchor } from '@/core/skyCentering';
 import { Vector3, type PerspectiveCamera } from 'three';
 import type { DeepSkyMarkers } from '@/components/celestial/DeepSkyMarkers';
 import type { DeepSkyFile, DeepSkyObject } from '@/core/deepsky';
@@ -49,6 +50,11 @@ interface Options {
   file: DeepSkyFile;
   camera: PerspectiveCamera;
   canvas: HTMLElement;
+  /** Centre l'écran sur la direction de l'objet ouvert (cf. `CameraSystem.centerOnSkyDirection`). */
+  centerOn?: (
+    direction: readonly [number, number, number],
+    anchorY?: number
+  ) => void;
   coordinator: OverlayCoordinator;
 }
 
@@ -82,7 +88,7 @@ function fact(label: string, value: string): HTMLElement[] {
 }
 
 export async function setupDeepSkyCard(options: Options): Promise<DeepSkyCard> {
-  const { markers, file, camera, canvas, coordinator } = options;
+  const { markers, file, camera, canvas, coordinator, centerOn } = options;
   // Les phrases de la fiche sont hors démarrage : `t()` rendrait les clés brutes sans elles.
   await loadDeferredMessages();
 
@@ -222,6 +228,17 @@ export async function setupDeepSkyCard(options: Options): Promise<DeepSkyCard> {
     getAnnouncer().announce(
       t('deep.card.opened', { name: object[2] ?? object[0] })
     );
+    // Un objet choisi dans la liste ou au clic arrive au centre de l'écran.
+    const direction: [number, number, number] = [0, 0, 0];
+    const index = markers.objects.indexOf(object);
+    if (index >= 0 && markers.directionOf(index, direction))
+      centerOn?.(
+        direction,
+        freeBandAnchor(card.getBoundingClientRect(), {
+          width: window.innerWidth,
+          height: window.innerHeight,
+        })
+      );
   }
 
   coordinator.register('deepsky-card', () => {

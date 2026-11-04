@@ -22,6 +22,7 @@ import Logger from '@/utils/Logger';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
 import type { CameraDistance } from '@/types';
 import type { CelestialBodies } from './SceneSystem';
+import type { SkyCenteringView } from './SkyCenteringView';
 
 /**
  * Ce que la caméra demande d'une cible : un objet à suivre, éventuellement une distance de
@@ -85,13 +86,19 @@ export class CameraSystem {
   private isAnimating = false;
   /** Actions différées jusqu'à la fin du vol en cours (cf. `whenSettled`). */
   private _whenSettled: (() => void)[] = [];
-  private currentTarget: {
+  /** Le corps suivi ; lu par `SkyCenteringView` (son rayon fixe l'angle qui dégage son disque). */
+  currentTarget: {
     name: string;
     group: THREE.Group;
     distance: number;
   } | null = null;
   /** Keeps the selected label while a mode morph temporarily freezes camera tracking. */
   private trackingPaused = false;
+  /**
+   * Le centrage sur un objet du ciel (`centerOnSkyDirection`), créé à la première demande : son
+   * code est un morceau à part, hors du démarrage.
+   */
+  private skyCentering: SkyCenteringView | null = null;
   private _opticalFov = CAMERA_SETTINGS.opticalMaxFov;
   private _scaleMode: 'educ' | 'explo' = 'educ';
 
@@ -133,6 +140,8 @@ export class CameraSystem {
     this.controls.rotateSpeed = CAMERA_CONTROLS_SETTINGS.rotateSpeed;
     this.controls.zoomSpeed = CAMERA_CONTROLS_SETTINGS.zoomSpeed;
     this.controls.target.set(0, 0, 0);
+    // Une rotation ou un zoom de l'utilisateur rend la vue d'origine (centrage sur le ciel).
+    this.controls.addEventListener('start', () => this.skyCentering?.release());
   }
 
   /**
@@ -278,6 +287,8 @@ export class CameraSystem {
     targetPosition: THREE.Vector3,
     onArrive?: () => void
   ): void {
+    // Choisir un corps rend la vue à son corps : le décalage du centrage sur le ciel s'efface.
+    this.skyCentering?.drop();
     // Un nouveau clic remplace le vol en cours. Sans cette annulation, plusieurs paires de
     // tweens écrivaient caméra/cible pendant les mêmes frames et produisaient un mouvement
     // latéral de va-et-vient lors d'une navigation rapide entre les planètes.
@@ -448,6 +459,7 @@ export class CameraSystem {
 
     this._updateClipPlanes();
     this.controls.update();
+    this.skyCentering?.sync();
     this._tiltTowardsHorizon();
   }
 
@@ -655,6 +667,7 @@ export class CameraSystem {
     }
     this.currentTarget = null;
     this.trackingPaused = false;
+    this.skyCentering?.drop();
     this._setFov(CAMERA_SETTINGS.fov);
     // Retour à la vue d'ensemble : restaure les bornes de zoom globales du mode (sinon on
     // resterait limité aux bornes proportionnelles du dernier corps ciblé).
@@ -998,6 +1011,23 @@ export class CameraSystem {
     );
     if (!angles) return;
     this.applyViewAngles(angles.azimuthDeg, angles.polarDeg, radius * radii);
+  }
+
+  /**
+   * Amène la direction `direction` (unitaire, repère de la scène : un point du ciel) à la hauteur
+   * `anchorY` de l'écran (0,5 = le centre), sans quitter l'orbite du corps suivi. `OrbitControls`
+   * regarde toujours sa cible : on tourne la visée d'un petit angle qui dégage le corps, puis on
+   * décale la fenêtre de projection (`core/skyCentering.ts`, `SkyCenteringView`). Un geste
+   * (rotation, zoom) rend la vue d'origine, et choisir un corps aussi. Sans effet en WebXR (la tête
+   * pilote la caméra). Le code de calcul se charge à la première demande.
+   */
+  async centerOnSkyDirection(
+    direction: readonly [number, number, number],
+    anchorY?: number
+  ): Promise<void> {
+    const { SkyCenteringView } = await import('./SkyCenteringView');
+    this.skyCentering ??= new SkyCenteringView(this);
+    this.skyCentering.center(direction, anchorY);
   }
 
   private getDefaultDistance(bodyName: string): number {

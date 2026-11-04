@@ -24,6 +24,9 @@ const vertexShader = /* glsl */ `
   void main() {
     gl_PointSize = ${RING_SIZE_PX.toFixed(1)} * pixelRatio;
     gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    // Un point du ciel est « à l'infini » : sa profondeur est celle du plan lointain, jamais sa distance
+    // réelle (2600). Sinon un far resté plus court coupe tout repère proche de l'axe de visée.
+    gl_Position.z = gl_Position.w;
   }
 `;
 

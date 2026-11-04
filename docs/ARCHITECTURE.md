@@ -7366,10 +7366,25 @@ rayon du clic part de la caméra et les repères sont centrés sur elle. Les phr
 `dict-card-*` (hors démarrage). Une surface contextuelle parmi les autres : `deepsky-card` dans le
 coordinateur, fermée par Échap ou par l'ouverture d'une autre.
 
-**Ce qu'elle ne fait pas, et pourquoi.** Elle ne centre pas la caméra sur l'objet. Mesuré le
-2026-11-03 : `OrbitControls` garde la CIBLE au centre de l'écran, donc regarder un point du ciel place
-la planète suivie devant lui (à 0,05 unité de la caméra pour Neptune) et un clic au centre ouvre la
-fiche de la planète. Centrer demanderait de déplacer la cible ou de décaler la vue : autre chantier.
+**Le centrage (2026-11-04).** Ouvrir une fiche amène l'objet au centre de l'écran. `OrbitControls` garde la
+CIBLE au centre (mesuré le 2026-11-03 : viser un point du ciel plaçait la planète suivie devant lui), donc
+on ne vise pas l'objet : `CameraSystem.centerOnSkyDirection` tourne la visée d'un petit angle autour de
+l'axe vertical de l'écran, qui dégage le disque du corps suivi, puis décale la FENÊTRE de projection
+(`PerspectiveCamera.setViewOffset`) jusqu'à ce que la direction de l'objet tombe au centre. Le corps reste
+en orbite, dans le champ, de côté. Les calculs (angle, tangentes, décalage en pixels, zone libre) sont dans
+`core/skyCentering.ts`, testés. Sur téléphone la fiche couvre la largeur en haut : l'objet est centré dans
+la zone entre son bord bas et la barre de temps (`freeBandAnchor`), pas sous la fiche. Une rotation, un
+zoom ou le choix d'un corps rend la vue d'origine. Sans effet en WebXR. Seule cette fiche l'utilise : la
+fiche des exoplanètes n'est pas câblée.
+
+**Un défaut préexistant que le centrage a révélé.** Les repères du ciel sont à 2600 unités de la caméra,
+alors que `far` est adaptatif et ne se met à jour qu'au-delà de 5 % (2480 mesuré à Neptune) : un repère à
+moins d'environ 17° de l'axe de visée avait une profondeur supérieure à `far` et était COUPÉ, intermittent
+selon l'historique de la caméra (0 losange sur 8 lancements iPhone, puis 8 sur 8 après correction). Les
+sommets des repères (`DeepSkyMarkers`, `ExoplanetHosts`, `MeteorRadiants`) épinglent donc leur profondeur
+au plan lointain (`gl_Position.z = gl_Position.w`), et les noms 2D (`ui/skyLabels`) testent « devant la
+caméra » au lieu de `z < 1`. `components/celestial/skyMarkerDepth.test.ts` tient les deux, falsifié. Les
+étoiles de `Starfield` ont la même projection et ne sont pas corrigées : non mesuré.
 
 ## Les pluies de météores (2026-11-03)
 
