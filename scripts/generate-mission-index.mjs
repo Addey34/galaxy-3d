@@ -500,7 +500,10 @@ index.provider = {
 };
 const indexJson = JSON.stringify(index, null, 1);
 if (check) {
-  if (!existsSync(INDEX) || readFileSync(INDEX, 'utf8') !== indexJson)
+  if (
+    !existsSync(INDEX) ||
+    !sameIgnoringReadDates(readFileSync(INDEX, 'utf8'), indexJson)
+  )
     drifted.push('index');
 } else writeFileSync(INDEX, indexJson);
 
@@ -567,7 +570,7 @@ const catalogueJson = `${JSON.stringify(
 if (check) {
   if (
     !existsSync(CATALOGUE) ||
-    readFileSync(CATALOGUE, 'utf8') !== catalogueJson
+    !sameIgnoringReadDates(readFileSync(CATALOGUE, 'utf8'), catalogueJson)
   )
     drifted.push('catalogue des pages');
 } else writeFileSync(CATALOGUE, catalogueJson);
