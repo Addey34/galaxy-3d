@@ -471,7 +471,7 @@ index.provider = {
 const indexJson = `${JSON.stringify(index, null, 1)}\n`;
 const beforeIndex = existsSync(INDEX) ? readFileSync(INDEX, 'utf8') : null;
 if (check) {
-  if (beforeIndex !== indexJson) drifted.push('index');
+  if (!sameIgnoringReadDates(beforeIndex, indexJson)) drifted.push('index');
 } else if (beforeIndex !== indexJson) writeFileSync(INDEX, indexJson);
 
 const total = [...built.values()].reduce((n, r) => n + r.instruments.length, 0);
