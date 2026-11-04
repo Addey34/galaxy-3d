@@ -62,6 +62,7 @@ import {
 import { Buffer } from 'node:buffer';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sameIgnoringReadDates } from './drift-compare.mjs';
 import {
   CACHE_DIR,
   cacheKey,
@@ -744,8 +745,9 @@ const drifted = [];
 const write = (path, json) => {
   const before = existsSync(path) ? readFileSync(path, 'utf8') : null;
   if (before === json) return;
-  if (check) drifted.push(path);
-  else writeFileSync(path, json);
+  if (check) {
+    if (!sameIgnoringReadDates(before, json)) drifted.push(path);
+  } else writeFileSync(path, json);
 };
 
 const index = {

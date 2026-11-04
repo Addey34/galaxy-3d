@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-21T18:18:50.671Z",
+ "generatedAt": "2026-11-04T00:31:43.800Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -12820,16 +12820,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 4.895,
-    "median": 4.3,
-    "p95": 11.44,
-    "max": 16.16
+    "mean": 454.8,
+    "median": 380.5,
+    "p95": 1046,
+    "max": 1113
    },
    "radii": {
-    "mean": 0.008946,
-    "median": 0.007858,
-    "p95": 0.0209,
-    "max": 0.02953
+    "mean": 0.8312,
+    "median": 0.6954,
+    "p95": 1.912,
+    "max": 2.033
    }
   },
   {
@@ -12847,16 +12847,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1819,
-    "median": 1381,
-    "p95": 4730,
-    "max": 6533
+    "mean": 1755,
+    "median": 1246,
+    "p95": 4549,
+    "max": 6344
    },
    "radii": {
-    "mean": 3.324,
-    "median": 2.523,
-    "p95": 8.644,
-    "max": 11.94
+    "mean": 3.207,
+    "median": 2.276,
+    "p95": 8.313,
+    "max": 11.59
    }
   },
   {
@@ -12874,16 +12874,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 422600,
-    "median": 118300,
-    "p95": 2181000,
-    "max": 3048000
+    "mean": 422700,
+    "median": 118500,
+    "p95": 2182000,
+    "max": 3049000
    },
    "radii": {
-    "mean": 772.3,
-    "median": 216.1,
-    "p95": 3987,
-    "max": 5571
+    "mean": 772.6,
+    "median": 216.6,
+    "p95": 3988,
+    "max": 5572
    }
   },
   {
@@ -12909,7 +12909,7 @@
    "radii": {
     "mean": 11190,
     "median": 13410,
-    "p95": 23580,
+    "p95": 23590,
     "max": 24010
    }
   },
@@ -12930,16 +12930,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 5.887,
-    "median": 5.16,
-    "p95": 13.27,
-    "max": 15.48
+    "mean": 458.2,
+    "median": 396.3,
+    "p95": 1058,
+    "max": 1143
    },
    "radii": {
-    "mean": 0.01076,
-    "median": 0.009431,
-    "p95": 0.02425,
-    "max": 0.02829
+    "mean": 0.8373,
+    "median": 0.7242,
+    "p95": 1.933,
+    "max": 2.09
    }
   },
   {
@@ -14985,13 +14985,13 @@
     "binaire": 48
    },
    "km": {
-    "mean": 3.044,
+    "mean": 3.045,
     "median": 0.06299,
     "p95": 15.12,
     "max": 40.58
    },
    "radii": {
-    "mean": 7.806,
+    "mean": 7.808,
     "median": 0.1615,
     "p95": 38.76,
     "max": 104
@@ -15002,7 +15002,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "2000-01-06",
-   "windowTo": "2030-12-28",
+   "windowTo": "2027-06-28",
    "windowClipped": false,
    "target": "120065803",
    "relative": true,
@@ -15012,16 +15012,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 0.005258,
-    "median": 0.004042,
-    "p95": 0.01305,
-    "max": 0.0231
+    "mean": 0.004659,
+    "median": 0.003861,
+    "p95": 0.009414,
+    "max": 0.02771
    },
    "radii": {
-    "mean": 0.0701,
-    "median": 0.05389,
-    "p95": 0.174,
-    "max": 0.308
+    "mean": 0.06212,
+    "median": 0.05148,
+    "p95": 0.1255,
+    "max": 0.3694
    }
   },
   {
@@ -15029,7 +15029,7 @@
    "provider": "kepler",
    "windowKind": "epoch",
    "windowFrom": "2015-12-31",
-   "windowTo": "2030-12-28",
+   "windowTo": "2027-06-29",
    "windowClipped": true,
    "target": "120065803",
    "relative": true,
@@ -15039,16 +15039,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 0.6833,
-    "median": 0.3165,
-    "p95": 2.304,
-    "max": 2.332
+    "mean": 0.9072,
+    "median": 0.3327,
+    "p95": 2.328,
+    "max": 2.342
    },
    "radii": {
-    "mean": 9.11,
-    "median": 4.22,
-    "p95": 30.73,
-    "max": 31.09
+    "mean": 12.1,
+    "median": 4.436,
+    "p95": 31.04,
+    "max": 31.22
    }
   },
   {
@@ -15056,7 +15056,7 @@
    "provider": "kepler",
    "windowKind": "fixed",
    "windowFrom": "2000-01-03",
-   "windowTo": "2030-12-28",
+   "windowTo": "2027-06-29",
    "windowClipped": true,
    "target": "120065803",
    "relative": true,
@@ -15066,15 +15066,15 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1.17,
-    "median": 1.25,
-    "p95": 2.327,
+    "mean": 1.203,
+    "median": 1.011,
+    "p95": 2.335,
     "max": 2.341
    },
    "radii": {
-    "mean": 15.61,
-    "median": 16.67,
-    "p95": 31.02,
+    "mean": 16.04,
+    "median": 13.49,
+    "p95": 31.13,
     "max": 31.21
    }
   },
@@ -15083,7 +15083,7 @@
    "provider": "kepler",
    "windowKind": "fixed",
    "windowFrom": "2000-01-03",
-   "windowTo": "2030-12-28",
+   "windowTo": "2027-06-29",
    "windowClipped": true,
    "target": "120065803",
    "relative": true,
@@ -15093,15 +15093,15 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1.186,
-    "median": 1.089,
-    "p95": 2.339,
+    "mean": 1.269,
+    "median": 1.324,
+    "p95": 2.34,
     "max": 2.342
    },
    "radii": {
-    "mean": 15.82,
-    "median": 14.52,
-    "p95": 31.19,
+    "mean": 16.93,
+    "median": 17.65,
+    "p95": 31.21,
     "max": 31.22
    }
   },
@@ -15109,8 +15109,8 @@
    "body": "dimorphos",
    "provider": "production",
    "windowKind": "fixed",
-   "windowFrom": "2001-01-02",
-   "windowTo": "2025-07-12",
+   "windowFrom": "2001-01-03",
+   "windowTo": "2027-06-29",
    "windowClipped": true,
    "target": "120065803",
    "relative": false,
@@ -15122,16 +15122,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 0.02247,
-    "median": 0.02121,
-    "p95": 0.05785,
-    "max": 0.08543
+    "mean": 0.02508,
+    "median": 0.02004,
+    "p95": 0.08784,
+    "max": 0.1355
    },
    "radii": {
-    "mean": 0.2997,
-    "median": 0.2828,
-    "p95": 0.7713,
-    "max": 1.139
+    "mean": 0.3344,
+    "median": 0.2672,
+    "p95": 1.171,
+    "max": 1.807
    }
   },
   {
@@ -16656,16 +16656,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1.323,
-    "median": 0.1247,
-    "p95": 9.87,
-    "max": 11.63
+    "mean": 1.399,
+    "median": 0.201,
+    "p95": 10.09,
+    "max": 11.91
    },
    "radii": {
-    "mean": 0.5513,
-    "median": 0.05197,
-    "p95": 4.112,
-    "max": 4.846
+    "mean": 0.5831,
+    "median": 0.08375,
+    "p95": 4.203,
+    "max": 4.962
    }
   },
   {
@@ -16766,16 +16766,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 1.562,
-    "median": 0.1142,
-    "p95": 7.628,
-    "max": 14.21
+    "mean": 1.835,
+    "median": 0.5922,
+    "p95": 8.069,
+    "max": 14.49
    },
    "radii": {
-    "mean": 0.651,
-    "median": 0.04758,
-    "p95": 3.178,
-    "max": 5.922
+    "mean": 0.7644,
+    "median": 0.2468,
+    "p95": 3.362,
+    "max": 6.036
    }
   },
   {
@@ -16793,16 +16793,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 21.9,
-    "median": 1.183,
-    "p95": 97.71,
-    "max": 256.6
+    "mean": 14.25,
+    "median": 1.225,
+    "p95": 81.04,
+    "max": 97.02
    },
    "radii": {
-    "mean": 10.95,
-    "median": 0.5914,
-    "p95": 48.86,
-    "max": 128.3
+    "mean": 7.126,
+    "median": 0.6123,
+    "p95": 40.52,
+    "max": 48.51
    }
   },
   {
@@ -16903,16 +16903,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 15.17,
-    "median": 0.9499,
-    "p95": 75.97,
-    "max": 141.1
+    "mean": 41.91,
+    "median": 1.152,
+    "p95": 217.5,
+    "max": 400.4
    },
    "radii": {
-    "mean": 7.586,
-    "median": 0.4749,
-    "p95": 37.99,
-    "max": 70.54
+    "mean": 20.95,
+    "median": 0.5761,
+    "p95": 108.8,
+    "max": 200.2
    }
   },
   {
@@ -17522,9 +17522,9 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1940,
-    "median": 0.223,
-    "p95": 506.7,
+    "mean": 2132,
+    "median": 0.2275,
+    "p95": 1461,
     "max": 90500
    },
    "radii": null
@@ -17544,10 +17544,10 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 0.02766,
-    "median": 0.01724,
-    "p95": 0.04479,
-    "max": 0.4603
+    "mean": 150.1,
+    "median": 0.4603,
+    "p95": 420.8,
+    "max": 501.5
    },
    "radii": null
   },
@@ -17764,10 +17764,10 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 0.765,
-    "median": 0.02923,
-    "p95": 0.438,
-    "max": 30.47
+    "mean": 252500,
+    "median": 246400,
+    "p95": 486900,
+    "max": 502900
    },
    "radii": null
   },
@@ -17830,10 +17830,10 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 0.009664,
+    "mean": 1.812,
     "median": 0.001392,
-    "p95": 0.06416,
-    "max": 0.0989
+    "p95": 0.07306,
+    "max": 86.51
    },
    "radii": null
   },
@@ -17941,9 +17941,9 @@
    "sources": {},
    "km": {
     "mean": 12120000,
-    "median": 8700000,
-    "p95": 33470000,
-    "max": 36830000
+    "median": 8478000,
+    "p95": 33760000,
+    "max": 37140000
    },
    "radii": null
   }

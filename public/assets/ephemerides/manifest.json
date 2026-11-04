@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-15T01:33:10.123Z",
+  "generatedAt": "2026-11-04T00:30:23.117Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -356,7 +356,7 @@
       "sampleCount": 1150
     },
     "bepicolombo": {
-      "file": "bepicolombo.04dafda46167.bin",
+      "file": "bepicolombo.9d673d8f24f5.bin",
       "target": "-121",
       "center": "sun",
       "startJdTdb": 2458413.5,
@@ -626,7 +626,7 @@
       "sampleCount": 9177
     },
     "didymos": {
-      "file": "didymos.144dbe709c2b.bin",
+      "file": "didymos.234f71bc9504.bin",
       "target": "65803;",
       "center": "sun",
       "startJdTdb": 2415020.5,
@@ -634,8 +634,8 @@
       "sampleCount": 73415,
       "primary": {
         "target": "920065803",
-        "fromJdTdb": 2451911.5,
-        "toJdTdb": 2460869.5
+        "fromJdTdb": 2451912.5,
+        "toJdTdb": 2461585.5
       }
     },
     "dinkinesh": {
@@ -781,12 +781,12 @@
       "sampleCount": 18354
     },
     "dimorphos": {
-      "file": "dimorphos.6cd5e517bb51.bin",
+      "file": "dimorphos.a1bafa1fe9b3.bin",
       "target": "120065803",
       "center": "didymos",
       "startJdTdb": 2451548.5,
       "stepDays": 1,
-      "sampleCount": 11317,
+      "sampleCount": 10038,
       "impulses": [
         2459849.469136169
       ]
@@ -800,29 +800,29 @@
       "sampleCount": 4648
     },
     "bepicolombo-mercury": {
-      "file": "bepicolombo-mercury.a7f6b8421b7e.bin",
+      "file": "bepicolombo-mercury.fb40f0fdf528.bin",
       "target": "-121",
       "center": "mercury",
       "startJdTdb": 2461326.5,
       "stepDays": 0.5,
       "sampleCount": 357,
       "impulses": [
-        2461366.2867143215,
-        2461371.045660654,
-        2461374.559173332,
-        2461377.58019352,
-        2461380.661719778,
-        2461388.0234276466,
-        2461414.7364469417,
-        2461417.944130645,
-        2461421.155518153,
-        2461424.3336701575,
-        2461453.118544356,
-        2461456.2472003256,
-        2461459.299655018,
-        2461462.3391374527,
-        2461465.454624955,
-        2461468.545403642
+        2461366.286447287,
+        2461371.0752071133,
+        2461374.5792314485,
+        2461377.600502151,
+        2461380.6902205707,
+        2461388.0519919456,
+        2461414.7648193752,
+        2461417.9717767853,
+        2461421.1808959786,
+        2461424.3583019977,
+        2461453.12382636,
+        2461456.2499905983,
+        2461459.301683872,
+        2461462.3399372036,
+        2461465.4550528727,
+        2461468.5453885836
       ],
       "segmentOf": "bepicolombo"
     },
@@ -867,7 +867,7 @@
       "sampleCount": 3019
     },
     "hera": {
-      "file": "hera.91a06cc221aa.bin",
+      "file": "hera.02ba1219670f.bin",
       "target": "-91",
       "center": "sun",
       "startJdTdb": 2460591.5,
@@ -1540,14 +1540,15 @@
       "flyby": true
     },
     "hera--didymos-2026-11-02": {
-      "file": "hera--didymos-2026-11-02.71f50ad9a944.bin",
+      "file": "hera--didymos-2026-11-02.1a8ef03c44ea.bin",
       "target": "-91",
       "center": "didymos",
       "startJdTdb": 2461344.416666667,
       "stepDays": 0.5,
       "sampleCount": 4,
       "impulses": [
-        2461344.586806
+        2461344.586806,
+        2461345.663677
       ],
       "segmentOf": "hera"
     },

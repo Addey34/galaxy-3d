@@ -9,11 +9,11 @@
   "authors": "Huber, L.",
   "year": 2024,
   "doi": "10.17189/23e7-zw13",
-  "retrieved": "2026-10-28"
+  "retrieved": "2026-11-03"
  },
  "reference": {
   "text": "Fulchignoni, M., F, Ferri, F. Angrilli, A.J. Ball, A. Bar-Nun, M.A. Barucci, C. Bettanini, G. Bianchini, W. Borucki, G. Colombatti, M. Coradini, A. Coustenis, S. Debei, P. Falkner, G. Fanti, E. Flamini, V. Gaborit, R. Grard, M. Hamelin, A.M. Harri, B. Hathi, I. Jernej, M. R. Leese, A. Lehto, P.F. Lion Stoppato, J.J. Lopez-Moreno, T. Makinen, J.A.M. McDonnell, C.P. McKay, G. Molina-Cuberos, F.M. Neubauer, V. Pirronello, R. Rodrigo, B. Saggin, K. Schwingenschuh, A. Seiff, F. Simoes, H. Svedhem, T. Tokano, M. C. Towner, R. Trautner, P. Withers J.C. Zarnecki. In situ measurements of the physical characteristics of Titan's environment Nature, 438, 785-791, doi:10.103038/nature04314, 2005",
-  "retrieved": "2026-10-28"
+  "retrieved": "2026-11-03"
  },
  "latitudeDeg": {
   "min": -10.326,
@@ -24,14 +24,14 @@
   "title": "Huygens Reconstructed Entry and Descent Trajectory (DTWG) Bundle",
   "doi": "10.17189/3hyn-wh42",
   "url": "https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hpdtwg_bundle/DATA/HUY_DTWG_DESCENT_POS.TAB",
-  "retrieved": "2026-10-28"
+  "retrieved": "2026-11-03"
  },
  "segments": [
   {
    "kind": "entry",
    "product": "urn:nasa:pds:hp_hasi:data_raw:hasi_l4_atmo_profile_entry",
    "url": "https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hphasi_bundle/DATA/PROFILES/HASI_L4_ATMO_PROFILE_ENTRY.TAB",
-   "retrieved": "2026-10-28",
+   "retrieved": "2026-11-03",
    "start": "2005-01-14T09:05:28.878Z",
    "stop": "2005-01-14T09:10:20.188Z",
    "samples": [
@@ -4596,7 +4596,7 @@
    "kind": "descent",
    "product": "urn:nasa:pds:hp_hasi:data_raw:hasi_l4_atmo_profile_descen",
    "url": "https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hphasi_bundle/DATA/PROFILES/HASI_L4_ATMO_PROFILE_DESCEN.TAB",
-   "retrieved": "2026-10-28",
+   "retrieved": "2026-11-03",
    "start": "2005-01-14T09:11:21.373Z",
    "stop": "2005-01-14T11:38:10.457Z",
    "samples": [
@@ -13702,12 +13702,12 @@
    {
     "product": "urn:nasa:pds:hp_hasi:data_raw:hasi_l4_ppi_pressure_vel",
     "url": "https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hphasi_bundle/DATA/PPI/HASI_L4_PPI_PRESSURE_VEL.TAB",
-    "retrieved": "2026-10-28"
+    "retrieved": "2026-11-03"
    },
    {
     "product": "urn:nasa:pds:hp_hasi:data_raw:hasi_l4_tem_temperature",
     "url": "https://atmos.nmsu.edu/PDS/data/PDS4/Huygens/hphasi_bundle/DATA/TEM/HASI_L4_TEM_TEMPERATURE.TAB",
-    "retrieved": "2026-10-28"
+    "retrieved": "2026-11-03"
    }
   ]
  }

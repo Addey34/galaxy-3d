@@ -639,7 +639,7 @@ const BODIES = [
   { name: 'hydra', target: '903', expectedName: 'hydra', center: 'pluto' },
   // Les satellites de deux cibles de missions (2026-10-04, vague 2). Horizons ne les sert que
   // sur une fenêtre BORNÉE, lue dans ses refus (« No ephemeris for target … prior to
-  // 2000-JAN-02 », « after 2030-DEC-30 » pour Dimorphos, « after 2050-NOV-30 » pour Menoetius) :
+  // 2000-JAN-02 », « after 2027-JUN-30 » pour Dimorphos (2030-DEC-30 jusqu'au 2026-11-03, relu ce jour), « after 2050-NOV-30 » pour Menoetius) :
   // hors d'elle, les éléments `relativeOrbitalElements` de la fiche prennent le relais.
   // Début au 2000-01-05, premier nœud de la grille commune de 4 jours partie de 1900-01-01 :
   // leurs échantillons tombent aux MÊMES instants que ceux des autres corps, et l'époque des
@@ -651,7 +651,7 @@ const BODIES = [
     expectedName: 'dimorphos',
     center: 'didymos',
     startTime: '2000-01-05',
-    stopTime: '2030-12-29',
+    stopTime: '2027-06-29',
     // Au pas d'UN jour (2026-10-05) : l'intervalle qui contient l'impact ne se résout pas au
     // pas de 4 jours (44 heures à plus d'un diamètre, mesuré heure par heure), et le saut de
     // vitesse se lit dans l'en-tête d'Horizons (cf. `readImpulses`).
