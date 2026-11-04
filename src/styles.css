@@ -3952,6 +3952,29 @@ body.is-capturing #loader {
 .exo-body {
   overflow-y: auto;
   padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  /* Ombres de défilement (CSS pur) : un liséré en haut ou en bas n'apparaît que s'il reste du
+     contenu hors de vue. Sur un téléphone à la fenêtre courte (iPhone 15 : 659 px visibles, fiche
+     plafonnée à 303 px pour 338 demandés), le dernier paragraphe semblait coupé alors que le
+     corps défile : rien n'annonçait la suite (2026-11-04). Les deux premiers dégradés, en
+     `local`, recouvrent l'ombre quand on est au bord ; les deux derniers, en `scroll`, la
+     portent. */
+  background:
+    linear-gradient(var(--surface-solid) 30%, transparent) 0 0 / 100% 1.5rem
+      no-repeat local,
+    linear-gradient(transparent, var(--surface-solid) 70%) 0 100% / 100% 1.5rem
+      no-repeat local,
+    radial-gradient(
+        farthest-side at 50% 0,
+        color-mix(in srgb, var(--ink) 22%, transparent),
+        transparent
+      )
+      0 0 / 100% 0.6rem no-repeat scroll,
+    radial-gradient(
+        farthest-side at 50% 100%,
+        color-mix(in srgb, var(--ink) 22%, transparent),
+        transparent
+      )
+      0 100% / 100% 0.6rem no-repeat scroll;
 }
 .exo-planets {
   display: grid;
