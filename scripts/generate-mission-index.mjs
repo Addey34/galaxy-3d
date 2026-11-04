@@ -57,6 +57,7 @@ import { Buffer } from 'node:buffer';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveKnownDivergence } from './pds-known-divergences.mjs';
+import { sameIgnoringReadDates } from './drift-compare.mjs';
 import {
   CACHE_DIR,
   cacheKey,
@@ -450,7 +451,7 @@ for (const body of [...byBody.keys()].sort()) {
   const path = join(OUT, `${body}.json`);
   const before = existsSync(path) ? readFileSync(path, 'utf8') : null;
   if (check) {
-    if (before !== json) drifted.push(body);
+    if (!sameIgnoringReadDates(before, json)) drifted.push(body);
   } else if (before !== json) writeFileSync(path, json);
 }
 

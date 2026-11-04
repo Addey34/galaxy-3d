@@ -41,6 +41,7 @@ import {
 } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sameIgnoringReadDates } from './drift-compare.mjs';
 import { inflateRawSync } from 'node:zlib';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -314,7 +315,7 @@ for (const { target, body } of pairs) {
   const path = join(OUT, `${body}.json`);
   const before = existsSync(path) ? readFileSync(path, 'utf8') : null;
   if (check) {
-    if (before !== json) drifted.push(body);
+    if (!sameIgnoringReadDates(before, json)) drifted.push(body);
   } else if (before !== json) {
     writeFileSync(path, json);
   }

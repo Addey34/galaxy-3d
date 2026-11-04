@@ -39,6 +39,7 @@ import {
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sameIgnoringReadDates } from './drift-compare.mjs';
 import {
   CACHE_DIR,
   cacheKey,
@@ -582,7 +583,8 @@ const write = [
 ];
 if (check) {
   const drift = write.filter(
-    ([f, text]) => !existsSync(f) || readFileSync(f, 'utf8') !== text
+    ([f, text]) =>
+      !existsSync(f) || !sameIgnoringReadDates(readFileSync(f, 'utf8'), text)
   );
   for (const [f] of drift) console.error(`dérive : ${f}`);
   process.exit(drift.length ? 1 : 0);

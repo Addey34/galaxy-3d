@@ -44,6 +44,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sameIgnoringReadDates } from './drift-compare.mjs';
 import {
   horizonsRelative,
   norm,
@@ -299,7 +300,7 @@ const output = `${JSON.stringify(
 
 if (CHECK) {
   const shipped = existsSync(OUT) ? readFileSync(OUT, 'utf8') : '';
-  if (shipped !== output) {
+  if (!sameIgnoringReadDates(shipped, output)) {
     console.error(`${OUT} a dérivé : relancer pnpm orbits:generate`);
     process.exit(1);
   }
