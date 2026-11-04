@@ -71,3 +71,24 @@ export function searchNames(
   }
   return [...starts, ...contains].slice(0, limit);
 }
+
+/**
+ * Direction unitaire du point `index` d'un tampon de positions (x, y, z à la suite), écrite dans
+ * `out`. Faux si le point est à l'origine : il n'a pas de direction.
+ */
+export function directionAt(
+  positions: ArrayLike<number>,
+  index: number,
+  out: [number, number, number]
+): boolean {
+  const x = positions[index * 3];
+  const y = positions[index * 3 + 1];
+  const z = positions[index * 3 + 2];
+  if (x === undefined || y === undefined || z === undefined) return false;
+  const n = Math.hypot(x, y, z);
+  if (!(n > 0)) return false;
+  out[0] = x / n;
+  out[1] = y / n;
+  out[2] = z / n;
+  return true;
+}

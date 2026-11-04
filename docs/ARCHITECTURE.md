@@ -7366,17 +7366,21 @@ rayon du clic part de la caméra et les repères sont centrés sur elle. Les phr
 `dict-card-*` (hors démarrage). Une surface contextuelle parmi les autres : `deepsky-card` dans le
 coordinateur, fermée par Échap ou par l'ouverture d'une autre.
 
-**Le centrage (2026-11-04).** Ouvrir une fiche amène l'objet au centre de l'écran. `OrbitControls` garde la
+**Le centrage (2026-11-04).** Ouvrir une fiche (ciel profond ou exoplanètes) amène l'objet au centre de l'écran. `OrbitControls` garde la
 CIBLE au centre (mesuré le 2026-11-03 : viser un point du ciel plaçait la planète suivie devant lui), donc
-on ne vise pas l'objet : `SkyCenteringView` (chargé à la première ouverture d'une fiche, et branché tout seul
-sur la caméra : `CameraSystem` n'a aucun point d'accroche) tourne la visée d'un petit angle autour de
+on ne vise pas l'objet : `SkyCenteringView` (chargé à la première ouverture d'une fiche par `ui/cardCentering`, partagé par
+les deux fiches, et branché tout seul sur la caméra : `CameraSystem` n'a aucun point d'accroche) tourne la visée d'un petit angle autour de
 l'axe vertical de l'écran, qui dégage le disque du corps suivi, puis décale la FENÊTRE de projection
 (`PerspectiveCamera.setViewOffset`) jusqu'à ce que la direction de l'objet tombe au centre. Le corps reste
 en orbite, dans le champ, de côté. Les calculs (angle, tangentes, décalage en pixels, zone libre) sont dans
 `core/skyCentering.ts`, testés. Sur téléphone la fiche couvre la largeur en haut : l'objet est centré dans
 la zone entre son bord bas et la barre de temps (`freeBandAnchor`), pas sous la fiche. Une rotation, un
-zoom ou le choix d'un corps rend la vue d'origine. Sans effet en WebXR. Seule cette fiche l'utilise : la
-fiche des exoplanètes n'est pas câblée.
+zoom ou le choix d'un corps rend la vue d'origine ; un simple CLIC ne la rend pas (OrbitControls émet `start`
+dès l'appui : rendre la vue à ce moment-là déplacerait l'objet avant le relâchement et le clic sur l'objet
+centré raterait, instantanément avec « réduire les animations » ; on attend un `change` sous le geste).
+Sans effet en WebXR. Le canvas publie `data-sky-centered` (`1` quand l'objet est arrivé, `0` sinon, comme
+`data-scene-moving`) : les tests attendent cet état plutôt qu'une durée, car le centrage se charge à la
+première ouverture et attend la fin d'un vol en cours.
 
 **Un défaut préexistant que le centrage a révélé.** Les repères du ciel sont à 2600 unités de la caméra,
 alors que `far` est adaptatif et ne se met à jour qu'au-delà de 5 % (2480 mesuré à Neptune) : un repère à

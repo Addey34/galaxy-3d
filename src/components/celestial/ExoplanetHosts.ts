@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { equatorialToSceneInto } from '@/core/frames';
 import type { ExoplanetSystem } from '@/core/exoplanets';
 import { systemAsStar } from '@/core/exoplanets';
-import { nearestDirection } from '@/core/skyPick';
+import { directionAt, nearestDirection } from '@/core/skyPick';
 import { starDirection, type StarRow } from '@/core/starCatalogue';
 
 const SKY_RADIUS = 2600;
@@ -121,6 +121,14 @@ export class ExoplanetHosts {
       'position'
     ) as THREE.BufferAttribute;
     return nearestDirection(position.array, this.systems.length, ray, tolRad);
+  }
+
+  /** Direction (unitaire, repère de la scène) du système `index`, lue dans le tampon des repères. */
+  directionOf(index: number, out: [number, number, number]): boolean {
+    const position = this.geometry.getAttribute(
+      'position'
+    ) as THREE.BufferAttribute;
+    return directionAt(position.array, index, out);
   }
 
   /** Le système visé par le rayon, ou null. */
