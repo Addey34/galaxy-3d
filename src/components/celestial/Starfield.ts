@@ -52,6 +52,9 @@ const vertexShader = /* glsl */ `
     vColor = color;
     gl_PointSize = size * pixelRatio;
     gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    // Le ciel est « à l'infini » : sa profondeur est épinglée au plan lointain, sinon les étoiles
+    // à moins d'environ 17° de l'axe de visée dépassent le plan lointain (adaptatif) et sont coupées.
+    gl_Position.z = gl_Position.w;
   }
 `;
 
@@ -89,6 +92,13 @@ export class Starfield {
   private fade = 1;
 
   constructor() {
+    // Même raison que pour les étoiles : les figures sont posées sur la même sphère.
+    this.lineMaterial.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <project_vertex>',
+        '#include <project_vertex>\n  gl_Position.z = gl_Position.w;'
+      );
+    };
     this.geometry = new THREE.BufferGeometry();
     this.material = new THREE.ShaderMaterial({
       name: 'StarfieldPoints',
