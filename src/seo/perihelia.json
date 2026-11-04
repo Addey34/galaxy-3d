@@ -398,10 +398,10 @@
     },
     {
       "probe": "parker-solar-probe",
-      "at": "2026-12-02T00:44:22Z",
-      "distanceKm": 6855385.655,
-      "altitudeKm": 6159685.655,
-      "speedKmS": 190.87555,
+      "at": "2026-12-02T00:43:59Z",
+      "distanceKm": 6855386.163,
+      "altitudeKm": 6159686.163,
+      "speedKmS": 190.87553,
       "solution": "psp_merged",
       "retrieved": "2026-11-04"
     },
