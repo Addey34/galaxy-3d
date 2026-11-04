@@ -7388,8 +7388,13 @@ moins d'environ 17° de l'axe de visée avait une profondeur supérieure à `far
 selon l'historique de la caméra (0 losange sur 8 lancements iPhone, puis 8 sur 8 après correction). Les
 sommets des repères (`DeepSkyMarkers`, `ExoplanetHosts`, `MeteorRadiants`) épinglent donc leur profondeur
 au plan lointain (`gl_Position.z = gl_Position.w`), et les noms 2D (`ui/skyLabels`) testent « devant la
-caméra » au lieu de `z < 1`. `components/celestial/skyMarkerDepth.test.ts` tient les deux, falsifié. Les
-étoiles de `Starfield` ont la même projection et ne sont pas corrigées : non mesuré.
+caméra » au lieu de `z < 1`. Les étoiles et les figures de constellations de `Starfield` ont la même
+projection et reçoivent la même ligne (points : dans le shader ; figures : `onBeforeCompile` sur le
+`LineBasicMaterial`, qui remplace `#include <project_vertex>`). `components/celestial/skyMarkerDepth.test.ts`
+tient le tout, falsifié, y compris que `ShaderLib.basic` porte encore la chaîne remplacée. Mesuré une seule
+fois proprement (iPhone 15 émulé : 409 pixels d'étoiles en plus, 0 en moins) ; les séries suivantes sont
+brouillées par de petites différences de pose de la caméra, donc une comparaison d'images de deux builds
+n'isole rien sans pose figée. L'effet sur les figures n'est pas mesuré.
 
 ## Les pluies de météores (2026-11-03)
 

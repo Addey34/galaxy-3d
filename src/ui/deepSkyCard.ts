@@ -3,8 +3,9 @@
  * désignation, d'un numéro Messier ou d'un nom d'usage (le chemin au clavier).
  *
  * Chargée à la demande, à la première activation de la couche : elle n'existe pas au démarrage.
- * Elle ne déplace pas la caméra (la cible d'`OrbitControls` reste au centre de l'écran : regarder
- * un point du ciel mettrait la planète suivie devant lui) et LIT le fichier daté d'OpenNGC
+ * Elle ne quitte pas le corps suivi : l'objet est amené au centre de l'écran par un décalage de la
+ * fenêtre de projection (`ui/cardCentering`, `SkyCenteringView`), car viser le point du ciel mettrait
+ * la planète suivie devant lui. Elle LIT le fichier daté d'OpenNGC
  * (`core/deepsky.ts`) : ni distance ni taille de scène, une valeur absente se dit « non publiée ».
  * Une surface contextuelle parmi les autres : le coordinateur n'en garde qu'une ouverte.
  */
