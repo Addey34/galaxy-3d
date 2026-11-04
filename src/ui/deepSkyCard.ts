@@ -8,6 +8,10 @@
  * (`core/deepsky.ts`) : ni distance ni taille de scène, une valeur absente se dit « non publiée ».
  * Une surface contextuelle parmi les autres : le coordinateur n'en garde qu'une ouverte.
  */
+import type {
+  SkyCenteringHost,
+  SkyCenteringView,
+} from '@/components/systems/SkyCenteringView';
 import { freeBandAnchor } from '@/core/skyCentering';
 import { Vector3, type PerspectiveCamera } from 'three';
 import type { DeepSkyMarkers } from '@/components/celestial/DeepSkyMarkers';
@@ -50,11 +54,8 @@ interface Options {
   file: DeepSkyFile;
   camera: PerspectiveCamera;
   canvas: HTMLElement;
-  /** Centre l'écran sur la direction de l'objet ouvert (cf. `CameraSystem.centerOnSkyDirection`). */
-  centerOn?: (
-    direction: readonly [number, number, number],
-    anchorY?: number
-  ) => void;
+  /** La caméra, pour centrer l'écran sur l'objet ouvert (`SkyCenteringView`, chargé à la première ouverture). */
+  centering?: SkyCenteringHost;
   coordinator: OverlayCoordinator;
 }
 
@@ -88,7 +89,8 @@ function fact(label: string, value: string): HTMLElement[] {
 }
 
 export async function setupDeepSkyCard(options: Options): Promise<DeepSkyCard> {
-  const { markers, file, camera, canvas, coordinator, centerOn } = options;
+  const { markers, file, camera, canvas, coordinator, centering } = options;
+  let view: Promise<SkyCenteringView> | null = null;
   // Les phrases de la fiche sont hors démarrage : `t()` rendrait les clés brutes sans elles.
   await loadDeferredMessages();
 
@@ -231,14 +233,16 @@ export async function setupDeepSkyCard(options: Options): Promise<DeepSkyCard> {
     // Un objet choisi dans la liste ou au clic arrive au centre de l'écran.
     const direction: [number, number, number] = [0, 0, 0];
     const index = markers.objects.indexOf(object);
-    if (index >= 0 && markers.directionOf(index, direction))
-      centerOn?.(
-        direction,
-        freeBandAnchor(card.getBoundingClientRect(), {
-          width: window.innerWidth,
-          height: window.innerHeight,
-        })
+    if (centering && index >= 0 && markers.directionOf(index, direction)) {
+      const anchor = freeBandAnchor(card.getBoundingClientRect(), {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+      view ??= import('@/components/systems/SkyCenteringView').then(
+        (m) => new m.SkyCenteringView(centering)
       );
+      void view.then((v) => v.center(direction, anchor));
+    }
   }
 
   coordinator.register('deepsky-card', () => {

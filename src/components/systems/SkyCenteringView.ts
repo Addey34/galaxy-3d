@@ -54,8 +54,14 @@ export class SkyCenteringView {
   private readonly size = new THREE.Vector2();
   /** L'animation en cours (vol vers la vue centrée, ou retour) : seule celle-ci est arrêtée, jamais le groupe. */
   private animation: Tween<object> | null = null;
+  /** Le corps suivi au moment du centrage : un autre corps, ou la vue d'ensemble, rend la vue d'origine. */
+  private followed: unknown = null;
+  private raf = 0;
 
-  constructor(private readonly host: SkyCenteringHost) {}
+  constructor(private readonly host: SkyCenteringHost) {
+    // Une rotation ou un zoom de l'utilisateur rend la vue d'origine.
+    host.controls.addEventListener('start', () => this.release());
+  }
 
   /**
    * Amène `direction` (unitaire, repère de la scène) à la hauteur `anchorY` de l'écran, au centre
@@ -124,6 +130,8 @@ export class SkyCenteringView {
       anchorY: THREE.MathUtils.clamp(anchorY, ANCHOR_MIN, ANCHOR_MAX),
     };
     this.key = '';
+    this.followed = this.host.currentTarget;
+    this.watch();
     if (prefersReducedMotion()) {
       this.state.k = 1;
       this.sync();
@@ -180,8 +188,23 @@ export class SkyCenteringView {
     this.host.camera.clearViewOffset();
   }
 
-  /** Reporte le décalage sur la caméra, à chaque image, seulement s'il a changé. */
-  sync(): void {
+  /**
+   * Une boucle d'images tient la vue tant que le centrage dure : elle reporte le décalage sur la
+   * caméra (la taille de l'écran peut changer) et le rend dès que le corps suivi n'est plus le même.
+   * `CameraSystem` ne sait rien de ce morceau : il n'a aucun point d'accroche dans le démarrage.
+   */
+  private watch(): void {
+    if (!this.raf) this.raf = requestAnimationFrame(this.loop);
+  }
+
+  private readonly loop = (): void => {
+    if (this.host.currentTarget !== this.followed) this.drop();
+    this.sync();
+    this.raf = this.state ? requestAnimationFrame(this.loop) : 0;
+  };
+
+  /** Reporte le décalage sur la caméra, seulement s'il a changé. */
+  private sync(): void {
     const state = this.state;
     if (!state) return;
     const { camera, renderer } = this.host;

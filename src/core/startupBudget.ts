@@ -430,12 +430,7 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
     chunk: 'SkyCenteringView',
     reason:
-      "le centrage de l'écran sur un objet du ciel (2026-11-04) : importé par `CameraSystem.centerOnSkyDirection` à la première ouverture d'une fiche d'objet du ciel profond, jamais au démarrage. Sorti de `CameraSystem`, qui l'avait fait dépasser le plafond de 2 479 octets.",
-  },
-  {
-    chunk: 'skyCentering',
-    reason:
-      "les calculs purs du centrage sur le ciel (`core/skyCentering`), partagés par `SkyCenteringView` et `deepSkyCard`, deux morceaux hors démarrage : Rollup en fait un morceau commun, qui ne se charge qu'avec eux.",
+      "le centrage de l'écran sur un objet du ciel (2026-11-04) : importé par `ui/deepSkyCard` à la première ouverture d'une fiche d'objet du ciel profond, jamais au démarrage, et branché tout seul sur la caméra : `CameraSystem` n'en sait rien. Sorti de `CameraSystem`, où ses points d'accroche faisaient dépasser le plafond (1 305 149 octets mesurés en CI).",
   },
   {
     chunk: 'skyPick',

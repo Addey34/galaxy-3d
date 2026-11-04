@@ -7368,7 +7368,8 @@ coordinateur, fermée par Échap ou par l'ouverture d'une autre.
 
 **Le centrage (2026-11-04).** Ouvrir une fiche amène l'objet au centre de l'écran. `OrbitControls` garde la
 CIBLE au centre (mesuré le 2026-11-03 : viser un point du ciel plaçait la planète suivie devant lui), donc
-on ne vise pas l'objet : `CameraSystem.centerOnSkyDirection` tourne la visée d'un petit angle autour de
+on ne vise pas l'objet : `SkyCenteringView` (chargé à la première ouverture d'une fiche, et branché tout seul
+sur la caméra : `CameraSystem` n'a aucun point d'accroche) tourne la visée d'un petit angle autour de
 l'axe vertical de l'écran, qui dégage le disque du corps suivi, puis décale la FENÊTRE de projection
 (`PerspectiveCamera.setViewOffset`) jusqu'à ce que la direction de l'objet tombe au centre. Le corps reste
 en orbite, dans le champ, de côté. Les calculs (angle, tangentes, décalage en pixels, zone libre) sont dans
