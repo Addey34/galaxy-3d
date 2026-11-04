@@ -129,8 +129,10 @@ describe('le service charge des fenêtres (lot 17C)', () => {
     // d'un jour, leurs départs de la Terre, leurs phases autour de Mars au pas de 6 et 3 h et six
     // détails, 6 090 192 octets) ; 63 992 208 quand la fin de Cassini entre dans la scène (lot 49,
     // 2026-10-15 : grille calée sur 10:46 TDB le 2017-09-15, et son segment autour de Saturne tient
-    // alors au pas de 12 h au lieu de 6 h, 462 192 octets de moins en tout).
-    expect(shipped).toBe(63_992_208);
+    // alors au pas de 12 h au lieu de 6 h, 462 192 octets de moins en tout) ;
+    // 63 930 816 quand Dimorphos est ramené à la fenêtre qu'Horizons sert (2026-11-03 : fin au
+    // 2027-06-29 au lieu du 2030-12-29, 61 392 octets de moins).
+    expect(shipped).toBe(63_930_816);
     // MESURÉ ici avec TOUTES les lignes d'orbite allumées, le pire cas qu'un visiteur obtient en
     // allumant la colonne entière : Halley en demande 333 Ko à elle seule (76 ans de révolution,
     // pas de 4 jours), Uranus 368 Ko. Le démarrage, lui, ne demande depuis le 2026-10-04 que les

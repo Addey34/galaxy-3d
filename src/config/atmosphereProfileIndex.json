@@ -14,7 +14,7 @@
       "doi": "10.17189/23e7-zw13"
     }
   },
-  "retrieved": "2026-10-28",
+  "retrieved": "2026-11-03",
   "profiles": {
     "jupiter": {
       "samples": 686
@@ -25,25 +25,25 @@
   },
   "titanRegistry": {
     "collections": 176,
-    "retrieved": "2026-10-28"
+    "retrieved": "2026-11-03"
   },
   "witness": {
     "jupiter": "urn:nasa:pds:gp:data_asi",
-    "collections": 503,
-    "retrieved": "2026-10-23"
+    "collections": 505,
+    "retrieved": "2026-11-03"
   },
   "absent": {
     "neptune": {
       "collections": 79,
-      "retrieved": "2026-10-23"
+      "retrieved": "2026-11-03"
     },
     "saturn": {
-      "collections": 291,
-      "retrieved": "2026-10-23"
+      "collections": 293,
+      "retrieved": "2026-11-03"
     },
     "uranus": {
       "collections": 110,
-      "retrieved": "2026-10-23"
+      "retrieved": "2026-11-03"
     }
   }
 }
