@@ -197,6 +197,7 @@ export const cardEs: Record<CardMessageKey, string> = {
   'bi.cities.name.rotterdam-3dbag': 'Róterdam',
   'bi.cities.name.denhaag-3dbag': 'La Haya',
   'bi.cities.name.utrecht-3dbag': 'Utrecht',
+  'bi.cities.name.eindhoven-3dbag': 'Eindhoven',
   'bi.cities.name.chicago-overture': 'Chicago',
   'bi.cities.name.singapore-overture': 'Singapur',
   'bi.cities.name.sydney-overture': 'Sídney',

@@ -24,6 +24,7 @@
  * Usage :
  *   node scripts/measure-perf.mjs --origin http://127.0.0.1:4173
  *   node scripts/measure-perf.mjs --origin http://127.0.0.1:4173 --cpu 4 --json reports/perf/x.json
+ *   node scripts/measure-perf.mjs --only earth-buildings --place Eindhoven   (une autre ville)
  *   node scripts/measure-perf.mjs --only earth-surface
  *   node scripts/measure-perf.mjs --only earth-surface --profile approach   (ou steady, ou boot)
  *   node scripts/measure-perf.mjs --only earth-explo --links   (attentes d'édition de liens, par programme)
@@ -56,6 +57,8 @@ const REPEAT = Number(flag('--repeat', '1'));
 const ATTEMPTS = Number(flag('--attempts', '3'));
 /** Paramètres ajoutés à chaque adresse, pour un A/B sur le même build (`--extra debug-decode-img`). */
 const EXTRA = flag('--extra', null);
+/** Une autre ville pour les scènes de bâtiments (`--place Eindhoven`), sans toucher à la recette. */
+const PLACE = flag('--place', null);
 
 /** Temps propre par fonction (fichier et ligne), en ms, depuis un profil du protocole. */
 function topSelf(profile, count = 15) {
@@ -413,6 +416,10 @@ async function measureScene(scene) {
   return true;
 }
 const failed = [];
+if (PLACE)
+  for (const scene of SCENES)
+    if (scene.expect === 'buildings') scene.place = PLACE;
+
 for (const scene of SCENES) {
   for (let run = 1; run <= REPEAT; run += 1) {
     let valid = false;
