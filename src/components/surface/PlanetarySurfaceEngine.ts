@@ -87,6 +87,7 @@ import { TILE_ENGINE_ENTER_RADII } from '@/core/layerDistances';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
 
 import { SurfaceTile } from './SurfaceTile';
+import { hasDebugFlag } from '@/utils/debugFlags';
 
 /** Ce que le moteur demande d'un corps. Plus petit qu'un `CelestialObject`, et c'est écrit. */
 export interface SurfaceHost {
@@ -715,9 +716,20 @@ export class PlanetarySurfaceEngine {
         this._tiles.delete(key);
         const relief = this._relief.get(key);
         this._relief.delete(key);
-        // Un carreau encore en fondu n'est pas peint : le garder montrerait un état à moitié fait.
-        if (stale || tile.fading) tile.dispose();
-        else this._retain(key, tile, relief);
+        // Un carreau encore en fondu est RETENU lui aussi, une fois son fondu terminé d'un coup :
+        // l'image est décodée, le détruire jetait un téléchargement et un décodage que le retour
+        // de la caméra refaisait (mesuré : mêmes carreaux détruits puis rechargés d'un glissement
+        // à l'autre). Seul un carreau d'une autre génération part.
+        if (stale) {
+          debugTileLog('stale', key);
+          tile.dispose();
+        } else {
+          if (tile.fading) {
+            debugTileLog('fading-retained', key);
+            tile.finishFade();
+          }
+          this._retain(key, tile, relief);
+        }
       }
     }
     this._trimRetained();
@@ -746,6 +758,7 @@ export class PlanetarySurfaceEngine {
     for (const [key, controller] of this._pending) {
       if (toFree <= 0) break;
       if (wanted.has(key)) continue;
+      debugTileLog('abort-pending', key);
       controller.abort();
       this._pending.delete(key);
       toFree -= 1;
@@ -1051,6 +1064,7 @@ export class PlanetarySurfaceEngine {
     const current = this._prefix();
     for (const [key, kept] of this._retained) {
       if (!key.startsWith(current) || now - kept.atMs > RETAIN_MS) {
+        debugTileLog('retained-expired', key);
         kept.tile.dispose();
         this._retained.delete(key);
       }
@@ -1058,6 +1072,7 @@ export class PlanetarySurfaceEngine {
     // L'ordre d'insertion d'une Map est l'ordre de sortie : le plus ancien d'abord.
     for (const [key, kept] of this._retained) {
       if (this._retained.size <= this._retainedLimit) break;
+      debugTileLog('retained-limit', key);
       kept.tile.dispose();
       this._retained.delete(key);
     }
@@ -1560,6 +1575,22 @@ export class PlanetarySurfaceEngine {
 
 /** Durée maximale de rétention d'un carreau masqué, en ms. */
 const RETAIN_MS = 45_000;
+
+/** Journal des libérations de carreaux (`?debug-surface` seulement) : `window.__tileLog`. */
+function debugTileLog(
+  reason: string,
+  key: string,
+  extra?: Record<string, number>
+): void {
+  if (!hasDebugFlag('debug-surface')) return;
+  const w = window as unknown as { __tileLog?: unknown[] };
+  (w.__tileLog ??= []).push({
+    t: Math.round(performance.now()),
+    reason,
+    key,
+    ...extra,
+  });
+}
 /** Mémoire d'images que les carreaux masqués ont le droit de garder (hors relief). */
 const RETAIN_BYTES = 64 * 1024 * 1024;
 

@@ -157,6 +157,19 @@ export class SurfaceTile {
     return this._held;
   }
 
+  /**
+   * Termine le fondu d'un coup : l'image est décodée, le carreau devient un carreau fini (opaque).
+   * Sert à RETENIR un carreau encore en train d'apparaître plutôt que de le détruire : revenu, il
+   * est complet, jamais à moitié fait.
+   */
+  finishFade(): void {
+    this._held = false;
+    this._fadeStart = null;
+    this._material.opacity = 1;
+    this._material.transparent = false;
+    this._material.needsUpdate = true;
+  }
+
   /** Lève la rétention : le fondu commence à `nowMs`, le même instant pour tout le groupe. */
   startFade(nowMs: number): void {
     if (!this._held) return;
