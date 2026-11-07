@@ -36,11 +36,21 @@ test('optical FOV lives in settings, is exploration-only and updates its value',
   await openSettingsTab(page, 'image');
   await expect(page.locator('#orbit-options')).toBeVisible();
   await expect(panel).toBeVisible();
-  await expect(range).toHaveAttribute('min', '8');
-  await expect(range).toHaveAttribute('max', '55');
+  // Course logarithmique en grossissement : positions 0 (55°) à 1000 (8°), pas 5.
+  await expect(range).toHaveAttribute('min', '0');
+  await expect(range).toHaveAttribute('max', '1000');
+  await expect(range).toHaveAttribute('step', '5');
 
-  await range.fill('12');
-  await expect(page.locator('.optical-zoom-value')).toHaveText('12°');
+  const shown = page.locator('.optical-zoom-value');
+  await range.fill('1000');
+  await expect(shown).toHaveText('8.0°');
+  await expect(range).toHaveAttribute('aria-valuetext', '8.0°');
+  await range.fill('0');
+  await expect(shown).toHaveText('55.0°');
+  // Milieu de course : le champ dont le grossissement est la moyenne géométrique de ceux des
+  // bornes (21,6°), pas la moyenne en degrés (31,5°).
+  await range.fill('500');
+  await expect(shown).toHaveText('21.6°');
 
   // Retour Éducatif (réglages toujours ouverts) : le contrôle redevient masqué.
   await page.locator('.mode-btn[data-mode="educ"]').click();
