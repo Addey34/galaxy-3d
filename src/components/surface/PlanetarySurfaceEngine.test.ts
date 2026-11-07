@@ -255,6 +255,44 @@ describe('les carreaux quittés restent en mémoire un temps', () => {
     expect(back.length).toBeGreaterThan(0);
     engine.dispose();
   });
+
+  it('retient un carreau encore en fondu, terminé d’un coup, au lieu de le détruire (#468)', async () => {
+    const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile,
+    });
+    const host = makeHost();
+    engine.attach(host, TILESET, RADIUS_KM);
+
+    const home = cameraOver(0, 8);
+    // On attrape les carreaux AVANT la fin de leur fondu : posés, mais encore translucides.
+    let fading: THREE.Mesh[] = [];
+    await vi.waitFor(
+      () => {
+        engine.update(home, 800);
+        fading = meshes(host).filter(
+          (m) => (m.material as THREE.Material).transparent
+        );
+        expect(fading.length).toBeGreaterThan(0);
+      },
+      { timeout: 4000 }
+    );
+    const names = new Set(fading.map((m) => m.name));
+
+    // On s'éloigne tout de suite : ces carreaux ne sont plus voulus.
+    engine.update(cameraOver(120, 8), 800);
+
+    // Aucun n'est détruit : tous restent dans le groupe, et finis (opaques), jamais à moitié faits.
+    const kept = meshes(host).filter((m) => names.has(m.name));
+    expect(kept.length).toBe(names.size);
+    for (const m of kept) {
+      const material = m.material as THREE.Material;
+      expect(material.transparent, m.name).toBe(false);
+      expect(material.opacity, m.name).toBe(1);
+    }
+    engine.dispose();
+  });
 });
 
 describe('un chargement que la vue a quitté', () => {
