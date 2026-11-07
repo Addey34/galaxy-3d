@@ -2,6 +2,16 @@ import './opticalZoom.css';
 import { CAMERA_SETTINGS } from '@/config/engine';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import { onLocaleChange, t } from '@/i18n';
+import { formatFixed } from './localNumber';
+import {
+  ZOOM_POSITION_MAX,
+  ZOOM_POSITION_STEP,
+  fovFromZoomPosition,
+  zoomPositionFromFov,
+} from '@/core/opticalZoomScale';
+
+const { opticalMinFov: MIN_FOV, opticalMaxFov: MAX_FOV } = CAMERA_SETTINGS;
+const fovText = (fov: number): string => `${formatFixed(fov, 1)}°`;
 
 export interface OpticalZoomControl {
   setMode(mode: 'educ' | 'explo'): void;
@@ -34,9 +44,11 @@ export function setupOpticalZoom(camera: CameraSystem): OpticalZoomControl {
   range.id = 'optical-zoom-range';
   range.className = 'optical-zoom-range';
   range.type = 'range';
-  range.min = String(CAMERA_SETTINGS.opticalMinFov);
-  range.max = String(CAMERA_SETTINGS.opticalMaxFov);
-  range.step = '1';
+  // Course LOGARITHMIQUE en grossissement (`core/opticalZoomScale`) : la valeur du curseur est une
+  // position, le champ en degrés est dans `aria-valuetext` et dans la sortie affichée.
+  range.min = '0';
+  range.max = String(ZOOM_POSITION_MAX);
+  range.step = String(ZOOM_POSITION_STEP);
   group.append(label, range);
 
   // Seul occupant de la section « Vue » des Réglages, qui se montre et se masque avec lui.
@@ -47,17 +59,21 @@ export function setupOpticalZoom(camera: CameraSystem): OpticalZoomControl {
   const refresh = (): void => {
     caption.textContent = t('zoom.optical');
     range.setAttribute('aria-label', t('zoom.optical'));
-    const rounded = Math.round(camera.opticalFov);
-    range.value = String(rounded);
-    value.textContent = `${rounded}°`;
+    const text = fovText(camera.opticalFov);
+    range.value = String(
+      zoomPositionFromFov(camera.opticalFov, MIN_FOV, MAX_FOV)
+    );
+    value.textContent = text;
     // Le natif expose déjà aria-valuenow/min/max depuis les attributs value/min/max,
     // mais un lecteur d'écran annoncerait juste "50" sans unité : valuetext donne le
     // libellé humain ("50°") qu'il annonce à la place.
-    range.setAttribute('aria-valuetext', `${rounded}°`);
+    range.setAttribute('aria-valuetext', text);
   };
 
   range.addEventListener('input', () => {
-    camera.setOpticalFov(Number(range.value));
+    camera.setOpticalFov(
+      fovFromZoomPosition(Number(range.value), MIN_FOV, MAX_FOV)
+    );
     refresh();
   });
   onLocaleChange(refresh);

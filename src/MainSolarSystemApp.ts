@@ -51,7 +51,7 @@ import { setupPermalinks } from './ui/permalink';
 import { parsePermalink, requestedSceneDate } from './core/permalink';
 import { LANDING_PAGE_BODIES } from './config/navigable';
 import { setupAstronomicalEvents } from './ui/astronomicalEvents';
-import { setupOpticalZoom } from './ui/opticalZoom';
+import type { OpticalZoomControl } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { InterstellarOverlay } from './ui/interstellarOverlay';
@@ -749,7 +749,22 @@ function wireChrome(): {
           : null
       );
     });
-    const opticalZoom = setupOpticalZoom(cameraSystem);
+    // Le curseur de zoom optique ne sert qu'en Explo : son morceau (`opticalZoom`) se charge à la
+    // première entrée dans ce mode, jamais au démarrage (budget `core/startupBudget`).
+    let opticalZoom: OpticalZoomControl | null = null;
+    let opticalZoomLoading = false;
+    const syncOpticalZoom = (mode: 'educ' | 'explo'): void => {
+      if (opticalZoom) {
+        opticalZoom.setMode(mode);
+        return;
+      }
+      if (mode !== 'explo' || opticalZoomLoading) return;
+      opticalZoomLoading = true;
+      void import('./ui/opticalZoom').then(({ setupOpticalZoom }) => {
+        opticalZoom = setupOpticalZoom(cameraSystem);
+        opticalZoom.setMode(currentMode);
+      });
+    };
     const webxr = setupWebXR(
       cameraSystem,
       sceneSystem,
@@ -763,7 +778,7 @@ function wireChrome(): {
       cameraSystem,
       (mode) => {
         currentMode = mode;
-        opticalZoom.setMode(mode);
+        syncOpticalZoom(mode);
         exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
         // La VISIBILITÉ des couches d'instrument suit le morph (voir la boucle de frame).
         webxr.setMode(mode);

@@ -433,6 +433,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le centrage de l'écran sur un objet du ciel (2026-11-04) : importé par `ui/cardCentering` à la première ouverture d'une fiche d'objet du ciel (ciel profond ou exoplanètes), jamais au démarrage, et branché tout seul sur la caméra : `CameraSystem` n'en sait rien. Sorti de `CameraSystem`, où ses points d'accroche faisaient dépasser le plafond (1 305 149 octets mesurés en CI).",
   },
   {
+    chunk: 'opticalZoom',
+    reason:
+      'le curseur de zoom optique et son échelle logarithmique (`core/opticalZoomScale`), propres au mode Exploration : chargé à la première entrée dans ce mode (2026-11-07), jamais au démarrage.',
+  },
+  {
     chunk: 'cardCentering',
     reason:
       "la fonction partagée par les fiches du ciel profond et des exoplanètes (2026-11-04) : elle ne fait que lire l'ancre et charger `SkyCenteringView` à la première ouverture d'une fiche. Morceau de la couche, activé par un réglage, jamais au démarrage.",
