@@ -86,7 +86,12 @@ test.describe('téléphone étroit', () => {
     // hauteur de chaque rangée) : le saut de 188,4 à 200,3 px vu deux fois en CI n'a jamais pu
     // être reproduit en local (stable à 190,4 px, frein CPU x6, police élargie, balayage lent),
     // donc le prochain échec doit dire LUI-MÊME à quelle valeur et pourquoi.
-    const rows: { value: number; geometry: string; detail: string }[] = [];
+    const rows: {
+      value: number;
+      geometry: string;
+      detail: string;
+      capped: boolean;
+    }[] = [];
     for (let v = 0; v <= 100; v += 2) {
       rows.push(
         await page.evaluate((value) => {
@@ -109,6 +114,10 @@ test.describe('téléphone étroit', () => {
             );
           return {
             value,
+            // Un plafond ANNONCÉ (`data-capped`, `ui/playback`) ajoute « · limité par la
+            // connexion » au libellé, donc une ligne de plus à 320 px : c'est le débit MESURÉ du
+            // coureur qui le décide, pas le geste. `styles.css` l'exclut de la hauteur réservée.
+            capped: range.dataset['capped'] !== undefined,
             geometry: `${r.x.toFixed(1)}|${r.y.toFixed(1)}|${r.width.toFixed(1)}|${r.height.toFixed(1)}`,
             detail: `libellé « ${label.textContent} » ${label.getBoundingClientRect().height.toFixed(1)} px ; ${rowHeights.join(', ')}`,
           };
@@ -116,7 +125,12 @@ test.describe('téléphone étroit', () => {
       );
     }
     const NL = String.fromCharCode(10);
-    const geometries = new Set(rows.map((row) => row.geometry));
+    // Le saut vu en CI (188,4 puis 200,3 px, run 42381169089) était CE libellé de débit limité, à la
+    // valeur 100 : on ne mesure que les pas où le plafond n'est pas annoncé, mais il en reste
+    // la quasi-totalité de la course (garde ci-dessous contre un test vidé).
+    const free = rows.filter((row) => !row.capped);
+    expect(free.length, 'pas sans plafond annoncé').toBeGreaterThanOrEqual(40);
+    const geometries = new Set(free.map((row) => row.geometry));
     expect(
       [...geometries],
       `géométries de la barre, par valeur du curseur :${NL}${rows.map((row) => `${row.value} ${row.geometry} ${row.detail}`).join(NL)}`
