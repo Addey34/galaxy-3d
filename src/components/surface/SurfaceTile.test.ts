@@ -261,3 +261,43 @@ describe('SurfaceTile retenu (révélation groupée)', () => {
     expect(material.transparent).toBe(false);
   });
 });
+
+/**
+ * #468 : un carreau encore en fondu que le moteur ne veut plus est RETENU, pas détruit. Pour que
+ * son retour soit un carreau complet et non une moitié de fondu, `finishFade` le termine d'un coup.
+ */
+describe('finishFade (carreau en fondu retenu)', () => {
+  function tileWith(fadeFromMs: number | 'hold') {
+    const material = new THREE.MeshBasicMaterial();
+    const tile = new SurfaceTile({
+      index: { level: 3, row: 1, column: 2 },
+      radius: 1,
+      shape: WMTS_EQUIRECTANGULAR_2x1,
+      material,
+    });
+    tile.setTexture(new THREE.Texture(), undefined, fadeFromMs);
+    return { tile, material };
+  }
+
+  it('rend opaque un carreau à mi-fondu, qui ne fond plus ensuite', () => {
+    const { tile, material } = tileWith(1000);
+    expect(tile.advanceFade(1200)).toBe(true);
+    expect(material.opacity).toBeLessThan(1);
+    tile.finishFade();
+    expect(tile.fading).toBe(false);
+    expect(material.opacity).toBe(1);
+    expect(material.transparent).toBe(false);
+    expect(tile.advanceFade(1300)).toBe(false);
+    expect(material.opacity).toBe(1);
+  });
+
+  it('libère aussi un carreau encore en attente de la révélation du groupe', () => {
+    const { tile, material } = tileWith('hold');
+    expect(tile.held).toBe(true);
+    tile.finishFade();
+    expect(tile.held).toBe(false);
+    expect(tile.fading).toBe(false);
+    expect(material.opacity).toBe(1);
+    expect(material.transparent).toBe(false);
+  });
+});
