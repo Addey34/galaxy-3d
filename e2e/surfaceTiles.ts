@@ -107,10 +107,15 @@ export async function zoomIn(page: Page, delta = -12_000): Promise<void> {
 export async function zoomInSettling(
   page: Page,
   rest = -12_000,
-  first = -2500
+  first = -2500,
+  onWindow?: (line: string) => void
 ): Promise<void> {
   await zoomIn(page, first);
-  await waitForCalmMainThread(page, { budgetMs: 3000, timeoutMs: 120_000 });
+  await waitForCalmMainThread(page, {
+    budgetMs: 3000,
+    timeoutMs: 120_000,
+    onWindow,
+  });
   await zoomIn(page, rest);
 }
 

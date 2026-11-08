@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { LOD_UPDATE_INTERVAL } from '../src/core/modelLod';
+import { formatCalmWindow } from './calmDiagnostic';
 
 /**
  * ATTENDRE QUE LE THREAD PRINCIPAL RÉPONDE, PAS QUE LE CHARGEUR DISPARAISSE (lot 24).
@@ -74,6 +75,11 @@ export interface CalmOptions {
   frames?: number;
   /** Au-delà, on échoue en NOMMANT la série mesurée. */
   timeoutMs?: number;
+  /**
+   * Diagnostic facultatif : reçoit UNE ligne de synthèse après chaque fenêtre d'observation
+   * (voir `calmDiagnostic.ts`). Sans lui, rien n'est publié et le comportement est inchangé.
+   */
+  onWindow?: (line: string) => void;
 }
 
 /**
@@ -89,11 +95,12 @@ export interface CalmOptions {
  */
 export async function waitForCalmMainThread(
   page: Page,
-  { budgetMs, frames, timeoutMs }: CalmOptions = {}
+  { budgetMs, frames, timeoutMs, onWindow }: CalmOptions = {}
 ): Promise<string[]> {
   const budget = budgetMs ?? CALM_BUDGET_MS;
   const wanted = frames ?? CALM_FRAMES;
-  const deadline = Date.now() + (timeoutMs ?? 60_000);
+  const startedAt = Date.now();
+  const deadline = startedAt + (timeoutMs ?? 60_000);
   const series: string[] = [];
 
   for (;;) {
@@ -132,6 +139,9 @@ export async function waitForCalmMainThread(
           requestAnimationFrame(tick);
         }),
       { budget, wanted, windowMs: OBSERVATION_WINDOW_MS }
+    );
+    onWindow?.(
+      formatCalmWindow(Date.now() - startedAt, observed.series, budget, wanted)
     );
     series.push(...observed.series);
     if (observed.calm) return series;

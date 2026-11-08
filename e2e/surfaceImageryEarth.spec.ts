@@ -665,7 +665,8 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   // Zoom par ALTITUDE (2026-11-08) : un cran multiplie l'altitude (0,95^(1,5 × |delta| / 100)), pas
   // la distance. Mesuré depuis l'arrivée à 9 rayons : -3300 d'un coup donne 1,63 rayon, puis -800
   // 1,34. Ici -3000 (1,79 rayon, dans le calme) puis -250 retrouvent les 1,66 rayon d'avant.
-  await zoomInSettling(page, -250, -3000);
+  // Diagnostic du calme qui ne revenait pas sur EPYC 7763 : une ligne par fenêtre, dans le journal.
+  await zoomInSettling(page, -250, -3000, (line) => console.log(line));
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
     timeout: 60_000,
