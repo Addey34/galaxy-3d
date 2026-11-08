@@ -7,7 +7,10 @@
  * distances min/max selon le mode (Éducatif : grandes distances ; Explo : vraie échelle,
  * planètes à quelques millièmes d'unité).
  */
-import { altitudeDistanceFactor } from '@/core/altitudeZoom';
+import {
+  altitudeDistanceFactor,
+  altitudeMotionFactor,
+} from '@/core/altitudeZoom';
 import { horizonTiltRad } from '@/core/horizonTilt';
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
@@ -161,6 +164,28 @@ export class CameraSystem {
       );
     c._dollyIn = (scale) => dollyIn(factor(scale, true));
     c._dollyOut = (scale) => dollyOut(1 / factor(scale, false));
+
+    // L'orbite et le déplacement latéral ralentissent de la même façon (`altitudeMotionFactor`) :
+    // sinon, près du sol, un geste de souris balaie la surface bien plus vite que l'altitude.
+    const rotate = c as unknown as {
+      _rotateLeft(angle: number): void;
+      _rotateUp(angle: number): void;
+      _pan(deltaX: number, deltaY: number): void;
+    };
+    const rotateLeft = rotate._rotateLeft.bind(c);
+    const rotateUp = rotate._rotateUp.bind(c);
+    const pan = rotate._pan.bind(c);
+    const motion = (): number =>
+      altitudeMotionFactor(
+        this.camera.position.distanceTo(this.controls.target),
+        this._zoomClearance
+      );
+    rotate._rotateLeft = (angle) => rotateLeft(angle * motion());
+    rotate._rotateUp = (angle) => rotateUp(angle * motion());
+    rotate._pan = (dx, dy) => {
+      const k = motion();
+      pan(dx * k, dy * k);
+    };
   }
 
   /**

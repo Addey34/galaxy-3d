@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { altitudeDistanceFactor } from './altitudeZoom';
+import {
+  altitudeDistanceFactor,
+  altitudeMotionFactor,
+  MOTION_FLOOR,
+} from './altitudeZoom';
 
 const CRAN = Math.pow(0.95, 1.1);
 
@@ -53,5 +57,26 @@ describe('altitudeDistanceFactor', () => {
 
   it('retombe sur le facteur brut si la caméra est déjà sous le dégagement', () => {
     expect(altitudeDistanceFactor(0.5, 1, CRAN, true)).toBeCloseTo(CRAN, 12);
+  });
+});
+
+describe('altitudeMotionFactor', () => {
+  it('vaut 1 sans dégagement (vue d’ensemble)', () => {
+    expect(altitudeMotionFactor(100, 0)).toBe(1);
+  });
+
+  it('vaut presque 1 loin du corps', () => {
+    expect(altitudeMotionFactor(1e6, 1)).toBeGreaterThan(0.999);
+  });
+
+  it('vaut altitude / distance entre les deux', () => {
+    expect(altitudeMotionFactor(2, 1)).toBeCloseTo(0.5, 12);
+    expect(altitudeMotionFactor(10, 1)).toBeCloseTo(0.9, 12);
+  });
+
+  it('décroît vers la surface sans jamais passer sous le plancher', () => {
+    expect(altitudeMotionFactor(1.0001, 1)).toBe(MOTION_FLOOR);
+    expect(altitudeMotionFactor(1, 1)).toBe(MOTION_FLOOR);
+    expect(altitudeMotionFactor(0.5, 1)).toBe(MOTION_FLOOR);
   });
 });

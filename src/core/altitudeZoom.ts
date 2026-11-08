@@ -28,3 +28,24 @@ export function altitudeDistanceFactor(
   const next = clearance + altitude * (inward ? scale : 1 / scale);
   return next / distance;
 }
+
+/** Part minimale de la vitesse d'orbite : au ras du sol, on tourne lentement mais on tourne. */
+export const MOTION_FLOOR = 0.02;
+
+/**
+ * Facteur à appliquer à l'orbite et au déplacement latéral : altitude / distance au centre.
+ *
+ * OrbitControls tourne d'un angle fixe autour du CENTRE du corps. À l'altitude `a` d'un rayon `c`,
+ * ce même angle balaie le sol de `c` × angle, alors que le champ visible ne fait que quelques
+ * `a` : la surface file sous la caméra. Multiplier l'angle par a / d garde la vitesse apparente
+ * à l'écran. Loin du corps (a ≈ d) le facteur vaut 1 ; sans dégagement (vue d'ensemble) il vaut 1.
+ */
+export function altitudeMotionFactor(
+  distance: number,
+  clearance: number
+): number {
+  if (!(clearance > 0) || !(distance > clearance)) {
+    return !(clearance > 0) ? 1 : MOTION_FLOOR;
+  }
+  return Math.max(MOTION_FLOOR, (distance - clearance) / distance);
+}
