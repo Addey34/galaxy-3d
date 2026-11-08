@@ -7,6 +7,7 @@
  * distances min/max selon le mode (Éducatif : grandes distances ; Explo : vraie échelle,
  * planètes à quelques millièmes d'unité).
  */
+import { altitudeDistanceFactor } from '@/core/altitudeZoom';
 import { horizonTiltRad } from '@/core/horizonTilt';
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
@@ -95,6 +96,8 @@ export class CameraSystem {
   private trackingPaused = false;
   private _opticalFov = CAMERA_SETTINGS.opticalMaxFov;
   private _scaleMode: 'educ' | 'explo' = 'educ';
+  /** Rayon à ne pas traverser pour le zoom par altitude ; 0 sans corps suivi. */
+  private _zoomClearance = 0;
 
   private readonly smoothness = CAMERA_CONTROLS_SETTINGS.smoothness;
   private readonly minDistanceMultiplier =
@@ -134,6 +137,30 @@ export class CameraSystem {
     this.controls.rotateSpeed = CAMERA_CONTROLS_SETTINGS.rotateSpeed;
     this.controls.zoomSpeed = CAMERA_CONTROLS_SETTINGS.zoomSpeed;
     this.controls.target.set(0, 0, 0);
+    this._zoomByAltitude();
+  }
+
+  /**
+   * Un cran de molette ou de pincement multiplie l'ALTITUDE (distance moins dégagement), pas la
+   * distance au centre : la vitesse décroît exponentiellement vers la surface (`core/altitudeZoom`).
+   * OrbitControls n'expose pas ce point : on enveloppe ses deux méthodes de zoom internes.
+   */
+  private _zoomByAltitude(): void {
+    const c = this.controls as unknown as {
+      _dollyIn(s: number): void;
+      _dollyOut(s: number): void;
+    };
+    const dollyIn = c._dollyIn.bind(c);
+    const dollyOut = c._dollyOut.bind(c);
+    const factor = (scale: number, inward: boolean): number =>
+      altitudeDistanceFactor(
+        this.camera.position.distanceTo(this.controls.target),
+        this._zoomClearance,
+        scale,
+        inward
+      );
+    c._dollyIn = (scale) => dollyIn(factor(scale, true));
+    c._dollyOut = (scale) => dollyOut(1 / factor(scale, false));
   }
 
   /**
@@ -696,6 +723,7 @@ export class CameraSystem {
       ? CAMERA_CONTROLS_SETTINGS.exploMaxDistance
       : CAMERA_CONTROLS_SETTINGS.educMaxDistance;
 
+    this._zoomClearance = radius;
     // Min : on frôle la surface (facteur × rayon), jamais sous le garde-fou du mode.
     this.controls.minDistance = Math.max(minFloor, radius * minFactor);
     // Max : cadrage large du corps (facteur × rayon), plafonné par le max global du mode
@@ -736,6 +764,7 @@ export class CameraSystem {
   /** Bornes de zoom globales du mode courant (vue d'ensemble, sans corps ciblé). */
   private _applyGlobalZoomBounds(): void {
     const explo = this._scaleMode === 'explo';
+    this._zoomClearance = 0;
     this.controls.minDistance = explo
       ? CAMERA_CONTROLS_SETTINGS.exploMinDistance
       : CAMERA_CONTROLS_SETTINGS.educMinDistance;

@@ -310,7 +310,7 @@ export const CAMERA_CONTROLS_SETTINGS = {
   enableZoom: true,
   enableRotate: true,
   rotateSpeed: 0.5,
-  zoomSpeed: 0.7,
+  zoomSpeed: 1.5,
 };
 
 export const LIGHTING_SETTINGS = {
