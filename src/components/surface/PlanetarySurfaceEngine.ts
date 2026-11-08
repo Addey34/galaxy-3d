@@ -269,6 +269,9 @@ const defaultHeightFetcher: HeightFetcher = async (url, signal) => {
   return response.arrayBuffer();
 };
 
+/** Délai avant de redemander un carreau dont le chargement a échoué (ms). */
+const FAILED_RETRY_MS = 8000;
+
 export class PlanetarySurfaceEngine {
   private _host: SurfaceHost | null = null;
   private _tileset: SurfaceTileset | null = null;
@@ -308,7 +311,12 @@ export class PlanetarySurfaceEngine {
   private _missing = 0;
   private readonly _pending = new Map<string, AbortController>();
   private readonly _queue: TileIndex[] = [];
-  private readonly _failed = new Set<string>();
+  /**
+   * Carreaux dont le chargement a échoué, avec l'instant de l'échec (`performance.now()`). Un échec
+   * passager (limite de débit d'un service, coupure) ne doit pas laisser un trou définitif où la
+   * texture de loin reste visible de près : la tuile est redemandée après `FAILED_RETRY_MS`.
+   */
+  private readonly _failed = new Map<string, number>();
 
   private _state: SurfaceImageryState | null = null;
 
@@ -743,7 +751,7 @@ export class PlanetarySurfaceEngine {
       if (
         this._tiles.has(key) ||
         this._pending.has(key) ||
-        this._failed.has(key)
+        this._isFailedRecently(key)
       )
         continue;
       this._queue.push(index);
@@ -1435,6 +1443,15 @@ export class PlanetarySurfaceEngine {
     return this._pending.size + this._queue.length + this._fadingTiles;
   }
 
+  /** Un échec récent se retient ; passé `FAILED_RETRY_MS` la tuile redevient demandable. */
+  private _isFailedRecently(key: string): boolean {
+    const at = this._failed.get(key);
+    if (at === undefined) return false;
+    if (performance.now() - at < FAILED_RETRY_MS) return true;
+    this._failed.delete(key);
+    return false;
+  }
+
   private _pump(): void {
     while (
       this._pending.size < this._budget.maxConcurrentLoads &&
@@ -1564,7 +1581,7 @@ export class PlanetarySurfaceEngine {
       if ((error as Error)?.name === 'AbortError') return;
       // Un échec se RETIENT : sans cela la même tuile serait redemandée à chaque frame, et
       // un service en panne recevrait soixante requêtes par seconde.
-      this._failed.add(key);
+      this._failed.set(key, performance.now());
       Logger.warn(`[Surface] tuile non chargée : ${(error as Error)?.message}`);
     } finally {
       if (this._pending.get(key) === controller) this._pending.delete(key);

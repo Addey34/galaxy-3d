@@ -154,6 +154,37 @@ describe('ce que le moteur demande', () => {
     engine.dispose();
   });
 
+  it('redemande un carreau en échec une fois le délai écoulé', async () => {
+    let calls = 0;
+    const fetchTile = vi.fn<TileFetcher>(async () => {
+      calls += 1;
+      if (calls <= 25) throw new Error('429');
+      return bitmap();
+    });
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile,
+    });
+    engine.attach(makeHost(), TILESET, RADIUS_KM);
+    const now = vi.spyOn(performance, 'now');
+    now.mockReturnValue(1000);
+    const camera = cameraAt(8);
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(fetchTile).toHaveBeenCalledTimes(25));
+    // Laisser les 25 échecs s'enregistrer (à l'instant 1000) avant d'avancer l'horloge.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    now.mockReturnValue(1000 + 9000);
+    engine.update(camera, 800);
+    await vi.waitFor(() =>
+      expect(
+        fetchTile.mock.calls.length,
+        'un échec passager laissait un trou définitif'
+      ).toBeGreaterThan(25)
+    );
+    now.mockRestore();
+    engine.dispose();
+  });
+
   it('ne demande rien tant que le corps est loin, ni sous sa surface', () => {
     const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
     const engine = new PlanetarySurfaceEngine({
