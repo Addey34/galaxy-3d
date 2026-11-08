@@ -29,23 +29,30 @@ export function altitudeDistanceFactor(
   return next / distance;
 }
 
-/** Part minimale de la vitesse d'orbite : au ras du sol, on tourne lentement mais on tourne. */
-export const MOTION_FLOOR = 0.02;
+/**
+ * Garde numérique, pas un réglage : sous 1e-6 de la vitesse d'orbite (un mètre à 1 000 km de
+ * distance) le geste n'a plus d'effet visible, et zéro figerait la caméra. Un plancher de 2 %
+ * (première version, #476) laissait la surface filer 125 fois trop vite à 1 km d'altitude.
+ */
+export const MOTION_FLOOR = 1e-6;
 
 /**
  * Facteur à appliquer à l'orbite et au déplacement latéral : altitude / distance au centre.
  *
- * OrbitControls tourne d'un angle fixe autour du CENTRE du corps. À l'altitude `a` d'un rayon `c`,
- * ce même angle balaie le sol de `c` × angle, alors que le champ visible ne fait que quelques
- * `a` : la surface file sous la caméra. Multiplier l'angle par a / d garde la vitesse apparente
- * à l'écran. Loin du corps (a ≈ d) le facteur vaut 1 ; sans dégagement (vue d'ensemble) il vaut 1.
+ * OrbitControls tourne d'un angle fixe autour du CENTRE du corps, à la distance `d` : la caméra
+ * avance de `d` × angle, alors que le sol sous elle est à l'altitude `a`. La vitesse APPARENTE du
+ * sol (angle vu par la caméra) vaut donc `d` × angle / `a`, et elle explose près de la surface.
+ * Multiplier l'angle par a / d la rend constante : le déplacement réel est proportionnel à
+ * l'altitude, comme le zoom (qui multiplie l'altitude par un facteur fixe). Le déplacement
+ * latéral (`_pan`, proportionnel à `d` dans OrbitControls) suit la même règle.
+ *
+ * Loin du corps (a ≈ d) le facteur vaut 1 ; sans dégagement (vue d'ensemble) il vaut 1.
  */
 export function altitudeMotionFactor(
   distance: number,
   clearance: number
 ): number {
-  if (!(clearance > 0) || !(distance > clearance)) {
-    return !(clearance > 0) ? 1 : MOTION_FLOOR;
-  }
+  if (!(clearance > 0)) return 1;
+  if (!(distance > clearance)) return MOTION_FLOOR;
   return Math.max(MOTION_FLOOR, (distance - clearance) / distance);
 }
