@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   altitudeDistanceFactor,
   altitudeMotionFactor,
+  altitudeRotationFactor,
   MOTION_FLOOR,
 } from './altitudeZoom';
 
@@ -89,5 +90,42 @@ describe('altitudeMotionFactor', () => {
     expect(altitudeMotionFactor(1, 1)).toBe(MOTION_FLOOR);
     expect(altitudeMotionFactor(0.5, 1)).toBe(MOTION_FLOOR);
     expect(altitudeMotionFactor(1 + 1e-12, 1)).toBe(MOTION_FLOOR);
+  });
+});
+
+describe('altitudeRotationFactor', () => {
+  const FOV = (60 * Math.PI) / 180;
+  const SPEED = 0.5;
+
+  it('vaut 1 sans dégagement et presque 1 loin du corps', () => {
+    expect(altitudeRotationFactor(100, 0, FOV, SPEED)).toBe(1);
+    expect(altitudeRotationFactor(1e6, 1, FOV, SPEED)).toBeGreaterThan(0.999);
+  });
+
+  it('fait suivre le sol au curseur près de la surface (1 hauteur pour 1 hauteur)', () => {
+    // Défilement du sol, en hauteurs d'écran, pour un glissement d'une hauteur :
+    // angle (2π × vitesse × facteur) × distance / altitude / champ.
+    const clearance = 1;
+    for (const altitude of [1e-4, 1e-3, 1e-2]) {
+      const distance = clearance + altitude;
+      const defilement =
+        (2 *
+          Math.PI *
+          SPEED *
+          altitudeRotationFactor(distance, clearance, FOV, SPEED) *
+          distance) /
+        altitude /
+        FOV;
+      expect(defilement).toBeGreaterThan(0.99);
+      expect(defilement).toBeLessThan(1.02);
+    }
+  });
+
+  it('ne dépasse jamais la vitesse sans gain', () => {
+    for (const d of [1.0001, 1.1, 2, 10, 1e4]) {
+      expect(altitudeRotationFactor(d, 1, FOV, SPEED)).toBeLessThanOrEqual(
+        altitudeMotionFactor(d, 1)
+      );
+    }
   });
 });

@@ -56,3 +56,25 @@ export function altitudeMotionFactor(
   if (!(distance > clearance)) return MOTION_FLOOR;
   return Math.max(MOTION_FLOOR, (distance - clearance) / distance);
 }
+
+/**
+ * Gain d'orbite pour que le sol SUIVE le curseur près de la surface.
+ *
+ * `altitudeMotionFactor` rend constante la vitesse apparente du sol, mais pas à la bonne valeur :
+ * OrbitControls tourne de `2π × rotateSpeed` radians par hauteur d'écran (π avec 0,5), donc le
+ * sol défile de π / `fov` hauteurs d'écran (environ 3 pour un champ de 60°) par glissement d'une
+ * hauteur. Pour qu'un glissement d'une hauteur fasse défiler le sol d'une hauteur, il faut un angle
+ * de `fov` : le gain vaut `fov / (2π × rotateSpeed)` (au plus 1). Loin du corps le gain s'efface
+ * (l'orbite d'une planète garde sa vitesse), près du sol il s'applique en entier.
+ */
+export function altitudeRotationFactor(
+  distance: number,
+  clearance: number,
+  fovRad: number,
+  rotateSpeed: number
+): number {
+  const ratio = altitudeMotionFactor(distance, clearance);
+  if (!(clearance > 0) || !(fovRad > 0) || !(rotateSpeed > 0)) return ratio;
+  const grab = Math.min(1, fovRad / (2 * Math.PI * rotateSpeed));
+  return ratio * (grab + (1 - grab) * ratio);
+}
