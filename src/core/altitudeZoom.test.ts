@@ -74,9 +74,20 @@ describe('altitudeMotionFactor', () => {
     expect(altitudeMotionFactor(10, 1)).toBeCloseTo(0.9, 12);
   });
 
-  it('décroît vers la surface sans jamais passer sous le plancher', () => {
-    expect(altitudeMotionFactor(1.0001, 1)).toBe(MOTION_FLOOR);
+  it('garde la vitesse APPARENTE du sol constante à toute altitude', () => {
+    // Déplacement de la caméra par unité de geste = distance × facteur ; le sol est à `altitude`.
+    const clearance = 1;
+    for (const altitude of [1e-6 * 10, 1e-4, 1e-2, 0.5, 8, 1e3]) {
+      const distance = clearance + altitude;
+      const apparent =
+        (distance * altitudeMotionFactor(distance, clearance)) / altitude;
+      expect(apparent).toBeCloseTo(1, 9);
+    }
+  });
+
+  it('ne descend jamais à zéro, même au sol ou dedans', () => {
     expect(altitudeMotionFactor(1, 1)).toBe(MOTION_FLOOR);
     expect(altitudeMotionFactor(0.5, 1)).toBe(MOTION_FLOOR);
+    expect(altitudeMotionFactor(1 + 1e-12, 1)).toBe(MOTION_FLOOR);
   });
 });
