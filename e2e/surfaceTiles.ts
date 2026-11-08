@@ -98,12 +98,18 @@ export async function zoomIn(page: Page, delta = -12_000): Promise<void> {
  * exponentielle (3,6e-4 par unité, relevé sur deux arrêts mesurés) : -3300 depuis les 7,25 rayons
  * que `boot` laisse (arrivée à 9 rayons moins son cran de -600) donne 2,21 rayons ; c'était 2,14
  * depuis l'arrivée à 7.
+ *
+ * ZOOM PAR ALTITUDE (2026-11-08, `core/altitudeZoom.ts`) : un cran multiplie l'ALTITUDE de
+ * 0,95^(1,5 × |delta| / 100), plus la distance. Mesuré depuis l'arrivée à 9 rayons : -3300 donne
+ * 1,63 rayon d'un coup (36 carreaux en vol, 1,2 s l'image, attente de calme expirée en CI). Le
+ * premier cran par défaut est donc -2500, qui retrouve les 2,17 rayons d'avant.
  */
 export async function zoomInSettling(
   page: Page,
-  rest = -12_000
+  rest = -12_000,
+  first = -2500
 ): Promise<void> {
-  await zoomIn(page, -3300);
+  await zoomIn(page, first);
   await waitForCalmMainThread(page, { budgetMs: 3000, timeoutMs: 120_000 });
   await zoomIn(page, rest);
 }
