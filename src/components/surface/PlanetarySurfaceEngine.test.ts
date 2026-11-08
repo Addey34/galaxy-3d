@@ -185,6 +185,220 @@ describe('ce que le moteur demande', () => {
     engine.dispose();
   });
 
+  describe('la reprise des carreaux en échec', () => {
+    /** Un moteur dont CHAQUE chargement échoue ou réussit selon `ok`, horloge simulée. */
+    function setup(host: SurfaceHost = makeHost()) {
+      const state = { ok: false, calls: 0 };
+      const fetchTile = vi.fn<TileFetcher>(async () => {
+        state.calls += 1;
+        if (!state.ok) throw new Error('503');
+        return bitmap();
+      });
+      const engine = new PlanetarySurfaceEngine({
+        budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+        fetchTile,
+      });
+      engine.attach(host, TILESET, RADIUS_KM);
+      const now = vi.spyOn(performance, 'now');
+      now.mockReturnValue(1000);
+      const camera = cameraAt(8);
+      /** Avance l'horloge à `t`, passe une image, laisse les chargements se régler. */
+      const at = async (t: number): Promise<number> => {
+        now.mockReturnValue(t);
+        engine.update(camera, 800);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        return state.calls;
+      };
+      return { engine, state, at, restore: () => now.mockRestore() };
+    }
+
+    it('espace de plus en plus les redemandes d’un carreau qui échoue toujours', async () => {
+      const { engine, at, restore } = setup();
+      expect(await at(1000)).toBe(25);
+      // 1er échec à 1000 : retard 8 s.
+      expect(await at(1000 + 7900)).toBe(25);
+      expect(await at(1000 + 8100)).toBe(50);
+      // 2e échec à 9100 : retard 16 s, donc rien avant 25 100.
+      expect(await at(9100 + 15_900)).toBe(50);
+      expect(await at(9100 + 16_100)).toBe(75);
+      // 3e échec à 25 200 : retard 32 s.
+      expect(await at(25_200 + 31_900)).toBe(75);
+      expect(await at(25_200 + 32_100)).toBe(100);
+      // 4e échec à 57 300 : retard 60 s (plafond), puis 60 s encore, sans jamais cesser.
+      expect(await at(57_300 + 59_900)).toBe(100);
+      expect(await at(57_300 + 60_100)).toBe(125);
+      expect(await at(117_400 + 59_900)).toBe(125);
+      expect(await at(117_400 + 60_100)).toBe(150);
+      restore();
+      engine.dispose();
+    });
+
+    it('un succès solde l’historique : le carreau est posé et ne garde aucun retard', async () => {
+      const { engine, state, at, restore } = setup();
+      await at(1000);
+      await at(1000 + 8100);
+      state.ok = true;
+      expect(await at(9100 + 16_100)).toBe(75);
+      const inner = engine as unknown as {
+        _failed: Map<string, unknown>;
+        _tiles: Map<string, unknown>;
+      };
+      // Les 25 carreaux sont posés, et plus aucun n'a d'historique d'échec.
+      expect(inner._tiles.size).toBe(25);
+      expect(inner._failed.size).toBe(0);
+      restore();
+      engine.dispose();
+    });
+
+    it('le retour du réseau rend tout de suite leur chance aux carreaux en attente', async () => {
+      const { engine, state, at, restore } = setup();
+      await at(1000);
+      await at(1000 + 8100); // 2e échec : retard 16 s
+      expect(await at(9100 + 1000)).toBe(50);
+      state.ok = true;
+      engine.retryFailedNow();
+      expect(await at(9100 + 1100)).toBeGreaterThan(50);
+      restore();
+      engine.dispose();
+    });
+
+    it('l’écouteur « online » suit l’attachement : jamais plus d’un, aucun après détachement ou destruction', () => {
+      // Comme le DOM : un ensemble d'écouteurs, où le même ajouté deux fois ne compte qu'une.
+      const live = new Set<unknown>();
+      vi.stubGlobal('window', {
+        addEventListener: (type: string, fn: unknown) => {
+          if (type === 'online') live.add(fn);
+        },
+        removeEventListener: (type: string, fn: unknown) => {
+          if (type === 'online') live.delete(fn);
+        },
+      });
+      try {
+        const engine = new PlanetarySurfaceEngine({
+          budget: { maxTiles: 4, maxConcurrentLoads: 4 },
+          fetchTile: async () => bitmap(),
+        });
+        expect(live.size, 'rien tant qu’aucun corps').toBe(0);
+        engine.attach(makeHost(), TILESET, RADIUS_KM);
+        expect(live.size).toBe(1);
+        engine.attach(makeHost(), TILESET, RADIUS_KM); // autre corps
+        expect(live.size).toBe(1);
+        engine.detach();
+        expect(live.size).toBe(0);
+        engine.attach(makeHost(), TILESET, RADIUS_KM);
+        expect(live.size).toBe(1);
+        engine.dispose();
+        expect(live.size, 'rien ne reste après la destruction').toBe(0);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it('au-delà de 2048 échecs, le plus ancien est oublié et la Map reste bornée', async () => {
+      const fetchTile = vi.fn<TileFetcher>(async () => {
+        throw new Error('503');
+      });
+      const engine = new PlanetarySurfaceEngine({
+        budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+        fetchTile,
+      });
+      engine.attach(makeHost(), TILESET, RADIUS_KM);
+      const failed = (
+        engine as unknown as {
+          _failed: Map<string, { at: number; failures: number }>;
+        }
+      )._failed;
+      for (let i = 0; i < 2048; i += 1)
+        failed.set(`k${i}`, { at: 0, failures: 3 });
+      const now = vi.spyOn(performance, 'now');
+      now.mockReturnValue(1000);
+      engine.update(cameraAt(8), 800);
+      await vi.waitFor(() => expect(fetchTile).toHaveBeenCalled());
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(failed.size).toBeLessThanOrEqual(2048);
+      expect(failed.has('k0'), 'le plus ancien part le premier').toBe(false);
+      now.mockRestore();
+      engine.dispose();
+    });
+
+    it('si le réseau réussit mais que la pose échoue, le retard continue de croître', async () => {
+      const host = makeHost();
+      let poseFails = true;
+      const attach = host.attachSpinningChild;
+      host.attachSpinningChild = (object) => {
+        if (poseFails && (object as THREE.Mesh).isMesh)
+          throw new Error('pose impossible');
+        return attach(object);
+      };
+      const { engine, state, at, restore } = setup(host);
+      state.ok = true; // le réseau répond toujours
+      const failed = (
+        engine as unknown as {
+          _failed: Map<string, { at: number; failures: number }>;
+        }
+      )._failed;
+      expect(await at(1000)).toBe(25);
+      // 1er échec (pose) à 1000 : retard 8 s.
+      expect(await at(1000 + 8100)).toBe(50);
+      // 2e échec à 9100 : retard 16 s. Avec un historique soldé trop tôt, il serait reparti de 8 s.
+      expect(await at(9100 + 8100)).toBe(50);
+      expect([...failed.values()].every((e) => e.failures === 2)).toBe(true);
+      expect(await at(9100 + 16_100)).toBe(75);
+      expect([...failed.values()].every((e) => e.failures === 3)).toBe(true);
+      // La pose réussit enfin (3e échec à 25 200 : retard 32 s) : l'historique est soldé.
+      poseFails = false;
+      expect(await at(25_200 + 32_100)).toBe(100);
+      expect(failed.size).toBe(0);
+      restore();
+      engine.dispose();
+    });
+
+    it('l’événement « online » rend les carreaux éligibles à la passe suivante, sans doubler l’écouteur ni perdre le compte', async () => {
+      const listeners = new Set<() => void>();
+      vi.stubGlobal('window', {
+        addEventListener: (type: string, fn: () => void) => {
+          if (type === 'online') listeners.add(fn);
+        },
+        removeEventListener: (type: string, fn: () => void) => {
+          if (type === 'online') listeners.delete(fn);
+        },
+      });
+      try {
+        const { engine, at, restore } = setup();
+        expect(listeners.size).toBe(1);
+        expect(await at(1000)).toBe(25);
+        expect(await at(1000 + 8100)).toBe(50); // 2e échec : retard 16 s
+        expect(await at(9100 + 1000)).toBe(50); // encore retenus
+        for (const fn of listeners) fn(); // le navigateur annonce le retour du réseau
+        expect(listeners.size, 'aucun écouteur de plus').toBe(1);
+        expect(await at(9100 + 1100)).toBe(75); // redemandés aussitôt
+        // Le compte est conservé : 3e échec, donc 32 s et non 8.
+        expect(await at(10_300 + 16_100)).toBe(75);
+        expect(await at(10_300 + 32_100)).toBe(100);
+        restore();
+        engine.dispose();
+        expect(listeners.size).toBe(0);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it('changer de jeu remet les comptes à zéro', async () => {
+      const { engine, at, restore } = setup();
+      await at(1000);
+      await at(1000 + 8100); // 2e échec : retard 16 s
+      engine.attach(makeHost(), TILESET, RADIUS_KM);
+      const failed = (engine as unknown as { _failed: Map<string, unknown> })
+        ._failed;
+      expect(failed.size).toBe(0);
+      // Le premier échec du nouveau jeu retombe à 8 s, pas à 32.
+      const base = (await at(9100 + 100)) as number;
+      expect(await at(9100 + 100 + 8100)).toBeGreaterThan(base);
+      restore();
+      engine.dispose();
+    });
+  });
+
   it('ne demande rien tant que le corps est loin, ni sous sa surface', () => {
     const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
     const engine = new PlanetarySurfaceEngine({

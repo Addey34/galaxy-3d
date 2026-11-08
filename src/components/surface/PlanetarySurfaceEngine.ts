@@ -88,6 +88,7 @@ import { prefersReducedMotion } from '@/utils/reducedMotion';
 
 import { SurfaceTile } from './SurfaceTile';
 import { hasDebugFlag } from '@/utils/debugFlags';
+import { isTileRetryPending } from '@/core/tileRetry';
 
 /** Ce que le moteur demande d'un corps. Plus petit qu'un `CelestialObject`, et c'est écrit. */
 export interface SurfaceHost {
@@ -269,8 +270,8 @@ const defaultHeightFetcher: HeightFetcher = async (url, signal) => {
   return response.arrayBuffer();
 };
 
-/** Délai avant de redemander un carreau dont le chargement a échoué (ms). */
-const FAILED_RETRY_MS = 8000;
+/** Carreaux en échec gardés en mémoire (le plus ancien est oublié au-delà) : borne la Map. */
+const MAX_TRACKED_FAILURES = 2048;
 
 export class PlanetarySurfaceEngine {
   private _host: SurfaceHost | null = null;
@@ -312,11 +313,17 @@ export class PlanetarySurfaceEngine {
   private readonly _pending = new Map<string, AbortController>();
   private readonly _queue: TileIndex[] = [];
   /**
-   * Carreaux dont le chargement a échoué, avec l'instant de l'échec (`performance.now()`). Un échec
-   * passager (limite de débit d'un service, coupure) ne doit pas laisser un trou définitif où la
-   * texture de loin reste visible de près : la tuile est redemandée après `FAILED_RETRY_MS`.
+   * Carreaux dont le chargement a échoué : instant du dernier échec (`performance.now()`) et
+   * nombre d'échecs CONSÉCUTIFS. Un échec passager (limite de débit d'un service, coupure) ne doit
+   * pas laisser un trou définitif où la texture de loin reste visible de près : la tuile est
+   * redemandée, après un retard qui double à chaque échec jusqu'à un plafond (`core/tileRetry.ts`).
+   * Un succès (carreau posé ou retenu) ou un changement de corps ou de jeu remettent le compte à
+   * zéro ; le retour du réseau ne remet à zéro que l'ÉCHÉANCE (`retryFailedNow`), le compte reste.
    */
-  private readonly _failed = new Map<string, number>();
+  private readonly _failed = new Map<
+    string,
+    { at: number; failures: number }
+  >();
 
   private _state: SurfaceImageryState | null = null;
 
@@ -389,6 +396,13 @@ export class PlanetarySurfaceEngine {
       options.onImageryWidthChanged ?? (() => undefined);
   }
 
+  /** Les carreaux en échec redeviennent demandables à la prochaine passe ; leur compte reste. */
+  retryFailedNow(): void {
+    for (const entry of this._failed.values()) entry.at = -Infinity;
+  }
+
+  private readonly _onOnline = (): void => this.retryFailedNow();
+
   get state(): SurfaceImageryState | null {
     return this._state;
   }
@@ -460,6 +474,11 @@ export class PlanetarySurfaceEngine {
     this._radiusKm = radiusKm;
     this._heights = heights;
     this._heightAbort = heights ? new AbortController() : null;
+    // Le retour du réseau rend tout de suite leur chance aux carreaux en attente de reprise.
+    // Branché À L'ATTACHEMENT et retiré au détachement : un moteur sans corps n'écoute rien.
+    // Le même écouteur (même référence) ne s'ajoute qu'une fois.
+    if (typeof window !== 'undefined')
+      window.addEventListener('online', this._onOnline);
   }
 
   /**
@@ -568,6 +587,8 @@ export class PlanetarySurfaceEngine {
 
   /** Vide tout : requêtes en vol, carreaux, état, et la finesse déclarée au corps. */
   detach(): void {
+    if (typeof window !== 'undefined')
+      window.removeEventListener('online', this._onOnline);
     const host = this._host;
     host?.setMeasuredGroundRadiusKm?.(null);
     this._measuredGroundKm = null;
@@ -1443,13 +1464,14 @@ export class PlanetarySurfaceEngine {
     return this._pending.size + this._queue.length + this._fadingTiles;
   }
 
-  /** Un échec récent se retient ; passé `FAILED_RETRY_MS` la tuile redevient demandable. */
+  /**
+   * Un échec récent se retient ; passé le retard (`tileRetryDelayMs`) la tuile redevient
+   * demandable. L'entrée RESTE : son compte d'échecs fait doubler le retard au prochain échec.
+   */
   private _isFailedRecently(key: string): boolean {
-    const at = this._failed.get(key);
-    if (at === undefined) return false;
-    if (performance.now() - at < FAILED_RETRY_MS) return true;
-    this._failed.delete(key);
-    return false;
+    const entry = this._failed.get(key);
+    if (entry === undefined) return false;
+    return isTileRetryPending(entry.at, entry.failures, performance.now());
   }
 
   private _pump(): void {
@@ -1562,6 +1584,8 @@ export class PlanetarySurfaceEngine {
           tile,
           relief ? { level: relief.level, entry: relief.entry } : undefined
         );
+        // Réussite : carreau construit, posé et retenu pour le retour de la vue.
+        this._failed.delete(key);
         return;
       }
       this._tiles.set(key, tile);
@@ -1574,6 +1598,10 @@ export class PlanetarySurfaceEngine {
         this._relief.set(key, { level: relief.level, entry: relief.entry });
         this._applyShellScale();
       }
+      // Réussite : carreau construit, posé et rattaché. Pas avant : si la pose échoue, le retard
+      // doit continuer de croître au lieu de repartir de 8 s. Une réponse obsolète, une erreur
+      // ou une annulation ne solde rien.
+      this._failed.delete(key);
     } catch (error) {
       // L'autre image de la paire, encore en vol, ne servirait plus à rien.
       controller.abort();
@@ -1581,7 +1609,13 @@ export class PlanetarySurfaceEngine {
       if ((error as Error)?.name === 'AbortError') return;
       // Un échec se RETIENT : sans cela la même tuile serait redemandée à chaque frame, et
       // un service en panne recevrait soixante requêtes par seconde.
-      this._failed.set(key, performance.now());
+      const failures = (this._failed.get(key)?.failures ?? 0) + 1;
+      this._failed.delete(key);
+      this._failed.set(key, { at: performance.now(), failures });
+      if (this._failed.size > MAX_TRACKED_FAILURES) {
+        const oldest = this._failed.keys().next().value;
+        if (oldest !== undefined) this._failed.delete(oldest);
+      }
       Logger.warn(`[Surface] tuile non chargée : ${(error as Error)?.message}`);
     } finally {
       if (this._pending.get(key) === controller) this._pending.delete(key);
