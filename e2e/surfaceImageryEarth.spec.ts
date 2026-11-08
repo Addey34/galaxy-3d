@@ -663,9 +663,14 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   // rayons). Depuis le 2026-10-31 l'arrivée est à 9 rayons : -4700 donnent 1,66. En deux temps
   // depuis le 2026-10-25 : -3900 (le 8k se pose dans le calme, 2,21 rayons), puis -800.
   // Zoom par ALTITUDE (2026-11-08) : un cran multiplie l'altitude (0,95^(1,5 × |delta| / 100)), pas
-  // la distance. Mesuré depuis l'arrivée à 9 rayons : -3300 d'un coup donne 1,63 rayon, puis -800
-  // 1,34. Ici -3000 (1,79 rayon, dans le calme) puis -250 retrouvent les 1,66 rayon d'avant.
-  await zoomInSettling(page, -250, -3000);
+  // la distance. Mesuré avec la sonde `?debug-surface` depuis l'arrivée (6,04 rayons après le cran
+  // de `boot`) : (-3000, -250) s'arrête à 1,50 rayon, avec 22 carreaux de VIIRS à attendre, et
+  // finit à 1,414 rayon ; (-2500, -750) s'arrête à 1,74 rayon, 13 carreaux, et finit au MÊME
+  // point. Les deux arrêts sont dans la zone du fond de loin (1,5 à 1,8 rayon, `core/farBase.ts`) :
+  // il le faut, car la destination (sous 1,5) ne garde le fond du jour que par l'hystérésis. Un
+  // arrêt au-delà de 1,8 (-2300, 1,86 rayon) ne le charge jamais : Sentinel-2 est demandé et le
+  // jour n'apparaît pas.
+  await zoomInSettling(page, -750, -2500);
   const badge = page.locator('#surface-imagery');
   await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
     timeout: 60_000,
