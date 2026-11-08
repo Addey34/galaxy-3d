@@ -31,7 +31,18 @@ import {
   dequantizeFromTile,
   type BuildingTileIdentity,
 } from '@/core/buildingTile';
+import {
+  HttpStatusError,
+  classifyTransportFailure,
+  mayRequest,
+  parseRetryAfter,
+  recordFailure,
+  rememberFailure,
+  retryAfterOf,
+  type FailureRecord,
+} from '@/core/fetchRetry';
 import { geographicToLocalDirection } from '@/core/frames';
+import Logger from '@/utils/Logger';
 import type { BuildingSetManifest } from '@/config/buildingSets';
 import type { SurfaceHost } from './PlanetarySurfaceEngine';
 
@@ -71,8 +82,10 @@ export interface BuildingLayerState {
   loaded: number;
   /** Tuiles en vol. */
   pending: number;
-  /** Tuiles retenues comme échouées (jamais redemandées). */
+  /** Tuiles définitivement perdues (absentes, invalides, ou essais épuisés). */
   failed: number;
+  /** Tuiles en échec passager, qui seront redemandées après leur retard. */
+  retrying: number;
   /** Tuiles chargées dont le sol rendu n'est pas encore mesurable : invisibles. */
   waitingForGround: number;
   /** Bâtiments visibles, toutes tuiles posées sur le sol confondues. */
@@ -99,7 +112,14 @@ const key = (t: BuildingTileIdentity): string =>
 
 const defaultFetcher: BuildingTileFetcher = async (url, signal) => {
   const response = await fetch(url, { signal });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  // `Retry-After` n'est lisible ici (service de données = autre origine) que si le serveur le
+  // liste dans `Access-Control-Expose-Headers` ; sinon `null` et la reprise suit le seul retard
+  // exponentiel. Voir `parseRetryAfter`.
+  if (!response.ok)
+    throw new HttpStatusError(
+      response.status,
+      parseRetryAfter(response.headers.get('retry-after'), Date.now())
+    );
   return response.arrayBuffer();
 };
 
@@ -119,7 +139,12 @@ export class BuildingLayer {
   });
   private readonly _tiles = new Map<string, Entry>();
   private readonly _pending = new Map<string, AbortController>();
-  private readonly _failed = new Set<string>();
+  /**
+   * Échecs par tuile (clé : identifiant du jeu + tuile). Le magasin peut être FOURNI par l'appelant
+   * pour survivre à la couche : sans cela, détruire la couche (caméra remontée) rendrait cinq
+   * essais à chaque tuile.
+   */
+  private readonly _failures: Map<string, FailureRecord>;
   private readonly _raycaster = new THREE.Raycaster();
   /**
    * Le repère des bâtiments : UN groupe attaché au groupe qui tourne avec le corps, comme les
@@ -139,6 +164,8 @@ export class BuildingLayer {
     fetchTile?: BuildingTileFetcher;
     now?: () => number;
     onChange?: () => void;
+    /** Magasin d'échecs partagé, borné par `rememberFailure` ; absent : propre à cette couche. */
+    failures?: Map<string, FailureRecord>;
   }) {
     this._host = options.host;
     this._radiusKm = options.radiusKm;
@@ -148,6 +175,7 @@ export class BuildingLayer {
     this._fetch = options.fetchTile ?? defaultFetcher;
     this._now = options.now ?? (() => performance.now());
     this._onChange = options.onChange ?? (() => undefined);
+    this._failures = options.failures ?? new Map();
     this._root.name = 'buildings';
     this._host.attachSpinningChild(this._root);
   }
@@ -162,6 +190,10 @@ export class BuildingLayer {
   }
 
   get state(): BuildingLayerState {
+    const prefix = `${this._set.id}/`;
+    const ownFailures: FailureRecord[] = [];
+    for (const [fk, f] of this._failures)
+      if (fk.startsWith(prefix)) ownFailures.push(f);
     let waitingForGround = 0;
     let buildings = 0;
     const origins = new Set<number>();
@@ -174,7 +206,8 @@ export class BuildingLayer {
     return {
       loaded: this._tiles.size,
       pending: this._pending.size,
-      failed: this._failed.size,
+      failed: ownFailures.filter((f) => f.kind === 'permanent').length,
+      retrying: ownFailures.filter((f) => f.kind === 'transient').length,
       waitingForGround,
       buildings,
       origins: [...origins].sort((a, b) => a - b),
@@ -211,7 +244,9 @@ export class BuildingLayer {
 
     for (const id of wanted) {
       const k = key(id);
-      if (this._tiles.has(k) || this._pending.has(k) || this._failed.has(k))
+      if (this._tiles.has(k) || this._pending.has(k)) continue;
+      // Une panne passagère se redemande une fois son retard écoulé ; une absence, jamais.
+      if (!mayRequest(this._failures.get(this._failureKey(k)), this._now()))
         continue;
       this._load(id);
     }
@@ -242,22 +277,56 @@ export class BuildingLayer {
     const k = key(id);
     const controller = new AbortController();
     this._pending.set(k, controller);
+    // Une réponse, un échec ou une erreur tardifs d'une requête annulée, remplacée ou d'une couche
+    // détruite ne comptent pour rien.
+    const live = (): boolean =>
+      !this._disposed &&
+      !controller.signal.aborted &&
+      this._pending.get(k) === controller;
     this._fetch(this._url(id), controller.signal)
-      .then((bytes) => {
-        if (this._disposed || controller.signal.aborted) return;
-        // La confrontation d'identité refuse une tuile d'un autre endroit.
-        const tile = decodeBuildingTile(bytes, id);
-        this._place(id, tile);
-      })
-      .catch((error: unknown) => {
-        if ((error as Error)?.name === 'AbortError') return;
-        this._failed.add(k);
-        this._onChange();
-      })
+      .then(
+        (bytes) => {
+          if (!live()) return;
+          // Décodage et construction : un contenu invalide ne se répare pas en le redemandant.
+          try {
+            // La confrontation d'identité refuse une tuile d'un autre endroit.
+            this._place(id, decodeBuildingTile(bytes, id));
+            this._failures.delete(this._failureKey(k));
+          } catch (error: unknown) {
+            this._fail(k, 'permanent', null);
+            Logger.warn(`[Bâtiments] tuile ${k} invalide : ${String(error)}`);
+          }
+        },
+        (error: unknown) => {
+          if (!live()) return;
+          const kind = classifyTransportFailure(error);
+          if (kind === 'abort') return;
+          this._fail(k, kind, retryAfterOf(error));
+        }
+      )
       .finally(() => {
         // Une annulation a déjà retiré son entrée ; seule la complétion du bon contrôleur compte.
         if (this._pending.get(k) === controller) this._pending.delete(k);
       });
+  }
+
+  /** Le jeu fait partie de la clé : une même tuile d'un autre jeu a son propre budget. */
+  private _failureKey(k: string): string {
+    return `${this._set.id}/${k}`;
+  }
+
+  private _fail(
+    k: string,
+    kind: 'transient' | 'permanent',
+    retryAfterMs: number | null
+  ): void {
+    const fk = this._failureKey(k);
+    rememberFailure(
+      this._failures,
+      fk,
+      recordFailure(this._failures.get(fk), kind, this._now(), retryAfterMs)
+    );
+    this._onChange();
   }
 
   private _place(
