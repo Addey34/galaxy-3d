@@ -10,6 +10,7 @@
 import {
   altitudeDistanceFactor,
   altitudeMotionFactor,
+  altitudeRotationFactor,
 } from '@/core/altitudeZoom';
 import { horizonTiltRad } from '@/core/horizonTilt';
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
@@ -180,8 +181,17 @@ export class CameraSystem {
         this.camera.position.distanceTo(this.controls.target),
         this._zoomClearance
       );
-    rotate._rotateLeft = (angle) => rotateLeft(angle * motion());
-    rotate._rotateUp = (angle) => rotateUp(angle * motion());
+    // L'orbite ajoute le gain « le sol suit le curseur » (`altitudeRotationFactor`), lu au champ
+    // courant : le zoom optique le resserre avec le champ.
+    const orbit = (): number =>
+      altitudeRotationFactor(
+        this.camera.position.distanceTo(this.controls.target),
+        this._zoomClearance,
+        THREE.MathUtils.degToRad(this.camera.fov),
+        this.controls.rotateSpeed
+      );
+    rotate._rotateLeft = (angle) => rotateLeft(angle * orbit());
+    rotate._rotateUp = (angle) => rotateUp(angle * orbit());
     rotate._pan = (dx, dy) => {
       const k = motion();
       pan(dx * k, dy * k);
