@@ -94,3 +94,65 @@ describe('formatCalmWindow', () => {
     expect(line).toContain('100 101 102 103 104 105 … 134 135 136 137 138 139');
   });
 });
+
+describe('décomposition de data-surface-busy', () => {
+  const frame = (ms: number, d: string, tiles: number) =>
+    `${ms}${tiles > 0 ? `+${tiles}tile` : ''}{${d}}`;
+
+  it('relit la décomposition portée par une image', () => {
+    expect(parseCalmFrame('1384+22tile{b22p3q2h17f0m5a12}')).toMatchObject({
+      tiles: 22,
+      busy: { busy: 22, pending: 3, queued: 2, held: 17 },
+    });
+    // La notation d'avant, sans décomposition, reste lisible.
+    expect(parseCalmFrame('1384+22tile')?.busy).toBeUndefined();
+    expect(parseCalmFrame('1384+22tile{zzz}')).toBeNull();
+    expect(parseCalmFrame('900+1tile{b1p1q0h0f0m0a0}~')).toMatchObject({
+      moving: true,
+      busy: { pending: 1 },
+    });
+  });
+
+  it('désigne la part dominante et compte les incohérences', () => {
+    const series = [
+      frame(1400, 'b22p0q0h22f0m5a3', 22),
+      frame(1400, 'b20p0q0h20f0m3a9', 20),
+      // Somme fausse (parties 5 pour un total 6) : incohérence INTERNE.
+      frame(1400, 'b6p1q1h3f0m0a0', 6),
+      // Parties cohérentes (9 = 9) mais total différent de `+Ntile` (8) : DÉCALAGE temporel.
+      frame(1400, 'b9p9q0h0f0m0a0', 8),
+    ];
+    const s = summarizeCalmWindow(series, 3000);
+    expect(s.withDetail).toBe(4);
+    expect(s.dominant).toBe('retenus');
+    expect(s.heldAgeMaxS).toBe(9);
+    expect(s.internal).toBe(1);
+    expect(s.skew).toBe(1);
+    expect(s.mean.held).toBe(11.3);
+    expect(s.mean.pending).toBe(2.5);
+  });
+
+  it('dit « aucune » sans rien d’occupé, et ne parle pas de carreaux sans décomposition', () => {
+    const calm = summarizeCalmWindow([frame(100, 'b0p0q0h0f0m0a0', 0)], 3000);
+    expect(calm.dominant).toBe('aucune');
+    expect(summarizeCalmWindow(['100', '200+1tile'], 3000).withDetail).toBe(0);
+    expect(formatCalmWindow(0, ['100', '200+1tile'], 3000, 6)).not.toContain(
+      'carreaux['
+    );
+  });
+
+  it('ajoute à la ligne de fenêtre la répartition en moyenne', () => {
+    const line = formatCalmWindow(
+      1000,
+      [frame(1400, 'b4p1q1h2f0m0a4', 4)],
+      3000,
+      6
+    );
+    expect(line).toContain('carreaux[n=1](moyenne) téléchargements=1 file=1');
+    expect(line).toContain('retenus=2 fondu=0 dominant=');
+    expect(line).toContain(
+      'âge-retenus-max=4s incohérences-internes=0 décalage-avec-data-surface-busy=0'
+    );
+    expect(line).not.toContain(String.fromCharCode(10));
+  });
+});

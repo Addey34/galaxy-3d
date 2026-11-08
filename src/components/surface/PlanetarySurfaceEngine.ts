@@ -88,6 +88,7 @@ import { prefersReducedMotion } from '@/utils/reducedMotion';
 
 import { SurfaceTile } from './SurfaceTile';
 import { hasDebugFlag } from '@/utils/debugFlags';
+import { formatBusyDetail, type BusyDetail } from '@/core/surfaceBusyDetail';
 
 /** Ce que le moteur demande d'un corps. Plus petit qu'un `CelestialObject`, et c'est écrit. */
 export interface SurfaceHost {
@@ -602,6 +603,19 @@ export class PlanetarySurfaceEngine {
    * pas les mêmes, et le niveau servi doit suivre ce qui est réellement dessiné.
    */
   update(camera: THREE.PerspectiveCamera, viewportHeightPx: number): void {
+    this._update(camera, viewportHeightPx);
+    if (DEBUG_BUSY) {
+      // Décomposition de `busyCount` (`?debug-surface` seulement), prise À LA FIN de la passe dont
+      // `busyCount` rend compte : `window.__surfaceBusy`, lu par `e2e/mainThread.ts`.
+      (window as unknown as { __surfaceBusy?: string }).__surfaceBusy =
+        formatBusyDetail(this.busyDetail);
+    }
+  }
+
+  private _update(
+    camera: THREE.PerspectiveCamera,
+    viewportHeightPx: number
+  ): void {
     this._advanceFades();
     const host = this._host;
     const tileset = this._tileset;
@@ -1443,6 +1457,30 @@ export class PlanetarySurfaceEngine {
     return this._pending.size + this._queue.length + this._fadingTiles;
   }
 
+  /**
+   * Décomposition de `busyCount` pour le diagnostic (`?debug-surface`, `core/surfaceBusyDetail.ts`).
+   * Lecture seule, sans effet de bord : `fading` est le fondu ACTIF, c'est-à-dire `_fadingTiles`
+   * moins les carreaux retenus (que `SurfaceTile.fading` compte aussi), donc `held + fading` vaut
+   * EXACTEMENT `_fadingTiles`. Ce compteur est recalculé par `_advanceFades` : après le retrait de
+   * carreaux (caméra éloignée), il garde une passe leur ancien compte (mesuré : 10 carreaux
+   * « en fondu » pendant une passe sans aucun carreau en fondu, puis 0). `busyCount` a le même
+   * retard, qui n'est pas corrigé ici. `fading` est publié tel quel, même négatif (jamais observé).
+   */
+  get busyDetail(): BusyDetail {
+    return {
+      busy: this.busyCount,
+      pending: this._pending.size,
+      queued: this._queue.length,
+      held: this._held.size,
+      fading: this._fadingTiles - this._held.size,
+      missing: this._missing,
+      heldAgeS:
+        this._heldSinceMs === null
+          ? 0
+          : Math.round((performance.now() - this._heldSinceMs) / 1000),
+    };
+  }
+
   /** Un échec récent se retient ; passé `FAILED_RETRY_MS` la tuile redevient demandable. */
   private _isFailedRecently(key: string): boolean {
     const at = this._failed.get(key);
@@ -1592,6 +1630,9 @@ export class PlanetarySurfaceEngine {
 
 /** Durée maximale de rétention d'un carreau masqué, en ms. */
 const RETAIN_MS = 45_000;
+
+/** Lu une fois au chargement du module : un test de paramètre par image coûterait. */
+const DEBUG_BUSY = hasDebugFlag('debug-surface');
 
 /** Journal des libérations de carreaux (`?debug-surface` seulement) : `window.__tileLog`. */
 function debugTileLog(

@@ -15,6 +15,11 @@ import {
 } from '@/core/frames';
 import type { SurfaceTileset } from '@/config/surfaceTilesets';
 import { compareMapOf } from './compareMaterial';
+import {
+  isBusyDetailConsistent,
+  parseBusyDetail,
+  type BusyDetail,
+} from '@/core/surfaceBusyDetail';
 
 /**
  * CE QUE LE MOTEUR DEMANDE, ET CE QU'IL NE REDEMANDE PAS.
@@ -228,6 +233,132 @@ describe('ce que le moteur demande', () => {
  * carreau serait exactement l'erreur que la phase 9C a payée sur l'imagerie. Et un relief
  * indisponible ne doit pas emporter l'imagerie avec lui.
  */
+describe('la décomposition diagnostique de busyCount', () => {
+  it('retrouve le total à chaque instant et ne le modifie pas', async () => {
+    const waiting: (() => void)[] = [];
+    const fetchTile = vi.fn<TileFetcher>(
+      () =>
+        new Promise<ImageBitmap>((done) => waiting.push(() => done(bitmap())))
+    );
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 4 },
+      fetchTile,
+    });
+    const host = makeHost();
+    engine.attach(host, TILESET, RADIUS_KM);
+    const camera = cameraAt(8);
+    // L'état interne, lu tel quel : `_fadingTiles` est le compteur que `busyCount` additionne.
+    const inner = engine as unknown as {
+      _fadingTiles: number;
+      _tiles: Map<string, { fading: boolean; held: boolean }>;
+    };
+    const consistent = (): BusyDetail => {
+      const detail = engine.busyDetail;
+      expect(detail.busy).toBe(engine.busyCount);
+      expect(isBusyDetailConsistent(detail)).toBe(true);
+      // held + fondu actif = EXACTEMENT le compteur de fondu, retenus compris.
+      expect(detail.held + detail.fading).toBe(inner._fadingTiles);
+      // Et ce compteur, avec les retenus, est celui des carreaux posés.
+      const tiles = [...inner._tiles.values()];
+      expect(detail.held).toBe(tiles.filter((t) => t.held).length);
+      expect(inner._fadingTiles).toBe(tiles.filter((t) => t.fading).length);
+      return detail;
+    };
+
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(fetchTile).toHaveBeenCalled());
+    const start = consistent();
+    // Des téléchargements en vol et, la limite de concurrence étant atteinte, une file.
+    expect(start.pending).toBeGreaterThan(0);
+    expect(start.queued).toBeGreaterThan(0);
+    expect(start.busy).toBe(start.pending + start.queued);
+
+    // Un carreau à la fois : tant que d'autres sont en vol, ceux qui arrivent sont RETENUS
+    // (`core/tileReveal.ts`) et comptent dans `fading` côté carreau, pas dans le fondu actif.
+    let maxHeld = 0;
+    for (let step = 0; step < 40 && waiting.length > 0; step += 1) {
+      waiting.shift()!();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      engine.update(camera, 800);
+      maxHeld = Math.max(maxHeld, consistent().held);
+    }
+    expect(maxHeld).toBeGreaterThan(0);
+    // La révélation : les retenus passent d'un coup en fondu actif.
+    let maxFading = 0;
+
+    await vi.waitFor(
+      () => {
+        while (waiting.length > 0) waiting.shift()!();
+        engine.update(camera, 800);
+        maxFading = Math.max(maxFading, consistent().fading);
+        expect(engine.busyCount).toBe(0);
+      },
+      { timeout: 6000 }
+    );
+    // La surface a fini : tout est à zéro.
+    expect(engine.busyDetail).toMatchObject({
+      busy: 0,
+      pending: 0,
+      queued: 0,
+      held: 0,
+      fading: 0,
+      heldAgeS: 0,
+    });
+    expect(maxFading).toBeGreaterThan(0);
+    engine.dispose();
+  });
+
+  it('ne change rien aux demandes du moteur, et ne publie rien sans ?debug-surface', async () => {
+    const run = async (
+      module: typeof import('./PlanetarySurfaceEngine')
+    ): Promise<{ urls: string[]; busy: number[] }> => {
+      const urls: string[] = [];
+      const engine = new module.PlanetarySurfaceEngine({
+        budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+        fetchTile: async (url) => {
+          urls.push(url);
+          return bitmap();
+        },
+      });
+      engine.attach(makeHost(), TILESET, RADIUS_KM);
+      const camera = cameraAt(8);
+      const busy: number[] = [];
+      for (let i = 0; i < 3; i += 1) {
+        engine.update(camera, 800);
+        busy.push(engine.busyCount);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+      engine.dispose();
+      return { urls, busy };
+    };
+    // L'environnement de ce fichier est Node : `window` est une doublure, avec ou sans le drapeau.
+    const fakeWindow = (search: string): { __surfaceBusy?: string } => {
+      const w: { __surfaceBusy?: string } = {};
+      vi.stubGlobal('window', { ...w, location: { search } });
+      return (globalThis as unknown as { window: typeof w }).window;
+    };
+    try {
+      let w = fakeWindow('');
+      vi.resetModules();
+      const without = await run(await import('./PlanetarySurfaceEngine'));
+      expect(w.__surfaceBusy).toBeUndefined();
+
+      w = fakeWindow('?debug-surface');
+      vi.resetModules();
+      const withFlag = await run(await import('./PlanetarySurfaceEngine'));
+      // Le même enchaînement de demandes, dans le même ordre.
+      expect(without.urls.length).toBeGreaterThan(0);
+      expect(withFlag.urls).toEqual(without.urls);
+      expect(withFlag.busy).toEqual(without.busy);
+      // Et, avec le drapeau seulement, la décomposition est publiée, relisible.
+      expect(parseBusyDetail(w.__surfaceBusy ?? '')).not.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+      vi.resetModules();
+    }
+  });
+});
+
 describe('les carreaux quittés restent en mémoire un temps', () => {
   /** La même caméra qu'au-dessus, mais sur un autre méridien du même équateur. */
   function cameraOver(longitudeDeg: number, altitudeKm: number) {

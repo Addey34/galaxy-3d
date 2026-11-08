@@ -106,7 +106,7 @@ export async function waitForCalmMainThread(
   for (;;) {
     // Attributs absents (page sans l'application) : rien en vol, rien en mouvement.
     const observed = await page.evaluate(
-      ({ budget, wanted, windowMs }) =>
+      ({ budget, wanted, windowMs, detail }) =>
         new Promise<{ calm: boolean; series: string[] }>((resolve) => {
           const canvas = document.querySelector('canvas');
           const start = performance.now();
@@ -124,8 +124,14 @@ export async function waitForCalmMainThread(
             // Les carreaux de surface (en vol, ou en fondu d'entrée) ne passent pas par
             // `TextureSystem` : `data-surface-busy` les compte.
             const tiles = canvas?.dataset['surfaceBusy'] ?? '0';
+            // Décomposition de `data-surface-busy` (`?debug-surface`), seulement sur demande du
+            // diagnostic : sans lui, la notation de l'image est celle d'avant.
+            const busyDetail = detail
+              ? ((window as unknown as { __surfaceBusy?: string })
+                  .__surfaceBusy ?? '')
+              : '';
             out.push(
-              `${took}${loading === '0' ? '' : `+${loading}tex`}${tiles === '0' ? '' : `+${tiles}tile`}${moving ? '~' : ''}`
+              `${took}${loading === '0' ? '' : `+${loading}tex`}${tiles === '0' ? '' : `+${tiles}tile`}${busyDetail === '' ? '' : `{${busyDetail}}`}${moving ? '~' : ''}`
             );
             streak =
               took <= budget && loading === '0' && tiles === '0' && !moving
@@ -138,7 +144,12 @@ export async function waitForCalmMainThread(
           };
           requestAnimationFrame(tick);
         }),
-      { budget, wanted, windowMs: OBSERVATION_WINDOW_MS }
+      {
+        budget,
+        wanted,
+        windowMs: OBSERVATION_WINDOW_MS,
+        detail: onWindow !== undefined,
+      }
     );
     onWindow?.(
       formatCalmWindow(Date.now() - startedAt, observed.series, budget, wanted)
