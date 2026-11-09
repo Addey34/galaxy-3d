@@ -649,6 +649,27 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
     eox.push(route.request().url());
     return route.abort();
   });
+  // PALIER `medium` (textures 2k au plus). Ce scénario vérifie le CÂBLAGE du fond de loin (VIIRS
+  // du jour demandé et peint, aucune tuile Sentinel-2, réglage inchangé), pas le rendu 8k : rien
+  // de cela ne dépend de la résolution des textures générales. Au palier par défaut du bureau,
+  // les cinq couches 8k de la Terre (surface, relief, nuages, reflets, lumières) se posent l'une
+  // après l'autre à l'approche (seuil 2,5 rayons) ; chacune bloque le fil principal 1,2 à 2,9 s
+  // en rendu logiciel (`initTexture`, décodage et envoi synchrones, mesuré CPU x6 : 9,7 à
+  // 10,4 s cumulées), et les carreaux VIIRS, qui attendent ce fil, n'aboutissent qu'après. Le
+  // palier par défaut reste celui des autres scénarios de ce fichier et de `surfaceApproach` ;
+  // le choix de la résolution selon la distance est tenu par les tests de `core/textureLod`.
+  // La clé est celle de `e2e/modelLod.spec.ts`.
+  await page.addInitScript(() => {
+    localStorage.setItem('ssv-quality', 'medium');
+  });
+  // Le palier est APPLIQUÉ, pas seulement enregistré : aucune texture 4k ou 8k de la Terre n'est
+  // demandée (le palier par défaut en demande dix, 4k puis 8k).
+  const heavyTextures: string[] = [];
+  page.on('request', (request) => {
+    const url = request.url();
+    if (/\/earth\/earth_[a-z_]+_(4k|8k)\.jpg/.test(url))
+      heavyTextures.push(url.split('/').pop()!);
+  });
 
   await boot(
     page,
@@ -665,13 +686,59 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   // Zoom par ALTITUDE (2026-11-08) : un cran multiplie l'altitude (0,95^(1,5 × |delta| / 100)), pas
   // la distance. Mesuré depuis l'arrivée à 9 rayons : -3300 d'un coup donne 1,63 rayon, puis -800
   // 1,34. Ici -3000 (1,79 rayon, dans le calme) puis -250 retrouvent les 1,66 rayon d'avant.
-  await zoomInSettling(page, -250, -3000);
   const badge = page.locator('#surface-imagery');
+  // Premier arrêt, puis l'attente de CE QUE LE SCÉNARIO VÉRIFIE, pas du calme de la scène : la
+  // caméra est entrée dans la zone du fond de loin, une tuile du jour est demandée ET peinte
+  // (`data-painted`, le bandeau ne compte que le peint), et les textures générales sont posées.
+  // L'attente générale du calme exigeait les 22 carreaux, six téléchargements à la fois, donc
+  // plus de la moitié des 120 s sur un EPYC 7763.
+  await zoomIn(page, -3000);
+  await expect
+    .poll(
+      async () => {
+        const text = (await page.locator('#surface-probe').textContent()) ?? '';
+        const match = /\(([\d.]+) R\)/.exec(text);
+        const radii = match ? Number(match[1]) : null;
+        return radii !== null && radii > 1.5 && radii < 1.8;
+      },
+      {
+        timeout: 60_000,
+        message: 'la caméra n’est pas dans la zone du fond de loin',
+      }
+    )
+    .toBe(true);
+  await expect
+    .poll(() => seen.viirs.length, { timeout: 60_000 })
+    .toBeGreaterThan(0);
   await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
     timeout: 60_000,
   });
+  await expect
+    .poll(async () => Number((await badge.getAttribute('data-painted')) ?? 0), {
+      timeout: 60_000,
+      message: 'aucune tuile du jour peinte',
+    })
+    .toBeGreaterThan(0);
+  await expect(page.locator('canvas').first()).toHaveAttribute(
+    'data-textures-loading',
+    '0',
+    { timeout: 60_000 }
+  );
+  await zoomIn(page, -250);
+  await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
+    timeout: 60_000,
+  });
+  // Au rayon final aussi, le fond du jour est PEINT, pas seulement nommé : le bandeau publie le
+  // jour dès que son état existe.
+  await expect
+    .poll(async () => Number((await badge.getAttribute('data-painted')) ?? 0), {
+      timeout: 60_000,
+      message: 'aucune tuile du jour peinte au rayon final',
+    })
+    .toBeGreaterThan(0);
   expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
   expect(eox, 'Sentinel-2 demandé de trop loin').toEqual([]);
+  expect(heavyTextures, 'le palier medium n’est pas appliqué').toEqual([]);
   // Le clic final tombait dans le travail de la scène sur un runner lent (Xeon 8370C, run
   // 40729356516 : « waiting for element to be visible, enabled and stable » 3 fois sur 3, 15 s).
   // Ni `click()` (il attend un bouton « stable », donc plusieurs images fluides) ni l'attente du
