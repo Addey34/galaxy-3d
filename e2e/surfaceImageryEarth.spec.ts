@@ -649,6 +649,27 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
     eox.push(route.request().url());
     return route.abort();
   });
+  // PALIER `medium` (textures 2k au plus). Ce scénario vérifie le CÂBLAGE du fond de loin (VIIRS
+  // du jour demandé et peint, aucune tuile Sentinel-2, réglage inchangé), pas le rendu 8k : rien
+  // de cela ne dépend de la résolution des textures générales. Au palier par défaut du bureau,
+  // les cinq couches 8k de la Terre (surface, relief, nuages, reflets, lumières) se posent l'une
+  // après l'autre à l'approche (seuil 2,5 rayons) ; chacune bloque le fil principal 1,2 à 2,9 s
+  // en rendu logiciel (`initTexture`, décodage et envoi synchrones, mesuré CPU x6 : 9,7 à
+  // 10,4 s cumulées), et les carreaux VIIRS, qui attendent ce fil, n'aboutissent qu'après. Le
+  // palier par défaut reste celui des autres scénarios de ce fichier et de `surfaceApproach` ;
+  // le choix de la résolution selon la distance est tenu par les tests de `core/textureLod`.
+  // La clé est celle de `e2e/modelLod.spec.ts`.
+  await page.addInitScript(() => {
+    localStorage.setItem('ssv-quality', 'medium');
+  });
+  // Le palier est APPLIQUÉ, pas seulement enregistré : aucune texture 4k ou 8k de la Terre n'est
+  // demandée (le palier par défaut en demande dix, 4k puis 8k).
+  const heavyTextures: string[] = [];
+  page.on('request', (request) => {
+    const url = request.url();
+    if (/\/earth\/earth_[a-z_]+_(4k|8k)\.jpg/.test(url))
+      heavyTextures.push(url.split('/').pop()!);
+  });
 
   await boot(
     page,
@@ -672,6 +693,7 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   });
   expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
   expect(eox, 'Sentinel-2 demandé de trop loin').toEqual([]);
+  expect(heavyTextures, 'le palier medium n’est pas appliqué').toEqual([]);
   // Le clic final tombait dans le travail de la scène sur un runner lent (Xeon 8370C, run
   // 40729356516 : « waiting for element to be visible, enabled and stable » 3 fois sur 3, 15 s).
   // Ni `click()` (il attend un bouton « stable », donc plusieurs images fluides) ni l'attente du
