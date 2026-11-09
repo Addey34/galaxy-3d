@@ -25,6 +25,17 @@ import { originColour } from '@/core/buildingOriginStyle';
 import { splitUrls } from '@/core/textLinks';
 import { safeExternalUrl } from '@/utils/safeUrl';
 import { getLocale, intlLocale, t } from '@/i18n';
+import {
+  HttpStatusError,
+  PermanentFetchError,
+  classifyTransportFailure,
+  mayRequest,
+  parseRetryAfter,
+  recordFailure,
+  retryAfterOf,
+  spreadOf,
+  type FailureRecord,
+} from '@/core/fetchRetry';
 import { GALAXY_DATA_ORIGIN } from '@/core/galaxyData';
 import { readQualityMode, resolveQualityTier } from '@/core/qualityTier';
 import Logger from '@/utils/Logger';
@@ -84,51 +95,131 @@ const ORIGIN_KEYS = [
   [HEIGHT_ORIGIN.absent, 'absent'],
 ] as const;
 
-export function createBuildingsOverlay(mount: HTMLElement): BuildingsOverlay {
+/** Lit un fichier JSON de l'application ; les échecs portent leur nature (HTTP, réponse d'un autre type). */
+const fetchJson = async (url: string): Promise<unknown> => {
+  const response = await fetch(url);
+  if (!response.ok)
+    throw new HttpStatusError(
+      response.status,
+      parseRetryAfter(response.headers.get('retry-after'), Date.now())
+    );
+  // La réécriture SPA de l'hébergeur rend du HTML pour un fichier absent : définitif.
+  if (!(response.headers.get('content-type') ?? '').includes('json'))
+    throw new PermanentFetchError('réponse non JSON');
+  // Lire le corps puis l'analyser à part : un corps interrompu (réseau) lève ICI une erreur de
+  // transport, passagère ; un JSON mal formé n'est pas une panne et ne se répare pas en le
+  // redemandant.
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as unknown;
+  } catch (error: unknown) {
+    throw new PermanentFetchError(`JSON mal formé : ${String(error)}`);
+  }
+};
+
+export function createBuildingsOverlay(
+  mount: HTMLElement,
+  options: {
+    fetchJson?: (url: string) => Promise<unknown>;
+    now?: () => number;
+  } = {}
+): BuildingsOverlay {
+  const getJson = options.fetchJson ?? fetchJson;
+  const now = options.now ?? ((): number => performance.now());
   let index: BuildingSetIndex | null = null;
-  let indexState: 'idle' | 'loading' | 'failed' = 'idle';
-  const manifests = new Map<
-    string,
-    BuildingSetManifest | 'loading' | 'failed'
-  >();
+  /** `ready` : l'index valide est gardé, plus jamais redemandé. */
+  let indexState: 'idle' | 'loading' | 'ready' = 'idle';
+  let indexFailure: FailureRecord | undefined;
+  const manifests = new Map<string, BuildingSetManifest | 'loading'>();
+  const manifestFailures = new Map<string, FailureRecord>();
+  /**
+   * Échecs des tuiles, gardés tant que l'overlay vit : détruire la couche (zone quittée, caméra
+   * remontée) ne rend pas ses essais aux tuiles. Borné par `rememberFailure`.
+   */
+  const tileFailures = new Map<string, FailureRecord>();
   let layer: BuildingLayer | null = null;
   let layerHost: BuildingTarget | null = null;
 
-  const getJson = async (url: string): Promise<unknown> => {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    // La réécriture SPA de l'hébergeur rend du HTML pour un fichier absent : refusé ici.
-    if (!(response.headers.get('content-type') ?? '').includes('json'))
-      throw new Error('réponse non JSON');
-    return response.json();
+  /**
+   * Charge un JSON puis le fait valider. Un échec de TRANSPORT se classe (passager ou définitif) ;
+   * un document qui ne passe pas la validation est définitif.
+   */
+  const load = (
+    url: string,
+    accept: (json: unknown) => void,
+    fail: (
+      kind: 'transient' | 'permanent',
+      retryAfterMs: number | null
+    ) => void,
+    label: string
+  ): void => {
+    getJson(url).then(
+      (json) => {
+        try {
+          accept(json);
+        } catch (error: unknown) {
+          fail('permanent', null);
+          Logger.warn(`[Bâtiments] ${label} invalide : ${String(error)}`);
+        }
+      },
+      (error: unknown) => {
+        const kind = classifyTransportFailure(error);
+        if (kind === 'abort') return;
+        fail(kind, retryAfterOf(error));
+        Logger.warn(`[Bâtiments] ${label} indisponible : ${String(error)}`);
+      }
+    );
   };
 
   const loadIndex = (): void => {
-    if (indexState !== 'idle') return;
+    if (indexState !== 'idle' || !mayRequest(indexFailure, now())) return;
     indexState = 'loading';
-    getJson(`${SITE_ORIGIN()}/assets/buildings/index.json`)
-      .then((json) => {
+    load(
+      `${SITE_ORIGIN()}/assets/buildings/index.json`,
+      (json) => {
         index = parseBuildingSetIndex(json);
+        indexState = 'ready';
+        indexFailure = undefined;
+      },
+      (kind, retryAfterMs) => {
         indexState = 'idle';
-      })
-      .catch((error: unknown) => {
-        // Pas d'index : pas de bâtiments, et pas de nouvel essai à chaque image.
-        indexState = 'failed';
-        Logger.warn(`[Bâtiments] index indisponible : ${String(error)}`);
-      });
+        indexFailure = recordFailure(
+          indexFailure,
+          kind,
+          now(),
+          retryAfterMs,
+          spreadOf('index')
+        );
+      },
+      'index'
+    );
   };
 
   const loadManifest = (id: string, path: string): void => {
-    if (manifests.has(id)) return;
+    if (manifests.has(id) || !mayRequest(manifestFailures.get(id), now()))
+      return;
     manifests.set(id, 'loading');
-    getJson(`${SITE_ORIGIN()}/${path}`)
-      .then((json) => manifests.set(id, parseBuildingSetManifest(json)))
-      .catch((error: unknown) => {
-        manifests.set(id, 'failed');
-        Logger.warn(
-          `[Bâtiments] manifeste « ${id} » indisponible : ${String(error)}`
+    load(
+      `${SITE_ORIGIN()}/${path}`,
+      (json) => {
+        manifests.set(id, parseBuildingSetManifest(json));
+        manifestFailures.delete(id);
+      },
+      (kind, retryAfterMs) => {
+        manifests.delete(id);
+        manifestFailures.set(
+          id,
+          recordFailure(
+            manifestFailures.get(id),
+            kind,
+            now(),
+            retryAfterMs,
+            spreadOf(id)
+          )
         );
-      });
+      },
+      `manifeste « ${id} »`
+    );
   };
 
   const drop = (): void => {
@@ -224,7 +315,7 @@ export function createBuildingsOverlay(mount: HTMLElement): BuildingsOverlay {
       }
       loadManifest(entry.id, entry.manifest);
       const manifest = manifests.get(entry.id);
-      if (!manifest || manifest === 'loading' || manifest === 'failed') return;
+      if (!manifest || manifest === 'loading') return;
 
       if (layer && (layer.setId !== manifest.id || layerHost !== host)) drop();
       if (!layer) {
@@ -235,6 +326,8 @@ export function createBuildingsOverlay(mount: HTMLElement): BuildingsOverlay {
           set: manifest,
           origin: GALAXY_DATA_ORIGIN,
           budget: PROVISIONAL_BUILDING_BUDGET[tier],
+          failures: tileFailures,
+          now,
         });
         layerHost = host;
       }

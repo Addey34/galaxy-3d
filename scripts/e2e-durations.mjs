@@ -42,6 +42,16 @@ export function fileSeconds(lines) {
   return out;
 }
 
+/**
+ * Un job de shard dont on lit les durées : seulement un job RÉUSSI. Un job rouge (ou annulé)
+ * contient des tests arrêtés par leur délai (3 min chacun pour `surfaceImageryEarth.spec.ts`
+ * dans le run 42469732295, soit 1 470 s contre 959 s sur les runs verts), et la durée retenue
+ * d'un fichier est la plus LONGUE observée : un seul job en échec gonflerait la répartition.
+ */
+export function isMeasurableJob(job) {
+  return job.shard !== null && job.conclusion === 'success';
+}
+
 /** Le nom de modèle sans fioritures (« AMD EPYC 7763 64-Core Processor » → « AMD EPYC 7763 »). */
 export function cpuKey(model) {
   const m =
@@ -114,7 +124,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   for (const id of runs) {
     const run = inspectRun(id, { readLogs: false });
     for (const job of run.jobs) {
-      if (job.shard === null || job.conclusion === 'skipped') continue;
+      if (!isMeasurableJob(job)) continue;
       const lines = logLines(jobLog(job.id));
       const cpu = cpuKey(
         lines.map((l) => /^RUNNER_CPU (.*?) \|/.exec(l)?.[1]).find(Boolean)

@@ -142,6 +142,37 @@ const CITIES: {
   },
 ];
 
+/**
+ * La tuile que le test sert : un bâtiment au centre de l'indice demandé, mesuré à 30 m ; le
+ * décodeur refuse une tuile dont l'en-tête ne nomme pas l'indice demandé.
+ */
+function servedBuildingTile(zoom: number, column: number, row: number): Buffer {
+  const [x, y] = [32768, 32768];
+  return Buffer.from(
+    encodeBuildingTile({
+      zoom,
+      column,
+      row,
+      buildings: [
+        {
+          ring: Uint16Array.from([
+            x,
+            y,
+            x + 900,
+            y,
+            x + 900,
+            y + 900,
+            x,
+            y + 900,
+          ]),
+          heightDecimetres: 300,
+          origin: HEIGHT_ORIGIN.measured,
+        },
+      ],
+    })
+  );
+}
+
 /** L'adresse de crédit que l'attribution d'un jeu rend cliquable, quand il en porte une. */
 const CREDIT_LINKS: Record<string, string> = {
   'nairobi-overture': 'https://opendatacommons.org/licenses/odbl/1-0/',
@@ -192,32 +223,7 @@ for (const {
           number,
           number,
         ];
-        // Un bâtiment au centre de la tuile demandée, mesuré à 30 m ; le décodeur refuse une
-        // tuile dont l'en-tête ne nomme pas l'indice demandé.
-        const [x, y] = [32768, 32768];
-        const body = Buffer.from(
-          encodeBuildingTile({
-            zoom,
-            column,
-            row,
-            buildings: [
-              {
-                ring: Uint16Array.from([
-                  x,
-                  y,
-                  x + 900,
-                  y,
-                  x + 900,
-                  y + 900,
-                  x,
-                  y + 900,
-                ]),
-                heightDecimetres: 300,
-                origin: HEIGHT_ORIGIN.measured,
-              },
-            ],
-          })
-        );
+        const body = servedBuildingTile(zoom, column, row);
         return route.fulfill({
           status: 200,
           contentType: 'application/octet-stream',
@@ -344,3 +350,132 @@ for (const {
     expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
   });
 }
+
+/**
+ * LA RÉCUPÉRATION D'UNE PANNE PASSAGÈRE (GAL-A002) : chaque tuile répond d'abord 503 avec
+ * `Retry-After: 4`, puis une tuile valide, SANS recharger la page. On prouve par les requêtes
+ * (l'instrumentation de démarrage ne publie pas `retrying`) :
+ *  - aucune nouvelle demande avant l'échéance (4 s après la RÉPONSE 503, pas après le début de la
+ *    première demande),
+ *  - au plus deux demandes par tuile (une panne, une reprise : pas de tempête),
+ *  - les bâtiments finissent à l'écran, sans erreur de page.
+ * La réponse interceptée est d'une autre origine que la page : elle porte donc
+ * `Access-Control-Allow-Origin` ET `Access-Control-Expose-Headers: Retry-After`, sans quoi le
+ * navigateur masquerait l'en-tête (dépendance du Caddyfile de `galaxy-data`, voir
+ * `parseRetryAfter`). Le retard exponentiel initial est de 2 s : un délai de 4 s ne peut venir que
+ * de la lecture de l'en-tête, ce qui distingue ce test d'un simple repli sur le retard.
+ */
+test('recovers from a transient 503 on its tiles without a reload, never asking before Retry-After', async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  // Le navigateur journalise lui-même chaque 503 attendu. Les autres ressources de la scène
+  // (hauteurs, GIBS WMS) ne sont pas servies par ce test et échouent hors sujet : on ne juge que
+  // les ressources de BÂTIMENTS, dont toute erreur autre que le 503 prévu (CORS compris) compte.
+  page.on('console', (msg) => {
+    if (
+      msg.type() === 'error' &&
+      msg.location().url.includes('/assets/buildings/') &&
+      !/status of 503/.test(msg.text())
+    )
+      errors.push(`console : ${msg.text()} ${msg.location().url}`);
+  });
+  await page.route(
+    '**gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_NextGeneration/**',
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'image/jpeg',
+        headers: { 'access-control-allow-origin': '*' },
+        body: TILE_JPEG,
+      })
+  );
+  const RETRY_AFTER_S = 4;
+  /** Par tuile : l'instant de chaque demande et celui où la réponse 503 est PARTIE (ms). */
+  const asked = new Map<string, { at: number[]; answeredAt: number | null }>();
+  await page.route(
+    '**galaxy-data.adrianguichard.dev/assets/buildings/**',
+    async (route) => {
+      const url = route.request().url();
+      const m = /\/(\d+)\/(\d+)\/(\d+)\.bin$/.exec(url);
+      if (!m) return route.fulfill({ status: 404, body: 'x' });
+      const key = m.slice(1).join('/');
+      const entry = asked.get(key) ?? { at: [], answeredAt: null };
+      entry.at.push(Date.now());
+      asked.set(key, entry);
+      const cors = {
+        'access-control-allow-origin': '*',
+        'access-control-expose-headers': 'Retry-After',
+      };
+      if (entry.at.length === 1) {
+        await route.fulfill({
+          status: 503,
+          headers: { ...cors, 'retry-after': String(RETRY_AFTER_S) },
+          body: '',
+        });
+        entry.answeredAt = Date.now();
+        return;
+      }
+      const [zoom, column, row] = m.slice(1).map(Number) as [
+        number,
+        number,
+        number,
+      ];
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/octet-stream',
+        headers: cors,
+        body: servedBuildingTile(zoom, column, row),
+      });
+    }
+  );
+
+  await boot(page, '?debug-surface&mode=educ&body=earth');
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#palette-input').fill('Paris');
+  await page.locator('#palette-hit-0').click();
+
+  const canvas = page.locator('canvas').first();
+  await expect
+    .poll(
+      async () => {
+        try {
+          await zoomIn(page);
+          return await canvas.evaluate(
+            (c) => (c as HTMLCanvasElement).dataset['buildings'] ?? ''
+          );
+        } catch (error) {
+          if (!(error instanceof Error) || error.name !== 'TimeoutError')
+            throw error;
+          return '';
+        }
+      },
+      { timeout: 150_000, intervals: [2_000] }
+    )
+    .toMatch(/^paris-bdtopo:\d+:[1-9]\d*$/);
+  await expect(page.locator('.si-buildings')).toBeVisible();
+
+  const entries = [...asked.entries()];
+  expect(entries.length, 'tuiles demandées').toBeGreaterThan(0);
+  // Pas de tempête : une panne puis une reprise, jamais plus de deux demandes par tuile.
+  for (const [key, { at }] of entries)
+    expect(at.length, `demandes de la tuile ${key}`).toBeLessThanOrEqual(2);
+  // Au moins une tuile a vraiment vécu panne PUIS reprise, et aucune n'a été redemandée avant
+  // l'échéance du serveur.
+  const recovered = entries.filter(([, { at }]) => at.length === 2);
+  expect(recovered.length, 'tuiles reprises après panne').toBeGreaterThan(0);
+  for (const [key, { at, answeredAt }] of recovered) {
+    expect(answeredAt, `réponse 503 de ${key}`).not.toBeNull();
+    // Depuis la RÉPONSE 503 (partie du test), pas depuis le début de la première demande.
+    expect(
+      at[1]! - answeredAt!,
+      `délai entre la réponse 503 et la reprise de ${key}`
+    ).toBeGreaterThanOrEqual(RETRY_AFTER_S * 1000);
+  }
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
