@@ -26,18 +26,18 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
-  readdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import {
   assertCoveredBody,
   publishStaged,
+  recoverPublish,
+  scanDataset,
   verifyBodyResult,
 } from './place-observations-publish.mjs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gunzipSync } from 'node:zlib';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CACHE = join(ROOT, '.cache', 'ode-footprints');
@@ -218,16 +218,6 @@ function candidates(grid, rings, kind) {
   return out;
 }
 
-function* products(dir) {
-  const files = readdirSync(dir)
-    .filter((f) => f.endsWith('.ndjson.gz'))
-    .sort((a, b) => parseInt(a) - parseInt(b));
-  for (const f of files) {
-    const text = gunzipSync(readFileSync(join(dir, f))).toString();
-    for (const line of text.split('\n')) if (line) yield JSON.parse(line);
-  }
-}
-
 const bodyRadius = (body) => {
   const r = readJson(join(ROOT, 'src', 'registry', 'entities', `${body}.json`))
     .facts?.radiusKm?.value;
@@ -257,6 +247,18 @@ const summary = {
   bodies: {},
   complete: true,
 };
+/**
+ * AVANT de toucher au staging : une publication interrompue (processus tué) est reprise ou
+ * annulée d'après son journal. Supprimer le staging précédent sans cela perdrait la trace.
+ */
+try {
+  const recovered = recoverPublish(STAGING);
+  if (recovered !== 'none')
+    console.log(`publication précédente interrompue : ${recovered}`);
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
 rmSync(STAGING, { recursive: true, force: true });
 mkdirSync(STAGING, { recursive: true });
 const previousIndex = existsSync(INDEX) ? readJson(INDEX) : null;
@@ -287,27 +289,27 @@ for (const [db, body] of Object.entries(BODY)) {
   let global = 0;
   let missingPages = 0;
   let extraPages = 0;
+  const pageProblems = [];
   const t0 = Date.now();
   for (const key of keys) {
     const dir = join(CACHE, 'pages', safe(key));
-    const expected = Math.ceil(counts[key] / PAGE);
-    const have = existsSync(dir)
-      ? readdirSync(dir).filter((f) => f.endsWith('.gz')).length
-      : 0;
-    missingPages += Math.max(0, expected - have);
-    extraPages += Math.max(0, have - expected);
-    if (!have) continue;
     const [, IHID, IID] = key.split('|');
     const ik = `${db}|${IHID}|${IID}`;
-    if (!instIndex.has(ik)) {
-      instIndex.set(ik, instruments.length);
-      instruments.push({ host: IHID, id: IID, ...names.get(ik) });
-    }
-    const inst = instIndex.get(ik);
-    const ids = new Set();
-    for (const p of products(dir)) {
-      if (ids.has(p.id)) continue;
-      ids.add(p.id);
+    let inst = -1;
+    /**
+     * LES PAGES ATTENDUES SONT VÉRIFIÉES PAR NOM (0, 5000, 10000… jusqu'au compte déclaré), pas par
+     * nombre de fichiers : une page remplacée par une autre garde le même total. `scanDataset`
+     * refuse aussi les pages mal nommées ou illisibles et exige autant de produits DISTINCTS que
+     * le compte déclaré du jeu.
+     */
+    const report = scanDataset(dir, counts[key], PAGE, (p) => {
+      if (inst < 0) {
+        if (!instIndex.has(ik)) {
+          instIndex.set(ik, instruments.length);
+          instruments.push({ host: IHID, id: IID, ...names.get(ik) });
+        }
+        inst = instIndex.get(ik);
+      }
       seen++;
       const cands = new Set();
       for (const [kind, rings] of Object.entries(p.shapes))
@@ -339,7 +341,10 @@ for (const [db, body] of Object.entries(BODY)) {
           if (t1 > e.last) e.last = t1;
         }
       }
-    }
+    });
+    missingPages += report.missing.length;
+    extraPages += report.extra.length + report.misnamed.length;
+    for (const p of report.problems) pageProblems.push(`${key} : ${p}`);
   }
   const observed = {};
   let withAny = 0;
@@ -388,6 +393,7 @@ for (const [db, body] of Object.entries(BODY)) {
       {
         missingPages,
         extraPages,
+        pageProblems,
         products: seen,
         observed: withAny,
         formations: features.length,

@@ -8,6 +8,7 @@ export function assertCoveredBody(only: string | null | undefined): void;
 export interface BodyResult {
   missingPages: number;
   extraPages: number;
+  pageProblems?: readonly string[];
   products: number;
   observed: number;
   formations: number;
@@ -39,3 +40,32 @@ export function publishStaged(options: {
 }): void;
 
 export function byteLength(text: string): number;
+
+export function expectedOffsets(count: number, page: number): number[];
+
+export function checkPageNames(
+  files: readonly string[],
+  count: number,
+  page: number
+): { missing: number[]; extra: string[]; misnamed: string[] };
+
+export interface DatasetReport {
+  missing: number[];
+  extra: string[];
+  misnamed: string[];
+  unreadable: string[];
+  distinct: number;
+  duplicates: number;
+  problems: string[];
+}
+
+export function scanDataset(
+  dir: string,
+  count: number,
+  page: number,
+  onProduct?: (product: { id: string; [key: string]: unknown }) => void
+): DatasetReport;
+
+export function recoverPublish(
+  staging: string
+): 'none' | 'cleaned' | 'rolled-back';
