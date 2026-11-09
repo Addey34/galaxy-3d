@@ -91,12 +91,12 @@ export function classifyTransportFailure(error: unknown): FailureKind {
  * `Retry-After` : secondes entières ou date HTTP ; `null` si absent, négatif ou illisible.
  *
  * DÉPENDANCE : un navigateur ne lit cet en-tête sur une réponse d'une AUTRE origine que si le
- * serveur le liste dans `Access-Control-Expose-Headers`. `services/galaxy-data/Caddyfile` n'y met
- * aujourd'hui que `Content-Range, Content-Length, Accept-Ranges` : pour une tuile du service de
- * données, `headers.get('retry-after')` rend `null` et la reprise retombe sur le retard exponentiel
- * (2 s, 4 s…), plus court que ce que le serveur demande. L'index et les manifestes (même origine)
- * sont lus correctement. Ajouter `Retry-After` à cette liste est un changement de la VM, hors de
- * cette mission.
+ * serveur le liste dans `Access-Control-Expose-Headers`. `services/galaxy-data/Caddyfile` l'expose
+ * (garde `src/config/galaxyDataCors.test.ts`), mais seulement une fois ce Caddyfile REDÉPLOYÉ sur la
+ * VM : tant que ce n'est pas fait, `headers.get('retry-after')` rend `null` pour une tuile du
+ * service de données et la reprise retombe sur le retard exponentiel avec le plancher de
+ * RATE_LIMIT_FLOOR_MS pour un 429/503. L'index et les manifestes (même origine) sont lus
+ * correctement.
  */
 export function parseRetryAfter(
   value: string | null | undefined,

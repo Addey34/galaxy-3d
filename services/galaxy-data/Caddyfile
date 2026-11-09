@@ -15,7 +15,10 @@
 	header @allowed Access-Control-Allow-Origin {re.origin.0}
 	# Un navigateur n'expose pas `Content-Range` à une page d'une autre origine sans cet en-tête, et le
 	# lecteur d'éphémérides l'EXIGE pour valider chaque fenêtre (`core/ephemerisWindow.ts`).
-	header @allowed Access-Control-Expose-Headers "Content-Range, Content-Length, Accept-Ranges"
+	# `Retry-After` : sans lui un navigateur ne le lit pas sur une réponse 429/503 d'une autre origine
+	# (`headers.get('retry-after')` rend `null`), et la reprise des bâtiments (`core/fetchRetry.ts`)
+	# retombe sur son retard par défaut au lieu du délai que le serveur demande.
+	header @allowed Access-Control-Expose-Headers "Content-Range, Content-Length, Accept-Ranges, Retry-After"
 	header Vary Origin
 
 	# Le manifeste change à chaque passage ; un champ publié ne change jamais (son cycle est
