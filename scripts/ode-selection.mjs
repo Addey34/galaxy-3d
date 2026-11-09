@@ -24,6 +24,49 @@ import {
 } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
+/**
+ * Le gel temporel : un jour déjà fini (l'ODE lit `maxcreationtime=AAAA-MM-JJ` comme la FIN de ce
+ * jour). Source unique, relue par le précontrôle et confrontée à l'index livré.
+ */
+export const FREEZE = {
+  mincreationtime: '1900-01-01',
+  maxcreationtime: '2026-09-29',
+};
+/** Produits par page tirée. */
+export const PAGE = 5000;
+/** Base de métadonnées de l'ODE → cible. */
+export const TARGET = {
+  Moon: 'moon',
+  Mars: 'mars',
+  Mercury: 'mercury',
+  Venus: 'venus',
+};
+
+/** Les jeux à empreintes, une ligne par CLÉ (la liste de l'ODE répète une clé par DataSetId). */
+export function datasetsFromIipt(raw) {
+  const sets = raw.ODEResults.IIPTSets.IIPTSet.filter(
+    (s) => s.ValidFootprints === 'T'
+  );
+  const keys = new Map();
+  for (const s of sets) {
+    const k = [s.ODEMetaDB, s.IHID, s.IID, s.PT].join('|');
+    if (!keys.has(k) && TARGET[s.ODEMetaDB])
+      keys.set(k, {
+        key: k,
+        db: s.ODEMetaDB,
+        target: TARGET[s.ODEMetaDB],
+        IHID: s.IHID,
+        IID: s.IID,
+        PT: s.PT,
+        mission: s.IHName,
+        instrument: s.IName,
+        minObs: s.MinObservationTime,
+        maxObs: s.MaxObservationTime,
+      });
+  }
+  return [...keys.values()];
+}
+
 /** Les corps qu'une collecte peut viser, dans l'ordre voulu (Mercure d'abord, plus petit). */
 export const COLLECTABLE_BODIES = ['mercury', 'mars'];
 

@@ -49,8 +49,11 @@ import { fileURLToPath } from 'node:url';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import {
   COLLECTABLE_BODIES,
+  FREEZE,
+  PAGE,
   acquireLock,
   assertMetadataComplete,
+  datasetsFromIipt,
   resolveCacheDir,
   selectDatasets,
 } from './ode-selection.mjs';
@@ -86,21 +89,9 @@ try {
   process.exit(2);
 }
 const ODE = 'https://oderest.rsl.wustl.edu/live2/';
-/**
- * LE GEL EST UN JOUR DEJA FINI. L'ODE lit `maxcreationtime=AAAA-MM-JJ` comme la FIN de ce jour
- * (sa reponse l'ecrit : `2026-09-30T23:59:59.999`), donc geler « aujourd'hui » ne gele rien : un
- * produit publie ce soir decalerait encore les pages. Mesure le 2026-09-30.
- */
-const FREEZE = { mincreationtime: '1900-01-01', maxcreationtime: '2026-09-29' };
-const PAGE = 5000;
+/** Le gel (`FREEZE`) et la taille de page (`PAGE`) viennent de `ode-selection.mjs`, source unique. */
 /** Un type n'est declare redondant que sur au moins autant d'images toutes deja gardees. */
 const MIN_REDUNDANT_SAMPLE = 20;
-const TARGET = {
-  Moon: 'moon',
-  Mars: 'mars',
-  Mercury: 'mercury',
-  Venus: 'venus',
-};
 
 const args = process.argv.slice(2);
 const flag = (n) => args.includes(n);
@@ -200,27 +191,7 @@ async function datasets() {
   const raw = await cached('iipt.json', async () =>
     JSON.parse(await request({ query: 'iipt', output: 'JSON' }))
   );
-  const sets = raw.ODEResults.IIPTSets.IIPTSet.filter(
-    (s) => s.ValidFootprints === 'T'
-  );
-  const keys = new Map();
-  for (const s of sets) {
-    const k = [s.ODEMetaDB, s.IHID, s.IID, s.PT].join('|');
-    if (!keys.has(k) && TARGET[s.ODEMetaDB])
-      keys.set(k, {
-        key: k,
-        db: s.ODEMetaDB,
-        target: TARGET[s.ODEMetaDB],
-        IHID: s.IHID,
-        IID: s.IID,
-        PT: s.PT,
-        mission: s.IHName,
-        instrument: s.IName,
-        minObs: s.MinObservationTime,
-        maxObs: s.MaxObservationTime,
-      });
-  }
-  return [...keys.values()];
+  return datasetsFromIipt(raw);
 }
 
 const q = (s) => ({ target: s.target, IHID: s.IHID, IID: s.IID, PT: s.PT });
