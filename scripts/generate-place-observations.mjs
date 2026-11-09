@@ -15,20 +15,29 @@
  *
  * Le rayon de chaque corps est lu dans sa fiche du registre (`facts.radiusKm`), jamais écrit ici.
  *
- * `--partial` accepte un tirage incomplet (développement : rien ne doit être livré ainsi, et
- * l'index le DIT) ; `--only <corps>`.
+ * PUBLICATION TRANSACTIONNELLE (GAL-A003-01, `place-observations-publish.mjs`) : rien n'est écrit
+ * dans `public/` avant que tous les corps traités soient vérifiés (pages du cache complètes, aucune
+ * page en trop, formations connues, bon morceau, pas de chute de plus de 1 % des produits livrés,
+ * sauf `--accept-drop`). Un échec laisse les données livrées et l'index INTACTS. `--partial`
+ * (développement) ne publie JAMAIS : le résultat reste dans `.cache/`. `--only <corps>` doit
+ * nommer un corps couvert (moon, mars, mercury, venus) et exige l'index livré à compléter.
  */
 import {
   existsSync,
   mkdirSync,
   readFileSync,
-  readdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import {
+  assertCoveredBody,
+  publishStaged,
+  recoverPublish,
+  scanDataset,
+  verifyBodyResult,
+} from './place-observations-publish.mjs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gunzipSync } from 'node:zlib';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CACHE = join(ROOT, '.cache', 'ode-footprints');
@@ -43,7 +52,40 @@ const BODY = { Moon: 'moon', Mars: 'mars', Mercury: 'mercury', Venus: 'venus' };
 
 const args = process.argv.slice(2);
 const PARTIAL = args.includes('--partial');
+const ACCEPT_DROP = args.includes('--accept-drop');
 const ONLY = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
+/**
+ * RIEN N'EST ÉCRIT DANS `public/` PENDANT LA GÉNÉRATION (GAL-A003-01). Les morceaux sont préparés
+ * ici, vérifiés, puis basculés d'un bloc par `publishStaged`, qui remet tout en état si une étape
+ * échoue. Un tirage incomplet (`--partial`) n'est JAMAIS publié : il reste dans `PARTIAL_DIR`.
+ */
+const STAGING = join(ROOT, '.cache', 'place-observations-staging');
+const PARTIAL_DIR = join(ROOT, '.cache', 'place-observations-partial');
+/**
+ * EN TOUT PREMIER, avant toute lecture du cache ODE et toute initialisation de Vite : une
+ * publication interrompue (processus tué) est reprise ou annulée d'après son journal, même si le
+ * cache est absent ou inaccessible. Supprimer le staging précédent sans cela perdrait la trace.
+ */
+try {
+  const recovered = recoverPublish(STAGING);
+  if (recovered !== 'none')
+    console.log(`publication précédente interrompue : ${recovered}`);
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
+try {
+  assertCoveredBody(ONLY);
+} catch (error) {
+  console.error(error.message);
+  process.exit(2);
+}
+if (ONLY && !existsSync(INDEX)) {
+  console.error(
+    `--only ${ONLY} : pas d'index livré à compléter (${INDEX}), lancer sans --only`
+  );
+  process.exit(2);
+}
 
 const { createServer } = await import('vite');
 const loader = await createServer({
@@ -189,16 +231,6 @@ function candidates(grid, rings, kind) {
   return out;
 }
 
-function* products(dir) {
-  const files = readdirSync(dir)
-    .filter((f) => f.endsWith('.ndjson.gz'))
-    .sort((a, b) => parseInt(a) - parseInt(b));
-  for (const f of files) {
-    const text = gunzipSync(readFileSync(join(dir, f))).toString();
-    for (const line of text.split('\n')) if (line) yield JSON.parse(line);
-  }
-}
-
 const bodyRadius = (body) => {
   const r = readJson(join(ROOT, 'src', 'registry', 'entities', `${body}.json`))
     .facts?.radiusKm?.value;
@@ -228,7 +260,16 @@ const summary = {
   bodies: {},
   complete: true,
 };
-mkdirSync(OUT, { recursive: true });
+rmSync(STAGING, { recursive: true, force: true });
+mkdirSync(STAGING, { recursive: true });
+const previousIndex = existsSync(INDEX) ? readJson(INDEX) : null;
+const published = [];
+/** Un refus est un échec net (code 1) : le temporaire part, le livré n'a jamais été touché. */
+function refuse(error) {
+  console.error(error.message);
+  rmSync(STAGING, { recursive: true, force: true });
+  process.exit(1);
+}
 
 for (const [db, body] of Object.entries(BODY)) {
   if (ONLY && ONLY !== body) continue;
@@ -248,26 +289,28 @@ for (const [db, body] of Object.entries(BODY)) {
   let seen = 0;
   let global = 0;
   let missingPages = 0;
+  let extraPages = 0;
+  const pageProblems = [];
   const t0 = Date.now();
   for (const key of keys) {
     const dir = join(CACHE, 'pages', safe(key));
-    const expected = Math.ceil(counts[key] / PAGE);
-    const have = existsSync(dir)
-      ? readdirSync(dir).filter((f) => f.endsWith('.gz')).length
-      : 0;
-    missingPages += expected - have;
-    if (!have) continue;
     const [, IHID, IID] = key.split('|');
     const ik = `${db}|${IHID}|${IID}`;
-    if (!instIndex.has(ik)) {
-      instIndex.set(ik, instruments.length);
-      instruments.push({ host: IHID, id: IID, ...names.get(ik) });
-    }
-    const inst = instIndex.get(ik);
-    const ids = new Set();
-    for (const p of products(dir)) {
-      if (ids.has(p.id)) continue;
-      ids.add(p.id);
+    let inst = -1;
+    /**
+     * LES PAGES ATTENDUES SONT VÉRIFIÉES PAR NOM (0, 5000, 10000… jusqu'au compte déclaré), pas par
+     * nombre de fichiers : une page remplacée par une autre garde le même total. `scanDataset`
+     * refuse aussi les pages mal nommées ou illisibles et exige autant de produits DISTINCTS que
+     * le compte déclaré du jeu.
+     */
+    const report = scanDataset(dir, counts[key], PAGE, (p) => {
+      if (inst < 0) {
+        if (!instIndex.has(ik)) {
+          instIndex.set(ik, instruments.length);
+          instruments.push({ host: IHID, id: IID, ...names.get(ik) });
+        }
+        inst = instIndex.get(ik);
+      }
       seen++;
       const cands = new Set();
       for (const [kind, rings] of Object.entries(p.shapes))
@@ -299,7 +342,10 @@ for (const [db, body] of Object.entries(BODY)) {
           if (t1 > e.last) e.last = t1;
         }
       }
-    }
+    });
+    missingPages += report.missing.length;
+    extraPages += report.extra.length + report.misnamed.length;
+    for (const p of report.problems) pageProblems.push(`${key} : ${p}`);
   }
   const observed = {};
   let withAny = 0;
@@ -331,8 +377,7 @@ for (const [db, body] of Object.entries(BODY)) {
    */
   const whole = Buffer.byteLength(JSON.stringify(observed));
   const shards = Math.max(1, Math.ceil(whole / SHARD_TARGET));
-  const dir = join(OUT, body);
-  rmSync(dir, { recursive: true, force: true });
+  const dir = join(STAGING, body);
   mkdirSync(dir, { recursive: true });
   let bytes = 0;
   for (let k = 0; k < shards; k++) {
@@ -343,6 +388,31 @@ for (const [db, body] of Object.entries(BODY)) {
     bytes += Buffer.byteLength(text);
     writeFileSync(join(dir, `${k}.json`), text);
   }
+  try {
+    verifyBodyResult(
+      body,
+      {
+        missingPages,
+        extraPages,
+        pageProblems,
+        products: seen,
+        observed: withAny,
+        formations: features.length,
+        shards,
+        observedIds: Object.keys(observed),
+        shardOf: (id) => Number(id) % shards,
+      },
+      {
+        previous: previousIndex?.bodies?.[body],
+        featureIds: features.map((f) => f.iauId),
+        partial: PARTIAL,
+        acceptDrop: ACCEPT_DROP,
+      }
+    );
+  } catch (error) {
+    refuse(error);
+  }
+  published.push({ body, shards });
   summary.bodies[body] = {
     formations: features.length,
     observed: withAny,
@@ -366,20 +436,41 @@ for (const [db, body] of Object.entries(BODY)) {
  * couvert », a juste titre pour un index faux. Les autres corps sont repris de l'index existant,
  * et la completude se DERIVE de tous : chaque corps couvert present, aucune page manquante.
  */
-if (ONLY && existsSync(INDEX)) {
-  const previous = readJson(INDEX);
-  for (const [body, entry] of Object.entries(previous.bodies ?? {}))
+if (ONLY && previousIndex) {
+  for (const [body, entry] of Object.entries(previousIndex.bodies ?? {}))
     if (!(body in summary.bodies)) summary.bodies[body] = entry;
 }
 summary.complete = Object.values(BODY).every(
   (body) => summary.bodies[body] && summary.bodies[body].missingPages === 0
 );
-if (!summary.complete && !PARTIAL) {
+const indexText = JSON.stringify(summary, null, 1) + '\n';
+if (PARTIAL) {
+  // Un tirage partiel est un état de développement : il ne touche JAMAIS `public/` ni l'index
+  // livré. `config/placeObservations.test.ts` refuse de toute façon un index incomplet.
+  rmSync(PARTIAL_DIR, { recursive: true, force: true });
+  mkdirSync(PARTIAL_DIR, { recursive: true });
+  writeFileSync(join(PARTIAL_DIR, 'index.json'), indexText);
+  console.log(
+    `--partial : rien n'est publié, résultat laissé dans ${STAGING} et ${PARTIAL_DIR}/index.json`
+  );
+} else if (!summary.complete) {
   console.error(
-    'Tirage incomplet : relancer `node scripts/pull-ode-footprints.mjs`, ou --partial.'
+    'Tirage incomplet : relancer `node scripts/pull-ode-footprints.mjs`. Rien n’est publié, les données livrées sont intactes.'
   );
   process.exit(1);
+} else {
+  try {
+    publishStaged({
+      staging: STAGING,
+      outRoot: OUT,
+      indexPath: INDEX,
+      indexText,
+      bodies: published,
+    });
+  } catch (error) {
+    refuse(error);
+  }
+  console.log(
+    `publié : ${published.map((b) => b.body).join(', ')} (index ${summary.complete ? 'complet' : 'incomplet'})`
+  );
 }
-// Ecrit MEME en `--partial`, avec `complete: false` : c'est `config/placeObservations.test.ts`
-// qui refuse de livrer un index incomplet, et une garde vaut mieux qu'une consigne.
-writeFileSync(INDEX, JSON.stringify(summary, null, 1) + '\n');
