@@ -10,6 +10,11 @@ export interface Observation {
 
 export function fileSeconds(lines: readonly string[]): Record<string, number>;
 
+export function isMeasurableJob(job: {
+  shard: number | null;
+  conclusion: string | null;
+}): boolean;
+
 export function cpuKey(model: string | undefined): string;
 
 export function cpuFactors(

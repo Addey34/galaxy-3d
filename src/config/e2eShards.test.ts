@@ -9,6 +9,7 @@ import {
 import {
   cpuFactors,
   fileSeconds,
+  isMeasurableJob,
   normalisedSeconds,
 } from '../../scripts/e2e-durations.mjs';
 import {
@@ -105,6 +106,19 @@ describe('e2e durations, read from CI logs', () => {
       'e2e/discovery.spec.ts': 150.5,
       'e2e/a.spec.ts': 0.85,
     });
+  });
+
+  it('ne lit que les jobs de shard réussis : un job rouge, annulé ou ignoré gonflerait les durées', () => {
+    expect(isMeasurableJob({ shard: 1, conclusion: 'success' })).toBe(true);
+    for (const conclusion of [
+      'failure',
+      'cancelled',
+      'skipped',
+      'timed_out',
+      null,
+    ])
+      expect(isMeasurableJob({ shard: 1, conclusion })).toBe(false);
+    expect(isMeasurableJob({ shard: null, conclusion: 'success' })).toBe(false);
   });
 
   it('fits one factor per CPU from files seen on two of them, against the reference', () => {
