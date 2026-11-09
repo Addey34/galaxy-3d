@@ -3,8 +3,8 @@
  *
  * Une panne passagère (coupure, 429, 503) ne doit pas condamner un fichier pour la session, et une
  * absence définitive (404) ou un contenu invalide ne doit jamais être redemandé. Une panne passagère
- * n'est JAMAIS promue définitive : le retard double jusqu'à 60 s puis reste là (une redemande par
- * minute et par fichier), avec un plancher de 8 s après un 429/503 sans `Retry-After` lisible et un
+ * n'est JAMAIS promue définitive : le retard double jusqu'à 60 s puis reste là (une redemande toutes les
+ * 45 à 60 s par fichier : l'étalement retire jusqu'à 25 % du plafond), avec un plancher de 8 s après un 429/503 sans `Retry-After` lisible et un
  * étalement par fichier contre les rafales. Le compte d'échecs appartient au FICHIER : il ne se
  * remet pas à zéro quand la caméra bouge ou que la couche est recréée, sinon la cadence de reprise
  * repartirait de 2 s à chaque retour.
@@ -144,7 +144,7 @@ export function recordFailure(
   const attempts = (previous?.attempts ?? 0) + 1;
   // Une panne passagère n'est JAMAIS promue définitive par le nombre d'essais : une coupure de
   // quelques minutes ne doit pas condamner des bâtiments pour la session. Le débit de redemande
-  // est borné par le plafond du retard (une par minute et par fichier).
+  // est borné par le plafond du retard (une redemande toutes les 45 à 60 s par fichier).
   if (kind === 'permanent')
     return { kind: 'permanent', attempts, retryAt: Infinity };
   return {

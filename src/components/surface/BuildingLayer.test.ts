@@ -302,13 +302,13 @@ describe('BuildingLayer', () => {
     expect(s.l.state.failed).toBe(0);
   });
 
-  it('au rythme réel, une panne longue redemande au plus une fois par minute et par tuile', async () => {
+  it('au rythme réel, une panne longue redemande une fois toutes les 45 à 60 s au plus par tuile', async () => {
     const s = scripted([http(503)]);
     for (let t = 0; t <= 600_000; t += 1000) {
       s.clock.t = t;
       await s.tick();
     }
-    // 10 minutes de panne : 8 s, 8 s, 8 s puis 12 à 16 s, 24 à 32 s, 45 à 60 s, puis une par minute.
+    // 10 minutes de panne : 8 s, 8 s, 8 s puis 12 à 16 s, 24 à 32 s, 45 à 60 s, puis une toutes les 45 à 60 s.
     expect(s.home()).toBeGreaterThanOrEqual(9);
     expect(s.home()).toBeLessThanOrEqual(16);
     expect(s.l.state.failed).toBe(0);

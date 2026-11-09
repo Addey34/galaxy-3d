@@ -210,7 +210,7 @@ describe('buildingsOverlay : pannes de l’index et des manifestes', () => {
     expect(s.count('manifest.json')).toBe(1);
   });
 
-  it('un manifeste en panne persistante n’est jamais abandonné mais redemandé au plus une fois par minute', async () => {
+  it('un manifeste en panne persistante n’est jamais abandonné mais redemandé au plus toutes les 45 à 60 s', async () => {
     const s = setup(async (url) => {
       if (url.endsWith('index.json')) return INDEX;
       throw new HttpStatusError(503);
