@@ -34,3 +34,7 @@ export function acquireLock(
   cacheDir: string,
   options?: { isAlive?: (pid: number) => boolean }
 ): () => void;
+
+export function freezeAction(cacheDir: string): 'present' | 'create';
+
+export function canWriteInto(dir: string): { ok: boolean; detail: string };

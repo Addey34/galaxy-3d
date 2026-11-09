@@ -16,21 +16,16 @@
  * vaut produits × octets par produit (2 000 par défaut, hypothèse prudente) × 1,25, et sera
  * recalée sur la première page réellement tirée.
  */
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  statfsSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, readFileSync, statfsSync } from 'node:fs';
 import { dirname, join, parse, relative, resolve, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   FREEZE,
   PAGE,
   assertMetadataComplete,
+  canWriteInto,
   datasetsFromIipt,
+  freezeAction,
   resolveCacheDir,
   selectDatasets,
 } from './ode-selection.mjs';
@@ -116,14 +111,21 @@ export function precheck({
     delivered === FREEZE.maxcreationtime,
     `script ${FREEZE.maxcreationtime}, index livré ${delivered}`
   );
-  add(
-    'freeze.json du cache',
-    freezeOnDisk === null ||
-      freezeOnDisk.maxcreationtime === FREEZE.maxcreationtime,
-    freezeOnDisk
-      ? `cache ${freezeOnDisk.maxcreationtime}`
-      : 'absent (sera écrit au premier lancement)'
-  );
+  let freezeDetail;
+  let freezeOk = true;
+  try {
+    const action = freezeAction(cacheDir);
+    freezeDetail =
+      action === 'present'
+        ? `cache ${freezeOnDisk?.maxcreationtime}`
+        : 'cache vierge : sera écrit au premier lancement';
+    if (action === 'present')
+      freezeOk = freezeOnDisk?.maxcreationtime === FREEZE.maxcreationtime;
+  } catch (error) {
+    freezeOk = false;
+    freezeDetail = error.message;
+  }
+  add('freeze.json du cache', freezeOk, freezeDetail);
 
   // 3. sélection, plan, exceptions de gel
   let plan = null;
@@ -170,15 +172,8 @@ export function precheck({
     !within(cacheDir, root),
     `${cacheDir} (hors du dépôt ${root})`
   );
-  try {
-    mkdirSync(cacheDir, { recursive: true });
-    const probe = join(cacheDir, '.precheck-write');
-    writeFileSync(probe, 'x');
-    rmSync(probe);
-    add('cache inscriptible', true, cacheDir);
-  } catch (error) {
-    add('cache inscriptible', false, error.message);
-  }
+  const cacheWrite = canWriteInto(cacheDir);
+  add('cache inscriptible', cacheWrite.ok, cacheWrite.detail);
   const cacheFree = freeBytes(cacheDir, statfs);
   add(
     'espace du cache',
@@ -189,6 +184,8 @@ export function precheck({
   else {
     const sameTree = within(backupDir, cacheDir) || within(cacheDir, backupDir);
     add('sauvegarde distincte du cache', !sameTree, backupDir);
+    const backupWrite = canWriteInto(backupDir);
+    add('sauvegarde inscriptible', backupWrite.ok, backupWrite.detail);
     add('sauvegarde hors du dépôt', !within(backupDir, root), `${backupDir}`);
     add(
       'sauvegarde sur un autre volume',

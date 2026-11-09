@@ -4,6 +4,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -14,6 +15,8 @@ import {
   COLLECTABLE_BODIES,
   acquireLock,
   assertMetadataComplete,
+  canWriteInto,
+  freezeAction,
   resolveCacheDir,
   selectDatasets,
   type OdeDataset,
@@ -268,6 +271,94 @@ describe('pull-ode-footprints.mjs : arguments refusés avant tout réseau', () =
       expect(existsSync(join(out, 'freeze.json'))).toBe(false);
     } finally {
       rmSync(out, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('freezeAction : freeze.json n’est jamais recréé dans un cache qui a des données', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'frz-'));
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it('cache vierge ou réduit à iipt.json : à créer ; freeze.json présent : présent', () => {
+    expect(freezeAction(dir)).toBe('create');
+    writeFileSync(join(dir, 'iipt.json'), '{}');
+    expect(freezeAction(dir)).toBe('create');
+    writeFileSync(join(dir, 'freeze.json'), '{}');
+    expect(freezeAction(dir)).toBe('present');
+  });
+  for (const trace of [
+    'counts.json',
+    'redundancy.json',
+    'unfrozen.json',
+    'unavailable.json',
+    'meta-only.json',
+    'pages',
+  ])
+    it(`sans freeze.json mais avec « ${trace} » : refusé`, () => {
+      if (trace === 'pages') mkdirSync(join(dir, 'pages'));
+      else writeFileSync(join(dir, trace), '{}');
+      expect(() => freezeAction(dir)).toThrow(
+        /freeze\.json manque.*rien n'est recréé/
+      );
+    });
+});
+
+describe('canWriteInto : essai réel, sans rien créer', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'cw-'));
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it('dossier existant : inscriptible, fichier d’essai retiré', () => {
+    expect(canWriteInto(dir).ok).toBe(true);
+    expect(readdirSync(dir)).toEqual([]);
+  });
+  it('dossier absent : jugé sur l’ancêtre, rien n’est créé', () => {
+    const r = canWriteInto(join(dir, 'x', 'y'));
+    expect(r.ok).toBe(true);
+    expect(r.detail).toMatch(/sera créé/);
+    expect(existsSync(join(dir, 'x'))).toBe(false);
+  });
+  it('un fichier à la place du dossier, ou un ancêtre fichier : refusé', () => {
+    writeFileSync(join(dir, 'f'), 'x');
+    expect(canWriteInto(join(dir, 'f')).ok).toBe(false);
+    expect(canWriteInto(join(dir, 'f', 'sous')).ok).toBe(false);
+  });
+});
+
+describe('pull-ode-footprints.mjs : cache existant sans freeze.json', () => {
+  it('échoue avant tout réseau et ne crée pas freeze.json', () => {
+    const cache = mkdtempSync(join(tmpdir(), 'pullfrz-'));
+    try {
+      writeFileSync(join(cache, 'counts.json'), '{}');
+      const r = spawnSync(
+        process.execPath,
+        [
+          'scripts/pull-ode-footprints.mjs',
+          '--body',
+          'mars',
+          '--cache-dir',
+          cache,
+        ],
+        {
+          cwd: process.cwd(),
+          encoding: 'utf8',
+          timeout: 20000,
+          env: { ...process.env, GALAXY_ODE_CACHE: '' },
+        }
+      );
+      expect(r.status).not.toBe(0);
+      expect(r.stderr).toMatch(
+        /freeze\.json manque dans un cache qui contient déjà counts\.json/
+      );
+      expect(existsSync(join(cache, 'freeze.json'))).toBe(false);
+      expect(existsSync(join(cache, 'collect.lock'))).toBe(false); // serrure libérée
+    } finally {
+      rmSync(cache, { recursive: true, force: true });
     }
   });
 });

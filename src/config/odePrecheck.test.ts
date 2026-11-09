@@ -1,4 +1,11 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -142,4 +149,59 @@ describe('précontrôle de collecte', () => {
       Math.ceil(12062 * 1000 * 1.25)
     );
   });
+  it('cache avec des métadonnées mais sans freeze.json : échec, rien n’est recréé', () => {
+    rmSync(join(cache, 'freeze.json'));
+    const r = run();
+    expect(failed(r)).toContain('freeze.json du cache');
+    expect(
+      r.checks.find((c) => c.name === 'freeze.json du cache')?.detail
+    ).toMatch(/freeze\.json manque dans un cache qui contient déjà/);
+    expect(existsSync(join(cache, 'freeze.json'))).toBe(false);
+  });
+  it('cache vierge (ou réduit à iipt.json) : freeze.json sera écrit, pas un échec', () => {
+    for (const f of [
+      'counts.json',
+      'redundancy.json',
+      'unfrozen.json',
+      'freeze.json',
+    ])
+      rmSync(join(cache, f));
+    const c = run().checks.find((x) => x.name === 'freeze.json du cache');
+    expect(c?.ok).toBe(true);
+    expect(c?.detail).toMatch(/vierge/);
+  });
+  it('sauvegarde non inscriptible : un fichier à la place du dossier, ou sous un fichier', () => {
+    const asFile = join(tmp, 'sauvegarde-fichier');
+    writeFileSync(asFile, 'je suis un fichier');
+    expect(failed(run({ backupDir: asFile }))).toContain(
+      'sauvegarde inscriptible'
+    );
+    expect(failed(run({ backupDir: join(asFile, 'sous') }))).toContain(
+      'sauvegarde inscriptible'
+    );
+  });
+  it('sauvegarde inscriptible : dossier existant (essai réel) ou à créer, sans rien créer', () => {
+    mkdirSync(backup);
+    const existing = run().checks.find(
+      (c) => c.name === 'sauvegarde inscriptible'
+    );
+    expect(existing?.ok).toBe(true);
+    expect(readdirSyncSafe(backup)).toEqual([]); // le fichier d'essai est retiré
+    const absent = join(tmp, 'a', 'b', 'c');
+    const c = run({ backupDir: absent }).checks.find(
+      (x) => x.name === 'sauvegarde inscriptible'
+    );
+    expect(c?.ok).toBe(true);
+    expect(c?.detail).toMatch(/sera créé/);
+    expect(existsSync(join(tmp, 'a'))).toBe(false);
+  });
+  it('le cache aussi est jugé sans être créé', () => {
+    const absent = join(tmp, 'nouveau-cache');
+    run({ cacheDir: absent });
+    expect(existsSync(absent)).toBe(false);
+  });
 });
+
+function readdirSyncSafe(dir: string): string[] {
+  return readdirSync(dir);
+}

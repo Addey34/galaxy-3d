@@ -54,6 +54,7 @@ import {
   acquireLock,
   assertMetadataComplete,
   datasetsFromIipt,
+  freezeAction,
   resolveCacheDir,
   selectDatasets,
 } from './ode-selection.mjs';
@@ -633,7 +634,9 @@ async function main() {
   const freezeOnDisk = existsSync(freezeFile)
     ? JSON.parse(readFileSync(freezeFile, 'utf8'))
     : null;
-  if (!freezeOnDisk) writeFileSync(freezeFile, JSON.stringify(FREEZE) + '\n');
+  // Jamais recréé dans un cache qui contient déjà une collecte (freezeAction lève sinon).
+  if (freezeAction(CACHE) === 'create')
+    writeFileSync(freezeFile, JSON.stringify(FREEZE) + '\n');
   // Les metadonnees sont celles de TOUS les jeux : la selection par corps vient APRES.
   const full = await datasets();
   let list = full;

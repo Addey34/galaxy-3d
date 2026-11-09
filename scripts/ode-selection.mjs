@@ -20,6 +20,8 @@ import {
   openSync,
   readFileSync,
   rmSync,
+  statSync,
+  writeFileSync,
   writeSync,
 } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
@@ -131,6 +133,64 @@ export function resolveCacheDir({ arg, env, root, requireExternal }) {
       `--cache-dir est dans un dépôt ou un worktree git (un .git existe plus haut) : ${dir}`
     );
   return dir;
+}
+
+/** Ce qui prouve qu'un cache contient déjà une collecte ou ses métadonnées (datées d'un gel). */
+const COLLECTION_TRACES = [
+  'counts.json',
+  'redundancy.json',
+  'unfrozen.json',
+  'unavailable.json',
+  'meta-only.json',
+  'pages',
+];
+
+/**
+ * `freeze.json` n'est JAMAIS recréé dans un cache qui contient déjà des données ou des
+ * métadonnées : le gel d'une collecte ne se devine pas, il se lit. Un cache vierge (ou réduit à
+ * `iipt.json`, qui ne dépend pas du gel) reçoit celui du script ; sinon l'absence est une erreur.
+ * Renvoie 'present', 'create' ou lève.
+ */
+export function freezeAction(cacheDir) {
+  if (existsSync(join(cacheDir, 'freeze.json'))) return 'present';
+  const traces = COLLECTION_TRACES.filter((n) => existsSync(join(cacheDir, n)));
+  if (traces.length)
+    throw new Error(
+      `freeze.json manque dans un cache qui contient déjà ${traces.join(', ')} : le gel de cette collecte est inconnu, rien n'est recréé. Restaurer freeze.json depuis la sauvegarde, ou repartir d'un cache vide.`
+    );
+  return 'create';
+}
+
+/**
+ * Vrai si l'on peut écrire dans `dir` : un dossier existant reçoit un fichier d'essai puis le
+ * retire ; un dossier absent est jugé sur son plus proche ancêtre existant (qui doit être un
+ * dossier inscriptible), SANS rien créer. Renvoie { ok, detail }.
+ */
+export function canWriteInto(dir) {
+  let target = dir;
+  let willCreate = false;
+  while (!existsSync(target)) {
+    const up = dirname(target);
+    if (up === target) return { ok: false, detail: `aucun ancêtre : ${dir}` };
+    target = up;
+    willCreate = true;
+  }
+  try {
+    if (!statSync(target).isDirectory())
+      return { ok: false, detail: `${target} n'est pas un dossier` };
+    const probe = join(target, `.ode-write-probe-${process.pid}`);
+    writeFileSync(probe, 'x');
+    rmSync(probe, { force: true });
+    return {
+      ok: true,
+      detail: willCreate ? `sera créé sous ${target}` : `inscriptible : ${dir}`,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      detail: `écriture refusée dans ${target} : ${error.code ?? error.message}`,
+    };
+  }
 }
 
 /**
