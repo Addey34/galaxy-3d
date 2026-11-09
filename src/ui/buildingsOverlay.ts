@@ -33,6 +33,7 @@ import {
   parseRetryAfter,
   recordFailure,
   retryAfterOf,
+  spreadOf,
   type FailureRecord,
 } from '@/core/fetchRetry';
 import { GALAXY_DATA_ORIGIN } from '@/core/galaxyData';
@@ -182,7 +183,13 @@ export function createBuildingsOverlay(
       },
       (kind, retryAfterMs) => {
         indexState = 'idle';
-        indexFailure = recordFailure(indexFailure, kind, now(), retryAfterMs);
+        indexFailure = recordFailure(
+          indexFailure,
+          kind,
+          now(),
+          retryAfterMs,
+          spreadOf('index')
+        );
       },
       'index'
     );
@@ -202,7 +209,13 @@ export function createBuildingsOverlay(
         manifests.delete(id);
         manifestFailures.set(
           id,
-          recordFailure(manifestFailures.get(id), kind, now(), retryAfterMs)
+          recordFailure(
+            manifestFailures.get(id),
+            kind,
+            now(),
+            retryAfterMs,
+            spreadOf(id)
+          )
         );
       },
       `manifeste « ${id} »`

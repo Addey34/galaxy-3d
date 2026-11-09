@@ -2,9 +2,12 @@
  * LA REPRISE APRÈS ÉCHEC D'UN FICHIER (GAL-A002) : pure, sans horloge ni réseau, testée.
  *
  * Une panne passagère (coupure, 429, 503) ne doit pas condamner un fichier pour la session, et une
- * absence définitive (404) ou un contenu invalide ne doit jamais être redemandé. Le budget de
- * tentatives appartient au FICHIER : il ne se remet pas à zéro quand la caméra bouge, sinon une
- * panne persistante serait réessayée sans fin.
+ * absence définitive (404) ou un contenu invalide ne doit jamais être redemandé. Une panne passagère
+ * n'est JAMAIS promue définitive : le retard double jusqu'à 60 s puis reste là (une redemande par
+ * minute et par fichier), avec un plancher de 8 s après un 429/503 sans `Retry-After` lisible et un
+ * étalement par fichier contre les rafales. Le compte d'échecs appartient au FICHIER : il ne se
+ * remet pas à zéro quand la caméra bouge ou que la couche est recréée, sinon la cadence de reprise
+ * repartirait de 2 s à chaque retour.
  *
  * Aucun minuteur : l'appelant compare `retryAt` à son horloge à chaque passage (la couche est déjà
  * appelée à l'image), donc rien à annuler à la destruction.
@@ -30,9 +33,17 @@ export class PermanentFetchError extends Error {
   }
 }
 
-export const MAX_ATTEMPTS = 5;
 export const BACKOFF_BASE_MS = 2000;
 export const BACKOFF_CAP_MS = 60_000;
+/**
+ * Plancher d'attente après un 429 ou un 503 SANS `Retry-After` lisible (cas de toute tuile du
+ * service de données tant que `Access-Control-Expose-Headers` ne l'expose pas) : le serveur dit
+ * « ralentis » sans dire de combien, 2 s serait une rafale. Même valeur que le premier retard des
+ * carreaux de surface (`core/tileRetry.ts`).
+ */
+export const RATE_LIMIT_FLOOR_MS = 8000;
+/** Part du retard exponentiel que l'étalement peut retirer (jamais ajouter : le plafond reste). */
+export const JITTER_SHARE = 0.25;
 /**
  * Borne NUMÉRIQUE d'un délai demandé par le serveur (un an), pas une règle de reprise : un délai
  * plus court est respecté tel quel, sans plafond d'une heure ni abandon. Elle ne sert qu'à garder
@@ -105,12 +116,18 @@ export function parseRetryAfter(
 /** Retard avant le prochain essai : 2 s, 4 s, 8 s… plafonné à 60 s ; un délai serveur plus long l'emporte. */
 export function nextRetryDelay(
   attempt: number,
-  retryAfterMs: number | null = null
+  retryAfterMs: number | null = null,
+  spread = 0
 ): number {
-  const backoff = Math.min(
-    BACKOFF_CAP_MS,
-    BACKOFF_BASE_MS * 2 ** Math.max(0, attempt - 1)
-  );
+  // `spread` (0 à 1, dérivé de la clé du fichier) retire jusqu'à JITTER_SHARE du retard : des
+  // fichiers tombés ensemble ne se redemandent pas tous à la même image. Le délai du serveur,
+  // lui, n'est jamais raccourci.
+  const share = 1 - JITTER_SHARE * Math.min(1, Math.max(0, spread || 0));
+  const backoff =
+    Math.min(
+      BACKOFF_CAP_MS,
+      BACKOFF_BASE_MS * 2 ** Math.min(20, Math.max(0, attempt - 1))
+    ) * share;
   // Jamais avant ce que le serveur demande, aussi loin que ce soit : `retryAt` est une échéance
   // comparée à l'horloge, pas un minuteur.
   return Math.max(backoff, sanitizeDelay(retryAfterMs) ?? 0);
@@ -121,15 +138,19 @@ export function recordFailure(
   previous: FailureRecord | undefined,
   kind: 'transient' | 'permanent',
   now: number,
-  retryAfterMs: number | null = null
+  retryAfterMs: number | null = null,
+  spread = 0
 ): FailureRecord {
   const attempts = (previous?.attempts ?? 0) + 1;
-  if (kind === 'permanent' || attempts >= MAX_ATTEMPTS)
+  // Une panne passagère n'est JAMAIS promue définitive par le nombre d'essais : une coupure de
+  // quelques minutes ne doit pas condamner des bâtiments pour la session. Le débit de redemande
+  // est borné par le plafond du retard (une par minute et par fichier).
+  if (kind === 'permanent')
     return { kind: 'permanent', attempts, retryAt: Infinity };
   return {
     kind: 'transient',
     attempts,
-    retryAt: now + nextRetryDelay(attempts, retryAfterMs),
+    retryAt: now + nextRetryDelay(attempts, retryAfterMs, spread),
   };
 }
 
@@ -164,7 +185,24 @@ export function mayRequest(
   return !record || (record.kind === 'transient' && now >= record.retryAt);
 }
 
-/** Le `Retry-After` d'une erreur HTTP, s'il y en a un. */
+/**
+ * L'attente minimale que demande une erreur HTTP : son `Retry-After` s'il est lisible, sinon
+ * RATE_LIMIT_FLOOR_MS pour un 429 ou un 503 (limitation de débit sans durée connue).
+ */
 export function retryAfterOf(error: unknown): number | null {
-  return error instanceof HttpStatusError ? error.retryAfterMs : null;
+  if (!(error instanceof HttpStatusError)) return null;
+  if (error.retryAfterMs !== null) return error.retryAfterMs;
+  return error.status === 429 || error.status === 503
+    ? RATE_LIMIT_FLOOR_MS
+    : null;
+}
+
+/** Nombre stable dans [0, 1) tiré d'une clé (FNV-1a) : l'étalement de la reprise, sans hasard. */
+export function spreadOf(key: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h / 0x1_0000_0000;
 }

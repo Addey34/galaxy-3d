@@ -237,7 +237,7 @@ describe('BuildingLayer', () => {
     ]);
     await s.tick();
     expect(s.l.state.retrying).toBe(1);
-    s.clock.t = 1999;
+    s.clock.t = 1499;
     await s.tick();
     expect(s.calls()).toBe(1);
     s.clock.t = 2000;
@@ -248,20 +248,20 @@ describe('BuildingLayer', () => {
     expect(s.l.state.failed).toBe(0);
   });
 
-  it('un 503 attend le retard exponentiel ; un 429 avec Retry-After plus long l’attend', async () => {
+  it('un 503 sans Retry-After lisible attend le plancher de 8 s ; un 429 avec Retry-After plus long l’attend', async () => {
     const s = scripted([
       http(503),
       http(429, 300_000),
       async () => tileBytes(),
     ]);
     await s.tick();
-    s.clock.t = 2000;
+    s.clock.t = 8000;
     await s.tick();
     expect(s.calls()).toBe(2);
-    s.clock.t = 2000 + 299_999;
+    s.clock.t = 8000 + 299_999;
     await s.tick();
     expect(s.calls()).toBe(2);
-    s.clock.t = 2000 + 300_000;
+    s.clock.t = 8000 + 300_000;
     await s.tick();
     expect(s.calls()).toBe(3);
     expect(s.l.state.loaded).toBe(1);
@@ -289,7 +289,7 @@ describe('BuildingLayer', () => {
     expect(s.calls()).toBe(1);
   });
 
-  it('une panne persistante s’arrête après 5 tentatives, même en bougeant la visée', async () => {
+  it('une panne persistante ne devient jamais définitive : une redemande par échéance, même en bougeant la visée', async () => {
     const s = scripted([http(503)]);
     for (let i = 0; i < 20; i++) {
       s.clock.t += 100_000;
@@ -297,29 +297,61 @@ describe('BuildingLayer', () => {
       await flush();
       await s.tick(); // et revient
     }
-    expect(s.home()).toBe(5);
-    expect(s.l.state.retrying).toBe(0);
+    expect(s.home()).toBe(20);
+    expect(s.l.state.retrying).toBeGreaterThanOrEqual(1);
+    expect(s.l.state.failed).toBe(0);
   });
 
-  it('le budget survit à la couche : détruite après épuisement, une nouvelle ne redemande rien', async () => {
+  it('au rythme réel, une panne longue redemande au plus une fois par minute et par tuile', async () => {
+    const s = scripted([http(503)]);
+    for (let t = 0; t <= 600_000; t += 1000) {
+      s.clock.t = t;
+      await s.tick();
+    }
+    // 10 minutes de panne : 8 s, 8 s, 8 s puis 12 à 16 s, 24 à 32 s, 45 à 60 s, puis une par minute.
+    expect(s.home()).toBeGreaterThanOrEqual(9);
+    expect(s.home()).toBeLessThanOrEqual(16);
+    expect(s.l.state.failed).toBe(0);
+  });
+
+  it('un 429 sans Retry-After lisible n’est pas redemandé avant 8 s', async () => {
+    const s = scripted([http(429), async () => tileBytes()]);
+    await s.tick();
+    s.clock.t = 7999;
+    await s.tick();
+    expect(s.calls()).toBe(1);
+    s.clock.t = 8000;
+    await s.tick();
+    expect(s.calls()).toBe(2);
+  });
+
+  it('la panne persiste au-delà de la couche : une couche neuve attend l’échéance puis récupère', async () => {
     const store = new Map<string, FailureRecord>();
     const first = scripted([http(503)], { failures: store });
     for (let i = 0; i < 10; i++) {
       first.clock.t += 100_000;
       await first.tick();
     }
-    expect(first.home()).toBe(5);
-    expect(first.l.state.failed).toBe(1);
+    expect(first.home()).toBe(10);
+    expect(first.l.state.failed).toBe(0);
+    expect(first.l.state.retrying).toBe(1);
     first.l.dispose();
-    // « suspend → reprise » : une couche neuve sur le même magasin et le même jeu.
+    // « suspend → reprise » : une couche neuve sur le même magasin et le même jeu. Avant
+    // l'échéance, rien ; après, la tuile est redemandée et récupérée.
     const second = scripted([async () => tileBytes()], { failures: store });
-    second.clock.t = 1e9;
-    for (let i = 0; i < 5; i++) await second.tick();
+    second.clock.t = first.clock.t; // le retard n'est pas écoulé : retryAt vient de l'horloge de la première
+    const retryAt = [...store.values()][0]!.retryAt;
+    second.clock.t = retryAt - 1;
+    await second.tick();
     expect(second.home()).toBe(0);
-    expect(second.l.state.failed).toBe(1);
+    second.clock.t = retryAt;
+    await second.tick();
+    expect(second.home()).toBe(1);
+    expect(second.l.state.loaded).toBe(1);
+    expect(store.size).toBe(0);
   });
 
-  it('le budget survit aussi à mi-chemin : 2 échecs puis une couche neuve = 3 essais de plus, pas 5', async () => {
+  it('le compte d’échecs survit à la couche : il continue de croître, sans jamais condamner', async () => {
     const store = new Map<string, FailureRecord>();
     const first = scripted([http(503)], { failures: store });
     for (let i = 0; i < 2; i++) {
@@ -334,7 +366,11 @@ describe('BuildingLayer', () => {
       second.clock.t += 100_000;
       await second.tick();
     }
-    expect(second.home()).toBe(3);
+    expect(second.home()).toBe(10);
+    expect([...store.values()][0]).toMatchObject({
+      kind: 'transient',
+      attempts: 12,
+    });
   });
 
   it('le jeu fait partie de la clé : un autre jeu a son propre budget', async () => {

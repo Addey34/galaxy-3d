@@ -3,13 +3,15 @@ import { describe, expect, it } from 'vitest';
 import {
   BACKOFF_CAP_MS,
   HttpStatusError,
-  MAX_ATTEMPTS,
   MAX_SERVER_DELAY_MS,
   MAX_TRACKED_FAILURES,
   PermanentFetchError,
   classifyTransportFailure,
   mayRequest,
   nextRetryDelay,
+  retryAfterOf,
+  RATE_LIMIT_FLOOR_MS,
+  spreadOf,
   parseRetryAfter,
   recordFailure,
   rememberFailure,
@@ -107,21 +109,55 @@ describe('nextRetryDelay', () => {
 });
 
 describe('recordFailure / mayRequest', () => {
-  it('passager : retard exponentiel, puis permanent à l’épuisement des essais', () => {
+  it('passager : jamais promu définitif par le nombre d’essais, retard plafonné', () => {
     let rec: FailureRecord | undefined;
-    const kinds: string[] = [];
-    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    for (let i = 0; i < 100; i++) {
       rec = recordFailure(rec, 'transient', 1000);
-      kinds.push(rec.kind);
+      expect(rec.kind).toBe('transient');
     }
-    expect(kinds).toEqual([
-      'transient',
-      'transient',
-      'transient',
-      'transient',
-      'permanent',
-    ]);
-    expect(mayRequest(rec, Number.MAX_SAFE_INTEGER)).toBe(false);
+    expect(rec?.attempts).toBe(100);
+    expect(rec?.retryAt).toBe(1000 + BACKOFF_CAP_MS);
+    expect(mayRequest(rec, 1000 + BACKOFF_CAP_MS)).toBe(true);
+  });
+  it('l’étalement retire jusqu’à 25 % du retard exponentiel, jamais du délai du serveur', () => {
+    expect(nextRetryDelay(3, null, 0)).toBe(8000);
+    expect(nextRetryDelay(3, null, 1)).toBe(6000);
+    expect(nextRetryDelay(20, null, 1)).toBe(BACKOFF_CAP_MS * 0.75);
+    expect(nextRetryDelay(1, 300_000, 1)).toBe(300_000);
+    expect(nextRetryDelay(3, null, Number.NaN)).toBe(8000);
+  });
+  it('l’étalement ne raccourcit jamais un délai imposé par le serveur', () => {
+    // Pour toute tentative, tout étalement et tout délai serveur lisible, l'attente est au moins
+    // celle que le serveur demande.
+    for (const server of [0, 1000, 5000, 8000, 30_000, 120_000, 3_600_000])
+      for (let attempt = 1; attempt <= 12; attempt++)
+        for (let k = 0; k <= 10; k++)
+          expect(
+            nextRetryDelay(attempt, server, k / 10)
+          ).toBeGreaterThanOrEqual(server);
+    // Et l'enregistrement le porte tel quel : l'échéance n'est pas avant `Retry-After`.
+    for (let k = 0; k <= 10; k++)
+      expect(
+        recordFailure(undefined, 'transient', 500, 45_000, k / 10).retryAt
+      ).toBeGreaterThanOrEqual(500 + 45_000);
+  });
+  it('spreadOf : stable, dans [0, 1), différent d’une clé à l’autre', () => {
+    expect(spreadOf('a/1/2')).toBe(spreadOf('a/1/2'));
+    const values = new Set<number>();
+    for (let i = 0; i < 50; i++) {
+      const v = spreadOf(`jeu/${i}/7`);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(1);
+      values.add(v);
+    }
+    expect(values.size).toBeGreaterThan(40);
+  });
+  it('retryAfterOf : 429 et 503 sans en-tête lisible attendent le plancher, un 500 non', () => {
+    expect(retryAfterOf(new HttpStatusError(429))).toBe(RATE_LIMIT_FLOOR_MS);
+    expect(retryAfterOf(new HttpStatusError(503))).toBe(RATE_LIMIT_FLOOR_MS);
+    expect(retryAfterOf(new HttpStatusError(500))).toBeNull();
+    expect(retryAfterOf(new HttpStatusError(503, 120_000))).toBe(120_000);
+    expect(retryAfterOf(new TypeError('x'))).toBeNull();
   });
   it('rien avant le retard, redemandable après', () => {
     const rec = recordFailure(undefined, 'transient', 1000);

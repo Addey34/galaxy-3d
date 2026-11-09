@@ -39,6 +39,7 @@ import {
   recordFailure,
   rememberFailure,
   retryAfterOf,
+  spreadOf,
   type FailureRecord,
 } from '@/core/fetchRetry';
 import { geographicToLocalDirection } from '@/core/frames';
@@ -82,7 +83,7 @@ export interface BuildingLayerState {
   loaded: number;
   /** Tuiles en vol. */
   pending: number;
-  /** Tuiles définitivement perdues (absentes, invalides, ou essais épuisés). */
+  /** Tuiles définitivement perdues (absentes ou invalides). */
   failed: number;
   /** Tuiles en échec passager, qui seront redemandées après leur retard. */
   retrying: number;
@@ -324,7 +325,13 @@ export class BuildingLayer {
     rememberFailure(
       this._failures,
       fk,
-      recordFailure(this._failures.get(fk), kind, this._now(), retryAfterMs)
+      recordFailure(
+        this._failures.get(fk),
+        kind,
+        this._now(),
+        retryAfterMs,
+        spreadOf(fk)
+      )
     );
     this._onChange();
   }

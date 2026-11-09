@@ -136,10 +136,10 @@ describe('buildingsOverlay : pannes de l’index et des manifestes', () => {
       throw new HttpStatusError(404);
     });
     await s.tick();
-    s.clock.t = 1999;
+    s.clock.t = 7999;
     for (let i = 0; i < 50; i++) await s.tick();
     expect(s.count('index.json')).toBe(1);
-    s.clock.t = 2000;
+    s.clock.t = 8000;
     await s.tick();
     for (let i = 0; i < 50; i++) await s.tick();
     expect(s.count('index.json')).toBe(2);
@@ -176,10 +176,10 @@ describe('buildingsOverlay : pannes de l’index et des manifestes', () => {
     await s.tick();
     await s.tick();
     expect(s.count('manifest.json')).toBe(1);
-    s.clock.t = 1999;
+    s.clock.t = 7999;
     for (let i = 0; i < 50; i++) await s.tick();
     expect(s.count('manifest.json')).toBe(1);
-    s.clock.t = 2000;
+    s.clock.t = 8000;
     await s.tick();
     for (let i = 0; i < 50; i++) await s.tick();
     expect(s.count('manifest.json')).toBe(2);
@@ -210,18 +210,19 @@ describe('buildingsOverlay : pannes de l’index et des manifestes', () => {
     expect(s.count('manifest.json')).toBe(1);
   });
 
-  it('un manifeste en panne persistante s’arrête après 5 essais', async () => {
+  it('un manifeste en panne persistante n’est jamais abandonné mais redemandé au plus une fois par minute', async () => {
     const s = setup(async (url) => {
       if (url.endsWith('index.json')) return INDEX;
       throw new HttpStatusError(503);
     });
     await s.tick();
-    for (let i = 0; i < 30; i++) {
-      s.clock.t += 100_000;
-      await s.tick();
+    // Dix minutes de panne, une image par seconde.
+    for (let i = 0; i < 600; i++) {
+      s.clock.t += 1000;
       await s.tick();
     }
-    expect(s.count('manifest.json')).toBe(5);
+    expect(s.count('manifest.json')).toBeGreaterThanOrEqual(9);
+    expect(s.count('manifest.json')).toBeLessThanOrEqual(16);
   });
 
   it('un JSON mal formé servi en 200 est définitif : une seule requête', async () => {
@@ -274,7 +275,7 @@ describe('buildingsOverlay : pannes de l’index et des manifestes', () => {
       await flush();
     };
     await tick();
-    clock.t = 1999;
+    clock.t = 1499;
     for (let i = 0; i < 20; i++) await tick();
     const indexCalls = (): number =>
       fetchMock.mock.calls.filter((c) =>
@@ -287,7 +288,7 @@ describe('buildingsOverlay : pannes de l’index et des manifestes', () => {
     expect(indexCalls()).toBe(2);
   });
 
-  it('suspend puis reprise : les tuiles épuisées ne retrouvent pas leurs cinq essais', async () => {
+  it('suspend puis reprise : le compte d’échecs des tuiles survit, aucune rafale au retour', async () => {
     const tileCalls = new Map<string, number>();
     vi.stubGlobal(
       'fetch',
@@ -306,14 +307,19 @@ describe('buildingsOverlay : pannes de l’index et des manifestes', () => {
       await s.tick();
     }
     expect(tileCalls.size).toBeGreaterThan(0);
-    expect([...tileCalls.values()].every((n) => n === 5)).toBe(true);
+    const before = new Map(tileCalls);
+    expect([...before.values()].every((n) => n === 12)).toBe(true);
     // Sortie de la zone ou caméra remontée : la couche est détruite, puis recréée.
     s.overlay.suspend();
     for (let i = 0; i < 12; i++) {
       s.clock.t += 100_000;
       await s.tick();
     }
-    expect([...tileCalls.values()].every((n) => n === 5)).toBe(true);
+    // Chaque tuile n'est redemandée qu'une fois par échéance, couche détruite ou non : 12 pas
+    // de 100 s de plus, au plus 12 requêtes de plus par tuile (jamais une rafale à la reprise).
+    expect(
+      [...tileCalls].every(([u, n]) => n - (before.get(u) ?? 0) <= 12)
+    ).toBe(true);
     s.overlay.suspend();
   });
 });
