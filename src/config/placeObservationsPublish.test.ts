@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { gzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -555,4 +556,93 @@ describe('interruption brutale : SIGKILL réel d’un sous-processus, récupéra
     expect(snapshot(outRoot)).toEqual(liveBefore);
     expect(existsSync(`${staging}.backup`)).toBe(true);
   });
+});
+
+describe('le VRAI générateur relancé après une publication tuée, sans cache ODE ni Vite', () => {
+  it('récupère les fichiers publiés et l’index octet pour octet avant toute lecture du cache', () => {
+    // Une racine de projet jetable : le générateur en déduit ses chemins de son propre dossier.
+    const root = join(work, 'projet');
+    mkdirSync(join(root, 'scripts'), { recursive: true });
+    for (const f of [
+      'generate-place-observations.mjs',
+      'place-observations-publish.mjs',
+    ])
+      cpSync(join(process.cwd(), 'scripts', f), join(root, 'scripts', f));
+    writeFileSync(join(root, 'package.json'), '{"type":"module"}');
+    const liveRoot = join(root, 'public', 'assets', 'place-observations');
+    const idx = join(root, 'src', 'config', 'placeObservationIndex.json');
+    const stg = join(root, '.cache', 'place-observations-staging');
+    // l'état livré
+    write(
+      join(liveRoot, 'mars', '0.json'),
+      '{"observed":{"1":[]},"v":"livre"}'
+    );
+    write(
+      join(liveRoot, 'mars', '1.json'),
+      '{"observed":{"2":[]},"v":"livre"}'
+    );
+    write(idx, '{"v":"index-livre"}\n');
+    // un staging préparé, puis une publication tuée APRÈS le renommage des fichiers publiés
+    for (let k = 0; k < 3; k++)
+      write(
+        join(stg, 'mars', `${k}.json`),
+        `{"observed":{},"v":"nouveau-${k}"}`
+      );
+    const before = snapshot(root);
+    const code = `
+      import { publishStaged } from ${JSON.stringify(
+        pathToFileURL(join(root, 'scripts', 'place-observations-publish.mjs'))
+          .href
+      )};
+      const a = JSON.parse(process.env.ARGS);
+      publishStaged({ ...a, hooks: { afterStep: (l) => {
+        if (l === 'mars:nouveau-posé') process.kill(process.pid, 'SIGKILL');
+      } } });
+    `;
+    const killed = spawnSync(
+      process.execPath,
+      ['--input-type=module', '-e', code],
+      {
+        env: {
+          ...process.env,
+          ARGS: JSON.stringify({
+            staging: stg,
+            outRoot: liveRoot,
+            indexPath: idx,
+            indexText: '{"v":"index-nouveau"}\n',
+            bodies: [{ body: 'mars', shards: 3 }],
+          }),
+        },
+        encoding: 'utf8',
+      }
+    );
+    expect(killed.status).not.toBe(0);
+    // l'état publié est bien à moitié basculé : 3 morceaux nouveaux, ancien index
+    expect(readdirSync(join(liveRoot, 'mars'))).toHaveLength(3);
+    expect(snapshot(root)).not.toEqual(before);
+    expect(existsSync(`${stg}.journal.json`)).toBe(true);
+
+    // le redémarrage du générateur : AUCUN cache ODE (.cache/ode-footprints absent), pas de vite
+    const run = spawnSync(
+      process.execPath,
+      [join(root, 'scripts', 'generate-place-observations.mjs')],
+      { cwd: root, encoding: 'utf8', timeout: 60000 }
+    );
+    expect(run.stdout).toContain(
+      'publication précédente interrompue : rolled-back'
+    );
+    expect(run.status).not.toBe(0); // le cache manque : la génération elle-même échoue
+    // mais les fichiers publiés et l'index sont ceux d'avant, octet pour octet
+    const after = snapshot(root);
+    for (const key of Object.keys(before))
+      if (key.includes('place-observations-staging')) continue;
+      else expect(after[key]).toBe(before[key]);
+    expect(readFileSync(idx, 'utf8')).toBe('{"v":"index-livre"}\n');
+    expect(readdirSync(join(liveRoot, 'mars')).sort()).toEqual([
+      '0.json',
+      '1.json',
+    ]);
+    expect(existsSync(`${stg}.journal.json`)).toBe(false);
+    expect(existsSync(`${stg}.backup`)).toBe(false);
+  }, 60000);
 });

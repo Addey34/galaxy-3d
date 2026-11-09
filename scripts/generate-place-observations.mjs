@@ -61,6 +61,19 @@ const ONLY = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
  */
 const STAGING = join(ROOT, '.cache', 'place-observations-staging');
 const PARTIAL_DIR = join(ROOT, '.cache', 'place-observations-partial');
+/**
+ * EN TOUT PREMIER, avant toute lecture du cache ODE et toute initialisation de Vite : une
+ * publication interrompue (processus tué) est reprise ou annulée d'après son journal, même si le
+ * cache est absent ou inaccessible. Supprimer le staging précédent sans cela perdrait la trace.
+ */
+try {
+  const recovered = recoverPublish(STAGING);
+  if (recovered !== 'none')
+    console.log(`publication précédente interrompue : ${recovered}`);
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
 try {
   assertCoveredBody(ONLY);
 } catch (error) {
@@ -247,18 +260,6 @@ const summary = {
   bodies: {},
   complete: true,
 };
-/**
- * AVANT de toucher au staging : une publication interrompue (processus tué) est reprise ou
- * annulée d'après son journal. Supprimer le staging précédent sans cela perdrait la trace.
- */
-try {
-  const recovered = recoverPublish(STAGING);
-  if (recovered !== 'none')
-    console.log(`publication précédente interrompue : ${recovered}`);
-} catch (error) {
-  console.error(error.message);
-  process.exit(1);
-}
 rmSync(STAGING, { recursive: true, force: true });
 mkdirSync(STAGING, { recursive: true });
 const previousIndex = existsSync(INDEX) ? readJson(INDEX) : null;
