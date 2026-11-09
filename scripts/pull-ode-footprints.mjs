@@ -30,7 +30,10 @@
  * Reprise : chaque page est un fichier, ecrit seulement quand elle est complete. Relancer
  * reprend ou l'on s'est arrete.
  *
- * `--plan` (compte et redondance seulement, rien n'est tire), `--only <IHID>`, `--concurrency <n>`
+ * `--body <mercury|mars>` (OBLIGATOIRE pour tirer : selection stricte par CIBLE ; `--only` filtre par
+ * mission et MESSENGER couvre aussi Venus), `--cache-dir <chemin absolu hors depot>` (ou
+ * GALAXY_ODE_CACHE, obligatoire avec --body), `--plan` (compte et redondance seulement, rien n'est
+ * tire), `--only <IHID>` (intersection avec --body), `--concurrency <n>`
  * (2 par defaut, avec un espacement de 3 s entre departs : a 3 et sans espacement, l'ODE a
  * commence a rendre des 403).
  */
@@ -44,9 +47,44 @@ import {
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync, gzipSync } from 'node:zlib';
+import {
+  COLLECTABLE_BODIES,
+  acquireLock,
+  assertMetadataComplete,
+  resolveCacheDir,
+  selectDatasets,
+} from './ode-selection.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const CACHE = join(ROOT, '.cache', 'ode-footprints');
+/**
+ * `--cache-dir <chemin absolu>` (ou GALAXY_ODE_CACHE) : le cache vit HORS de tout dépôt et de tout
+ * worktree. Une collecte par corps l'exige ; sans `--body`, l'ancien emplacement reste permis
+ * (`--plan`, lecture). Voir `ode-selection.mjs`.
+ */
+const argv = process.argv.slice(2);
+const argValue = (name) =>
+  argv.includes(name) ? argv[argv.indexOf(name) + 1] : null;
+const BODY = argValue('--body');
+let CACHE;
+try {
+  CACHE = resolveCacheDir({
+    arg: argValue('--cache-dir'),
+    env: process.env.GALAXY_ODE_CACHE ?? null,
+    root: ROOT,
+    requireExternal: BODY !== null || !argv.includes('--plan'),
+  });
+  if (BODY !== null && !COLLECTABLE_BODIES.includes(BODY))
+    throw new Error(
+      `--body ${BODY} : corps inconnu (${COLLECTABLE_BODIES.join(', ')})`
+    );
+  if (BODY === null && !argv.includes('--plan'))
+    throw new Error(
+      `une collecte exige --body (${COLLECTABLE_BODIES.join(' | ')}) ; --plan seul ne tire rien`
+    );
+} catch (error) {
+  console.error(error.message);
+  process.exit(2);
+}
 const ODE = 'https://oderest.rsl.wustl.edu/live2/';
 /**
  * LE GEL EST UN JOUR DEJA FINI. L'ODE lit `maxcreationtime=AAAA-MM-JJ` comme la FIN de ce jour
@@ -615,17 +653,36 @@ const safe = (k) => k.replace(/[^A-Za-z0-9_.-]+/g, '_');
 
 async function main() {
   mkdirSync(CACHE, { recursive: true });
+  // Un seul collecteur par cache : deux processus se réécriraient `unavailable.json`.
+  const release = acquireLock(CACHE);
+  process.on('exit', release);
   // Le gel est ECRIT a cote des pages : le croisement le relit pour le publier, sans le recopier.
-  writeFileSync(join(CACHE, 'freeze.json'), JSON.stringify(FREEZE) + '\n');
-  let list = await datasets();
-  const n = await counts(list);
+  // S'il existe deja avec une AUTRE valeur, on s'arrete (verifie plus bas) au lieu de l'ecraser.
+  const freezeFile = join(CACHE, 'freeze.json');
+  const freezeOnDisk = existsSync(freezeFile)
+    ? JSON.parse(readFileSync(freezeFile, 'utf8'))
+    : null;
+  if (!freezeOnDisk) writeFileSync(freezeFile, JSON.stringify(FREEZE) + '\n');
+  // Les metadonnees sont celles de TOUS les jeux : la selection par corps vient APRES.
+  const full = await datasets();
+  let list = full;
+  const n = await counts(full);
   const uf = join(CACHE, 'unfrozen.json');
-  UNFROZEN = existsSync(uf) ? JSON.parse(readFileSync(uf, 'utf8')) : {};
+  UNFROZEN = existsSync(uf) ? JSON.parse(readFileSync(uf, 'utf8')) : null;
+  const red = await redundancy(full, n);
+  assertMetadataComplete({
+    list: full,
+    counts: n,
+    redundancy: red,
+    unfrozen: UNFROZEN,
+    freezeOnDisk,
+    freeze: FREEZE,
+  });
   console.log(
     `${Object.keys(UNFROZEN).length} jeux NON geles (produits sans date de creation)`
   );
-  const red = await redundancy(list, n);
-  if (ONLY) list = list.filter((s) => s.IHID === ONLY);
+  if (BODY) list = selectDatasets(full, { body: BODY, only: ONLY });
+  else if (ONLY) list = list.filter((s) => s.IHID === ONLY);
   const todo = list.filter(
     (s) => red[s.key]?.verdict !== 'redundant' && n[s.key] > 0
   );
