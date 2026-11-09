@@ -96,8 +96,8 @@
    "bytes": 4322
   },
   "io": {
-   "count": 260,
-   "bytes": 48183
+   "count": 261,
+   "bytes": 48358
   },
   "itokawa": {
    "count": 17,
@@ -169,7 +169,7 @@
   },
   "titan": {
    "count": 304,
-   "bytes": 60695
+   "bytes": 60696
   },
   "titania": {
    "count": 18,
