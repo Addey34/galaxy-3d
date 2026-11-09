@@ -686,11 +686,56 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   // Zoom par ALTITUDE (2026-11-08) : un cran multiplie l'altitude (0,95^(1,5 × |delta| / 100)), pas
   // la distance. Mesuré depuis l'arrivée à 9 rayons : -3300 d'un coup donne 1,63 rayon, puis -800
   // 1,34. Ici -3000 (1,79 rayon, dans le calme) puis -250 retrouvent les 1,66 rayon d'avant.
-  await zoomInSettling(page, -250, -3000);
   const badge = page.locator('#surface-imagery');
+  // Premier arrêt, puis l'attente de CE QUE LE SCÉNARIO VÉRIFIE, pas du calme de la scène : la
+  // caméra est entrée dans la zone du fond de loin, une tuile du jour est demandée ET peinte
+  // (`data-painted`, le bandeau ne compte que le peint), et les textures générales sont posées.
+  // L'attente générale du calme exigeait les 22 carreaux, six téléchargements à la fois, donc
+  // plus de la moitié des 120 s sur un EPYC 7763.
+  await zoomIn(page, -3000);
+  await expect
+    .poll(
+      async () => {
+        const text = (await page.locator('#surface-probe').textContent()) ?? '';
+        const match = /\(([\d.]+) R\)/.exec(text);
+        const radii = match ? Number(match[1]) : null;
+        return radii !== null && radii > 1.5 && radii < 1.8;
+      },
+      {
+        timeout: 60_000,
+        message: 'la caméra n’est pas dans la zone du fond de loin',
+      }
+    )
+    .toBe(true);
+  await expect
+    .poll(() => seen.viirs.length, { timeout: 60_000 })
+    .toBeGreaterThan(0);
   await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
     timeout: 60_000,
   });
+  await expect
+    .poll(async () => Number((await badge.getAttribute('data-painted')) ?? 0), {
+      timeout: 60_000,
+      message: 'aucune tuile du jour peinte',
+    })
+    .toBeGreaterThan(0);
+  await expect(page.locator('canvas').first()).toHaveAttribute(
+    'data-textures-loading',
+    '0',
+    { timeout: 60_000 }
+  );
+  await zoomIn(page, -250);
+  await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
+    timeout: 60_000,
+  });
+  // Au rayon final aussi, le fond du jour est PEINT, pas seulement nommé : le bandeau publie le
+  // jour dès que son état existe.
+  await expect
+    .poll(async () => Number((await badge.getAttribute('data-painted')) ?? 0), {
+      timeout: 60_000,
+      message: 'aucune tuile du jour peinte au rayon final',
+    })
+    .toBeGreaterThan(0);
   expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
   expect(eox, 'Sentinel-2 demandé de trop loin').toEqual([]);
   expect(heavyTextures, 'le palier medium n’est pas appliqué').toEqual([]);
