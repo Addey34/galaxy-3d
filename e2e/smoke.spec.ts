@@ -142,15 +142,23 @@ test('selects a celestial body by clicking its 3D mesh', async ({ page }) => {
   const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
 
-  // Les labels éducatifs sont volontairement cliquables et peuvent recouvrir le point
-  // central. Force le hit-test du canvas pour tester exclusivement le picker 3D.
-  await canvas.click({
-    force: true,
-    position: {
-      x: box!.width / 2,
-      y: box!.height / 2,
-    },
+  // Les labels éducatifs sont volontairement cliquables et recouvrent parfois le point central :
+  // selon la date, celui de Mercury (décalé par le placement anti-collision) tombe sur le Soleil,
+  // et le clic ouvre Mercury. `force: true` ne change rien à cela : il saute les contrôles
+  // d'actionnabilité de Playwright, mais l'événement va toujours à l'élément le plus haut du
+  // point. Pour tester exclusivement le picker 3D par un vrai clic, les labels sont rendus
+  // transparents aux événements dans CE test, puis on vérifie que le canvas reçoit le point.
+  await page.addStyleTag({
+    content:
+      '.explo-label, .explo-label * { pointer-events: none !important; }',
   });
+  const centre = { x: box!.width / 2, y: box!.height / 2 };
+  const topTag = await page.evaluate(
+    ([x, y]) => document.elementFromPoint(x, y)?.tagName,
+    [box!.x + centre.x, box!.y + centre.y]
+  );
+  expect(topTag, 'le canvas doit recevoir le clic au centre').toBe('CANVAS');
+  await canvas.click({ position: centre });
 
   await expect(page.locator('#orbit-sun')).toHaveClass(/is-active/);
 });
