@@ -563,11 +563,10 @@ describe('le VRAI générateur relancé après une publication tuée, sans cache
     // Une racine de projet jetable : le générateur en déduit ses chemins de son propre dossier.
     const root = join(work, 'projet');
     mkdirSync(join(root, 'scripts'), { recursive: true });
-    for (const f of [
-      'generate-place-observations.mjs',
-      'place-observations-publish.mjs',
-    ])
-      cpSync(join(process.cwd(), 'scripts', f), join(root, 'scripts', f));
+    // tout le dossier des scripts : le générateur importe ses voisins (ode-selection.mjs après #492)
+    cpSync(join(process.cwd(), 'scripts'), join(root, 'scripts'), {
+      recursive: true,
+    });
     writeFileSync(join(root, 'package.json'), '{"type":"module"}');
     const liveRoot = join(root, 'public', 'assets', 'place-observations');
     const idx = join(root, 'src', 'config', 'placeObservationIndex.json');
