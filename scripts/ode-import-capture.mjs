@@ -99,6 +99,22 @@ export function checkDestination(cacheDir, mainFile) {
   }
   if (!existsSync(dir) || !statSync(dir).isDirectory())
     fail(`destination absente ou non dossier : ${dir}`);
+  // Chemin CANONIQUE : une jonction ou un lien situé hors dépôt peut pointer vers un dossier d'un dépôt git.
+  // Les protections de destination externe s'appliquent donc aussi à la cible réelle, et c'est elle qu'on utilise.
+  const canonical = realpathSync(dir);
+  if (canonical !== dir) {
+    try {
+      resolveCacheDir({
+        arg: canonical,
+        env: null,
+        root: ROOT,
+        requireExternal: true,
+      });
+    } catch (error) {
+      fail(`${error.message} (cible réelle de ${dir})`);
+    }
+    dir = canonical;
+  }
   if (!existsSync(join(dir, 'counts.json')))
     fail(`${dir} n'est pas un cache de collecte (counts.json absent)`);
   const diag = join(dir, 'diagnostics');

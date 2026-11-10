@@ -846,6 +846,36 @@ describe('import d’une capture conservée', () => {
     expect(existsSync(join(dest, 'diagnostics'))).toBe(false);
   });
 
+  it('jonction hors dépôt vers un cache situé dans un dépôt git : refus sur le chemin canonique, rien écrit', () => {
+    const s = source();
+    const repo = mkdtempSync(join(tmpdir(), 'depot-reel-'));
+    mkdirSync(join(repo, '.git'));
+    const cible = join(repo, 'cache');
+    mkdirSync(cible);
+    writeFileSync(join(cible, 'counts.json'), '{}');
+    const lien = join(mkdtempSync(join(tmpdir(), 'hors-depot-')), 'cache');
+    symlinkSync(cible, lien, 'junction');
+    // Sans la jonction, le chemin fourni est externe et valide : seule la cible réelle est fautive.
+    expect(existsSync(join(lien, 'counts.json'))).toBe(true);
+    expect(() =>
+      importCapture({ cacheDir: lien, mainFile: s.cap, write: true })
+    ).toThrow(/git|dépôt|worktree/);
+    expect(() => importCapture({ cacheDir: lien, mainFile: s.cap })).toThrow(
+      /cible réelle/
+    );
+    expect(existsSync(join(cible, 'diagnostics'))).toBe(false);
+  });
+
+  it('jonction vers un cache valide hors dépôt : acceptée, écriture dans la cible canonique', () => {
+    const s = source();
+    const cible = destination();
+    const lien = join(mkdtempSync(join(tmpdir(), 'hors-depot-')), 'cache');
+    symlinkSync(cible, lien, 'junction');
+    const r = importCapture({ cacheDir: lien, mainFile: s.cap, write: true });
+    expect(r.status).toBe('imported');
+    expect(existsSync(join(cible, 'diagnostics', 'cov.raw'))).toBe(true);
+  });
+
   it('diagnostics/ est un lien (jonction) : refus ; source déjà dans le cache : refus', () => {
     const s = source();
     const dest = destination();
