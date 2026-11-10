@@ -220,6 +220,27 @@ describe('traces : enregistrements multiples d’un même ODEId dans _gl', () =>
       /variante c0l : 1 enregistrements pour l'ODEId 1 \(2 en _gl\)/
     );
   });
+  it('doublon _gl sans _c0l ou sans _c180l : refus (une variante absente ne contourne pas la multiplicité)', () => {
+    expect(
+      bad(traces({ gl: [a, a2, b], c180l: [a, a2, b] })).join('\n')
+    ).toMatch(/variante c0l absente/);
+    expect(bad(traces({ gl: [a, a2, b], c0l: [a, a2, b] })).join('\n')).toMatch(
+      /variante c180l absente/
+    );
+    expect(bad(traces({ gl: [a, a2, b] })).length).toBe(2);
+  });
+  it('doublon _gl avec les deux variantes cohérentes : accepté ; multiplicité incohérente : refus', () => {
+    expect(
+      bad(traces({ gl: [a, a2, b], c0l: [a, a2, b], c180l: [a, a2, b] }))
+    ).toEqual([]);
+    expect(
+      bad(traces({ gl: [a, a2, b], c0l: [a, b, b], c180l: [a, a2, b] })).length
+    ).toBeGreaterThan(0);
+  });
+  it('sans doublon _gl : traitement historique conservé, même sans _c0l ni _c180l', () => {
+    expect(bad(traces({ gl: [a, b, c] }))).toEqual([]);
+    expect(bad(traces({ gl: [a, b, c], c0l: [a, a, b, c] }))).toEqual([]);
+  });
   it('une variante qui perd un identifiant entier est aussi refusée', () => {
     expect(
       bad(traces({ gl: [a, a2, b], c0l: [b, b], c180l: [a, a2, b] })).length
@@ -557,6 +578,32 @@ describe('provenance des sources réconciliées', () => {
       (p['query'] as Record<string, string>)['results'] = 'f';
     });
     refused(() => load(), /source metadata : paramètre results=f/);
+  });
+  it('limite incohérente seule (octets, SHA-256, tailles et gel conformes) : refus pour la coverage, les métadonnées et le manifeste', () => {
+    for (const historic of [false, true]) {
+      const f = fixture(newCache(), { historic });
+      build(f);
+      edit(join(f.dir, `${f.covFile}.json`), (p) => (p['limit'] = 100));
+      refused(() => load(), /source coverage : limite 100 différente/);
+      const g = fixture(newCache(), { historic });
+      build(g);
+      const mp = join(
+        g.dir,
+        historic ? `${g.metaFile}.provenance.json` : `${g.metaFile}.json`
+      );
+      edit(mp, (p) => {
+        (p[historic ? 'requete' : 'query'] as Record<string, string>)['limit'] =
+          '100';
+      });
+      refused(() => load(), /source metadata : limite 100 différente/);
+      const h = fixture(newCache(), { historic });
+      build(h);
+      edit(manifestPath(cache, KEY), (p) => (p['limit'] = 1000));
+      refused(
+        () => load(),
+        /limite .* différente de celle du manifeste \(1000\)/
+      );
+    }
   });
   it('les trois preuves ne sont plus exigées d’une capture dont l’offset diffère : la coverage doit être à l’offset 0', () => {
     const f = fixture(cache);

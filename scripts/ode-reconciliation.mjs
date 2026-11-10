@@ -130,6 +130,14 @@ function traceRecordProblems(variants) {
   };
   const gl = variants.gl;
   const glCount = count(gl.pairs);
+  // Un identifiant répété dans `_gl` ne se valide qu'avec les deux autres variantes : leur absence ne contourne rien.
+  const repeated = [...glCount].filter(([, n]) => n > 1);
+  if (repeated.length)
+    for (const v of ['c0l', 'c180l'])
+      if (!variants[v])
+        problems.push(
+          `variante ${v} absente : requise pour valider les ${repeated.length} identifiants répétés dans _gl (par exemple ${repeated[0][0]})`
+        );
   const pidOf = new Map();
   // Les ProductId contradictoires à l'intérieur d'une variante sont refusés par `conflicts` (readShapefiles).
   for (const [id, pid] of gl.pairs) pidOf.set(id, pid);
@@ -558,6 +566,10 @@ function provenanceProblems(manifest, label, src, bytes, sum, dir, readFile) {
       `source ${label} : provenance du jeu ${provenance.dataset} (attendu ${manifest.dataset})`
     );
   if (label === 'coverage') {
+    if (String(provenance?.limit) !== String(manifest.limit))
+      problems.push(
+        `source coverage : limite ${provenance?.limit} différente de celle du manifeste (${manifest.limit})`
+      );
     if (provenance?.dataset !== manifest.dataset)
       problems.push(
         `source coverage : jeu de la provenance absent ou différent`
@@ -589,6 +601,10 @@ function provenanceProblems(manifest, label, src, bytes, sum, dir, readFile) {
         problems.push(
           `source metadata : paramètre ${k}=${req[k]} (attendu ${v})`
         );
+    if (String(req.limit) !== String(manifest.limit))
+      problems.push(
+        `source metadata : limite ${req.limit} différente de celle du manifeste (${manifest.limit})`
+      );
     if (!sameFreeze(req, manifest.freeze))
       problems.push(
         'source metadata : gel de la requête différent de celui du manifeste'
