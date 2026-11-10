@@ -117,9 +117,49 @@ export function readCatalogue(buffer) {
 }
 
 /**
+ * Traces : plusieurs enregistrements pour un même ODEId ne sont admis que s'ils sont PROUVÉS légitimes :
+ * même ProductId pour tous les enregistrements de l'identifiant, et au moins autant d'enregistrements par
+ * identifiant dans chaque variante (c0l/c180l en ont davantage : découpe au méridien). Sinon, refus nommé (comportement d'origine).
+ */
+function traceRecordProblems(variants) {
+  const problems = [];
+  const count = (pairs) => {
+    const m = new Map();
+    for (const [id] of pairs) m.set(id, (m.get(id) ?? 0) + 1);
+    return m;
+  };
+  const gl = variants.gl;
+  const glCount = count(gl.pairs);
+  // Un identifiant répété dans `_gl` ne se valide qu'avec les deux autres variantes : leur absence ne contourne rien.
+  const repeated = [...glCount].filter(([, n]) => n > 1);
+  if (repeated.length)
+    for (const v of ['c0l', 'c180l'])
+      if (!variants[v])
+        problems.push(
+          `variante ${v} absente : requise pour valider les ${repeated.length} identifiants répétés dans _gl (par exemple ${repeated[0][0]})`
+        );
+  const pidOf = new Map();
+  // Les ProductId contradictoires à l'intérieur d'une variante sont refusés par `conflicts` (readShapefiles).
+  for (const [id, pid] of gl.pairs) pidOf.set(id, pid);
+  for (const [v, x] of Object.entries(variants)) {
+    if (v === 'gl') continue;
+    const c = count(x.pairs);
+    for (const [id, n] of glCount)
+      if ((c.get(id) ?? 0) < n)
+        problems.push(
+          `variante ${v} : ${c.get(id) ?? 0} enregistrements pour l'ODEId ${id} (${n} en _gl)`
+        );
+    for (const [id, pid] of x.pairs)
+      if (pidOf.has(id) && pidOf.get(id) !== pid)
+        problems.push(`variante ${v} : ProductId différent pour l'ODEId ${id}`);
+  }
+  return problems.slice(0, 5);
+}
+
+/**
  * Lit les shapefiles d'une archive brute. Rend { variants, kind, problems }. La nature (`l` ou `a`) se DÉRIVE
- * des suffixes présents ; une archive qui en mêle plusieurs, ou aucune, est refusée. Pour les traces, une ligne
- * par produit dans `_gl` (exigence d'origine, inchangée). Pour les surfaces, plusieurs enregistrements par ODEId
+ * des suffixes présents ; une archive qui en mêle plusieurs, ou aucune, est refusée. Pour les traces, plusieurs
+ * enregistrements `_gl` d'un même ODEId ne sont admis que prouvés légitimes (`traceRecordProblems`). Pour les surfaces, plusieurs enregistrements par ODEId
  * sont légitimes (anneau découpé à la couture 0/360) mais un ODEId ne porte JAMAIS deux ProductId.
  */
 export function readShapefiles(buffer) {
@@ -148,6 +188,7 @@ export function readShapefiles(buffer) {
       records: rows.length,
       ids: new Set(rows.map((r) => r.ODEId)),
       productIds: new Map(rows.map((r) => [r.ODEId, r.ProductId])),
+      pairs: rows.map((r) => [r.ODEId, r.ProductId]),
     };
     const seen = new Map();
     conflicts[m[1]] = new Set();
@@ -170,10 +211,7 @@ export function readShapefiles(buffer) {
     problems.push(
       `archive sans shapefile \`_${primary}\` (celui que lit le pipeline)`
     );
-  else if (kind === 'l' && variants.gl.records !== variants.gl.ids.size)
-    problems.push(
-      `shapefile _gl : ${variants.gl.records} enregistrements pour ${variants.gl.ids.size} identifiants distincts`
-    );
+  else if (kind === 'l') problems.push(...traceRecordProblems(variants));
   if (kind === 'a')
     for (const v of SURFACE_VARIANTS)
       if (!variants[v])
@@ -183,12 +221,11 @@ export function readShapefiles(buffer) {
       problems.push(
         `surfaces : variante \`_${v}\` sans fichier .shp exploitable`
       );
-  if (kind === 'a')
-    for (const [v, ids] of Object.entries(conflicts))
-      if (ids.size)
-        problems.push(
-          `variante ${v} : ProductId incohérent pour l'ODEId ${[...ids].slice(0, 3).join(', ')}`
-        );
+  for (const [v, ids] of Object.entries(conflicts))
+    if (ids.size)
+      problems.push(
+        `variante ${v} : ProductId incohérent pour l'ODEId ${[...ids].slice(0, 3).join(', ')}`
+      );
   return { variants, kind, problems };
 }
 
@@ -474,12 +511,118 @@ export function validateManifest(
   return problems;
 }
 
-/** Revérifie les sommes des deux sources sur disque (`<cache>/diagnostics/`). Lève si une diffère. */
+/**
+ * Provenance d'une source : fichier `<source>.json` (captures `.raw`) ou `<source>.provenance.json` (formats
+ * historiques), et somme annexe `<source>.sha256`. Aucune valeur n'est inventée : un fichier absent est un refus.
+ */
+function provenanceFiles(file) {
+  return {
+    provenance: file.endsWith('.raw')
+      ? `${file}.json`
+      : `${file}.provenance.json`,
+    sidecar: `${file}.sha256`,
+  };
+}
+
+/**
+ * Les trois preuves d'une source (provenance, somme annexe, manifeste) doivent décrire EXACTEMENT les octets lus,
+ * et la provenance doit désigner le même jeu, le même gel et la même requête que le manifeste. Rend les problèmes.
+ */
+function provenanceProblems(manifest, label, src, bytes, sum, dir, readFile) {
+  const problems = [];
+  const files = provenanceFiles(src.file);
+  let provenance;
+  try {
+    provenance = JSON.parse(readFile(join(dir, files.provenance), 'utf8'));
+  } catch (error) {
+    return [
+      `source ${label} : provenance illisible (${files.provenance}) : ${error.code ?? error.message}`,
+    ];
+  }
+  let sidecar;
+  try {
+    sidecar = readFile(join(dir, files.sidecar), 'utf8').trim().split(/\s+/)[0];
+  } catch (error) {
+    problems.push(
+      `source ${label} : somme annexe illisible (${files.sidecar}) : ${error.code ?? error.message}`
+    );
+  }
+  if (provenance?.sha256 !== sum)
+    problems.push(
+      `source ${label} : SHA-256 de la provenance différent du contenu`
+    );
+  if (provenance?.receivedBytes !== bytes.length)
+    problems.push(
+      `source ${label} : taille de la provenance différente du contenu`
+    );
+  if (sidecar !== undefined && sidecar !== sum)
+    problems.push(`source ${label} : somme annexe différente du contenu`);
+  // Jeu et gel : présents dans les provenances modernes ; les provenances historiques de métadonnées n'ont pas de `dataset`.
+  if (
+    provenance?.dataset !== undefined &&
+    provenance.dataset !== manifest.dataset
+  )
+    problems.push(
+      `source ${label} : provenance du jeu ${provenance.dataset} (attendu ${manifest.dataset})`
+    );
+  if (label === 'coverage') {
+    if (String(provenance?.limit) !== String(manifest.limit))
+      problems.push(
+        `source coverage : limite ${provenance?.limit} différente de celle du manifeste (${manifest.limit})`
+      );
+    if (provenance?.dataset !== manifest.dataset)
+      problems.push(
+        `source coverage : jeu de la provenance absent ou différent`
+      );
+    if (provenance?.offset !== 0)
+      problems.push(
+        `source coverage : offset ${provenance?.offset} (attendu 0)`
+      );
+    if (!sameFreeze(provenance?.freeze, manifest.freeze))
+      problems.push(
+        'source coverage : gel de la provenance différent de celui du manifeste'
+      );
+  } else {
+    // `query` (captures isolées) ou `requete` (captures historiques) : même contenu.
+    const req = provenance?.query ?? provenance?.requete ?? {};
+    const [db, ihid, iid, pt] = manifest.dataset.split('|');
+    const expected = {
+      query: 'product',
+      results: 'm',
+      output: 'JSON',
+      target: db.toLowerCase(),
+      IHID: ihid,
+      IID: iid,
+      PT: pt,
+      offset: '0',
+    };
+    for (const [k, v] of Object.entries(expected))
+      if (req[k] !== v)
+        problems.push(
+          `source metadata : paramètre ${k}=${req[k]} (attendu ${v})`
+        );
+    if (String(req.limit) !== String(manifest.limit))
+      problems.push(
+        `source metadata : limite ${req.limit} différente de celle du manifeste (${manifest.limit})`
+      );
+    if (!sameFreeze(req, manifest.freeze))
+      problems.push(
+        'source metadata : gel de la requête différent de celui du manifeste'
+      );
+  }
+  return problems;
+}
+
+/**
+ * Revérifie les deux sources sur disque (`<cache>/diagnostics/`) : octets contre le manifeste, puis cohérence des
+ * trois preuves (provenance, somme annexe, manifeste) et identité du jeu, du gel et de la requête. Lève si une diffère.
+ */
 export function verifySources(manifest, cacheDir, readFile = readFileSync) {
   const problems = [];
   for (const s of ['metadata', 'coverage']) {
     const src = manifest.sources[s];
-    const file = join(cacheDir, 'diagnostics', src.file);
+    const dir = join(cacheDir, 'diagnostics');
+    const file = join(dir, src.file);
     let bytes;
     try {
       bytes = readFile(file);
@@ -493,8 +636,12 @@ export function verifySources(manifest, cacheDir, readFile = readFileSync) {
       problems.push(
         `source ${s} : ${bytes.length} octets pour ${src.receivedBytes}`
       );
-    if (sha256(bytes) !== src.sha256)
+    const sum = sha256(bytes);
+    if (sum !== src.sha256)
       problems.push(`source ${s} : SHA-256 différent de celui du manifeste`);
+    problems.push(
+      ...provenanceProblems(manifest, s, src, bytes, sum, dir, readFile)
+    );
   }
   if (problems.length) throw new ReconciliationError(problems);
 }

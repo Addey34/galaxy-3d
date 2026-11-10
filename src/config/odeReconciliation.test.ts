@@ -255,6 +255,27 @@ const build = (f: Fixture) =>
     coverageFile: f.covFile,
     now: new Date('2026-11-10T12:00:00Z'),
   });
+/**
+ * Remplace une source par un autre contenu EN RESTANT cohérent (somme annexe et provenance réécrites) : une
+ * falsification soignée, que seuls les contrôles de contenu qui suivent (exclusions, identifiants) peuvent refuser.
+ */
+function forgeSource(file: string, bytes: Buffer) {
+  const dir = join(cache, 'diagnostics');
+  writeFileSync(join(dir, file), bytes);
+  writeFileSync(
+    join(dir, `${file}.sha256`),
+    `${sha256(bytes)}  ${file}
+`
+  );
+  const pf = join(
+    dir,
+    file.endsWith('.raw') ? `${file}.json` : `${file}.provenance.json`
+  );
+  const prov = JSON.parse(readFileSync(pf, 'utf8')) as Record<string, unknown>;
+  prov['sha256'] = sha256(bytes);
+  prov['receivedBytes'] = bytes.length;
+  writeFileSync(pf, JSON.stringify(prov));
+}
 const refused = (fn: () => unknown, pattern: RegExp) => {
   let error: unknown;
   try {
@@ -824,7 +845,7 @@ describe('rejeu de la capture conservée', () => {
     const manifestFile = manifestPath(cache, KEY);
     const m = JSON.parse(readFileSync(manifestFile, 'utf8'));
     const meta = metadata(ALL_IDS, () => true);
-    writeFileSync(join(cache, 'diagnostics', f.metaFile), meta);
+    forgeSource(f.metaFile, meta);
     m.sources.metadata.sha256 = sha256(meta);
     m.sources.metadata.receivedBytes = meta.length;
     writeFileSync(manifestFile, JSON.stringify(m));
@@ -839,7 +860,7 @@ describe('rejeu de la capture conservée', () => {
     const manifestFile = manifestPath(cache, KEY);
     const m = JSON.parse(readFileSync(manifestFile, 'utf8'));
     const cov = coverage([...FOOT_IDS.slice(1), EXCLUDED[0]]);
-    writeFileSync(join(cache, 'diagnostics', f.covFile), cov);
+    forgeSource(f.covFile, cov);
     m.sources.coverage.sha256 = sha256(cov);
     m.sources.coverage.receivedBytes = cov.length;
     writeFileSync(manifestFile, JSON.stringify(m));
