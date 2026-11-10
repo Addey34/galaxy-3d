@@ -19,10 +19,22 @@
  *   node ode-import-capture.mjs --cache-dir <abs> --source <fichier principal> [--write]    (mode sec par défaut)
  */
 import { createHash, randomBytes } from 'node:crypto';
-import { existsSync, linkSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import {
+  existsSync,
+  linkSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+} from 'node:fs';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeFileAtomic, TMP_SUFFIX } from './ode-pages.mjs';
+import { resolveCacheDir } from './ode-selection.mjs';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export class ImportError extends Error {}
 const sha = (b) => createHash('sha256').update(b).digest('hex');
@@ -66,11 +78,47 @@ export function readCapture(mainFile) {
   };
 }
 
+/**
+ * Destination : chemin ABSOLU, HORS du dépôt et de tout worktree git (protections de `resolveCacheDir`), dossier
+ * existant qui est bien un cache de collecte (`counts.json`), `diagnostics/` jamais un lien symbolique, et la
+ * source n'est pas déjà un fichier de la destination. Rend le dossier résolu.
+ */
+export function checkDestination(cacheDir, mainFile) {
+  if (typeof cacheDir !== 'string' || cacheDir === '')
+    fail('--cache-dir exige un chemin absolu');
+  let dir;
+  try {
+    dir = resolveCacheDir({
+      arg: cacheDir,
+      env: null,
+      root: ROOT,
+      requireExternal: true,
+    });
+  } catch (error) {
+    fail(error.message);
+  }
+  if (!existsSync(dir) || !statSync(dir).isDirectory())
+    fail(`destination absente ou non dossier : ${dir}`);
+  if (!existsSync(join(dir, 'counts.json')))
+    fail(`${dir} n'est pas un cache de collecte (counts.json absent)`);
+  const diag = join(dir, 'diagnostics');
+  if (existsSync(diag) && lstatSync(diag).isSymbolicLink())
+    fail(`${diag} est un lien symbolique : refusé`);
+  if (existsSync(mainFile)) {
+    const real = realpathSync(mainFile).toLowerCase();
+    const inside = realpathSync(dir).toLowerCase();
+    if (real.startsWith(`${inside}${sep}`.toLowerCase()))
+      fail('la source est déjà dans le cache de destination');
+  }
+  return dir;
+}
+
 /** Importe une capture. `write: false` : vérifie tout et n'écrit rien. Rend { status, imported, alreadyPresent }. */
 export function importCapture({ cacheDir, mainFile, write = false, fs = {} }) {
   const link = fs.linkSync ?? linkSync;
+  const cache = checkDestination(cacheDir, mainFile);
   const { digest, files } = readCapture(mainFile);
-  const dir = join(cacheDir, 'diagnostics');
+  const dir = join(cache, 'diagnostics');
   const todo = [];
   const present = [];
   for (const f of files) {

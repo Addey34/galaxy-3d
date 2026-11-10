@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import { spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import {
   existsSync,
@@ -8,10 +9,11 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import {
@@ -124,11 +126,11 @@ function shpPolygons(n: number): Buffer {
   return Buffer.concat(recs);
 }
 type Variants = Record<string, Rec[]>;
-function archive(rows: Variants): Buffer {
+function archive(rows: Variants, skipShp: string[] = []): Buffer {
   const entries: Record<string, Buffer> = {};
   for (const [v, list] of Object.entries(rows)) {
     entries[`m_${v}.dbf`] = dbf(list);
-    entries[`m_${v}.shp`] = shpPolygons(list.length);
+    if (!skipShp.includes(v)) entries[`m_${v}.shp`] = shpPolygons(list.length);
   }
   // L'archive de moins de 1024 octets est lue comme une page vide : remplissage incompressible.
   entries['m_pad.prj'] = randomBytes(1500);
@@ -342,6 +344,45 @@ describe('surfaces _ga : construction du manifeste', () => {
     );
   });
 
+  it('ProductId falsifié dans UNE variante seulement (c0a, puis c180a), ensembles d’identifiants identiques : refus', () => {
+    for (const variant of ['c0a', 'c180a']) {
+      const rows = surfaces();
+      rows[variant] = rows[variant].map((r) =>
+        r.id === '2' ? { id: '2', pid: 'falsifie' } : r
+      );
+      refused(
+        () => build(fixture({ archive: archive(rows) })),
+        new RegExp(
+          `variante ${variant} : ODEId 2 porte le ProductId falsifie au lieu de ${pidOf('2')}`
+        )
+      );
+    }
+    // Contrôle : sans falsification, les mêmes ensembles passent.
+    expect(build(fixture()).manifest.counts.footprints).toBe(5);
+  });
+
+  it('archive de surfaces réduite aux .dbf (une variante, puis toutes) : refus ; le chemin _gl garde son comportement', () => {
+    refused(
+      () => build(fixture({ archive: archive(surfaces(), ['c180a']) })),
+      /variante `_c180a` sans fichier \.shp exploitable/
+    );
+    refused(
+      () =>
+        build(
+          fixture({ archive: archive(surfaces(), ['ga', 'c0a', 'c180a']) })
+        ),
+      /sans fichier \.shp exploitable/
+    );
+    // Traces : l'exigence n'a pas été étendue (comportement historique conservé).
+    const t = build(
+      fixture({
+        kind: 'l',
+        archive: archive(traces(), ['gl', 'c0l', 'c180l']),
+      })
+    );
+    expect(t.manifest.counts.excluded).toBe(1);
+  });
+
   it('identifiant inattendu : hors catalogue, ou présent dans une variante seulement', () => {
     refused(
       () => build(fixture({ archive: archive(surfaces([...IDS, '77'])) })),
@@ -546,6 +587,35 @@ describe('surfaces _ga : manifeste publié et rejeu', () => {
         excluded: [{ ...manifest.excluded[0], inShapefiles: { gl: false } }],
       }).join()
     ).toMatch(/absence des shapefiles/);
+    // Surfaces : les trois variantes, toutes à false, ni moins ni plus.
+    for (const proof of [
+      { ga: false },
+      { ga: false, c0a: false },
+      { ga: false, c180a: false },
+      { c0a: false, c180a: false },
+      { ga: false, c0a: false, c180a: false, gl: false },
+      { ga: false, c0a: false, c180a: 'false' },
+      { ga: false, c0a: false, autre: false },
+      { ga: false, c180a: false, autre: false },
+      {},
+    ])
+      expect(
+        bad({
+          ...manifest,
+          excluded: [{ ...manifest.excluded[0], inShapefiles: proof }],
+        }).join()
+      ).toMatch(/absence des shapefiles non démontrée/);
+    expect(
+      bad({
+        ...manifest,
+        excluded: [
+          {
+            ...manifest.excluded[0],
+            inShapefiles: { ga: false, c0a: false, c180a: false },
+          },
+        ],
+      })
+    ).toEqual([]);
     writeFileSync(
       join(fx.dir, 'cov.raw'),
       Buffer.concat([readFileSync(join(fx.dir, 'cov.raw')), Buffer.from('x')])
@@ -650,17 +720,17 @@ describe('import d’une capture conservée', () => {
     ['provenance absente', (c: string) => rmSync(`${c}.json`)],
   ])('source corrompue (%s) : refus sans écriture', (_name, mutate) => {
     const s = source();
-    const dest = mkdtempSync(join(tmpdir(), 'dest-surf-'));
+    const dest = destination();
     mutate(s.cap);
     expect(() =>
       importCapture({ cacheDir: dest, mainFile: s.cap, write: true })
     ).toThrow(ImportError);
-    expect(readdirSync(dest)).toEqual([]);
+    expect(readdirSync(dest).sort()).toEqual(['counts.json', 'freeze.json']);
   });
 
   it('lien dur impossible : refus, aucun repli par copie, rien laissé', () => {
     const s = source();
-    const dest = mkdtempSync(join(tmpdir(), 'dest-surf-'));
+    const dest = destination();
     let copies = 0;
     const fs = {
       linkSync: () => {
@@ -679,7 +749,7 @@ describe('import d’une capture conservée', () => {
 
   it('interruption en cours d’import : les fichiers créés par CET appel sont retirés, les autres intacts', () => {
     const s = source();
-    const dest = mkdtempSync(join(tmpdir(), 'dest-surf-'));
+    const dest = destination();
     mkdirSync(join(dest, 'diagnostics'));
     writeFileSync(join(dest, 'diagnostics', 'preexistant.txt'), 'garde');
     let n = 0;
@@ -725,6 +795,74 @@ describe('import d’une capture conservée', () => {
         coverageFile: 'cov.raw',
       }).manifest.counts.excluded
     ).toBe(1);
+  });
+
+  it.each([
+    ['chemin relatif', () => 'relatif/cache'],
+    ['chemin vide', () => ''],
+    ['dossier du dépôt', () => join(process.cwd(), 'cache-test')],
+    ['dossier inexistant', () => join(tmpdir(), 'n-existe-pas-06l')],
+    ['dossier sans counts.json', () => mkdtempSync(join(tmpdir(), 'vide-'))],
+  ])('destination dangereuse (%s) : refus sans écriture', (_n, make) => {
+    const s = source();
+    const dest = make();
+    expect(() =>
+      importCapture({ cacheDir: dest, mainFile: s.cap, write: true })
+    ).toThrow(ImportError);
+    if (dest && existsSync(dest))
+      expect(existsSync(join(dest, 'diagnostics'))).toBe(false);
+  });
+
+  it('chemin RELATIF vers un cache valide (ligne de commande, cwd voisin) : refus, rien écrit', () => {
+    const s = source();
+    const dest = destination();
+    const r = spawnSync(
+      process.execPath,
+      [
+        join(process.cwd(), 'scripts', 'ode-import-capture.mjs'),
+        '--cache-dir',
+        basename(dest),
+        '--source',
+        s.cap,
+        '--write',
+      ],
+      { cwd: dirname(dest), encoding: 'utf8' }
+    );
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/chemin absolu/);
+    expect(existsSync(join(dest, 'diagnostics'))).toBe(false);
+  });
+
+  it('cache situé dans un dépôt git (un .git plus haut) : refus', () => {
+    const s = source();
+    const repo = mkdtempSync(join(tmpdir(), 'depot-'));
+    mkdirSync(join(repo, '.git'));
+    const dest = join(repo, 'cache');
+    mkdirSync(dest);
+    writeFileSync(join(dest, 'counts.json'), '{}');
+    expect(() =>
+      importCapture({ cacheDir: dest, mainFile: s.cap, write: true })
+    ).toThrow(/dépôt|worktree|git/);
+    expect(existsSync(join(dest, 'diagnostics'))).toBe(false);
+  });
+
+  it('diagnostics/ est un lien (jonction) : refus ; source déjà dans le cache : refus', () => {
+    const s = source();
+    const dest = destination();
+    const elsewhere = mkdtempSync(join(tmpdir(), 'ailleurs-'));
+    symlinkSync(elsewhere, join(dest, 'diagnostics'), 'junction');
+    expect(() =>
+      importCapture({ cacheDir: dest, mainFile: s.cap, write: true })
+    ).toThrow(/lien symbolique/);
+    expect(readdirSync(elsewhere)).toEqual([]);
+    const own = destination();
+    mkdirSync(join(own, 'diagnostics'));
+    const inside = join(own, 'diagnostics', 'cov.raw');
+    for (const f of ['', '.json', '.sha256'])
+      writeFileSync(`${inside}${f}`, readFileSync(`${s.cap}${f}`));
+    expect(() =>
+      importCapture({ cacheDir: own, mainFile: inside, write: true })
+    ).toThrow(/déjà dans le cache/);
   });
 
   it('le code d’import ne contient aucun repli par copie ni renommage', () => {

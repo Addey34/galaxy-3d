@@ -5,6 +5,7 @@ export const GEOMETRY_FIELDS: readonly string[];
 export const SHAPEFILE_VARIANTS: readonly string[];
 export const GEOMETRY_KINDS: readonly string[];
 export function primaryVariant(kind: string): string;
+export const SURFACE_VARIANTS: readonly string[];
 
 export class ReconciliationError extends Error {
   problems: string[];

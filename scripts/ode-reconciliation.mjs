@@ -41,6 +41,8 @@ export const SHAPEFILE_VARIANTS = ['gl', 'c0l', 'c180l'];
  */
 export const GEOMETRY_KINDS = ['l', 'a'];
 export const primaryVariant = (kind) => `g${kind}`;
+/** Les trois variantes qu'une archive de surfaces doit porter. */
+export const SURFACE_VARIANTS = ['ga', 'c0a', 'c180a'];
 
 export class ReconciliationError extends Error {
   constructor(problems) {
@@ -130,10 +132,18 @@ export function readShapefiles(buffer) {
   }
   const variants = {};
   const conflicts = {};
+  const shapeFiles = new Set();
+  for (const name of Object.keys(tar))
+    if (/\.shp$/.test(name)) shapeFiles.add(name);
+  const missingShp = [];
   for (const name of Object.keys(tar)) {
     const m = /_(gl|c0l|c180l|ga|c0a|c180a)\.dbf$/.exec(name);
     if (!m) continue;
     const rows = readDbf(tar[name], ['ODEId', 'ProductId']);
+    // Surfaces : la table seule ne décrit aucune géométrie, le `.shp` de la même variante est exigé.
+    const shp = name.replace(/\.dbf$/, '.shp');
+    if (m[1].endsWith('a') && !(shapeFiles.has(shp) && tar[shp].length > 100))
+      missingShp.push(m[1]);
     variants[m[1]] = {
       records: rows.length,
       ids: new Set(rows.map((r) => r.ODEId)),
@@ -165,9 +175,14 @@ export function readShapefiles(buffer) {
       `shapefile _gl : ${variants.gl.records} enregistrements pour ${variants.gl.ids.size} identifiants distincts`
     );
   if (kind === 'a')
-    for (const v of ['ga', 'c0a', 'c180a'])
+    for (const v of SURFACE_VARIANTS)
       if (!variants[v])
         problems.push(`surfaces : variante \`_${v}\` manquante`);
+  if (kind === 'a')
+    for (const v of missingShp)
+      problems.push(
+        `surfaces : variante \`_${v}\` sans fichier .shp exploitable`
+      );
   if (kind === 'a')
     for (const [v, ids] of Object.entries(conflicts))
       if (ids.size)
@@ -283,6 +298,13 @@ export function buildManifest({
           if (!v.ids.has(id))
             problems.push(
               `variante ${variant} : identifiant ${id} de _${primary} absent`
+            );
+          else if (
+            shp.kind === 'a' &&
+            v.productIds.get(id) !== shp.variants[primary].productIds.get(id)
+          )
+            problems.push(
+              `variante ${variant} : ODEId ${id} porte le ProductId ${v.productIds.get(id)} au lieu de ${shp.variants[primary].productIds.get(id)} (_${primary})`
             );
       }
     for (const p of cat.products) {
@@ -431,10 +453,16 @@ export function validateManifest(
       problems.push(
         `exclusion ${e.odeId} : géométrie des métadonnées non démontrée absente`
       );
+    const proof = e.inShapefiles;
+    const required =
+      manifest.geometryKind === 'a' ? SURFACE_VARIANTS : [primary];
     if (
-      !e.inShapefiles ||
-      Object.values(e.inShapefiles).some((v) => v !== false) ||
-      !(primary in e.inShapefiles)
+      !proof ||
+      Object.values(proof).some((v) => v !== false) ||
+      required.some((v) => !(v in proof)) ||
+      // Surfaces : exactement les trois variantes, ni plus ni moins (le contrat des traces reste inchangé).
+      (manifest.geometryKind === 'a' &&
+        Object.keys(proof).length !== SURFACE_VARIANTS.length)
     )
       problems.push(
         `exclusion ${e.odeId} : absence des shapefiles non démontrée`

@@ -4,6 +4,7 @@ export function readCapture(mainFile: string): {
   digest: string;
   files: { name: string; data: Buffer }[];
 };
+export function checkDestination(cacheDir: string, mainFile: string): string;
 export function importCapture(options: {
   cacheDir: string;
   mainFile: string;
