@@ -350,7 +350,11 @@ export function writeFileAtomic(file, text, { fs = {} } = {}) {
   try {
     mkdirSync(dirname(file), { recursive: true });
     fd = openSync(tmp, 'w');
-    writeAll(fd, Buffer.from(text, 'utf8'), write);
+    writeAll(
+      fd,
+      Buffer.isBuffer(text) ? text : Buffer.from(text, 'utf8'),
+      write
+    );
     fsyncSync(fd);
     closeSync(fd);
     fd = null;

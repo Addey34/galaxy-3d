@@ -83,6 +83,6 @@ export function collectPages(options: {
 
 export function writeFileAtomic(
   file: string,
-  text: string,
+  text: string | Buffer,
   options?: { fs?: Record<string, (...args: never[]) => unknown> }
 ): void;

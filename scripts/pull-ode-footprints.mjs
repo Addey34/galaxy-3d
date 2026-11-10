@@ -35,14 +35,15 @@
  * GALAXY_ODE_CACHE, obligatoire avec --body), `--plan` (compte et redondance seulement, rien n'est
  * tire), `--only <IHID>` (intersection avec --body), `--dataset <cle>` (UN jeu, egalite exacte avec
  * sa cle `Corps|MISSION|INSTRUMENT|TYPE`, du corps demande), `--max-pages <n>` (refuse la collecte
- * si plus de n pages sont a telecharger), `--concurrency <n>`
+ * si plus de n pages sont a telecharger), `--diagnostic` (avec --dataset : conserve la reponse brute
+ * `coveragetargz` et son analyse avant regroupement sous <cache>/diagnostics/, jamais dans pages/),
+ * `--concurrency <n>`
  * (2 par defaut, avec un espacement de 3 s entre departs : a 3 et sans espacement, l'ODE a
  * commence a rendre des 403).
  */
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gunzipSync } from 'node:zlib';
 import {
   COLLECTABLE_BODIES,
   FREEZE,
@@ -65,7 +66,15 @@ import {
   inspectExistingPages,
   pageName,
   writeFileAtomic,
+  isLocalStorageError,
 } from './ode-pages.mjs';
+import { parseCoverageArchive } from './ode-coverage.mjs';
+import {
+  describeGap,
+  diagnosticsDir,
+  quarantineRaw,
+  writeAnalysis,
+} from './ode-diagnostic.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /**
@@ -82,6 +91,8 @@ let DATASET = null;
 let MAX_PAGES = null;
 /** Un pilote (--dataset / --max-pages) ne sollicite JAMAIS l'ODE pour ses métadonnées. */
 let PILOT = false;
+/** Mode diagnostic explicite : conserve le brut `coveragetargz` en quarantaine (jamais dans pages/). */
+let DIAGNOSTIC = false;
 try {
   CACHE = resolveCacheDir({
     arg: argValue('--cache-dir'),
@@ -94,6 +105,9 @@ try {
   PILOT = DATASET !== null || MAX_PAGES !== null;
   if (DATASET !== null && BODY === null)
     throw new Error('--dataset exige --body');
+  DIAGNOSTIC = argv.includes('--diagnostic');
+  if (DIAGNOSTIC && DATASET === null)
+    throw new Error('--diagnostic exige --dataset (un seul jeu)');
   if (BODY !== null && !COLLECTABLE_BODIES.includes(BODY))
     throw new Error(
       `--body ${BODY} : corps inconnu (${COLLECTABLE_BODIES.join(', ')})`
@@ -157,7 +171,7 @@ async function waitForSlot() {
   }
 }
 
-async function request(params, timeoutMs = 600000, attempts = 4) {
+async function request(params, timeoutMs = 600000, attempts = 4, meta = null) {
   const u = new URL(ODE);
   for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
   let last;
@@ -181,6 +195,11 @@ async function request(params, timeoutMs = 600000, attempts = 4) {
       }
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       pauseMs = 5 * 60000;
+      if (meta) {
+        meta.status = r.status;
+        meta.contentType = r.headers.get('content-type');
+        meta.url = String(u);
+      }
       return Buffer.from(await r.arrayBuffer());
     } catch (e) {
       last = e;
@@ -340,106 +359,6 @@ async function redundancy(list, n) {
   });
 }
 
-function untar(buf) {
-  const out = {};
-  let o = 0;
-  while (o + 512 <= buf.length) {
-    const name = buf
-      .subarray(o, o + 100)
-      .toString()
-      .split('\0')[0];
-    if (!name) break;
-    const size = parseInt(
-      buf
-        .subarray(o + 124, o + 136)
-        .toString()
-        .replace(/\0/g, '')
-        .trim() || '0',
-      8
-    );
-    out[name] = buf.subarray(o + 512, o + 512 + size);
-    o += 512 + Math.ceil(size / 512) * 512;
-  }
-  return out;
-}
-
-function readDbf(d, want) {
-  const n = d.readUInt32LE(4);
-  const hl = d.readUInt16LE(8);
-  const rl = d.readUInt16LE(10);
-  const fields = [];
-  let o = 32;
-  let p = 1;
-  while (d[o] !== 0x0d) {
-    const name = d
-      .subarray(o, o + 11)
-      .toString()
-      .split('\0')[0];
-    const len = d[o + 16];
-    fields.push([name, p, len]);
-    p += len;
-    o += 32;
-  }
-  const rows = [];
-  for (let i = 0; i < n; i++) {
-    const b = hl + i * rl;
-    const r = {};
-    for (const [name, pp, len] of fields)
-      if (want.includes(name))
-        r[name] = d
-          .subarray(b + pp, b + pp + len)
-          .toString('latin1')
-          .trim();
-    rows.push(r);
-  }
-  return rows;
-}
-
-/** Formes d'un .shp (polygones, lignes, points), un tableau d'anneaux par enregistrement, au millieme de degre. */
-function readShp(d) {
-  const recs = [];
-  let o = 100;
-  const r3 = (x) => Math.round(x * 1000) / 1000;
-  while (o + 8 <= d.length) {
-    const len = d.readInt32BE(o + 4) * 2;
-    const c = o + 8;
-    const type = d.readInt32LE(c);
-    const rings = [];
-    if (type === 1 || type === 11 || type === 21) {
-      rings.push([[r3(d.readDoubleLE(c + 4)), r3(d.readDoubleLE(c + 12))]]);
-    } else if (type === 8 || type === 18 || type === 28) {
-      const nPts = d.readInt32LE(c + 36);
-      const ring = [];
-      for (let k = 0; k < nPts; k++)
-        ring.push([
-          r3(d.readDoubleLE(c + 40 + 16 * k)),
-          r3(d.readDoubleLE(c + 48 + 16 * k)),
-        ]);
-      rings.push(ring);
-    } else if ([3, 13, 23, 5, 15, 25].includes(type)) {
-      const nParts = d.readInt32LE(c + 36);
-      const nPts = d.readInt32LE(c + 40);
-      const parts = [];
-      for (let i = 0; i < nParts; i++)
-        parts.push(d.readInt32LE(c + 44 + 4 * i));
-      const base = c + 44 + 4 * nParts;
-      for (let i = 0; i < nParts; i++) {
-        const end = i + 1 < nParts ? parts[i + 1] : nPts;
-        const ring = [];
-        for (let k = parts[i]; k < end; k++)
-          ring.push([
-            r3(d.readDoubleLE(base + 16 * k)),
-            r3(d.readDoubleLE(base + 16 * k + 8)),
-          ]);
-        rings.push(ring);
-      }
-    }
-    recs.push(rings);
-    o = c + len;
-  }
-  return recs;
-}
-
 /**
  * UNE PAGE TROP LOURDE SE COUPE au lieu de se redemander : les traces de MARSIS portent jusqu'a
  * 976 sommets par produit, et une page de 5 000 depasse alors ce qu'une requete tient. Une page
@@ -475,6 +394,8 @@ async function pullPage(s, offset) {
   try {
     return await pullRange(s, offset, PAGE, 2);
   } catch (e) {
+    // Une panne de stockage local (quarantaine diagnostique) ne se contourne pas par d'autres requêtes.
+    if (isLocalStorageError(e)) throw e;
     console.log(
       `page coupee en sous-pages : ${s.key} @${offset} (${e.message.slice(-60)})`
     );
@@ -576,6 +497,7 @@ export function wktShapes(wkt) {
 }
 
 async function pullRange(s, offset, limit, attempts) {
+  const meta = {};
   const buf = await request(
     {
       query: 'coveragetargz',
@@ -585,63 +507,36 @@ async function pullRange(s, offset, limit, attempts) {
       ...freezeFor(s),
     },
     600000,
-    attempts
+    attempts,
+    meta
   );
-  if (buf.length < 1024) return [];
-  let tar;
-  try {
-    tar = untar(gunzipSync(buf));
-  } catch {
-    tar = untar(buf);
-  }
-  // UNE SURFACE (`_ga`), UNE TRACE (`_gl`, les sondeurs radar comme MARSIS) ou DES POINTS
-  // (`_gp`) : le suffixe du fichier dit la forme. UNE MEME PAGE PEUT PORTER LES TROIS, et c'est
-  // mesure sur PFS (9 surfaces et des dizaines de milliers de points pour 200 produits) : la
-  // premiere version ne lisait que le premier type trouve et aurait garde 9 produits sur 200
-  // sans un mot. Chaque forme est donc rangee sous son type, et une page sans aucun des trois
-  // echoue en le nommant.
-  const kinds = ['a', 'l', 'p'].filter((k) =>
-    Object.keys(tar).some((f) => f.endsWith(`_g${k}.dbf`))
-  );
-  if (!kinds.length)
-    throw new Error(
-      `ni ga, ni gl, ni gp pour ${s.key} @${offset} : ${Object.keys(tar)}`
+  // Mode diagnostic : le brut est conservé AVANT toute transformation. Un échec d'écriture est une
+  // erreur de stockage local qui interrompt la collecte (jamais un jeu indisponible).
+  const kept = DIAGNOSTIC
+    ? quarantineRaw({
+        cacheDir: CACHE,
+        raw: buf,
+        key: s.key,
+        offset,
+        limit,
+        freeze: { ...freezeFor(s) },
+        http: {
+          status: meta.status ?? null,
+          contentType: meta.contentType ?? null,
+          url: meta.url ?? null,
+        },
+      })
+    : null;
+  const { products, analysis } = parseCoverageArchive(buf, s.key, offset);
+  const gap = describeGap(analysis);
+  if (gap) console.log(`${s.key} @${offset} : ${gap}`);
+  if (kept && analysis) {
+    writeAnalysis({ dir: kept.dir, base: kept.base, analysis });
+    console.log(
+      `diagnostic : brut et analyse conserves dans ${diagnosticsDir(CACHE)} (${kept.base})`
     );
-  const byId = new Map();
-  for (const kind of kinds) {
-    const base = Object.keys(tar)
-      .find((f) => f.endsWith(`_g${kind}.dbf`))
-      .slice(0, -4);
-    const rows = readDbf(tar[`${base}.dbf`], [
-      'ODEId',
-      'ProductId',
-      'DatasetId',
-      'UTCstart',
-      'UTCend',
-      'LabelURL',
-      'Target',
-    ]);
-    const shapes = readShp(tar[`${base}.shp`]);
-    if (shapes.length !== rows.length)
-      throw new Error(
-        `${s.key} @${offset} : ${rows.length} lignes pour ${shapes.length} formes`
-      );
-    rows.forEach((r, i) => {
-      const e = byId.get(r.ODEId) ?? {
-        id: r.ODEId,
-        pid: r.ProductId,
-        ds: r.DatasetId,
-        t0: r.UTCstart,
-        t1: r.UTCend,
-        label: r.LabelURL,
-        target: r.Target,
-        shapes: {},
-      };
-      (e.shapes[kind] ??= []).push(...shapes[i]);
-      byId.set(r.ODEId, e);
-    });
   }
-  return [...byId.values()];
+  return products;
 }
 
 const safe = (k) => k.replace(/[^A-Za-z0-9_.-]+/g, '_');
