@@ -39,8 +39,23 @@ import {
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { resolveCacheDir } from './ode-selection.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const CACHE = join(ROOT, '.cache', 'ode-footprints');
+/** Le cache d'empreintes : `--cache-dir` ou GALAXY_ODE_CACHE (hors dépôt), sinon l'ancien emplacement. */
+const CACHE = (() => {
+  const i = process.argv.indexOf('--cache-dir');
+  try {
+    return resolveCacheDir({
+      arg: i >= 0 ? process.argv[i + 1] : null,
+      env: process.env.GALAXY_ODE_CACHE ?? null,
+      root: ROOT,
+      requireExternal: false,
+    });
+  } catch (error) {
+    console.error(error.message);
+    process.exit(2);
+  }
+})();
 const GAZ = join(ROOT, 'public', 'assets', 'gazetteer');
 const OUT = join(ROOT, 'public', 'assets', 'place-observations');
 const INDEX = join(ROOT, 'src', 'config', 'placeObservationIndex.json');
