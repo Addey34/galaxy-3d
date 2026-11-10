@@ -37,7 +37,7 @@
  * (2 par defaut, avec un espacement de 3 s entre departs : a 3 et sans espacement, l'ODE a
  * commence a rendre des 403).
  */
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
@@ -682,7 +682,9 @@ async function main() {
      * elle n'est jamais supprimée, le nouveau fichier validé la remplace par renommage atomique.
      * Les temporaires abandonnés d'une écriture interrompue sont retirés.
      */
-    const found = inspectExistingPages(dir, offsets);
+    const found = inspectExistingPages(dir, offsets, (off) =>
+      Math.min(PAGE, n[s.key] - off)
+    );
     for (const name of found.staleTmp)
       console.log(`temporaire abandonne retire : ${s.key} ${name}`);
     for (const bad of found.invalid)
@@ -697,6 +699,7 @@ async function main() {
           s,
           off,
           offset: off,
+          expected: Math.min(PAGE, n[s.key] - off),
           file: join(dir, pageName(off)),
         });
   }
@@ -715,7 +718,9 @@ async function main() {
     existsSync(unavailableFile) && !RETRY
       ? JSON.parse(readFileSync(unavailableFile, 'utf8'))
       : {};
-  const { done, failed, fatal, remaining } = await collectPages({
+  const incompleteFile = join(CACHE, 'incomplete.json');
+  const incompletes = {};
+  const { done, failed, incomplete, fatal, remaining } = await collectPages({
     tasks,
     pull: (t) => pullPage(t.s, t.off),
     unavailable,
@@ -730,6 +735,16 @@ async function main() {
       console.log(
         `ECHEC ${t.key} @${t.off}, jeu declare indisponible : ${e.message.slice(-120)}`
       );
+    },
+    markIncomplete: (t, e) => {
+      incompletes[`${t.key}@${t.off}`] = {
+        expected: t.expected,
+        got: e.got ?? null,
+        error: e.message.slice(-200),
+        at: new Date().toISOString(),
+      };
+      writeFileAtomic(incompleteFile, JSON.stringify(incompletes, null, 1));
+      console.log(`INCOMPLET ${t.key} @${t.off} : ${e.message.slice(-120)}`);
     },
     onProgress: ({ done: d, failed: f, queued, task }) => {
       if (d % 20 === 0 || !queued) {
@@ -754,7 +769,12 @@ async function main() {
   console.log(
     `FIN ${done} pages, ${failed} echec(s), ${((Date.now() - t0) / 3600000).toFixed(2)} h`
   );
-  if (failed) process.exitCode = 1;
+  if (!incomplete && existsSync(incompleteFile)) rmSync(incompleteFile);
+  if (incomplete)
+    console.error(
+      `${incomplete} page(s) INCOMPLETE(S) declaree(s) dans incomplete.json : non publiees, a reprendre`
+    );
+  if (failed || incomplete) process.exitCode = 1;
 }
 
 main().catch((e) => {

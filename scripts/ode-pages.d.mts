@@ -10,9 +10,28 @@ export class LocalStorageError extends Error {
   constructor(operation: string, cause: unknown);
 }
 
+export class IncompletePageError extends Error {
+  got?: number;
+  distinct?: number;
+  expected?: number;
+  constructor(message: string, details?: object);
+}
+
+export function writeAll(
+  fd: number,
+  buffer: Buffer,
+  write?: (...args: never[]) => number
+): void;
+
 export function isLocalStorageError(error: unknown): boolean;
-export function validatePageBuffer(buffer: Buffer): number;
-export function validatePageFile(file: string): number;
+export function validatePageBuffer(
+  buffer: Buffer,
+  options?: { expected?: number }
+): number;
+export function validatePageFile(
+  file: string,
+  options?: { expected?: number }
+): number;
 
 export function writePageAtomic(
   file: string,
@@ -20,12 +39,14 @@ export function writePageAtomic(
   options?: {
     hooks?: { afterStep?: (label: string) => void };
     fs?: Record<string, (...args: never[]) => unknown>;
+    expected?: number;
   }
 ): void;
 
 export function inspectExistingPages(
   dir: string,
-  offsets: readonly number[]
+  offsets: readonly number[],
+  expectedFor?: (offset: number) => number
 ): {
   valid: Set<number>;
   invalid: { offset: number; reason: string }[];
@@ -36,21 +57,32 @@ export interface PageTask {
   key: string;
   offset: number;
   file: string;
+  expected?: number;
 }
 
 export function collectPages(options: {
   tasks: readonly PageTask[];
   pull: (task: PageTask) => Promise<readonly unknown[]>;
-  write?: (file: string, products: readonly unknown[]) => void;
+  write?: (
+    file: string,
+    products: readonly unknown[],
+    options?: { expected?: number }
+  ) => void;
   unavailable: Record<string, unknown>;
   markUnavailable: (task: PageTask, error: Error) => void;
+  markIncomplete?: (task: PageTask, error: IncompletePageError) => void;
   concurrency?: number;
   onProgress?: (info: unknown) => void;
 }): Promise<{
   done: number;
   failed: number;
+  incomplete: number;
   fatal: Error | null;
   remaining: number;
 }>;
 
-export function writeFileAtomic(file: string, text: string): void;
+export function writeFileAtomic(
+  file: string,
+  text: string,
+  options?: { fs?: Record<string, (...args: never[]) => unknown> }
+): void;

@@ -29,6 +29,7 @@ import {
   rmSync,
   writeSync,
 } from 'node:fs';
+import { Buffer } from 'node:buffer';
 import { dirname, join } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 
@@ -66,6 +67,19 @@ export class LocalStorageError extends Error {
   }
 }
 
+/**
+ * Une page lisible mais INCOMPLÈTE (trop courte, vide, excédentaire) ou incohérente (identifiants
+ * en double). Ce n'est ni une panne de stockage ni un jeu indisponible : l'incomplétude est
+ * DÉCLARÉE (`incomplete.json`), la page n'est jamais publiée comme complète.
+ */
+export class IncompletePageError extends Error {
+  constructor(message, details = {}) {
+    super(message);
+    this.name = 'IncompletePageError';
+    Object.assign(this, details);
+  }
+}
+
 /** Vrai si l'erreur vient du système de fichiers local (et pas du réseau). */
 export function isLocalStorageError(error) {
   if (error instanceof LocalStorageError) return true;
@@ -77,7 +91,7 @@ export function isLocalStorageError(error) {
  * Valide le contenu d'une page : gzip ENTIER (un gzip tronqué lève), chaque ligne un JSON, chaque
  * produit avec un `id` et des `shapes`. Renvoie le nombre de produits ; lève sinon.
  */
-export function validatePageBuffer(buffer) {
+export function validatePageBuffer(buffer, { expected } = {}) {
   let text;
   try {
     text = gunzipSync(buffer).toString('utf8');
@@ -87,6 +101,7 @@ export function validatePageBuffer(buffer) {
     });
   }
   let count = 0;
+  const ids = new Set();
   for (const line of text.split('\n')) {
     if (!line) continue;
     let product;
@@ -103,14 +118,46 @@ export function validatePageBuffer(buffer) {
       product.shapes === null
     )
       throw new Error(`ligne ${count + 1} : produit sans id ou sans shapes`);
+    const id = String(product.id);
+    if (ids.has(id))
+      throw new IncompletePageError(`identifiant en double : ${id}`, {
+        got: count + 1,
+        distinct: ids.size,
+        expected,
+      });
+    ids.add(id);
     count++;
   }
+  if (expected !== undefined && count !== expected)
+    throw new IncompletePageError(
+      `page ${count < expected ? 'incomplète' : 'excédentaire'} : ${count} produit(s) distinct(s) pour ${expected} attendu(s)`,
+      { got: count, distinct: count, expected }
+    );
   return count;
 }
 
 /** Valide un fichier de page déjà sur disque. Lève si absent, tronqué ou illisible. */
-export function validatePageFile(file) {
-  return validatePageBuffer(readFileSync(file));
+export function validatePageFile(file, options) {
+  return validatePageBuffer(readFileSync(file), options);
+}
+
+/**
+ * Écrit TOUT le tampon : `writeSync` peut écrire moins d'octets que demandé, ou aucun. Une
+ * écriture qui n'avance plus est une défaillance LOCALE (EIO), jamais une boucle infinie.
+ */
+export function writeAll(fd, buffer, write = writeSync) {
+  let offset = 0;
+  while (offset < buffer.length) {
+    const n = write(fd, buffer, offset, buffer.length - offset);
+    if (!Number.isInteger(n) || n <= 0)
+      throw Object.assign(
+        new Error(
+          `écriture interrompue : ${n} octet(s) écrit(s) à ${offset}/${buffer.length}`
+        ),
+        { code: 'EIO' }
+      );
+    offset += n;
+  }
 }
 
 /**
@@ -118,7 +165,11 @@ export function validatePageFile(file) {
  * (exception ou SIGKILL simulés) : 'half-written', 'tmp-written', 'tmp-validated'.
  * Toute erreur du système de fichiers est relancée en LocalStorageError, le temporaire retiré.
  */
-export function writePageAtomic(file, products, { hooks = {}, fs = {} } = {}) {
+export function writePageAtomic(
+  file,
+  products,
+  { hooks = {}, fs = {}, expected } = {}
+) {
   const open = fs.openSync ?? openSync;
   const write = fs.writeSync ?? writeSync;
   const fsync = fs.fsyncSync ?? fsyncSync;
@@ -131,15 +182,15 @@ export function writePageAtomic(file, products, { hooks = {}, fs = {} } = {}) {
   try {
     fd = open(tmp, 'w');
     const half = Math.floor(data.length / 2);
-    write(fd, data, 0, half);
+    writeAll(fd, data.subarray(0, half), write);
     step('half-written');
-    write(fd, data, half, data.length - half);
+    writeAll(fd, data.subarray(half), write);
     fsync(fd);
     close(fd);
     fd = null;
     step('tmp-written');
     // Validation du TEMPORAIRE relu depuis le disque, avant toute publication.
-    validatePageFile(tmp);
+    validatePageFile(tmp, { expected });
     step('tmp-validated');
     rename(tmp, file);
   } catch (error) {
@@ -169,7 +220,7 @@ export function writePageAtomic(file, products, { hooks = {}, fs = {} } = {}) {
  * attente de validation. Les pages INVALIDES ne sont PAS supprimées : elles sont signalées et
  * seront remplacées atomiquement après un nouveau téléchargement validé.
  */
-export function inspectExistingPages(dir, offsets) {
+export function inspectExistingPages(dir, offsets, expectedFor) {
   const valid = new Set();
   const invalid = [];
   const staleTmp = [];
@@ -183,7 +234,7 @@ export function inspectExistingPages(dir, offsets) {
     const file = join(dir, pageName(offset));
     if (!existsSync(file)) continue;
     try {
-      validatePageFile(file);
+      validatePageFile(file, { expected: expectedFor?.(offset) });
       valid.add(offset);
     } catch (error) {
       if (isLocalStorageError(error) && error.code !== 'ENOENT')
@@ -208,11 +259,13 @@ export async function collectPages({
   write = writePageAtomic,
   unavailable,
   markUnavailable,
+  markIncomplete = () => {},
   concurrency = 2,
   onProgress = () => {},
 }) {
   let done = 0;
   let failed = 0;
+  let incomplete = 0;
   let fatal = null;
   const queue = [...tasks];
   const stop = (error) => {
@@ -257,11 +310,25 @@ export async function collectPages({
         continue;
       }
       try {
-        write(task.file, products);
+        write(task.file, products, { expected: task.expected });
       } catch (error) {
         if (isLocalStorageError(error)) {
           stop(asLocal(error, 'écriture'));
           break;
+        }
+        if (error instanceof IncompletePageError) {
+          // L'ODE n'a pas fourni tout ce qui est attendu : DÉCLARÉ, jamais masqué ni publié.
+          incomplete++;
+          try {
+            markIncomplete(task, error);
+          } catch (storeError) {
+            if (!isLocalStorageError(storeError)) throw storeError;
+            stop(asLocal(storeError, 'incomplete.json'));
+            break;
+          }
+          done++;
+          onProgress({ done, failed, queued: queue.length, task, error });
+          continue;
         }
         // contenu reçu invalide (refusé par la validation avant publication) : échec de jeu
         if (!failDownload(task, error)) break;
@@ -272,17 +339,18 @@ export async function collectPages({
     }
   }
   await Promise.all(Array.from({ length: concurrency }, worker));
-  return { done, failed, fatal, remaining: queue.length };
+  return { done, failed, incomplete, fatal, remaining: queue.length };
 }
 
 /** Écrit un petit fichier de métadonnées atomiquement (temporaire du même dossier, fsync, rename). */
-export function writeFileAtomic(file, text) {
+export function writeFileAtomic(file, text, { fs = {} } = {}) {
+  const write = fs.writeSync ?? writeSync;
   const tmp = `${file}${TMP_SUFFIX}`;
   let fd = null;
   try {
     mkdirSync(dirname(file), { recursive: true });
     fd = openSync(tmp, 'w');
-    writeSync(fd, text);
+    writeAll(fd, Buffer.from(text, 'utf8'), write);
     fsyncSync(fd);
     closeSync(fd);
     fd = null;

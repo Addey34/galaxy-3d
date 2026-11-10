@@ -6,20 +6,25 @@ import {
   readdirSync,
   rmSync,
   truncateSync,
+  writeSync,
   writeFileSync,
 } from 'node:fs';
+import { Buffer } from 'node:buffer';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  IncompletePageError,
   LocalStorageError,
   collectPages,
   inspectExistingPages,
   isLocalStorageError,
   pageName,
   validatePageBuffer,
+  writeAll,
+  writeFileAtomic,
   writePageAtomic,
   type PageTask,
 } from '../../scripts/ode-pages.mjs';
@@ -378,6 +383,198 @@ describe('collectPages : erreurs locales séparées des erreurs de téléchargem
   });
 });
 
+describe('complétude : nombre attendu et identifiants distincts', () => {
+  const dup = [product(1), product(1), product(2)];
+
+  it('validatePageBuffer refuse une page trop courte, vide, excédentaire ou à doublons', () => {
+    expect(validatePageBuffer(gz(products(0, 5)), { expected: 5 })).toBe(5);
+    expect(() =>
+      validatePageBuffer(gz(products(0, 3)), { expected: 5 })
+    ).toThrow(/incomplète : 3 produit\(s\) distinct\(s\) pour 5/);
+    expect(() => validatePageBuffer(gzipSync(''), { expected: 5 })).toThrow(
+      IncompletePageError
+    );
+    expect(() =>
+      validatePageBuffer(gz(products(0, 7)), { expected: 5 })
+    ).toThrow(/excédentaire/);
+    expect(() => validatePageBuffer(gz(dup), { expected: 3 })).toThrow(
+      /identifiant en double : p1/
+    );
+    // sans attendu, les doublons sont refusés quand même
+    expect(() => validatePageBuffer(gz(dup))).toThrow(IncompletePageError);
+  });
+
+  it('writePageAtomic ne publie jamais une page trop courte ou à doublons', () => {
+    expect(() =>
+      writePageAtomic(pageFile(0), products(0, 3), { expected: 5 })
+    ).toThrow(IncompletePageError);
+    expect(() => writePageAtomic(pageFile(0), dup, { expected: 3 })).toThrow(
+      IncompletePageError
+    );
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it('une page valide gzip/JSON mais trop courte n’est PAS réutilisée à la reprise', () => {
+    writePageAtomic(pageFile(0), products(0, 5), { expected: 5 });
+    writePageAtomic(pageFile(5), products(5, 8)); // sans attendu : 3 produits sur disque
+    const found = inspectExistingPages(dir, [0, 5], () => 5);
+    expect([...found.valid]).toEqual([0]);
+    expect(found.invalid).toHaveLength(1);
+    expect(found.invalid[0].reason).toMatch(/incomplète/);
+    expect(existsSync(pageFile(5))).toBe(true); // jamais supprimée
+  });
+
+  it('une page à doublons déjà sur disque n’est pas réutilisée non plus', () => {
+    writeFileSync(pageFile(0), gz(dup));
+    const found = inspectExistingPages(dir, [0], () => 3);
+    expect(found.valid.size).toBe(0);
+    expect(found.invalid[0].reason).toMatch(/double/);
+  });
+
+  it('collectPages déclare l’incomplétude (markIncomplete), pas unavailable, et continue', async () => {
+    const unavailable: Record<string, unknown> = {};
+    const incomplete: string[] = [];
+    const tasks: PageTask[] = [
+      { key: 'A', offset: 0, expected: 5, file: pageFile(0) },
+      { key: 'A', offset: 5, expected: 5, file: pageFile(5) },
+    ];
+    const r = await collectPages({
+      tasks,
+      pull: async (t) => (t.offset === 0 ? products(0, 3) : products(5, 10)),
+      unavailable,
+      markUnavailable: () => {
+        throw new Error('ne doit pas être appelé');
+      },
+      markIncomplete: (t, e) =>
+        incomplete.push(`${t.key}@${t.offset}:${e.got}`),
+      concurrency: 1,
+    });
+    expect(r.incomplete).toBe(1);
+    expect(r.failed).toBe(0);
+    expect(r.fatal).toBeNull();
+    expect(incomplete).toEqual(['A@0:3']);
+    expect(unavailable).toEqual({});
+    expect(existsSync(pageFile(0))).toBe(false);
+    expect(existsSync(pageFile(5))).toBe(true);
+  });
+
+  it('incomplete.json impossible à écrire (disque plein) : arrêt local', async () => {
+    const r = await collectPages({
+      tasks: [{ key: 'A', offset: 0, expected: 5, file: pageFile(0) }],
+      pull: async () => products(0, 2),
+      unavailable: {},
+      markUnavailable: () => {},
+      markIncomplete: () => {
+        throw errno('ENOSPC');
+      },
+      concurrency: 1,
+    });
+    expect(r.fatal).toBeInstanceOf(LocalStorageError);
+  });
+});
+
+describe('écritures partielles', () => {
+  it('writeAll boucle jusqu’à l’écriture intégrale (écritures de 3 octets)', () => {
+    const out: number[] = [];
+    const data = Buffer.from(Array.from({ length: 10 }, (_, i) => i));
+    writeAll(1, data, ((_fd: number, buf: Buffer, off: number, len: number) => {
+      const n = Math.min(3, len);
+      out.push(...buf.subarray(off, off + n));
+      return n;
+    }) as never);
+    expect(out).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  });
+
+  it('writePageAtomic écrit la page ENTIÈRE malgré des écritures partielles', () => {
+    let calls = 0;
+    const fs = {
+      writeSync: (fd: number, buf: Buffer, off: number, len: number) => {
+        calls++;
+        return writeSync(fd, buf, off, Math.min(7, len));
+      },
+    } as never;
+    writePageAtomic(pageFile(0), products(0, 300), { fs, expected: 300 });
+    expect(calls).toBeGreaterThan(2);
+    expect(
+      validatePageBuffer(readFileSync(pageFile(0)), { expected: 300 })
+    ).toBe(300);
+    expect(readdirSync(dir)).toEqual(['0.ndjson.gz']);
+  });
+
+  for (const ret of [0, -1, undefined, 1.5])
+    it(`une écriture qui n’avance plus (renvoie ${String(ret)}) : EIO local, pas de boucle, pas de page`, () => {
+      const fs = { writeSync: () => ret } as never;
+      let caught: unknown;
+      try {
+        writePageAtomic(pageFile(0), products(0, 5), { fs });
+      } catch (error) {
+        caught = error;
+      }
+      expect(caught).toBeInstanceOf(LocalStorageError);
+      expect((caught as LocalStorageError).code).toBe('EIO');
+      expect(readdirSync(dir)).toEqual([]);
+    });
+
+  it('une écriture partielle puis bloquée n’est jamais renommée', () => {
+    let first = true;
+    const fs = {
+      writeSync: (fd: number, buf: Buffer, off: number, len: number) => {
+        if (first) {
+          first = false;
+          return writeSync(fd, buf, off, Math.min(5, len));
+        }
+        return 0;
+      },
+    } as never;
+    expect(() => writePageAtomic(pageFile(0), products(0, 50), { fs })).toThrow(
+      LocalStorageError
+    );
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it('writeFileAtomic : écriture intégrale malgré des écritures partielles', () => {
+    const file = join(dir, 'meta.json');
+    const text = JSON.stringify({ a: 'é'.repeat(100) });
+    writeFileAtomic(file, text, {
+      fs: {
+        writeSync: (fd: number, buf: Buffer, off: number, len: number) =>
+          writeSync(fd, buf, off, Math.min(4, len)),
+      } as never,
+    });
+    expect(readFileSync(file, 'utf8')).toBe(text);
+  });
+
+  it('writeFileAtomic qui n’avance plus : erreur, ancien fichier intact, aucun temporaire', () => {
+    const file = join(dir, 'meta.json');
+    writeFileSync(file, 'ancien');
+    expect(() =>
+      writeFileAtomic(file, 'nouveau', { fs: { writeSync: () => 0 } as never })
+    ).toThrow(/écriture interrompue/);
+    expect(readFileSync(file, 'utf8')).toBe('ancien');
+    expect(readdirSync(dir)).toEqual(['meta.json']);
+  });
+
+  it('une défaillance d’écriture locale ne pollue pas unavailable', async () => {
+    const unavailable: Record<string, unknown> = {};
+    const r = await collectPages({
+      tasks: [{ key: 'A', offset: 0, expected: 5, file: pageFile(0) }],
+      pull: async () => products(0, 5),
+      write: (file, items, options) =>
+        writePageAtomic(file, items, {
+          ...options,
+          fs: { writeSync: () => 0 } as never,
+        }),
+      unavailable,
+      markUnavailable: () => {
+        throw new Error('ne doit pas être appelé');
+      },
+      concurrency: 1,
+    });
+    expect(r.fatal).toBeInstanceOf(LocalStorageError);
+    expect(unavailable).toEqual({});
+  });
+});
+
 describe('câblage de pull-ode-footprints.mjs', () => {
   const source = readFileSync(
     join(process.cwd(), 'scripts', 'pull-ode-footprints.mjs'),
@@ -387,6 +584,8 @@ describe('câblage de pull-ode-footprints.mjs', () => {
     expect(source).toContain("from './ode-pages.mjs'");
     expect(source).toContain('collectPages(');
     expect(source).toContain('inspectExistingPages(');
+    expect(source).toContain('Math.min(PAGE, n[s.key] - off)');
+    expect(source).toContain('incomplete.json');
     expect(source).not.toMatch(/writeFileSync\(\s*t\.file/);
     expect(source).not.toContain('gzipSync');
     expect(source).not.toMatch(/have\.has\(/);
