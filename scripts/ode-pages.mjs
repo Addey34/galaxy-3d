@@ -19,8 +19,11 @@
  */
 import {
   closeSync,
+  constants,
+  copyFileSync,
   existsSync,
   fsyncSync,
+  linkSync,
   mkdirSync,
   openSync,
   readFileSync,
@@ -30,6 +33,8 @@ import {
   writeSync,
 } from 'node:fs';
 import { Buffer } from 'node:buffer';
+import process from 'node:process';
+import { randomBytes } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 
@@ -91,7 +96,10 @@ export function isLocalStorageError(error) {
  * Valide le contenu d'une page : gzip ENTIER (un gzip tronqué lève), chaque ligne un JSON, chaque
  * produit avec un `id` et des `shapes`. Renvoie le nombre de produits ; lève sinon.
  */
-export function validatePageBuffer(buffer, { expected } = {}) {
+export function validatePageBuffer(
+  buffer,
+  { expected, excludedIds, allowedIds } = {}
+) {
   let text;
   try {
     text = gunzipSync(buffer).toString('utf8');
@@ -119,6 +127,18 @@ export function validatePageBuffer(buffer, { expected } = {}) {
     )
       throw new Error(`ligne ${count + 1} : produit sans id ou sans shapes`);
     const id = String(product.id);
+    // Un produit déclaré SANS géométrie par une réconciliation ne doit jamais figurer dans une page.
+    if (excludedIds?.has(id))
+      throw new IncompletePageError(
+        `exclusion injustifiée : le produit ${id}, déclaré sans géométrie, figure dans la page`,
+        { got: count + 1, distinct: ids.size, expected }
+      );
+    // Jeu réconcilié : les identifiants sont EXACTEMENT ceux du manifeste, pas seulement leur nombre.
+    if (allowedIds && !allowedIds.has(id))
+      throw new IncompletePageError(
+        `identifiant non attendu : ${id} ne figure pas dans l'ensemble prouvé des empreintes`,
+        { got: count + 1, distinct: ids.size, expected }
+      );
     if (ids.has(id))
       throw new IncompletePageError(`identifiant en double : ${id}`, {
         got: count + 1,
@@ -168,7 +188,7 @@ export function writeAll(fd, buffer, write = writeSync) {
 export function writePageAtomic(
   file,
   products,
-  { hooks = {}, fs = {}, expected } = {}
+  { hooks = {}, fs = {}, expected, excludedIds, allowedIds } = {}
 ) {
   const open = fs.openSync ?? openSync;
   const write = fs.writeSync ?? writeSync;
@@ -190,7 +210,7 @@ export function writePageAtomic(
     fd = null;
     step('tmp-written');
     // Validation du TEMPORAIRE relu depuis le disque, avant toute publication.
-    validatePageFile(tmp, { expected });
+    validatePageFile(tmp, { expected, excludedIds, allowedIds });
     step('tmp-validated');
     rename(tmp, file);
   } catch (error) {
@@ -220,21 +240,33 @@ export function writePageAtomic(
  * attente de validation. Les pages INVALIDES ne sont PAS supprimées : elles sont signalées et
  * seront remplacées atomiquement après un nouveau téléchargement validé.
  */
-export function inspectExistingPages(dir, offsets, expectedFor) {
+export function inspectExistingPages(
+  dir,
+  offsets,
+  expectedFor,
+  excludedFor,
+  allowedFor,
+  { cleanTmp = true } = {}
+) {
   const valid = new Set();
   const invalid = [];
   const staleTmp = [];
   if (!existsSync(dir)) return { valid, invalid, staleTmp };
   for (const name of readdirSync(dir))
     if (name.endsWith(TMP_SUFFIX)) {
-      rmSync(join(dir, name), { force: true });
+      // `cleanTmp: false` : inspection strictement non destructive (dry-run), le temporaire est seulement signalé.
+      if (cleanTmp) rmSync(join(dir, name), { force: true });
       staleTmp.push(name);
     }
   for (const offset of offsets) {
     const file = join(dir, pageName(offset));
     if (!existsSync(file)) continue;
     try {
-      validatePageFile(file, { expected: expectedFor?.(offset) });
+      validatePageFile(file, {
+        expected: expectedFor?.(offset),
+        excludedIds: excludedFor?.(offset),
+        allowedIds: allowedFor?.(offset),
+      });
       valid.add(offset);
     } catch (error) {
       if (isLocalStorageError(error) && error.code !== 'ENOENT')
@@ -310,7 +342,11 @@ export async function collectPages({
         continue;
       }
       try {
-        write(task.file, products, { expected: task.expected });
+        write(task.file, products, {
+          expected: task.expected,
+          excludedIds: task.excludedIds,
+          allowedIds: task.allowedIds,
+        });
       } catch (error) {
         if (isLocalStorageError(error)) {
           stop(asLocal(error, 'écriture'));
@@ -371,6 +407,63 @@ export function writeFileAtomic(file, text, { fs = {} } = {}) {
     throw error;
   }
 }
+
+/**
+ * Publie un fichier SANS JAMAIS REMPLACER la destination. Le contenu est d'abord écrit et fsyncé
+ * dans un temporaire PROPRE au processus (pid + aléa), puis publié :
+ *   - par `link` quand le volume le permet : la destination apparaît entière ou pas du tout
+ *     (ATOMIQUE), un seul gagnant, EEXIST pour les autres ;
+ *   - sinon (volume sans liens physiques, exFAT) par `copyFile` en mode EXCLUSIF
+ *     (`COPYFILE_EXCL`) : la création est exclusive (EEXIST si la destination existe, aucun
+ *     écrasement possible, même en course) mais la COPIE N'EST PAS ATOMIQUE : un lecteur peut voir
+ *     un fichier PARTIEL pendant la copie, ou après une interruption. Le lecteur doit donc refuser
+ *     un fichier incomplet (c'est le cas du manifeste : JSON entier, structure et SHA-256 validés).
+ * Propriété des fichiers : on ne supprime que ce qu'on a créé. Le temporaire est le nôtre ; la
+ * destination n'est retirée que si NOTRE copie a réussi puis échoué à la relecture. Après une
+ * erreur d'écriture non EEXIST, la destination éventuellement partielle est LAISSÉE (elle peut
+ * n'être qu'à un autre processus) : elle est refusée à la lecture et se retire à la main.
+ * Les temporaires d'autres processus ne sont jamais touchés. Lève une erreur EEXIST si la
+ * destination existe.
+ */
+export function writeFileExclusive(file, data, { fs = {} } = {}) {
+  const link = fs.linkSync ?? linkSync;
+  const copy = fs.copyFileSync ?? copyFileSync;
+  const bytes = Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8');
+  const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}${TMP_SUFFIX}`;
+  try {
+    writeFileAtomic(tmp, bytes, { fs });
+    try {
+      link(tmp, file);
+    } catch (error) {
+      if (!NO_HARDLINK_CODES.has(error?.code)) throw error;
+      copy(tmp, file, constants.COPYFILE_EXCL);
+      // Notre copie a réussi : la destination est la nôtre. On la relit ; si elle diffère, c'est
+      // un fichier partiel que NOUS avons créé, on le retire et on échoue.
+      let written = null;
+      try {
+        written = readFileSync(file);
+      } catch {
+        /* illisible : traité comme différent */
+      }
+      if (!written || !written.equals(bytes)) {
+        rmSync(file, { force: true });
+        throw Object.assign(
+          new Error(`copie exclusive incomplète (${file}) : retirée`),
+          { code: 'EIO' }
+        );
+      }
+    }
+  } finally {
+    rmSync(tmp, { force: true });
+  }
+}
+const NO_HARDLINK_CODES = new Set([
+  'EPERM',
+  'ENOSYS',
+  'ENOTSUP',
+  'EOPNOTSUPP',
+  'EXDEV',
+]);
 
 /** Code de sortie d'une collecte arrêtée sur une erreur locale (distinct des échecs de jeu). */
 export const EXIT_LOCAL_STORAGE = 3;

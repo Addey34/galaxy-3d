@@ -26,11 +26,19 @@ export function writeAll(
 export function isLocalStorageError(error: unknown): boolean;
 export function validatePageBuffer(
   buffer: Buffer,
-  options?: { expected?: number }
+  options?: {
+    expected?: number;
+    excludedIds?: ReadonlySet<string>;
+    allowedIds?: ReadonlySet<string>;
+  }
 ): number;
 export function validatePageFile(
   file: string,
-  options?: { expected?: number }
+  options?: {
+    expected?: number;
+    excludedIds?: ReadonlySet<string>;
+    allowedIds?: ReadonlySet<string>;
+  }
 ): number;
 
 export function writePageAtomic(
@@ -40,13 +48,18 @@ export function writePageAtomic(
     hooks?: { afterStep?: (label: string) => void };
     fs?: Record<string, (...args: never[]) => unknown>;
     expected?: number;
+    excludedIds?: ReadonlySet<string>;
+    allowedIds?: ReadonlySet<string>;
   }
 ): void;
 
 export function inspectExistingPages(
   dir: string,
   offsets: readonly number[],
-  expectedFor?: (offset: number) => number
+  expectedFor?: (offset: number) => number,
+  excludedFor?: (offset: number) => ReadonlySet<string> | undefined,
+  allowedFor?: (offset: number) => ReadonlySet<string> | undefined,
+  options?: { cleanTmp?: boolean }
 ): {
   valid: Set<number>;
   invalid: { offset: number; reason: string }[];
@@ -58,6 +71,8 @@ export interface PageTask {
   offset: number;
   file: string;
   expected?: number;
+  excludedIds?: ReadonlySet<string>;
+  allowedIds?: ReadonlySet<string>;
 }
 
 export function collectPages(options: {
@@ -66,7 +81,11 @@ export function collectPages(options: {
   write?: (
     file: string,
     products: readonly unknown[],
-    options?: { expected?: number }
+    options?: {
+      expected?: number;
+      excludedIds?: ReadonlySet<string>;
+      allowedIds?: ReadonlySet<string>;
+    }
   ) => void;
   unavailable: Record<string, unknown>;
   markUnavailable: (task: PageTask, error: Error) => void;
@@ -84,5 +103,11 @@ export function collectPages(options: {
 export function writeFileAtomic(
   file: string,
   text: string | Buffer,
+  options?: { fs?: Record<string, (...args: never[]) => unknown> }
+): void;
+
+export function writeFileExclusive(
+  file: string,
+  data: string | Buffer,
   options?: { fs?: Record<string, (...args: never[]) => unknown> }
 ): void;

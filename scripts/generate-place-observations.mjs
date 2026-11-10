@@ -39,7 +39,8 @@ import {
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { resolveCacheDir } from './ode-selection.mjs';
+import { FREEZE, resolveCacheDir } from './ode-selection.mjs';
+import { loadReconciliation } from './ode-reconciliation.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /** Le cache d'empreintes : `--cache-dir` ou GALAXY_ODE_CACHE (hors dépôt), sinon l'ancien emplacement. */
 const CACHE = (() => {
@@ -279,6 +280,8 @@ rmSync(STAGING, { recursive: true, force: true });
 mkdirSync(STAGING, { recursive: true });
 const previousIndex = existsSync(INDEX) ? readJson(INDEX) : null;
 const published = [];
+/** Jeux dont le catalogue dépasse les empreintes, PROUVÉ par un manifeste : tracés, jamais des observations. */
+const reconciled = [];
 /** Un refus est un échec net (code 1) : le temporaire part, le livré n'a jamais été touché. */
 function refuse(error) {
   console.error(error.message);
@@ -318,46 +321,77 @@ for (const [db, body] of Object.entries(BODY)) {
      * refuse aussi les pages mal nommées ou illisibles et exige autant de produits DISTINCTS que
      * le compte déclaré du jeu.
      */
-    const report = scanDataset(dir, counts[key], PAGE, (p) => {
-      if (inst < 0) {
-        if (!instIndex.has(ik)) {
-          instIndex.set(ik, instruments.length);
-          instruments.push({ host: IHID, id: IID, ...names.get(ik) });
-        }
-        inst = instIndex.get(ik);
-      }
-      seen++;
-      const cands = new Set();
-      for (const [kind, rings] of Object.entries(p.shapes))
-        for (const i of candidates(grid, rings, kind)) cands.add(i);
-      for (const i of cands) {
-        const v = observesShapes(p.shapes, features[i], R);
-        if (v === 'none') continue;
-        if (v === 'global') {
-          global++;
-          continue;
-        }
-        /**
-         * PREMIER DÉPART, DERNIÈRE FIN. Un produit porte un INTERVALLE : les produits dérivés de
-         * MOLA déclarent 1997-09-15 → 2001-06-30, toute la mission, et n'en lire que le départ
-         * faisait croire à une seule journée. Une date ABSENTE le reste : Viking Orbiter n'en
-         * publie aucune dans l'ODE, et rien ici n'en invente.
-         */
-        const m = agg[i];
-        const e = m.get(inst);
-        const t0 = p.t0 || '';
-        const t1 = p.t1 || t0;
-        if (!e) m.set(inst, { n: 1, first: t0, last: t1, label: p.label });
-        else {
-          e.n++;
-          if (t0 && (!e.first || t0 < e.first)) {
-            e.first = t0;
-            e.label = p.label;
-          }
-          if (t1 > e.last) e.last = t1;
-        }
-      }
+    const reconciliation = loadReconciliation({
+      cacheDir: CACHE,
+      key,
+      freeze: {
+        mincreationtime: FREEZE.mincreationtime,
+        maxcreationtime: FROZEN_AT,
+      },
+      catalogueCount: counts[key],
+      pageSize: PAGE,
     });
+    if (reconciliation)
+      reconciled.push({
+        key,
+        catalogued: reconciliation.catalogued,
+        withFootprint: reconciliation.footprints,
+        withoutGeometry: reconciliation.manifest.excluded.map((e) => ({
+          odeId: e.odeId,
+          productId: e.productId,
+          reason: e.reason,
+        })),
+        evidence: {
+          metadataSha256: reconciliation.manifest.sources.metadata.sha256,
+          coverageSha256: reconciliation.manifest.sources.coverage.sha256,
+        },
+      });
+    const report = scanDataset(
+      dir,
+      counts[key],
+      PAGE,
+      (p) => {
+        if (inst < 0) {
+          if (!instIndex.has(ik)) {
+            instIndex.set(ik, instruments.length);
+            instruments.push({ host: IHID, id: IID, ...names.get(ik) });
+          }
+          inst = instIndex.get(ik);
+        }
+        seen++;
+        const cands = new Set();
+        for (const [kind, rings] of Object.entries(p.shapes))
+          for (const i of candidates(grid, rings, kind)) cands.add(i);
+        for (const i of cands) {
+          const v = observesShapes(p.shapes, features[i], R);
+          if (v === 'none') continue;
+          if (v === 'global') {
+            global++;
+            continue;
+          }
+          /**
+           * PREMIER DÉPART, DERNIÈRE FIN. Un produit porte un INTERVALLE : les produits dérivés de
+           * MOLA déclarent 1997-09-15 → 2001-06-30, toute la mission, et n'en lire que le départ
+           * faisait croire à une seule journée. Une date ABSENTE le reste : Viking Orbiter n'en
+           * publie aucune dans l'ODE, et rien ici n'en invente.
+           */
+          const m = agg[i];
+          const e = m.get(inst);
+          const t0 = p.t0 || '';
+          const t1 = p.t1 || t0;
+          if (!e) m.set(inst, { n: 1, first: t0, last: t1, label: p.label });
+          else {
+            e.n++;
+            if (t0 && (!e.first || t0 < e.first)) {
+              e.first = t0;
+              e.label = p.label;
+            }
+            if (t1 > e.last) e.last = t1;
+          }
+        }
+      },
+      reconciliation
+    );
     missingPages += report.missing.length;
     extraPages += report.extra.length + report.misnamed.length;
     for (const p of report.problems) pageProblems.push(`${key} : ${p}`);
@@ -455,6 +489,16 @@ if (ONLY && previousIndex) {
   for (const [body, entry] of Object.entries(previousIndex.bodies ?? {}))
     if (!(body in summary.bodies)) summary.bodies[body] = entry;
 }
+if (ONLY && previousIndex) {
+  const processed = new Set(
+    Object.entries(BODY)
+      .filter(([, body]) => body === ONLY)
+      .map(([db]) => db)
+  );
+  for (const r of previousIndex.reconciled ?? [])
+    if (!processed.has(r.key.split('|')[0])) reconciled.push(r);
+}
+if (reconciled.length) summary.reconciled = reconciled;
 summary.complete = Object.values(BODY).every(
   (body) => summary.bodies[body] && summary.bodies[body].missingPages === 0
 );

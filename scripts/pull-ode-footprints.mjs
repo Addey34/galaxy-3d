@@ -75,6 +75,7 @@ import {
   quarantineRaw,
   writeAnalysis,
 } from './ode-diagnostic.mjs';
+import { loadReconciliation, pageExpectation } from './ode-reconciliation.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /**
@@ -595,6 +596,34 @@ async function main() {
   );
   if (flag('--plan')) return;
 
+  /**
+   * RÉCONCILIATION PROUVÉE (GAL-A003-05F) : catalogue (`counts.json`) et empreintes sont deux
+   * comptes. Un manifeste local, vérifié par SHA-256, peut établir qu'un jeu d'UNE page compte N
+   * produits catalogués dont k n'ont aucune géométrie : l'attendu devient N - k, par ÉGALITÉ, et
+   * ces k identifiants ne doivent jamais figurer dans la page. Sans manifeste, rien ne change.
+   */
+  const reconciliations = new Map();
+  for (const s of todo) {
+    const r = loadReconciliation({
+      cacheDir: CACHE,
+      key: s.key,
+      freeze: freezeFor(s),
+      catalogueCount: n[s.key],
+      pageSize: PAGE,
+    });
+    if (!r) continue;
+    reconciliations.set(s.key, r);
+    console.log(
+      `reconciliation ${s.key} : ${r.catalogued} catalogues = ${r.footprints} empreintes + ${r.excludedIds.size} sans geometrie (preuve ${r.manifest.sources.coverage.sha256.slice(0, 12)}…)`
+    );
+  }
+  const expectation = (s, off) =>
+    pageExpectation({
+      count: n[s.key],
+      offset: off,
+      pageSize: PAGE,
+      reconciliation: reconciliations.get(s.key),
+    });
   const tasks = [];
   let reused = 0;
   for (const s of todo) {
@@ -608,8 +637,12 @@ async function main() {
      * elle n'est jamais supprimée, le nouveau fichier validé la remplace par renommage atomique.
      * Les temporaires abandonnés d'une écriture interrompue sont retirés.
      */
-    const found = inspectExistingPages(dir, offsets, (off) =>
-      Math.min(PAGE, n[s.key] - off)
+    const found = inspectExistingPages(
+      dir,
+      offsets,
+      (off) => expectation(s, off).expected,
+      (off) => expectation(s, off).excludedIds,
+      (off) => expectation(s, off).allowedIds
     );
     for (const name of found.staleTmp)
       console.log(`temporaire abandonne retire : ${s.key} ${name}`);
@@ -625,7 +658,9 @@ async function main() {
           s,
           off,
           offset: off,
-          expected: Math.min(PAGE, n[s.key] - off),
+          expected: expectation(s, off).expected,
+          excludedIds: expectation(s, off).excludedIds,
+          allowedIds: expectation(s, off).allowedIds,
           file: join(dir, pageName(off)),
         });
   }

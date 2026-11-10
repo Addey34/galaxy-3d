@@ -812,7 +812,14 @@ describe('garanties inchangées', () => {
     'utf8'
   );
   it('le regroupement, la politique de complétude et le gel ne sont pas touchés', () => {
-    expect(source).toContain('Math.min(PAGE, n[s.key] - off)');
+    // L'attendu d'une page passe par pageExpectation : le catalogue, sauf réconciliation prouvée.
+    expect(source).toContain('pageExpectation(');
+    expect(
+      readFileSync(
+        join(process.cwd(), 'scripts', 'ode-reconciliation.mjs'),
+        'utf8'
+      )
+    ).toContain('Math.min(pageSize, count - offset)');
     expect(source).toContain('freezeAction(CACHE)');
     expect(source).toMatch(
       /parseCoverageArchive\(buf, s\.key, offset, \{\s*analyze: DIAGNOSTIC,?\s*\}\)/
