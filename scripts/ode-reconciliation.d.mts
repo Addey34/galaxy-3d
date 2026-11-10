@@ -111,4 +111,8 @@ export function pageExpectation(options: {
   offset: number;
   pageSize: number;
   reconciliation: LoadedReconciliation | null | undefined;
-}): { expected: number; excludedIds: ReadonlySet<string> | undefined };
+}): {
+  expected: number;
+  excludedIds: ReadonlySet<string> | undefined;
+  allowedIds: ReadonlySet<string> | undefined;
+};

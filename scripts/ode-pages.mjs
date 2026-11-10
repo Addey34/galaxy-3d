@@ -21,6 +21,7 @@ import {
   closeSync,
   existsSync,
   fsyncSync,
+  linkSync,
   mkdirSync,
   openSync,
   readFileSync,
@@ -30,6 +31,8 @@ import {
   writeSync,
 } from 'node:fs';
 import { Buffer } from 'node:buffer';
+import process from 'node:process';
+import { randomBytes } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 
@@ -91,7 +94,10 @@ export function isLocalStorageError(error) {
  * Valide le contenu d'une page : gzip ENTIER (un gzip tronqué lève), chaque ligne un JSON, chaque
  * produit avec un `id` et des `shapes`. Renvoie le nombre de produits ; lève sinon.
  */
-export function validatePageBuffer(buffer, { expected, excludedIds } = {}) {
+export function validatePageBuffer(
+  buffer,
+  { expected, excludedIds, allowedIds } = {}
+) {
   let text;
   try {
     text = gunzipSync(buffer).toString('utf8');
@@ -123,6 +129,12 @@ export function validatePageBuffer(buffer, { expected, excludedIds } = {}) {
     if (excludedIds?.has(id))
       throw new IncompletePageError(
         `exclusion injustifiée : le produit ${id}, déclaré sans géométrie, figure dans la page`,
+        { got: count + 1, distinct: ids.size, expected }
+      );
+    // Jeu réconcilié : les identifiants sont EXACTEMENT ceux du manifeste, pas seulement leur nombre.
+    if (allowedIds && !allowedIds.has(id))
+      throw new IncompletePageError(
+        `identifiant non attendu : ${id} ne figure pas dans l'ensemble prouvé des empreintes`,
         { got: count + 1, distinct: ids.size, expected }
       );
     if (ids.has(id))
@@ -174,7 +186,7 @@ export function writeAll(fd, buffer, write = writeSync) {
 export function writePageAtomic(
   file,
   products,
-  { hooks = {}, fs = {}, expected, excludedIds } = {}
+  { hooks = {}, fs = {}, expected, excludedIds, allowedIds } = {}
 ) {
   const open = fs.openSync ?? openSync;
   const write = fs.writeSync ?? writeSync;
@@ -196,7 +208,7 @@ export function writePageAtomic(
     fd = null;
     step('tmp-written');
     // Validation du TEMPORAIRE relu depuis le disque, avant toute publication.
-    validatePageFile(tmp, { expected, excludedIds });
+    validatePageFile(tmp, { expected, excludedIds, allowedIds });
     step('tmp-validated');
     rename(tmp, file);
   } catch (error) {
@@ -226,14 +238,22 @@ export function writePageAtomic(
  * attente de validation. Les pages INVALIDES ne sont PAS supprimées : elles sont signalées et
  * seront remplacées atomiquement après un nouveau téléchargement validé.
  */
-export function inspectExistingPages(dir, offsets, expectedFor, excludedFor) {
+export function inspectExistingPages(
+  dir,
+  offsets,
+  expectedFor,
+  excludedFor,
+  allowedFor,
+  { cleanTmp = true } = {}
+) {
   const valid = new Set();
   const invalid = [];
   const staleTmp = [];
   if (!existsSync(dir)) return { valid, invalid, staleTmp };
   for (const name of readdirSync(dir))
     if (name.endsWith(TMP_SUFFIX)) {
-      rmSync(join(dir, name), { force: true });
+      // `cleanTmp: false` : inspection strictement non destructive (dry-run), le temporaire est seulement signalé.
+      if (cleanTmp) rmSync(join(dir, name), { force: true });
       staleTmp.push(name);
     }
   for (const offset of offsets) {
@@ -243,6 +263,7 @@ export function inspectExistingPages(dir, offsets, expectedFor, excludedFor) {
       validatePageFile(file, {
         expected: expectedFor?.(offset),
         excludedIds: excludedFor?.(offset),
+        allowedIds: allowedFor?.(offset),
       });
       valid.add(offset);
     } catch (error) {
@@ -322,6 +343,7 @@ export async function collectPages({
         write(task.file, products, {
           expected: task.expected,
           excludedIds: task.excludedIds,
+          allowedIds: task.allowedIds,
         });
       } catch (error) {
         if (isLocalStorageError(error)) {
@@ -383,6 +405,39 @@ export function writeFileAtomic(file, text, { fs = {} } = {}) {
     throw error;
   }
 }
+
+/**
+ * Publie un fichier de façon ATOMIQUE et EXCLUSIVE : la destination n'est jamais remplacée. Le
+ * contenu est écrit et fsyncé dans un temporaire propre au processus, puis publié par `link` (qui
+ * échoue en EEXIST si la destination existe : un seul gagnant, aucun état intermédiaire visible).
+ * Sur un volume sans liens physiques (exFAT), repli : réservation exclusive de la destination
+ * (`wx`), puis renommage du temporaire sur SA réservation ; un lecteur ne voit au pire qu'un
+ * fichier vide, que la validation refuse. Lève une erreur de code EEXIST si la destination existe.
+ */
+export function writeFileExclusive(file, data, { fs = {} } = {}) {
+  const link = fs.linkSync ?? linkSync;
+  const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}${TMP_SUFFIX}`;
+  try {
+    writeFileAtomic(tmp, data, { fs });
+    try {
+      link(tmp, file);
+    } catch (error) {
+      if (!NO_HARDLINK_CODES.has(error?.code)) throw error;
+      const reserved = openSync(file, 'wx');
+      closeSync(reserved);
+      renameSync(tmp, file);
+    }
+  } finally {
+    rmSync(tmp, { force: true });
+  }
+}
+const NO_HARDLINK_CODES = new Set([
+  'EPERM',
+  'ENOSYS',
+  'ENOTSUP',
+  'EOPNOTSUPP',
+  'EXDEV',
+]);
 
 /** Code de sortie d'une collecte arrêtée sur une erreur locale (distinct des échecs de jeu). */
 export const EXIT_LOCAL_STORAGE = 3;

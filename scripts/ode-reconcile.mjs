@@ -23,7 +23,7 @@ import { FREEZE, PAGE, resolveCacheDir } from './ode-selection.mjs';
 import {
   inspectExistingPages,
   pageName,
-  writeFileAtomic,
+  writeFileExclusive,
   writePageAtomic,
 } from './ode-pages.mjs';
 import {
@@ -63,10 +63,12 @@ export function buildReconciliation({
   now = new Date(),
 }) {
   const file = manifestPath(cacheDir, key);
-  if (existsSync(file))
-    throw new ReconciliationError(
+  const exists = () =>
+    new ReconciliationError(
       `un manifeste existe déjà (${file}) : il n'est jamais écrasé`
     );
+  // Refus rapide ; la garantie réelle est la publication exclusive ci-dessous (course entre processus).
+  if (existsSync(file)) throw exists();
   const counts = readJson(join(cacheDir, 'counts.json'));
   if (!(key in counts))
     throw new ReconciliationError(`${key} absent de counts.json`);
@@ -80,7 +82,12 @@ export function buildReconciliation({
     now,
   });
   mkdirSync(dirname(file), { recursive: true });
-  writeFileAtomic(file, JSON.stringify(manifest, null, 1) + '\n');
+  try {
+    writeFileExclusive(file, JSON.stringify(manifest, null, 1) + '\n');
+  } catch (error) {
+    if (error?.code === 'EEXIST') throw exists();
+    throw error;
+  }
   return { manifest, file };
 }
 
@@ -167,7 +174,10 @@ export function replayReconciled({ cacheDir, key, dryRun = false }) {
     dir,
     [0],
     () => rec.footprints,
-    () => rec.excludedIds
+    () => rec.excludedIds,
+    () => rec.footprintIds,
+    // dry-run : inspection strictement non destructive (aucun temporaire retiré)
+    { cleanTmp: !dryRun }
   );
   if (existing.valid.has(0)) return { status: 'already-valid', ...summary };
   if (dryRun) return { status: 'dry-run', ...summary };
@@ -175,6 +185,7 @@ export function replayReconciled({ cacheDir, key, dryRun = false }) {
   writePageAtomic(file, products, {
     expected: rec.footprints,
     excludedIds: rec.excludedIds,
+    allowedIds: rec.footprintIds,
   });
   return { status: 'written', ...summary };
 }

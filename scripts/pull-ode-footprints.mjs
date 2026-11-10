@@ -641,7 +641,8 @@ async function main() {
       dir,
       offsets,
       (off) => expectation(s, off).expected,
-      (off) => expectation(s, off).excludedIds
+      (off) => expectation(s, off).excludedIds,
+      (off) => expectation(s, off).allowedIds
     );
     for (const name of found.staleTmp)
       console.log(`temporaire abandonne retire : ${s.key} ${name}`);
@@ -659,6 +660,7 @@ async function main() {
           offset: off,
           expected: expectation(s, off).expected,
           excludedIds: expectation(s, off).excludedIds,
+          allowedIds: expectation(s, off).allowedIds,
           file: join(dir, pageName(off)),
         });
   }

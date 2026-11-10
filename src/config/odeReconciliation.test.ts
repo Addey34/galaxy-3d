@@ -18,6 +18,7 @@ import {
   collectPages,
   inspectExistingPages,
   validatePageBuffer,
+  writeFileExclusive,
   writePageAtomic,
   type PageTask,
 } from '../../scripts/ode-pages.mjs';
@@ -906,5 +907,253 @@ describe('câblage de la chaîne (sources)', () => {
   });
   it('buildManifest est exporté et pur (smoke)', () => {
     expect(typeof buildManifest).toBe('function');
+  });
+});
+
+// ---------- 8. corrections CTO : ensemble exact, dry-run sans mutation, publication exclusive ----------
+const SWAPPED = ['99999999', ...FOOT_IDS.slice(1)]; // même total (3 274), un identifiant étranger
+const loadRec = () =>
+  loadReconciliation({
+    cacheDir: cache,
+    key: KEY,
+    freeze: FREEZE,
+    catalogueCount: 3278,
+    pageSize: 5000,
+  })!;
+
+describe('ensemble EXACT des empreintes (même total, identifiant étranger)', () => {
+  const allowed = new Set(FOOT_IDS);
+  const excluded = new Set(EXCLUDED);
+  it('validatePageBuffer : refus nommant l’identifiant non attendu', () => {
+    expect(
+      validatePageBuffer(ndjson(FOOT_IDS), {
+        expected: 3274,
+        excludedIds: excluded,
+        allowedIds: allowed,
+      })
+    ).toBe(3274);
+    expect(() =>
+      validatePageBuffer(ndjson(SWAPPED), {
+        expected: 3274,
+        excludedIds: excluded,
+        allowedIds: allowed,
+      })
+    ).toThrow(/identifiant non attendu : 99999999/);
+  });
+  it('sans ensemble prouvé (jeu non réconcilié) : comportement inchangé', () => {
+    expect(validatePageBuffer(ndjson(SWAPPED), { expected: 3274 })).toBe(3274);
+  });
+  it('writePageAtomic : la page à identifiant étranger n’est jamais posée', () => {
+    const file = join(cache, '0.ndjson.gz');
+    const products = SWAPPED.map((id) => ({ id, shapes: { l: [[[0, 0]]] } }));
+    expect(() =>
+      writePageAtomic(file, products, {
+        expected: 3274,
+        excludedIds: excluded,
+        allowedIds: allowed,
+      })
+    ).toThrow(IncompletePageError);
+    expect(existsSync(file)).toBe(false);
+    expect(readdirSync(cache)).toEqual([]);
+  });
+  it('inspectExistingPages : une ancienne page à identifiant étranger est invalide', () => {
+    const dir = join(cache, 'p');
+    mkdirSync(dir);
+    writeFileSync(join(dir, '0.ndjson.gz'), ndjson(SWAPPED));
+    const r = inspectExistingPages(
+      dir,
+      [0],
+      () => 3274,
+      () => excluded,
+      () => allowed
+    );
+    expect(r.valid.size).toBe(0);
+    expect(r.invalid[0].reason).toMatch(/non attendu/);
+  });
+  it('scanDataset : identifiant étranger signalé, jamais transmis comme observation', () => {
+    const dir = join(cache, 'pages');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, '0.ndjson.gz'), ndjson(SWAPPED));
+    const seen: string[] = [];
+    const r = scanDataset(
+      dir,
+      3278,
+      5000,
+      (p: { id: string }) => seen.push(p.id),
+      { excludedIds: excluded, footprintIds: allowed }
+    );
+    expect(r.unexpected).toEqual(['99999999']);
+    expect(r.problems.join(' ')).toMatch(/non attendu/);
+    expect(seen).not.toContain('99999999');
+  });
+  it('rejeu : une ancienne page incorrecte n’est PAS « already-valid »', () => {
+    build(fixture(cache));
+    const dir = join(cache, 'pages', 'Mercury_MESSENGER_MLA_radr');
+    mkdirSync(dir, { recursive: true });
+    const stale = ndjson(SWAPPED);
+    writeFileSync(join(dir, '0.ndjson.gz'), stale);
+    expect(
+      replayReconciled({ cacheDir: cache, key: KEY, dryRun: true }).status
+    ).toBe('dry-run');
+    expect(readFileSync(join(dir, '0.ndjson.gz')).equals(stale)).toBe(true);
+    expect(replayReconciled({ cacheDir: cache, key: KEY }).status).toBe(
+      'written'
+    );
+    expect(replayReconciled({ cacheDir: cache, key: KEY }).status).toBe(
+      'already-valid'
+    );
+  });
+  it('pageExpectation transmet l’ensemble prouvé', () => {
+    build(fixture(cache));
+    const e = pageExpectation({
+      count: 3278,
+      offset: 0,
+      pageSize: 5000,
+      reconciliation: loadRec(),
+    });
+    expect(e.allowedIds?.size).toBe(3274);
+    expect(
+      pageExpectation({
+        count: 3278,
+        offset: 0,
+        pageSize: 5000,
+        reconciliation: null,
+      }).allowedIds
+    ).toBeUndefined();
+  });
+});
+
+describe('dry-run strictement sans mutation', () => {
+  const snapshot = (dir: string): Record<string, string> => {
+    const out: Record<string, string> = {};
+    const walk = (d: string) => {
+      for (const name of readdirSync(d, { withFileTypes: true })) {
+        const path = join(d, name.name);
+        if (name.isDirectory()) walk(path);
+        else out[path.slice(dir.length)] = sha256(readFileSync(path));
+      }
+    };
+    walk(dir);
+    return out;
+  };
+  it('un temporaire .tmp et une page invalide sont conservés octet pour octet', () => {
+    build(fixture(cache));
+    const dir = join(cache, 'pages', 'Mercury_MESSENGER_MLA_radr');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, '0.ndjson.gz.tmp'),
+      'reste d’une écriture interrompue'
+    );
+    writeFileSync(join(dir, '0.ndjson.gz'), ndjson(SWAPPED));
+    const before = snapshot(cache);
+    const r = replayReconciled({ cacheDir: cache, key: KEY, dryRun: true });
+    expect(r.status).toBe('dry-run');
+    expect(snapshot(cache)).toEqual(before);
+    expect(existsSync(join(dir, '0.ndjson.gz.tmp'))).toBe(true);
+  });
+  it('inspectExistingPages { cleanTmp: false } signale sans supprimer ; par défaut il nettoie', () => {
+    const dir = join(cache, 'p');
+    mkdirSync(dir);
+    writeFileSync(join(dir, '0.ndjson.gz.tmp'), 'x');
+    const kept = inspectExistingPages(
+      dir,
+      [0],
+      undefined,
+      undefined,
+      undefined,
+      { cleanTmp: false }
+    );
+    expect(kept.staleTmp).toEqual(['0.ndjson.gz.tmp']);
+    expect(existsSync(join(dir, '0.ndjson.gz.tmp'))).toBe(true);
+    inspectExistingPages(dir, [0]);
+    expect(existsSync(join(dir, '0.ndjson.gz.tmp'))).toBe(false);
+  });
+  it('le rejeu réel (hors dry-run) nettoie le temporaire : la différence est bien le drapeau', () => {
+    build(fixture(cache));
+    const dir = join(cache, 'pages', 'Mercury_MESSENGER_MLA_radr');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, '0.ndjson.gz.tmp'), 'x');
+    replayReconciled({ cacheDir: cache, key: KEY });
+    expect(existsSync(join(dir, '0.ndjson.gz.tmp'))).toBe(false);
+  });
+});
+
+describe('manifeste : publication atomique exclusive', () => {
+  it('writeFileExclusive : la seconde publication échoue en EEXIST, contenu intact, aucun temporaire', () => {
+    const file = join(cache, 'm.json');
+    writeFileExclusive(file, 'premier');
+    expect(() => writeFileExclusive(file, 'second')).toThrow(
+      expect.objectContaining({ code: 'EEXIST' })
+    );
+    expect(readFileSync(file, 'utf8')).toBe('premier');
+    expect(readdirSync(cache)).toEqual(['m.json']);
+  });
+  it('repli sans liens physiques (EPERM) : même garantie', () => {
+    const file = join(cache, 'm.json');
+    const fs = {
+      linkSync: () => {
+        throw Object.assign(new Error('pas de lien'), { code: 'EPERM' });
+      },
+    };
+    writeFileExclusive(file, 'premier', { fs });
+    expect(readFileSync(file, 'utf8')).toBe('premier');
+    expect(() => writeFileExclusive(file, 'second', { fs })).toThrow(
+      expect.objectContaining({ code: 'EEXIST' })
+    );
+    expect(readFileSync(file, 'utf8')).toBe('premier');
+    expect(readdirSync(cache)).toEqual(['m.json']);
+  });
+  it('une autre erreur de lien n’est pas masquée par le repli', () => {
+    const fs = {
+      linkSync: () => {
+        throw Object.assign(new Error('disque plein'), { code: 'ENOSPC' });
+      },
+    };
+    expect(() =>
+      writeFileExclusive(join(cache, 'm.json'), 'x', { fs })
+    ).toThrow(expect.objectContaining({ code: 'ENOSPC' }));
+    expect(readdirSync(cache)).toEqual([]);
+  });
+  it('un manifeste existant (même sentinelle illisible) n’est jamais remplacé', () => {
+    const f = fixture(cache);
+    const file = manifestPath(cache, KEY);
+    mkdirSync(join(cache, 'reconciliation'), { recursive: true });
+    writeFileSync(file, 'SENTINELLE');
+    refused(() => build(f), /existe déjà/);
+    expect(readFileSync(file, 'utf8')).toBe('SENTINELLE');
+  });
+  it('trois processus concurrents : un seul gagne, le manifeste est valide et non corrompu', async () => {
+    const f = fixture(cache);
+    const { spawn } = await import('node:child_process');
+    const script = join(process.cwd(), 'scripts', 'ode-reconcile.mjs');
+    const run = () =>
+      new Promise<{ code: number | null; err: string }>((resolve) => {
+        const child = spawn(process.execPath, [
+          script,
+          'build',
+          '--cache-dir',
+          cache,
+          '--dataset',
+          KEY,
+          '--metadata',
+          f.metaFile,
+          '--coverage',
+          f.covFile,
+        ]);
+        let err = '';
+        child.stderr.on('data', (d) => (err += d));
+        child.on('close', (code) => resolve({ code, err }));
+      });
+    const results = await Promise.all([run(), run(), run()]);
+    expect(results.filter((r) => r.code === 0)).toHaveLength(1);
+    for (const r of results.filter((r) => r.code !== 0)) {
+      expect(r.code).toBe(1);
+      expect(r.err).toMatch(/existe déjà/);
+    }
+    const r = loadRec();
+    expect([r.catalogued, r.footprints]).toEqual([3278, 3274]);
+    expect(readdirSync(join(cache, 'reconciliation'))).toEqual([
+      'Mercury_MESSENGER_MLA_radr.json',
+    ]);
   });
 });

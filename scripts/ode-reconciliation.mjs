@@ -459,7 +459,12 @@ export function loadReconciliation({
  */
 export function pageExpectation({ count, offset, pageSize, reconciliation }) {
   const catalogued = Math.min(pageSize, count - offset);
-  if (!reconciliation) return { expected: catalogued, excludedIds: undefined };
+  if (!reconciliation)
+    return {
+      expected: catalogued,
+      excludedIds: undefined,
+      allowedIds: undefined,
+    };
   if (offset !== 0 || count > pageSize)
     throw new ReconciliationError(
       'réconciliation appliquée à un jeu de plusieurs pages'
@@ -467,5 +472,6 @@ export function pageExpectation({ count, offset, pageSize, reconciliation }) {
   return {
     expected: reconciliation.footprints,
     excludedIds: reconciliation.excludedIds,
+    allowedIds: reconciliation.footprintIds,
   };
 }

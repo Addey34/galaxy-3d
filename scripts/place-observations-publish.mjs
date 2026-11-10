@@ -148,12 +148,14 @@ export function scanDataset(
   // Une réconciliation prouvée ne change QUE l'attendu en empreintes : les pages restent celles du
   // catalogue, et les produits sans géométrie ne sont jamais des observations.
   const excludedIds = reconciliation?.excludedIds ?? new Set();
+  const allowedIds = reconciliation?.footprintIds ?? null;
   const wanted = count - excludedIds.size;
   const report = {
     ...names,
     catalogued: count,
     excluded: excludedIds.size,
     forbidden: [],
+    unexpected: [],
     unreadable: [],
     distinct: 0,
     duplicates: 0,
@@ -181,6 +183,10 @@ export function scanDataset(
         report.forbidden.push(String(p.id));
         continue;
       }
+      if (allowedIds && !allowedIds.has(String(p.id))) {
+        report.unexpected.push(String(p.id));
+        continue;
+      }
       if (ids.has(p.id)) {
         report.duplicates++;
         continue;
@@ -201,6 +207,10 @@ export function scanDataset(
     report.problems.push(`fichier(s) mal nommé(s) : ${some(names.misnamed)}`);
   if (report.unreadable.length)
     report.problems.push(`page(s) illisible(s) : ${some(report.unreadable)}`);
+  if (report.unexpected.length)
+    report.problems.push(
+      `identifiant(s) non attendu(s) hors de l'ensemble prouvé des empreintes : ${some(report.unexpected)}`
+    );
   if (report.forbidden.length)
     report.problems.push(
       `exclusion injustifiée : ${some(report.forbidden)} déclaré(s) sans géométrie mais présent(s) dans les pages`

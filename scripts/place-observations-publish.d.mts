@@ -56,6 +56,7 @@ export interface DatasetReport {
   catalogued: number;
   excluded: number;
   forbidden: string[];
+  unexpected: string[];
   unreadable: string[];
   distinct: number;
   duplicates: number;
@@ -67,7 +68,10 @@ export function scanDataset(
   count: number,
   page: number,
   onProduct?: (product: { id: string; [key: string]: unknown }) => void,
-  reconciliation?: { excludedIds: ReadonlySet<string> } | null
+  reconciliation?: {
+    excludedIds: ReadonlySet<string>;
+    footprintIds?: ReadonlySet<string>;
+  } | null
 ): DatasetReport;
 
 export function recoverPublish(
