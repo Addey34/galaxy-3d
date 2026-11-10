@@ -8,8 +8,8 @@
  * Toute erreur d'écriture est une erreur de STOCKAGE LOCAL : elle interrompt proprement la collecte
  * (`collectPages`) et n'inscrit aucun jeu dans `unavailable.json`.
  */
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { createHash, randomBytes } from 'node:crypto';
+import { closeSync, mkdirSync, openSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { LocalStorageError, writeFileAtomic } from './ode-pages.mjs';
 
@@ -21,10 +21,52 @@ export const sha256 = (buffer) =>
 
 const safeName = (key) => key.replace(/[^A-Za-z0-9_.-]+/g, '_');
 
-/** Nom de base d'une quarantaine : jeu, offset, limite et instant (jamais écrasée). */
-export function quarantineBase({ key, offset, limit, at }) {
+/** Aléa d'un identifiant de capture (injectable pour les tests de collision). */
+export const randomCaptureSuffix = () => randomBytes(4).toString('hex');
+
+/** Tentatives de réservation d'un identifiant de capture avant d'abandonner. */
+export const MAX_CAPTURE_ATTEMPTS = 8;
+
+/**
+ * Nom de base d'une capture : jeu, offset, limite, instant ET suffixe aléatoire. C'est le même
+ * identifiant pour le brut, la somme, la provenance et l'analyse.
+ */
+export function quarantineBase({ key, offset, limit, at, suffix }) {
   const stamp = at.replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
-  return `${safeName(key)}@${offset}+${limit}-${stamp}`;
+  return `${safeName(key)}@${offset}+${limit}-${stamp}-${suffix}`;
+}
+
+/**
+ * RÉSERVE un identifiant de capture par création EXCLUSIVE du fichier brut (`wx` : O_CREAT|O_EXCL,
+ * atomique, sans dépendre d'un `existsSync`). Deux appels au même instant, ou deux processus, ne
+ * peuvent pas obtenir le même identifiant : le perdant tire un nouveau suffixe. Le fichier réservé
+ * est vide jusqu'à son remplacement atomique par le brut, que nous seuls avons le droit d'écrire.
+ */
+export function reserveCapture({
+  dir,
+  key,
+  offset,
+  limit,
+  at,
+  suffixFn = randomCaptureSuffix,
+}) {
+  mkdirSync(dir, { recursive: true });
+  for (let attempt = 0; attempt < MAX_CAPTURE_ATTEMPTS; attempt++) {
+    const base = quarantineBase({ key, offset, limit, at, suffix: suffixFn() });
+    const rawFile = join(dir, `${base}.raw`);
+    try {
+      closeSync(openSync(rawFile, 'wx'));
+      return { base, rawFile };
+    } catch (error) {
+      if (error?.code !== 'EEXIST') throw error;
+    }
+  }
+  throw Object.assign(
+    new Error(
+      `aucun identifiant de capture libre après ${MAX_CAPTURE_ATTEMPTS} tentatives (${dir})`
+    ),
+    { code: 'EEXIST' }
+  );
 }
 
 /**
@@ -42,14 +84,15 @@ export function quarantineRaw({
   query = null,
   now = new Date(),
   write = writeFileAtomic,
+  suffixFn = randomCaptureSuffix,
 }) {
   const dir = diagnosticsDir(cacheDir);
   const at = now.toISOString();
-  const base = quarantineBase({ key, offset, limit, at });
-  const rawFile = join(dir, `${base}.raw`);
   const digest = sha256(raw);
-  const provenance = {
+  let reserved = null;
+  const makeProvenance = (base) => ({
     kind: 'quarantaine-brute-non-validee',
+    captureId: base,
     dataset: key,
     offset,
     limit,
@@ -60,8 +103,10 @@ export function quarantineRaw({
     sha256: digest,
     retrievedAt: at,
     note: 'réponse coveragetargz originale, avant transformation ; ce n’est PAS une page validée',
-  };
+  });
   try {
+    reserved = reserveCapture({ dir, key, offset, limit, at, suffixFn });
+    const { base, rawFile } = reserved;
     write(rawFile, raw);
     const back = readFileSync(rawFile);
     if (back.length !== raw.length || sha256(back) !== digest)
@@ -70,13 +115,25 @@ export function quarantineRaw({
         { code: 'EIO' }
       );
     write(`${rawFile}.sha256`, `${digest}  ${base}.raw\n`);
-    write(`${rawFile}.json`, JSON.stringify(provenance, null, 1) + '\n');
+    write(
+      `${rawFile}.json`,
+      JSON.stringify(makeProvenance(base), null, 1) + '\n'
+    );
+    return { rawFile, sha256: digest, base, dir };
   } catch (error) {
+    // Le fichier RÉSERVÉ vide n'est pas une capture : il est retiré s'il n'a jamais reçu le brut.
+    if (reserved) {
+      try {
+        if (readFileSync(reserved.rawFile).length === 0)
+          rmSync(reserved.rawFile, { force: true });
+      } catch {
+        /* rien à retirer */
+      }
+    }
     throw error instanceof LocalStorageError
       ? error
       : new LocalStorageError('quarantaine diagnostique', error);
   }
-  return { rawFile, sha256: digest, base, dir };
 }
 
 /** Écrit l'analyse avant regroupement à côté du brut (même atomicité, même règle d'erreur). */

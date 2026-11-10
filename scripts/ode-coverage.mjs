@@ -191,9 +191,15 @@ export function analyzeRecords(perKind) {
 
 /**
  * Lit l'archive et regroupe par `ODEId` (comportement historique). Rend { products, analysis } ;
- * une réponse de moins de 1 024 octets est une page vide (analysis null).
+ * `analysis` n'est construite que si `analyze` est vrai (mode diagnostic), sinon null. Une réponse
+ * de moins de 1 024 octets est une page vide (analysis null).
  */
-export function parseCoverageArchive(buf, key, offset) {
+export function parseCoverageArchive(
+  buf,
+  key,
+  offset,
+  { analyze = false } = {}
+) {
   if (buf.length < 1024) return { products: [], analysis: null };
   let tar;
   try {
@@ -231,7 +237,7 @@ export function parseCoverageArchive(buf, key, offset) {
       throw new Error(
         `${key} @${offset} : ${rows.length} lignes pour ${shapes.length} formes`
       );
-    perKind[kind] = rows;
+    if (analyze) perKind[kind] = rows;
     rows.forEach((r, i) => {
       const e = byId.get(r.ODEId) ?? {
         id: r.ODEId,
@@ -247,6 +253,8 @@ export function parseCoverageArchive(buf, key, offset) {
       byId.set(r.ODEId, e);
     });
   }
-  const analysis = analyzeRecords(perKind);
+  // Les statistiques ne sont construites qu'en mode diagnostic : la collecte normale n'en paie pas
+  // le coût, et les produits regroupés sont strictement les mêmes dans les deux modes.
+  const analysis = analyze ? analyzeRecords(perKind) : null;
   return { products: [...byId.values()], analysis };
 }

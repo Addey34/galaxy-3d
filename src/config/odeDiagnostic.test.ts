@@ -11,6 +11,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -28,6 +29,7 @@ import {
 import {
   describeGap,
   quarantineRaw,
+  reserveCapture,
   sha256,
   writeAnalysis,
 } from '../../scripts/ode-diagnostic.mjs';
@@ -143,7 +145,8 @@ describe('parseCoverageArchive et analyse avant regroupement', () => {
     const { products, analysis } = parseCoverageArchive(
       archive({ a: gappedRows() }),
       'k',
-      0
+      0,
+      { analyze: true }
     );
     expect(products).toHaveLength(3274);
     expect(analysis).toMatchObject({
@@ -179,7 +182,8 @@ describe('parseCoverageArchive et analyse avant regroupement', () => {
     const { products, analysis } = parseCoverageArchive(
       archive({ a: rows }),
       'k',
-      0
+      0,
+      { analyze: true }
     );
     expect(products).toHaveLength(3274);
     expect(analysis?.repeatedTotal).toBe(0);
@@ -190,7 +194,8 @@ describe('parseCoverageArchive et analyse avant regroupement', () => {
     const { products, analysis } = parseCoverageArchive(
       archive({ a: [row('7000'), row('7001')], p: [row('7000')] }),
       'k',
-      0
+      0,
+      { analyze: true }
     );
     expect(products).toHaveLength(2);
     expect(products.find((p) => p.id === '7000')?.shapes).toHaveProperty('a');
@@ -217,7 +222,8 @@ describe('parseCoverageArchive et analyse avant regroupement', () => {
         p: [row('3'), row('4'), row('4')],
       }),
       'k',
-      0
+      0,
+      { analyze: true }
     );
     expect(analysis?.recordsByKind).toEqual({ a: 2, l: 2, p: 3 });
     expect(analysis?.distinctByKind).toEqual({ a: 2, l: 2, p: 2 });
@@ -229,7 +235,8 @@ describe('parseCoverageArchive et analyse avant regroupement', () => {
     const { analysis } = parseCoverageArchive(
       archive({ a: [row(''), row(''), row('12x'), row('42')] }),
       'k',
-      0
+      0,
+      { analyze: true }
     );
     expect(analysis?.emptyIds).toEqual({ count: 2, byKind: { a: 2 } });
     expect(analysis?.invalidIds).toEqual({
@@ -249,7 +256,8 @@ describe('parseCoverageArchive et analyse avant regroupement', () => {
         ],
       }),
       'k',
-      0
+      0,
+      { analyze: true }
     );
     expect(analysis?.inconsistentTotal).toBe(2);
     expect(analysis?.inconsistent).toEqual([
@@ -327,6 +335,7 @@ describe('quarantaine du brut', () => {
     freeze: { mincreationtime: '1900-01-01', maxcreationtime: '2026-09-29' },
     http: { status: 200, contentType: 'application/x-gzip', url: 'u' },
     now: new Date('2026-11-10T03:19:00.000Z'),
+    suffixFn: () => 'abcd1234',
   });
 
   it('écrit le brut identique, sa somme et sa provenance, hors de pages/', () => {
@@ -339,7 +348,7 @@ describe('quarantaine du brut', () => {
       `${kept.base}.raw.sha256`,
     ]);
     expect(kept.base).toBe(
-      'Mercury_MESSENGER_MLA_radr@0+5000-20261110T031900Z'
+      'Mercury_MESSENGER_MLA_radr@0+5000-20261110T031900Z-abcd1234'
     );
     const back = readFileSync(kept.rawFile);
     expect(back.equals(raw)).toBe(true);
@@ -361,9 +370,10 @@ describe('quarantaine du brut', () => {
     });
     expect(existsSync(join(cache, 'pages'))).toBe(false);
     // la quarantaine contient le brut AVANT regroupement : 3 278 enregistrements
-    expect(parseCoverageArchive(back, 'k', 0).analysis?.totalRecords).toBe(
-      3278
-    );
+    expect(
+      parseCoverageArchive(back, 'k', 0, { analyze: true }).analysis
+        ?.totalRecords
+    ).toBe(3278);
   });
 
   it('ne laisse aucun temporaire et n’écrase jamais une quarantaine précédente', () => {
@@ -381,7 +391,9 @@ describe('quarantaine du brut', () => {
 
   it('écrit l’analyse à côté du brut', () => {
     const kept = quarantineRaw(common());
-    const analysis = parseCoverageArchive(raw, 'k', 0).analysis!;
+    const analysis = parseCoverageArchive(raw, 'k', 0, {
+      analyze: true,
+    }).analysis!;
     const file = writeAnalysis({ dir: kept.dir, base: kept.base, analysis });
     expect(JSON.parse(readFileSync(file, 'utf8')).totalRecords).toBe(3278);
   });
@@ -442,7 +454,9 @@ describe('quarantaine du brut', () => {
     expect(r.fatal).toBeInstanceOf(LocalStorageError);
     expect(r.remaining).toBe(1);
     expect(unavailable).toEqual({});
-    expect(readdirSync(cache)).toEqual([]);
+    // seul le dossier (vide) de la quarantaine existe : rien publié, aucune capture partielle
+    expect(readdirSync(cache)).toEqual(['diagnostics']);
+    expect(readdirSync(join(cache, 'diagnostics'))).toEqual([]);
   });
 });
 
@@ -618,6 +632,180 @@ describe('script --diagnostic de bout en bout (fetch simulé)', () => {
   });
 });
 
+// ---------- capture sans écrasement ----------
+describe('quarantaine : jamais d’écrasement, même au même instant', () => {
+  let cache: string;
+  beforeEach(() => {
+    cache = mkdtempSync(join(tmpdir(), 'odecol-'));
+  });
+  afterEach(() => rmSync(cache, { recursive: true, force: true }));
+  const NOW = new Date('2026-11-10T03:19:00.000Z');
+  const make = (raw: Buffer, suffixFn: () => string) =>
+    quarantineRaw({
+      cacheDir: cache,
+      raw,
+      key: 'Mercury|MESSENGER|MLA|radr',
+      offset: 0,
+      limit: 5000,
+      freeze: { maxcreationtime: '2026-09-29' },
+      http: { status: 200, contentType: null, url: null },
+      now: NOW,
+      suffixFn,
+    });
+
+  it('même horodatage ET même suffixe tirés : la seconde capture prend un autre identifiant, la première reste intacte', () => {
+    const first = make(Buffer.from('premier'), () => 'aaaa0001');
+    const seq = ['aaaa0001', 'aaaa0001', 'bbbb0002'];
+    const second = make(Buffer.from('second'), () => seq.shift()!);
+    expect(second.base).not.toBe(first.base);
+    expect(second.base.endsWith('bbbb0002')).toBe(true);
+    expect(readFileSync(first.rawFile, 'utf8')).toBe('premier');
+    expect(readFileSync(second.rawFile, 'utf8')).toBe('second');
+    expect(
+      JSON.parse(readFileSync(`${first.rawFile}.json`, 'utf8')).sha256
+    ).toBe(sha256(Buffer.from('premier')));
+  });
+
+  it('un seul identifiant par capture pour le brut, la somme, la provenance et l’analyse', () => {
+    const kept = make(Buffer.from('x'.repeat(2000)), () => 'cccc0003');
+    const analysis = parseCoverageArchive(archive({ a: [row('1')] }), 'k', 0, {
+      analyze: true,
+    }).analysis!;
+    writeAnalysis({ dir: kept.dir, base: kept.base, analysis });
+    expect(readdirSync(kept.dir).sort()).toEqual(
+      [
+        `${kept.base}.raw`,
+        `${kept.base}.raw.json`,
+        `${kept.base}.raw.sha256`,
+        `${kept.base}.analysis.json`,
+      ].sort()
+    );
+    expect(
+      JSON.parse(readFileSync(`${kept.rawFile}.json`, 'utf8')).captureId
+    ).toBe(kept.base);
+  });
+
+  it('suffixes toujours en collision : échec explicite (stockage local), rien d’écrasé', () => {
+    const first = make(Buffer.from('premier'), () => 'dddd0004');
+    expect(() => make(Buffer.from('second'), () => 'dddd0004')).toThrow(
+      LocalStorageError
+    );
+    expect(readFileSync(first.rawFile, 'utf8')).toBe('premier');
+    expect(readdirSync(first.dir)).toHaveLength(3);
+  });
+
+  it('la réservation est EXCLUSIVE (pas un simple existsSync) : un fichier posé après coup n’est pas remplacé par la réservation', () => {
+    const dir = join(cache, 'diagnostics');
+    const args = {
+      dir,
+      key: 'k',
+      offset: 0,
+      limit: 5000,
+      at: NOW.toISOString(),
+    };
+    const a = reserveCapture({ ...args, suffixFn: () => 'eeee0005' });
+    writeFileSync(a.rawFile, 'contenu écrit entre-temps');
+    const seq = ['eeee0005', 'ffff0006'];
+    const b = reserveCapture({ ...args, suffixFn: () => seq.shift()! });
+    expect(b.base).not.toBe(a.base);
+    expect(readFileSync(a.rawFile, 'utf8')).toBe('contenu écrit entre-temps');
+  });
+
+  it('deux processus simultanés au même instant et au même premier suffixe : deux captures distinctes et intactes', async () => {
+    const { spawn } = await import('node:child_process');
+    const moduleUrl = pathToFileURL(
+      join(process.cwd(), 'scripts', 'ode-diagnostic.mjs')
+    ).href;
+    const code = `
+      import { quarantineRaw } from ${JSON.stringify(moduleUrl)};
+      let first = true;
+      const a = JSON.parse(process.env.ARGS);
+      const k = quarantineRaw({
+        cacheDir: a.cache, raw: Buffer.from(a.payload), key: 'K|A|B|C', offset: 0, limit: 5000,
+        freeze: {}, http: { status: 200, contentType: null, url: null },
+        now: new Date('2026-11-10T03:19:00.000Z'),
+        suffixFn: () => { if (first) { first = false; return 'fixe0001'; } return Math.random().toString(16).slice(2, 10); },
+      });
+      console.log(k.base);`;
+    const runOne = (payload: string) =>
+      new Promise<{ code: number | null; out: string }>((resolve) => {
+        const child = spawn(
+          process.execPath,
+          ['--input-type=module', '-e', code],
+          { env: { ...process.env, ARGS: JSON.stringify({ cache, payload }) } }
+        );
+        let out = '';
+        child.stdout.on('data', (d) => (out += d));
+        child.on('close', (c) => resolve({ code: c, out: out.trim() }));
+      });
+    const [x, y] = await Promise.all([
+      runOne('X'.repeat(4000)),
+      runOne('Y'.repeat(4000)),
+    ]);
+    expect(x.code).toBe(0);
+    expect(y.code).toBe(0);
+    expect(x.out).not.toBe(y.out);
+    const dir = join(cache, 'diagnostics');
+    expect(readFileSync(join(dir, `${x.out}.raw`), 'utf8')).toBe(
+      'X'.repeat(4000)
+    );
+    expect(readFileSync(join(dir, `${y.out}.raw`), 'utf8')).toBe(
+      'Y'.repeat(4000)
+    );
+    expect(readdirSync(dir)).toHaveLength(6);
+  });
+
+  it('une écriture échouée ne laisse pas de réservation vide', () => {
+    expect(() =>
+      quarantineRaw({
+        cacheDir: cache,
+        raw: Buffer.from('x'),
+        key: 'k',
+        offset: 0,
+        limit: 1,
+        freeze: {},
+        http: { status: 200, contentType: null, url: null },
+        write: () => {
+          throw Object.assign(new Error('plein'), { code: 'ENOSPC' });
+        },
+      })
+    ).toThrow(LocalStorageError);
+    expect(readdirSync(join(cache, 'diagnostics'))).toEqual([]);
+  });
+});
+
+// ---------- analyse uniquement en mode diagnostic ----------
+describe('l’analyse n’est construite qu’en mode diagnostic', () => {
+  const shapes = {
+    a: [...gappedRows(), row('1000', 'PX')],
+    p: [row('1001'), row('2000'), row('2000')],
+    l: [row(''), row('12x')],
+  };
+  it('mêmes produits regroupés, octet pour octet, avec ou sans analyse', () => {
+    const bytes = archive(shapes);
+    const plain = parseCoverageArchive(bytes, 'k', 0);
+    const diag = parseCoverageArchive(bytes, 'k', 0, { analyze: true });
+    expect(JSON.stringify(plain.products)).toBe(JSON.stringify(diag.products));
+    expect(plain.products.length).toBeGreaterThan(3000);
+    expect(plain.analysis).toBeNull();
+    expect(diag.analysis).not.toBeNull();
+  });
+  it('sans analyze (défaut), aucune statistique n’est calculée', () => {
+    expect(parseCoverageArchive(archive(shapes), 'k', 0).analysis).toBeNull();
+    expect(
+      parseCoverageArchive(archive(shapes), 'k', 0, { analyze: false }).analysis
+    ).toBeNull();
+  });
+  it('le script ne demande l’analyse que si --diagnostic est actif', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'scripts', 'pull-ode-footprints.mjs'),
+      'utf8'
+    );
+    expect(source).toMatch(/analyze: DIAGNOSTIC/);
+    expect(source).not.toMatch(/analyze: true/);
+  });
+});
+
 describe('garanties inchangées', () => {
   const source = readFileSync(
     join(process.cwd(), 'scripts', 'pull-ode-footprints.mjs'),
@@ -626,7 +814,9 @@ describe('garanties inchangées', () => {
   it('le regroupement, la politique de complétude et le gel ne sont pas touchés', () => {
     expect(source).toContain('Math.min(PAGE, n[s.key] - off)');
     expect(source).toContain('freezeAction(CACHE)');
-    expect(source).toContain('parseCoverageArchive(buf, s.key, offset)');
+    expect(source).toMatch(
+      /parseCoverageArchive\(buf, s\.key, offset, \{\s*analyze: DIAGNOSTIC,?\s*\}\)/
+    );
     expect(source).not.toMatch(/expected\s*[-+]\s*\d|tolerance|tolérance/i);
   });
   it('la quarantaine ne passe jamais par pages/', () => {

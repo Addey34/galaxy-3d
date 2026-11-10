@@ -527,7 +527,9 @@ async function pullRange(s, offset, limit, attempts) {
         },
       })
     : null;
-  const { products, analysis } = parseCoverageArchive(buf, s.key, offset);
+  const { products, analysis } = parseCoverageArchive(buf, s.key, offset, {
+    analyze: DIAGNOSTIC,
+  });
   const gap = describeGap(analysis);
   if (gap) console.log(`${s.key} @${offset} : ${gap}`);
   if (kept && analysis) {

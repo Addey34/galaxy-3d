@@ -46,5 +46,6 @@ export function analyzeRecords(
 export function parseCoverageArchive(
   buf: Buffer,
   key: string,
-  offset: number
+  offset: number,
+  options?: { analyze?: boolean }
 ): { products: CoverageProduct[]; analysis: CoverageAnalysis | null };
