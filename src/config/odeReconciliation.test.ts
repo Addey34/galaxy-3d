@@ -1,16 +1,19 @@
 import { Buffer } from 'node:buffer';
 import { spawnSync } from 'node:child_process';
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -1155,5 +1158,179 @@ describe('manifeste : publication atomique exclusive', () => {
     expect(readdirSync(join(cache, 'reconciliation'))).toEqual([
       'Mercury_MESSENGER_MLA_radr.json',
     ]);
+  });
+});
+
+// ---------- 9. repli sans liens physiques : exclusif, pas atomique, lecteur strict ----------
+describe('writeFileExclusive : repli par copie exclusive (COPYFILE_EXCL)', () => {
+  const noLink = () => {
+    throw Object.assign(new Error('pas de lien'), { code: 'EPERM' });
+  };
+  const realCopy = copyFileSync;
+
+  it('collision au moment de la copie : le fichier de l’autre processus est intact, notre temporaire retiré', () => {
+    const file = join(cache, 'm.json');
+    const fs = {
+      linkSync: noLink,
+      // un autre processus publie entre notre écriture et notre copie
+      copyFileSync: (src: string, dst: string, mode?: number) => {
+        writeFileSync(dst, 'CONTENU-DE-L-AUTRE');
+        return realCopy(src, dst, mode);
+      },
+    };
+    expect(() => writeFileExclusive(file, 'le-notre', { fs })).toThrow(
+      expect.objectContaining({ code: 'EEXIST' })
+    );
+    expect(readFileSync(file, 'utf8')).toBe('CONTENU-DE-L-AUTRE');
+    expect(readdirSync(cache)).toEqual(['m.json']);
+  });
+
+  it('fichier préexistant : jamais remplacé (copie exclusive réelle)', () => {
+    const file = join(cache, 'm.json');
+    writeFileSync(file, 'PREEXISTANT');
+    expect(() =>
+      writeFileExclusive(file, 'nouveau', { fs: { linkSync: noLink } })
+    ).toThrow(expect.objectContaining({ code: 'EEXIST' }));
+    expect(readFileSync(file, 'utf8')).toBe('PREEXISTANT');
+    expect(readdirSync(cache)).toEqual(['m.json']);
+  });
+
+  it('panne d’écriture avant la copie (ENOSPC) : aucune destination, aucun résidu', () => {
+    const file = join(cache, 'm.json');
+    const fs = {
+      linkSync: noLink,
+      writeSync: () => {
+        throw Object.assign(new Error('plein'), { code: 'ENOSPC' });
+      },
+    };
+    expect(() => writeFileExclusive(file, 'x'.repeat(100), { fs })).toThrow(
+      expect.objectContaining({ code: 'ENOSPC' })
+    );
+    expect(readdirSync(cache)).toEqual([]);
+  });
+
+  it('panne pendant la copie (EIO) avec destination préexistante d’un autre : jamais supprimée', () => {
+    const file = join(cache, 'm.json');
+    writeFileSync(file, 'APPARTIENT-A-UN-AUTRE');
+    const fs = {
+      linkSync: noLink,
+      copyFileSync: () => {
+        throw Object.assign(new Error('E/S'), { code: 'EIO' });
+      },
+    };
+    expect(() => writeFileExclusive(file, 'x', { fs })).toThrow(
+      expect.objectContaining({ code: 'EIO' })
+    );
+    expect(readFileSync(file, 'utf8')).toBe('APPARTIENT-A-UN-AUTRE');
+    expect(readdirSync(cache)).toEqual(['m.json']);
+  });
+
+  it('copie réussie mais tronquée : détectée à la relecture, retirée (elle est la nôtre), échec explicite', () => {
+    const file = join(cache, 'm.json');
+    const fs = {
+      linkSync: noLink,
+      copyFileSync: (_src: string, dst: string) => {
+        writeFileSync(dst, 'tronq');
+      },
+    };
+    expect(() => writeFileExclusive(file, 'contenu entier', { fs })).toThrow(
+      /copie exclusive incomplète/
+    );
+    expect(readdirSync(cache)).toEqual([]);
+  });
+
+  it('les temporaires d’AUTRES processus ne sont jamais supprimés', () => {
+    const file = join(cache, 'm.json');
+    const foreign = join(cache, 'm.json.99999.deadbeef.tmp');
+    writeFileSync(foreign, 'en cours chez un autre');
+    writeFileExclusive(file, 'ok', { fs: { linkSync: noLink } });
+    writeFileExclusive(join(cache, 'n.json'), 'ok');
+    expect(readFileSync(foreign, 'utf8')).toBe('en cours chez un autre');
+    expect(readFileSync(file, 'utf8')).toBe('ok');
+  });
+
+  it('quatre processus en course, repli forcé : un seul gagne, contenu entier et jamais mélangé', async () => {
+    const { spawn } = await import('node:child_process');
+    const file = join(cache, 'course.json');
+    const moduleUrl = pathToFileURL(
+      join(process.cwd(), 'scripts', 'ode-pages.mjs')
+    ).href;
+    const code = `
+      import { writeFileExclusive } from ${JSON.stringify(moduleUrl)};
+      const payload = process.env.PAYLOAD;
+      const noLink = () => { throw Object.assign(new Error('x'), { code: 'EPERM' }); };
+      try { writeFileExclusive(process.env.FILE, payload, { fs: { linkSync: noLink } }); console.log('gagne'); }
+      catch (e) { console.log(e.code); process.exitCode = 1; }`;
+    const payloads = ['A', 'B', 'C', 'D'].map((c) => c.repeat(300_000));
+    const run = (payload: string) =>
+      new Promise<{ code: number | null; out: string }>((resolve) => {
+        const child = spawn(
+          process.execPath,
+          ['--input-type=module', '-e', code],
+          { env: { ...process.env, FILE: file, PAYLOAD: payload } }
+        );
+        let out = '';
+        child.stdout.on('data', (d) => (out += d));
+        child.on('close', (c) => resolve({ code: c, out: out.trim() }));
+      });
+    const results = await Promise.all(payloads.map(run));
+    expect(results.filter((r) => r.code === 0)).toHaveLength(1);
+    for (const r of results.filter((r) => r.code !== 0))
+      expect(r.out).toBe('EEXIST');
+    expect(payloads).toContain(readFileSync(file, 'utf8'));
+    expect(readdirSync(cache)).toEqual(['course.json']);
+  });
+});
+
+describe('lecteur strict : un manifeste incomplet ou interrompu est refusé', () => {
+  const load = () =>
+    loadReconciliation({
+      cacheDir: cache,
+      key: KEY,
+      freeze: FREEZE,
+      catalogueCount: 3278,
+      pageSize: 5000,
+    });
+  const manifestText = () => {
+    build(fixture(cache));
+    return readFileSync(manifestPath(cache, KEY), 'utf8');
+  };
+
+  it.each([0.0, 0.1, 0.5, 0.9, 0.999])(
+    'manifeste tronqué à %s de sa longueur : refus, jamais accepté',
+    (ratio) => {
+      const text = manifestText();
+      writeFileSync(
+        manifestPath(cache, KEY),
+        text.slice(0, Math.floor(text.length * ratio))
+      );
+      refused(load, /illisible|manifeste/);
+    }
+  );
+
+  it('récupération après interruption : le fichier partiel bloque la reconstruction (jamais écrasé), message explicite ; une fois déplacé à la main, la reconstruction réussit', () => {
+    const text = manifestText();
+    const file = manifestPath(cache, KEY);
+    writeFileSync(file, text.slice(0, 200));
+    refused(load, /illisible/);
+    refused(
+      () =>
+        buildReconciliation({
+          cacheDir: cache,
+          key: KEY,
+          metadataFile: 'meta@0.json',
+          coverageFile: 'cov@0.raw',
+        }),
+      /déplacer à la main/
+    );
+    expect(readFileSync(file, 'utf8')).toBe(text.slice(0, 200));
+    renameSync(file, `${file}.partiel`);
+    buildReconciliation({
+      cacheDir: cache,
+      key: KEY,
+      metadataFile: 'meta@0.json',
+      coverageFile: 'cov@0.raw',
+    });
+    expect(load()!.footprints).toBe(3274);
   });
 });

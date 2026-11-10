@@ -19,6 +19,8 @@
  */
 import {
   closeSync,
+  constants,
+  copyFileSync,
   existsSync,
   fsyncSync,
   linkSync,
@@ -407,25 +409,49 @@ export function writeFileAtomic(file, text, { fs = {} } = {}) {
 }
 
 /**
- * Publie un fichier de façon ATOMIQUE et EXCLUSIVE : la destination n'est jamais remplacée. Le
- * contenu est écrit et fsyncé dans un temporaire propre au processus, puis publié par `link` (qui
- * échoue en EEXIST si la destination existe : un seul gagnant, aucun état intermédiaire visible).
- * Sur un volume sans liens physiques (exFAT), repli : réservation exclusive de la destination
- * (`wx`), puis renommage du temporaire sur SA réservation ; un lecteur ne voit au pire qu'un
- * fichier vide, que la validation refuse. Lève une erreur de code EEXIST si la destination existe.
+ * Publie un fichier SANS JAMAIS REMPLACER la destination. Le contenu est d'abord écrit et fsyncé
+ * dans un temporaire PROPRE au processus (pid + aléa), puis publié :
+ *   - par `link` quand le volume le permet : la destination apparaît entière ou pas du tout
+ *     (ATOMIQUE), un seul gagnant, EEXIST pour les autres ;
+ *   - sinon (volume sans liens physiques, exFAT) par `copyFile` en mode EXCLUSIF
+ *     (`COPYFILE_EXCL`) : la création est exclusive (EEXIST si la destination existe, aucun
+ *     écrasement possible, même en course) mais la COPIE N'EST PAS ATOMIQUE : un lecteur peut voir
+ *     un fichier PARTIEL pendant la copie, ou après une interruption. Le lecteur doit donc refuser
+ *     un fichier incomplet (c'est le cas du manifeste : JSON entier, structure et SHA-256 validés).
+ * Propriété des fichiers : on ne supprime que ce qu'on a créé. Le temporaire est le nôtre ; la
+ * destination n'est retirée que si NOTRE copie a réussi puis échoué à la relecture. Après une
+ * erreur d'écriture non EEXIST, la destination éventuellement partielle est LAISSÉE (elle peut
+ * n'être qu'à un autre processus) : elle est refusée à la lecture et se retire à la main.
+ * Les temporaires d'autres processus ne sont jamais touchés. Lève une erreur EEXIST si la
+ * destination existe.
  */
 export function writeFileExclusive(file, data, { fs = {} } = {}) {
   const link = fs.linkSync ?? linkSync;
+  const copy = fs.copyFileSync ?? copyFileSync;
+  const bytes = Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8');
   const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}${TMP_SUFFIX}`;
   try {
-    writeFileAtomic(tmp, data, { fs });
+    writeFileAtomic(tmp, bytes, { fs });
     try {
       link(tmp, file);
     } catch (error) {
       if (!NO_HARDLINK_CODES.has(error?.code)) throw error;
-      const reserved = openSync(file, 'wx');
-      closeSync(reserved);
-      renameSync(tmp, file);
+      copy(tmp, file, constants.COPYFILE_EXCL);
+      // Notre copie a réussi : la destination est la nôtre. On la relit ; si elle diffère, c'est
+      // un fichier partiel que NOUS avons créé, on le retire et on échoue.
+      let written = null;
+      try {
+        written = readFileSync(file);
+      } catch {
+        /* illisible : traité comme différent */
+      }
+      if (!written || !written.equals(bytes)) {
+        rmSync(file, { force: true });
+        throw Object.assign(
+          new Error(`copie exclusive incomplète (${file}) : retirée`),
+          { code: 'EIO' }
+        );
+      }
     }
   } finally {
     rmSync(tmp, { force: true });

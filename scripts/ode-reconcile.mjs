@@ -65,7 +65,7 @@ export function buildReconciliation({
   const file = manifestPath(cacheDir, key);
   const exists = () =>
     new ReconciliationError(
-      `un manifeste existe déjà (${file}) : il n'est jamais écrasé`
+      `un manifeste existe déjà (${file}) : il n'est jamais écrasé (s'il est incomplet ou invalide, le déplacer à la main puis relancer)`
     );
   // Refus rapide ; la garantie réelle est la publication exclusive ci-dessous (course entre processus).
   if (existsSync(file)) throw exists();
