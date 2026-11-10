@@ -9,9 +9,22 @@ export interface OdeDataset {
   [field: string]: unknown;
 }
 
+export function parseDatasetArg(
+  value: string | null | undefined
+): string | null;
+export function parseMaxPages(value: string | null | undefined): number | null;
+export function assertMaxPages(
+  pagesToDownload: number,
+  maxPages: number | null
+): void;
+
 export function selectDatasets(
   list: readonly OdeDataset[],
-  options: { body: string | null | undefined; only?: string | null }
+  options: {
+    body: string | null | undefined;
+    only?: string | null;
+    dataset?: string | null;
+  }
 ): OdeDataset[];
 
 export function resolveCacheDir(options: {
@@ -38,3 +51,15 @@ export function acquireLock(
 export function freezeAction(cacheDir: string): 'present' | 'create';
 
 export function canWriteInto(dir: string): { ok: boolean; detail: string };
+
+export function datasetsFromIipt(raw: unknown): OdeDataset[];
+
+export function optionValue(
+  argv: readonly string[],
+  name: string
+): string | null;
+export const PILOT_METADATA: readonly string[];
+export function assertLocalMetadata(
+  cacheDir: string,
+  exists?: (path: string) => boolean
+): void;

@@ -33,7 +33,9 @@
  * `--body <mercury|mars>` (OBLIGATOIRE pour tirer : selection stricte par CIBLE ; `--only` filtre par
  * mission et MESSENGER couvre aussi Venus), `--cache-dir <chemin absolu hors depot>` (ou
  * GALAXY_ODE_CACHE, obligatoire avec --body), `--plan` (compte et redondance seulement, rien n'est
- * tire), `--only <IHID>` (intersection avec --body), `--concurrency <n>`
+ * tire), `--only <IHID>` (intersection avec --body), `--dataset <cle>` (UN jeu, egalite exacte avec
+ * sa cle `Corps|MISSION|INSTRUMENT|TYPE`, du corps demande), `--max-pages <n>` (refuse la collecte
+ * si plus de n pages sont a telecharger), `--concurrency <n>`
  * (2 par defaut, avec un espacement de 3 s entre departs : a 3 et sans espacement, l'ODE a
  * commence a rendre des 403).
  */
@@ -46,9 +48,14 @@ import {
   FREEZE,
   PAGE,
   acquireLock,
+  assertMaxPages,
+  assertLocalMetadata,
   assertMetadataComplete,
   datasetsFromIipt,
   freezeAction,
+  optionValue,
+  parseDatasetArg,
+  parseMaxPages,
   resolveCacheDir,
   selectDatasets,
 } from './ode-selection.mjs';
@@ -71,6 +78,10 @@ const argValue = (name) =>
   argv.includes(name) ? argv[argv.indexOf(name) + 1] : null;
 const BODY = argValue('--body');
 let CACHE;
+let DATASET = null;
+let MAX_PAGES = null;
+/** Un pilote (--dataset / --max-pages) ne sollicite JAMAIS l'ODE pour ses métadonnées. */
+let PILOT = false;
 try {
   CACHE = resolveCacheDir({
     arg: argValue('--cache-dir'),
@@ -78,6 +89,11 @@ try {
     root: ROOT,
     requireExternal: BODY !== null || !argv.includes('--plan'),
   });
+  DATASET = parseDatasetArg(optionValue(argv, '--dataset'));
+  MAX_PAGES = parseMaxPages(optionValue(argv, '--max-pages'));
+  PILOT = DATASET !== null || MAX_PAGES !== null;
+  if (DATASET !== null && BODY === null)
+    throw new Error('--dataset exige --body');
   if (BODY !== null && !COLLECTABLE_BODIES.includes(BODY))
     throw new Error(
       `--body ${BODY} : corps inconnu (${COLLECTABLE_BODIES.join(', ')})`
@@ -182,6 +198,12 @@ function cached(name, compute) {
   const f = join(CACHE, name);
   if (existsSync(f))
     return Promise.resolve(JSON.parse(readFileSync(f, 'utf8')));
+  if (PILOT)
+    return Promise.reject(
+      new Error(
+        `${name} absent du cache : un pilote ne le récupère pas en ligne`
+      )
+    );
   return compute().then((v) => {
     writeFileAtomic(f, JSON.stringify(v, null, 1));
     return v;
@@ -625,6 +647,8 @@ async function pullRange(s, offset, limit, attempts) {
 const safe = (k) => k.replace(/[^A-Za-z0-9_.-]+/g, '_');
 
 async function main() {
+  // Pilote : tout doit déjà être en local, vérifié AVANT le verrou, le gel et toute requête.
+  if (PILOT) assertLocalMetadata(CACHE);
   mkdirSync(CACHE, { recursive: true });
   // Un seul collecteur par cache : deux processus se réécriraient `unavailable.json`.
   const release = acquireLock(CACHE);
@@ -656,7 +680,12 @@ async function main() {
   console.log(
     `${Object.keys(UNFROZEN).length} jeux NON geles (produits sans date de creation)`
   );
-  if (BODY) list = selectDatasets(full, { body: BODY, only: ONLY });
+  if (BODY)
+    list = selectDatasets(full, {
+      body: BODY,
+      only: ONLY,
+      dataset: DATASET,
+    });
   else if (ONLY) list = list.filter((s) => s.IHID === ONLY);
   const todo = list.filter(
     (s) => red[s.key]?.verdict !== 'redundant' && n[s.key] > 0
@@ -704,6 +733,13 @@ async function main() {
         });
   }
   console.log(`pages : ${reused} valides deja la, ${tasks.length} a tirer`);
+  try {
+    assertMaxPages(tasks.length, MAX_PAGES);
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 2;
+    return;
+  }
   const t0 = Date.now();
   /**
    * UN JEU QUI NE REPOND PAS EST DECLARE, il ne bloque pas le tirage. Une page qui echoue par
