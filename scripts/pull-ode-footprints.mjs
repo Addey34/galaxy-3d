@@ -37,16 +37,10 @@
  * (2 par defaut, avec un espacement de 3 s entre departs : a 3 et sans espacement, l'ODE a
  * commence a rendre des 403).
  */
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-  readdirSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gunzipSync, gzipSync } from 'node:zlib';
+import { gunzipSync } from 'node:zlib';
 import {
   COLLECTABLE_BODIES,
   FREEZE,
@@ -58,6 +52,13 @@ import {
   resolveCacheDir,
   selectDatasets,
 } from './ode-selection.mjs';
+import {
+  EXIT_LOCAL_STORAGE,
+  collectPages,
+  inspectExistingPages,
+  pageName,
+  writeFileAtomic,
+} from './ode-pages.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /**
@@ -182,7 +183,7 @@ function cached(name, compute) {
   if (existsSync(f))
     return Promise.resolve(JSON.parse(readFileSync(f, 'utf8')));
   return compute().then((v) => {
-    writeFileSync(f, JSON.stringify(v, null, 1));
+    writeFileAtomic(f, JSON.stringify(v, null, 1));
     return v;
   });
 }
@@ -233,7 +234,7 @@ async function counts(list) {
       out[s.key] = all > frozen ? all : frozen;
       if (all > frozen) unfrozen[s.key] = { frozen, all };
     }
-    writeFileSync(
+    writeFileAtomic(
       join(CACHE, 'unfrozen.json'),
       JSON.stringify(unfrozen, null, 1)
     );
@@ -438,7 +439,7 @@ const metaOnly = new Set(
 );
 const markMetaOnly = (s) => {
   metaOnly.add(instrumentOf(s));
-  writeFileSync(META_ONLY_FILE, JSON.stringify([...metaOnly], null, 1));
+  writeFileAtomic(META_ONLY_FILE, JSON.stringify([...metaOnly], null, 1));
 };
 const instrumentOf = (s) => `${s.db}|${s.IHID}|${s.IID}`;
 
@@ -636,7 +637,7 @@ async function main() {
     : null;
   // Jamais recréé dans un cache qui contient déjà une collecte (freezeAction lève sinon).
   if (freezeAction(CACHE) === 'create')
-    writeFileSync(freezeFile, JSON.stringify(FREEZE) + '\n');
+    writeFileAtomic(freezeFile, JSON.stringify(FREEZE) + '\n');
   // Les metadonnees sont celles de TOUS les jeux : la selection par corps vient APRES.
   const full = await datasets();
   let list = full;
@@ -669,68 +670,87 @@ async function main() {
   if (flag('--plan')) return;
 
   const tasks = [];
+  let reused = 0;
   for (const s of todo) {
     const dir = join(CACHE, 'pages', safe(s.key));
     mkdirSync(dir, { recursive: true });
-    const have = new Set(readdirSync(dir));
-    for (let off = 0; off < n[s.key]; off += PAGE)
-      if (!have.has(`${off}.ndjson.gz`))
-        tasks.push({ s, off, file: join(dir, `${off}.ndjson.gz`) });
+    const offsets = [];
+    for (let off = 0; off < n[s.key]; off += PAGE) offsets.push(off);
+    /**
+     * UNE PAGE PRÉSENTE N'EST PAS UNE PAGE VALIDE : chaque fichier est relu en entier (gzip, JSON,
+     * id, shapes) avant d'être tenu pour acquis. Une page invalide est SIGNALÉE et retéléchargée ;
+     * elle n'est jamais supprimée, le nouveau fichier validé la remplace par renommage atomique.
+     * Les temporaires abandonnés d'une écriture interrompue sont retirés.
+     */
+    const found = inspectExistingPages(dir, offsets);
+    for (const name of found.staleTmp)
+      console.log(`temporaire abandonne retire : ${s.key} ${name}`);
+    for (const bad of found.invalid)
+      console.log(
+        `PAGE INVALIDE ${s.key} @${bad.offset} (${bad.reason}) : a retelecharger`
+      );
+    reused += found.valid.size;
+    for (const off of offsets)
+      if (!found.valid.has(off))
+        tasks.push({
+          key: s.key,
+          s,
+          off,
+          offset: off,
+          file: join(dir, pageName(off)),
+        });
   }
-  const pages = todo.reduce((a, s) => a + Math.ceil(n[s.key] / PAGE), 0);
-  console.log(
-    `pages : ${pages - tasks.length} deja la, ${tasks.length} a tirer`
-  );
-  let done = 0;
-  let failed = 0;
+  console.log(`pages : ${reused} valides deja la, ${tasks.length} a tirer`);
   const t0 = Date.now();
   /**
    * UN JEU QUI NE REPOND PAS EST DECLARE, il ne bloque pas le tirage. Une page qui echoue par
    * les TROIS routes (shapefile entier, sous-pages, metadonnees) marque son jeu INDISPONIBLE avec
    * l'erreur mesuree, dans `unavailable.json` : le croisement le PUBLIE au lieu de le taire, et
    * les pages restantes de ce jeu ne coutent plus des heures de reprises.
+   * Une erreur de STOCKAGE LOCAL (disque plein, E/S, volume disparu, permissions) n'est PAS un
+   * jeu indisponible : elle arrete la collecte proprement (`collectPages`, code de sortie 3).
    */
   const unavailableFile = join(CACHE, 'unavailable.json');
   const unavailable =
     existsSync(unavailableFile) && !RETRY
       ? JSON.parse(readFileSync(unavailableFile, 'utf8'))
       : {};
-  async function worker() {
-    while (tasks.length) {
-      const t = tasks.shift();
-      if (unavailable[t.s.key]) {
-        done++;
-        continue;
-      }
-      try {
-        const products = await pullPage(t.s, t.off);
-        writeFileSync(
-          t.file,
-          gzipSync(products.map((p) => JSON.stringify(p)).join('\n'))
-        );
-      } catch (e) {
-        failed++;
-        unavailable[t.s.key] = {
-          error: e.message.slice(-200),
-          offset: t.off,
-          at: new Date().toISOString(),
-        };
-        writeFileSync(unavailableFile, JSON.stringify(unavailable, null, 1));
+  const { done, failed, fatal, remaining } = await collectPages({
+    tasks,
+    pull: (t) => pullPage(t.s, t.off),
+    unavailable,
+    concurrency: CONCURRENCY,
+    markUnavailable: (t, e) => {
+      unavailable[t.key] = {
+        error: e.message.slice(-200),
+        offset: t.off,
+        at: new Date().toISOString(),
+      };
+      writeFileAtomic(unavailableFile, JSON.stringify(unavailable, null, 1));
+      console.log(
+        `ECHEC ${t.key} @${t.off}, jeu declare indisponible : ${e.message.slice(-120)}`
+      );
+    },
+    onProgress: ({ done: d, failed: f, queued, task }) => {
+      if (d % 20 === 0 || !queued) {
+        const rate = (Date.now() - t0) / d;
         console.log(
-          `ECHEC ${t.s.key} @${t.off}, jeu declare indisponible : ${e.message.slice(-120)}`
+          `[${d}/${d + queued}] ${task.key} @${task.off} · ${f} echec(s) · ` +
+            `reste ~${((rate * queued) / 3600000).toFixed(1)} h`
         );
       }
-      done++;
-      if (done % 20 === 0 || !tasks.length) {
-        const rate = (Date.now() - t0) / done;
-        console.log(
-          `[${done}/${done + tasks.length}] ${t.s.key} @${t.off} · ${failed} echec(s) · ` +
-            `reste ~${((rate * tasks.length) / 3600000).toFixed(1)} h`
-        );
-      }
-    }
+    },
+  });
+  if (fatal) {
+    console.error(
+      `ARRET sur erreur de stockage LOCAL : ${fatal.message}
+` +
+        `${remaining} page(s) non tirees ; aucun jeu n'a ete declare indisponible a cause de cette erreur. ` +
+        `Corriger le stockage puis relancer : les pages valides sont conservees.`
+    );
+    process.exitCode = EXIT_LOCAL_STORAGE;
+    return;
   }
-  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
   console.log(
     `FIN ${done} pages, ${failed} echec(s), ${((Date.now() - t0) / 3600000).toFixed(2)} h`
   );
