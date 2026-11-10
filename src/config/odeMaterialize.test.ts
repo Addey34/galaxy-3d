@@ -706,6 +706,143 @@ catch (e) { console.log('RESULT ' + JSON.stringify({ ok: false, message: e.messa
   }, 60_000);
 });
 
+describe('finalisation après le lien (GAL-A003-10B)', () => {
+  const tmpName = (f: unknown) =>
+    /\.tmp$/.test(String(f)) && !/\.tmp\.tmp$/.test(String(f));
+  const auxName = (f: unknown) => /\.tmp\.tmp$/.test(String(f));
+  /** rmSync qui échoue sur les fichiers désignés, comme un antivirus ou un disque en défaut. */
+  const failing = (pick: (f: unknown) => boolean) => ({
+    rmSync: (f: string, o?: { force?: boolean }) => {
+      if (pick(f))
+        throw Object.assign(new Error('EPERM simulé'), { code: 'EPERM' });
+      rmSync(f, o);
+    },
+  });
+  const catchError = (fn: () => unknown) => {
+    try {
+      fn();
+    } catch (e) {
+      return e as Error;
+    }
+    return null;
+  };
+
+  it('publication normale : résultat inchangé (SHA-256, taille, un seul nom, un seul fichier)', () => {
+    const fx = fixture({ kind: 'l' });
+    const p = fx.plan();
+    const r = commitPage(p, { cacheDir: fx.cache, fs: failing(() => false) });
+    expect(r).toEqual({
+      target: p.target,
+      sha256: p.pageSha256,
+      bytes: p.pageBytes,
+    });
+    expect(statSync(p.target).nlink).toBe(1);
+    expect(readdirSync(p.dir)).toEqual(['0.ndjson.gz']);
+  });
+
+  it('échec du retrait du temporaire APRÈS le lien : jamais de succès, page retirée, temporaire signalé', () => {
+    const fx = fixture({ kind: 'l' });
+    const p = fx.plan();
+    const e = catchError(() =>
+      commitPage(p, { cacheDir: fx.cache, fs: failing(tmpName) })
+    );
+    expect(e).toBeInstanceOf(MaterializeError);
+    expect(e?.message).toMatch(
+      /non retiré\(s\), à retirer à la main[^]*plusieurs noms/
+    );
+    expect(e?.message).not.toMatch(/ÉTAT PARTIEL/);
+    expect(existsSync(p.target)).toBe(false);
+    // Seul NOTRE temporaire reste, nommé dans le message ; rien d'autre n'a bougé.
+    const left = readdirSync(p.dir);
+    expect(left).toHaveLength(1);
+    expect(left[0]).toMatch(/\.tmp$/);
+    expect(e?.message).toContain(left[0]);
+  });
+
+  it('échec du retrait du temporaire AUXILIAIRE après le lien : même refus explicite', () => {
+    const fx = fixture({ kind: 'l' });
+    const p = fx.plan();
+    // Le temporaire auxiliaire n'existe pas : on exige que l'échec de son retrait soit traité comme les autres.
+    const e = catchError(() =>
+      commitPage(p, { cacheDir: fx.cache, fs: failing(auxName) })
+    );
+    expect(e).toBeInstanceOf(MaterializeError);
+    expect(e?.message).toMatch(/non retiré\(s\), à retirer à la main/);
+    expect(existsSync(p.target)).toBe(false);
+    expect(readdirSync(p.dir)).toEqual([]);
+  });
+
+  it('échec du nettoyage AVANT le lien (écriture en échec) : aucune page, l’erreur d’origine reste en tête', () => {
+    const fx = fixture({ kind: 'l' });
+    const p = fx.plan();
+    const fs = {
+      ...failing(tmpName),
+      writeSync: () => {
+        throw Object.assign(new Error('disque plein'), { code: 'ENOSPC' });
+      },
+    };
+    const e = catchError(() => commitPage(p, { cacheDir: fx.cache, fs }));
+    expect(e?.message).toMatch(/^disque plein/);
+    expect(existsSync(p.target)).toBe(false);
+    // Le temporaire écrit par writeFileAtomic a été retiré par lui ; un reste éventuel est signalé, jamais ignoré.
+    for (const f of readdirSync(p.dir)) expect(e?.message).toContain(f);
+  });
+
+  it('collision au lien puis échec du retrait du temporaire : la page du gagnant reste intacte', () => {
+    const fx = fixture({ kind: 'l' });
+    const p = fx.plan();
+    const fs = {
+      ...failing(tmpName),
+      linkSync: (a: string, b: string) => {
+        writeFileSync(b, 'GAGNANT');
+        linkSync(a, b);
+      },
+    };
+    const e = catchError(() => commitPage(p, { cacheDir: fx.cache, fs }));
+    expect(e?.message).toMatch(/collision[^]*à retirer à la main/);
+    expect(readFileSync(p.target, 'utf8')).toBe('GAGNANT');
+  });
+
+  it('échec de récupération après une première erreur : état partiel explicite, les deux erreurs rapportées, rien d’autre touché', () => {
+    const fx = fixture({ kind: 'l' });
+    const p = fx.plan();
+    const fs = {
+      ...failing((f) => String(f) === p.target),
+      linkSync: (a: string, b: string) => {
+        linkSync(a, b);
+        writeFileSync(b, Buffer.concat([readFileSync(b), Buffer.from('x')]));
+      },
+    };
+    const before = snap(fx.cache);
+    const e = catchError(() => commitPage(p, { cacheDir: fx.cache, fs }));
+    expect(e).toBeInstanceOf(MaterializeError);
+    expect(e?.message).toMatch(
+      /ÉTAT PARTIEL, intervention manuelle[^]*relecture différente[^]*n'a pas pu être retirée \(EPERM\)/
+    );
+    expect(e?.message).toContain(p.target);
+    // État sur disque : la page altérée est LAISSÉE (non retirable de façon sûre), aucun autre fichier du cache ne change.
+    expect(existsSync(p.target)).toBe(true);
+    const after = snap(fx.cache);
+    for (const k of Object.keys(before)) expect(after[k]).toBe(before[k]);
+    expect(Object.keys(after).filter((k) => !(k in before))).toHaveLength(1);
+  });
+
+  it('temporaire et récupération en échec ensemble : état partiel, temporaire nommé', () => {
+    const fx = fixture({ kind: 'l' });
+    const p = fx.plan();
+    const e = catchError(() =>
+      commitPage(p, {
+        cacheDir: fx.cache,
+        fs: failing((f) => tmpName(f) || String(f) === p.target),
+      })
+    );
+    expect(e?.message).toMatch(
+      /ÉTAT PARTIEL[^]*plusieurs noms[^]*n'a pas pu être retirée[^]*à retirer à la main/
+    );
+    expect(statSync(p.target).nlink).toBe(2);
+  });
+});
+
 describe('surfaces', () => {
   it('anneau non fermé dans la capture : refus avant toute écriture', () => {
     const fx = fixture({ kind: 'a', bad: 'open' });

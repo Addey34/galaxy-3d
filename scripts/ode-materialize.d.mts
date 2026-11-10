@@ -30,6 +30,7 @@ export interface MaterializePlan {
 /** Pannes injectables, pour les tests seulement. */
 export interface CommitFs {
   linkSync?: (existing: string, target: string) => void;
+  rmSync?: (path: string, options?: { force?: boolean }) => void;
   writeSync?: (...args: unknown[]) => number;
   [name: string]: unknown;
 }

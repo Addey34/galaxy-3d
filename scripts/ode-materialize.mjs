@@ -237,8 +237,9 @@ export function planReconciledPage({ cacheDir, key }) {
 
 /**
  * Publication STRICTE par LIEN DUR, sans repli par copie. Ne retire que NOTRE temporaire et, si la relecture échoue
- * après un lien réussi, la cible que NOUS venons de lier. N'écrit aucun autre fichier du cache. `fs` n'existe que
- * pour les tests (injection de pannes).
+ * après un lien réussi, la cible que NOUS venons de lier ; si ce retrait échoue, signale un ÉTAT PARTIEL sans rien
+ * nettoyer d'autre. Une erreur de nettoyage ne masque jamais l'erreur d'origine et n'autorise jamais le succès. N'écrit
+ * aucun autre fichier du cache. `fs` n'existe que pour les tests (injection de pannes).
  */
 export function commitPage(plan, { fs = {}, cacheDir } = {}) {
   const link = fs.linkSync ?? linkSync;
@@ -249,15 +250,15 @@ export function commitPage(plan, { fs = {}, cacheDir } = {}) {
   if (existsSync(plan.dir) && readdirSync(plan.dir).length)
     fail(`le dossier du jeu n'est pas vide : ${plan.dir}`);
   mkdirSync(plan.dir, { recursive: true });
+  const rm = fs.rmSync ?? rmSync;
   const tmp = `${plan.target}.${process.pid}.${randomBytes(4).toString('hex')}${TMP_SUFFIX}`;
-  let linked = false;
+  let failure = null;
   try {
     writeFileAtomic(tmp, plan.bytes, { fs });
     if (!readFileSync(tmp).equals(plan.bytes))
       fail('le temporaire relu diffère des octets planifiés');
     try {
       link(tmp, plan.target);
-      linked = true;
     } catch (error) {
       if (error?.code === 'EEXIST')
         fail(
@@ -267,12 +268,31 @@ export function commitPage(plan, { fs = {}, cacheDir } = {}) {
         `publication par lien dur impossible (${error?.code ?? error?.message}) : aucun repli par copie, aucune page écrite`
       );
     }
-  } finally {
-    rmSync(tmp, { force: true });
-    rmSync(`${tmp}${TMP_SUFFIX}`, { force: true });
+  } catch (e) {
+    failure = e;
+  }
+  // Retrait de NOS deux temporaires. Une erreur ici ne coupe jamais la suite : elle est mémorisée, car la page déjà
+  // liée doit passer ses contrôles définitifs (ou être retirée) avant tout retour.
+  const leftovers = [];
+  for (const f of [tmp, `${tmp}${TMP_SUFFIX}`]) {
+    try {
+      rm(f, { force: true });
+    } catch (e) {
+      leftovers.push(`${f} (${e?.code ?? e?.message})`);
+    }
+  }
+  const manual = `temporaire(s) non retiré(s), à retirer à la main : ${leftovers.join(', ')}`;
+  if (failure) {
+    // Aucun lien n'a abouti : aucune page n'est publiée. L'erreur d'origine reste la première information.
+    if (!leftovers.length) throw failure;
+    throw new MaterializeError(`${failure.message} ; en plus, ${manual}`);
   }
   let back;
   try {
+    if (leftovers.length)
+      throw new MaterializeError(
+        `${manual} : la page porterait plusieurs noms`
+      );
     back = readFileSync(plan.target);
     if (!back.equals(plan.bytes))
       throw new MaterializeError('relecture différente');
@@ -288,8 +308,17 @@ export function commitPage(plan, { fs = {}, cacheDir } = {}) {
         'la page a plusieurs noms après retrait du temporaire'
       );
   } catch (e) {
-    if (linked) rmSync(plan.target, { force: true });
-    throw new MaterializeError(`page retirée après relecture : ${e.message}`);
+    // La cible a été liée par NOUS : seule elle peut être retirée. Si elle ne l'est pas, l'état est partiel.
+    try {
+      rm(plan.target, { force: true });
+    } catch (removal) {
+      throw new MaterializeError(
+        `ÉTAT PARTIEL, intervention manuelle : ${e.message} ; la page ${plan.target} n'a pas pu être retirée (${removal?.code ?? removal?.message})${leftovers.length ? ` ; ${manual}` : ''}`
+      );
+    }
+    throw new MaterializeError(
+      `page retirée après relecture : ${e.message}${leftovers.length && !String(e.message).includes('à retirer à la main') ? ` ; ${manual}` : ''}`
+    );
   }
   return { target: plan.target, sha256: sha(back), bytes: back.length };
 }
