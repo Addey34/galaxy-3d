@@ -3,6 +3,9 @@ export const MANIFEST_VERSION: number;
 export const REASON_NO_GEOMETRY: string;
 export const GEOMETRY_FIELDS: readonly string[];
 export const SHAPEFILE_VARIANTS: readonly string[];
+export const GEOMETRY_KINDS: readonly string[];
+export function primaryVariant(kind: string): string;
+export const SURFACE_VARIANTS: readonly string[];
 
 export class ReconciliationError extends Error {
   problems: string[];
@@ -25,6 +28,8 @@ export interface Manifest {
   version: number;
   kind: string;
   dataset: string;
+  /** Absent pour les traces (format historique), `'a'` pour les surfaces. */
+  geometryKind?: string;
   counts: { catalogued: number; footprints: number; excluded: number };
   excluded: {
     odeId: string;
@@ -49,6 +54,7 @@ export interface Manifest {
 export interface LoadedReconciliation {
   manifest: Manifest;
   file: string;
+  geometryKind: string;
   catalogued: number;
   footprints: number;
   excludedIds: ReadonlySet<string>;
@@ -59,7 +65,12 @@ export function manifestPath(cacheDir: string, key: string): string;
 export function sha256(buffer: Buffer): string;
 export function hasGeometry(product: Record<string, unknown>): boolean;
 export function readCatalogue(buffer: Buffer): {
-  products: { id: string; productId: string; geometry: boolean }[];
+  products: {
+    id: string;
+    productId: string;
+    geometry: boolean;
+    otherGeometry: string[];
+  }[];
   problems: string[];
 };
 export function readShapefiles(buffer: Buffer): {
@@ -71,6 +82,7 @@ export function readShapefiles(buffer: Buffer): {
       productIds: Map<string, string>;
     }
   >;
+  kind: string | null;
   problems: string[];
 };
 export function buildManifest(options: {

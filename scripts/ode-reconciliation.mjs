@@ -35,6 +35,14 @@ export const GEOMETRY_FIELDS = [
 ];
 /** Les variantes de shapefile d'une archive `coveragetargz`. `gl` est celle que lit le pipeline. */
 export const SHAPEFILE_VARIANTS = ['gl', 'c0l', 'c180l'];
+/**
+ * Les natures de géométrie couvertes : `l` (traces, historique) et `a` (surfaces). La variante lue par le
+ * pipeline est `g<nature>`. Un manifeste SANS `geometryKind` est un manifeste de traces (format d'origine).
+ */
+export const GEOMETRY_KINDS = ['l', 'a'];
+export const primaryVariant = (kind) => `g${kind}`;
+/** Les trois variantes qu'une archive de surfaces doit porter. */
+export const SURFACE_VARIANTS = ['ga', 'c0a', 'c180a'];
 
 export class ReconciliationError extends Error {
   constructor(problems) {
@@ -94,12 +102,26 @@ export function readCatalogue(buffer) {
     if (seen.has(id))
       problems.push(`ODEId en double dans les métadonnées : ${id}`);
     seen.add(id);
-    products.push({ id, productId, geometry: hasGeometry(raw) });
+    // Tout AUTRE champ dont le nom évoque une géométrie et qui porte une valeur : preuve d'absence renforcée
+    // pour un produit exclu (les cinq champs connus restent seuls juges de `geometry`, comportement inchangé).
+    const otherGeometry = Object.keys(raw).filter(
+      (k) =>
+        /geom|polygon|wkt/i.test(k) &&
+        !GEOMETRY_FIELDS.includes(k) &&
+        String(raw[k] ?? '').trim() !== '' &&
+        !/EMPTY/.test(String(raw[k]))
+    );
+    products.push({ id, productId, geometry: hasGeometry(raw), otherGeometry });
   }
   return { products, problems };
 }
 
-/** Lit les shapefiles d'une archive brute. Rend { variants: { gl: {records, ids:Set} … }, problems }. */
+/**
+ * Lit les shapefiles d'une archive brute. Rend { variants, kind, problems }. La nature (`l` ou `a`) se DÉRIVE
+ * des suffixes présents ; une archive qui en mêle plusieurs, ou aucune, est refusée. Pour les traces, une ligne
+ * par produit dans `_gl` (exigence d'origine, inchangée). Pour les surfaces, plusieurs enregistrements par ODEId
+ * sont légitimes (anneau découpé à la couture 0/360) mais un ODEId ne porte JAMAIS deux ProductId.
+ */
 export function readShapefiles(buffer) {
   const problems = [];
   let tar;
@@ -109,23 +131,65 @@ export function readShapefiles(buffer) {
     tar = untar(buffer);
   }
   const variants = {};
+  const conflicts = {};
+  const shapeFiles = new Set();
+  for (const name of Object.keys(tar))
+    if (/\.shp$/.test(name)) shapeFiles.add(name);
+  const missingShp = [];
   for (const name of Object.keys(tar)) {
-    const m = /_(gl|c0l|c180l)\.dbf$/.exec(name);
+    const m = /_(gl|c0l|c180l|ga|c0a|c180a)\.dbf$/.exec(name);
     if (!m) continue;
     const rows = readDbf(tar[name], ['ODEId', 'ProductId']);
+    // Surfaces : la table seule ne décrit aucune géométrie, le `.shp` de la même variante est exigé.
+    const shp = name.replace(/\.dbf$/, '.shp');
+    if (m[1].endsWith('a') && !(shapeFiles.has(shp) && tar[shp].length > 100))
+      missingShp.push(m[1]);
     variants[m[1]] = {
       records: rows.length,
       ids: new Set(rows.map((r) => r.ODEId)),
       productIds: new Map(rows.map((r) => [r.ODEId, r.ProductId])),
     };
+    const seen = new Map();
+    conflicts[m[1]] = new Set();
+    for (const r of rows) {
+      if (seen.has(r.ODEId) && seen.get(r.ODEId) !== r.ProductId)
+        conflicts[m[1]].add(r.ODEId);
+      seen.set(r.ODEId, r.ProductId);
+    }
   }
-  if (!variants.gl)
-    problems.push('archive sans shapefile `_gl` (celui que lit le pipeline)');
-  else if (variants.gl.records !== variants.gl.ids.size)
+  const kinds = [...new Set(Object.keys(variants).map((v) => v.slice(-1)))];
+  if (kinds.length > 1) {
+    problems.push(
+      `archive mêlant plusieurs natures de géométrie (${kinds.join(', ')}) : non couverte`
+    );
+    return { variants, kind: null, problems };
+  }
+  const kind = kinds[0] ?? 'l';
+  const primary = primaryVariant(kind);
+  if (!variants[primary])
+    problems.push(
+      `archive sans shapefile \`_${primary}\` (celui que lit le pipeline)`
+    );
+  else if (kind === 'l' && variants.gl.records !== variants.gl.ids.size)
     problems.push(
       `shapefile _gl : ${variants.gl.records} enregistrements pour ${variants.gl.ids.size} identifiants distincts`
     );
-  return { variants, problems };
+  if (kind === 'a')
+    for (const v of SURFACE_VARIANTS)
+      if (!variants[v])
+        problems.push(`surfaces : variante \`_${v}\` manquante`);
+  if (kind === 'a')
+    for (const v of missingShp)
+      problems.push(
+        `surfaces : variante \`_${v}\` sans fichier .shp exploitable`
+      );
+  if (kind === 'a')
+    for (const [v, ids] of Object.entries(conflicts))
+      if (ids.size)
+        problems.push(
+          `variante ${v} : ProductId incohérent pour l'ODEId ${[...ids].slice(0, 3).join(', ')}`
+        );
+  return { variants, kind, problems };
 }
 
 const sameFreeze = (a, b) =>
@@ -164,7 +228,8 @@ export function buildManifest({
   };
   const metaSha = checkSource('métadonnées', metadata);
   const covSha = checkSource('coveragetargz', coverage);
-  const req = metadata.provenance?.requete ?? {};
+  // `requete` (captures historiques) ou `query` (sondes de métadonnées isolées) : même contenu.
+  const req = metadata.provenance?.requete ?? metadata.provenance?.query ?? {};
   const expectReq = {
     query: 'product',
     results: 'm',
@@ -217,25 +282,37 @@ export function buildManifest({
 
   if (!problems.length) {
     const catIds = new Set(cat.products.map((p) => p.id));
-    const gl = shp.variants.gl.ids;
+    const primary = primaryVariant(shp.kind);
+    const gl = shp.variants[primary].ids;
     for (const id of gl)
       if (!catIds.has(id))
         problems.push(`identifiant du shapefile absent du catalogue : ${id}`);
     for (const [variant, v] of Object.entries(shp.variants))
-      if (variant !== 'gl') {
+      if (variant !== primary) {
         for (const id of v.ids)
           if (!gl.has(id))
             problems.push(
-              `variante ${variant} : identifiant ${id} absent de _gl`
+              `variante ${variant} : identifiant ${id} absent de _${primary}`
             );
         for (const id of gl)
           if (!v.ids.has(id))
             problems.push(
-              `variante ${variant} : identifiant ${id} de _gl absent`
+              `variante ${variant} : identifiant ${id} de _${primary} absent`
+            );
+          else if (
+            shp.kind === 'a' &&
+            v.productIds.get(id) !== shp.variants[primary].productIds.get(id)
+          )
+            problems.push(
+              `variante ${variant} : ODEId ${id} porte le ProductId ${v.productIds.get(id)} au lieu de ${shp.variants[primary].productIds.get(id)} (_${primary})`
             );
       }
     for (const p of cat.products) {
       const inGl = gl.has(p.id);
+      if (!inGl && p.otherGeometry.length)
+        problems.push(
+          `produit ${p.id} : exclu mais porte ${p.otherGeometry.join(', ')} dans les métadonnées`
+        );
       if (inGl && !p.geometry)
         problems.push(
           `produit ${p.id} : dans le shapefile mais sans géométrie dans les métadonnées`
@@ -244,15 +321,15 @@ export function buildManifest({
         problems.push(
           `produit ${p.id} : géométrie présente dans les métadonnées mais absent du shapefile (exclusion injustifiée)`
         );
-      if (inGl && shp.variants.gl.productIds.get(p.id) !== p.productId)
+      if (inGl && shp.variants[primary].productIds.get(p.id) !== p.productId)
         problems.push(
-          `produit ${p.id} : ProductId ${shp.variants.gl.productIds.get(p.id)} (shapefile) différent de ${p.productId} (métadonnées)`
+          `produit ${p.id} : ProductId ${shp.variants[primary].productIds.get(p.id)} (shapefile) différent de ${p.productId} (métadonnées)`
         );
     }
   }
   if (problems.length) throw new ReconciliationError(problems);
 
-  const gl = shp.variants.gl.ids;
+  const gl = shp.variants[primaryVariant(shp.kind)].ids;
   const excluded = cat.products
     .filter((p) => !gl.has(p.id))
     .map((p) => ({
@@ -269,6 +346,8 @@ export function buildManifest({
     version: MANIFEST_VERSION,
     kind: 'reconciliation-empreintes',
     dataset: key,
+    // Absent pour les traces (format d'origine, octet pour octet) ; présent pour les surfaces.
+    ...(shp.kind === 'l' ? {} : { geometryKind: shp.kind }),
     freeze: {
       mincreationtime: freeze.mincreationtime,
       maxcreationtime: freeze.maxcreationtime,
@@ -326,6 +405,9 @@ export function validateManifest(
     problems.push(`nature ${manifest.kind}`);
   if (manifest.dataset !== key)
     problems.push(`jeu ${manifest.dataset} (attendu ${key})`);
+  if (manifest.geometryKind !== undefined && manifest.geometryKind !== 'a')
+    problems.push(`nature de géométrie ${manifest.geometryKind} non admise`);
+  const primary = primaryVariant(manifest.geometryKind ?? 'l');
   if (!sameFreeze(manifest.freeze, freeze))
     problems.push('gel du manifeste différent du gel courant');
   if (manifest.pageSize !== pageSize)
@@ -371,10 +453,16 @@ export function validateManifest(
       problems.push(
         `exclusion ${e.odeId} : géométrie des métadonnées non démontrée absente`
       );
+    const proof = e.inShapefiles;
+    const required =
+      manifest.geometryKind === 'a' ? SURFACE_VARIANTS : [primary];
     if (
-      !e.inShapefiles ||
-      Object.values(e.inShapefiles).some((v) => v !== false) ||
-      !('gl' in e.inShapefiles)
+      !proof ||
+      Object.values(proof).some((v) => v !== false) ||
+      required.some((v) => !(v in proof)) ||
+      // Surfaces : exactement les trois variantes, ni plus ni moins (le contrat des traces reste inchangé).
+      (manifest.geometryKind === 'a' &&
+        Object.keys(proof).length !== SURFACE_VARIANTS.length)
     )
       problems.push(
         `exclusion ${e.odeId} : absence des shapefiles non démontrée`
@@ -446,6 +534,7 @@ export function loadReconciliation({
   return {
     manifest,
     file,
+    geometryKind: manifest.geometryKind ?? 'l',
     catalogued: manifest.counts.catalogued,
     footprints: manifest.counts.footprints,
     excludedIds: new Set(manifest.excluded.map((e) => e.odeId)),
