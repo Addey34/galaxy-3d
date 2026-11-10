@@ -33,7 +33,9 @@
  * `--body <mercury|mars>` (OBLIGATOIRE pour tirer : selection stricte par CIBLE ; `--only` filtre par
  * mission et MESSENGER couvre aussi Venus), `--cache-dir <chemin absolu hors depot>` (ou
  * GALAXY_ODE_CACHE, obligatoire avec --body), `--plan` (compte et redondance seulement, rien n'est
- * tire), `--only <IHID>` (intersection avec --body), `--concurrency <n>`
+ * tire), `--only <IHID>` (intersection avec --body), `--dataset <cle>` (UN jeu, egalite exacte avec
+ * sa cle `Corps|MISSION|INSTRUMENT|TYPE`, du corps demande), `--max-pages <n>` (refuse la collecte
+ * si plus de n pages sont a telecharger), `--concurrency <n>`
  * (2 par defaut, avec un espacement de 3 s entre departs : a 3 et sans espacement, l'ODE a
  * commence a rendre des 403).
  */
@@ -46,9 +48,12 @@ import {
   FREEZE,
   PAGE,
   acquireLock,
+  assertMaxPages,
   assertMetadataComplete,
   datasetsFromIipt,
   freezeAction,
+  parseDatasetArg,
+  parseMaxPages,
   resolveCacheDir,
   selectDatasets,
 } from './ode-selection.mjs';
@@ -71,6 +76,8 @@ const argValue = (name) =>
   argv.includes(name) ? argv[argv.indexOf(name) + 1] : null;
 const BODY = argValue('--body');
 let CACHE;
+let DATASET = null;
+let MAX_PAGES = null;
 try {
   CACHE = resolveCacheDir({
     arg: argValue('--cache-dir'),
@@ -78,6 +85,10 @@ try {
     root: ROOT,
     requireExternal: BODY !== null || !argv.includes('--plan'),
   });
+  DATASET = parseDatasetArg(argValue('--dataset'));
+  MAX_PAGES = parseMaxPages(argValue('--max-pages'));
+  if (DATASET !== null && BODY === null)
+    throw new Error('--dataset exige --body');
   if (BODY !== null && !COLLECTABLE_BODIES.includes(BODY))
     throw new Error(
       `--body ${BODY} : corps inconnu (${COLLECTABLE_BODIES.join(', ')})`
@@ -656,7 +667,12 @@ async function main() {
   console.log(
     `${Object.keys(UNFROZEN).length} jeux NON geles (produits sans date de creation)`
   );
-  if (BODY) list = selectDatasets(full, { body: BODY, only: ONLY });
+  if (BODY)
+    list = selectDatasets(full, {
+      body: BODY,
+      only: ONLY,
+      dataset: DATASET,
+    });
   else if (ONLY) list = list.filter((s) => s.IHID === ONLY);
   const todo = list.filter(
     (s) => red[s.key]?.verdict !== 'redundant' && n[s.key] > 0
@@ -704,6 +720,13 @@ async function main() {
         });
   }
   console.log(`pages : ${reused} valides deja la, ${tasks.length} a tirer`);
+  try {
+    assertMaxPages(tasks.length, MAX_PAGES);
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 2;
+    return;
+  }
   const t0 = Date.now();
   /**
    * UN JEU QUI NE REPOND PAS EST DECLARE, il ne bloque pas le tirage. Une page qui echoue par

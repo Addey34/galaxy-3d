@@ -73,11 +73,45 @@ export function datasetsFromIipt(raw) {
 export const COLLECTABLE_BODIES = ['mercury', 'mars'];
 
 /**
- * Jeux retenus : cible == `body` (strict), puis IHID == `only` si donné. Lève si `body` est absent
- * ou inconnu, ou si la sélection est vide (une faute de frappe ne doit pas ressembler à « rien à
- * tirer »).
+ * `--dataset <clé>` : syntaxe d'une clé de jeu (`Corps|MISSION|INSTRUMENT|TYPE`, quatre segments
+ * non vides, sans espace de bord). Vérifiée AVANT toute requête, sans la liste des jeux. Rend la
+ * clé, ou null si l'option est absente ; lève sinon.
  */
-export function selectDatasets(list, { body, only = null }) {
+export function parseDatasetArg(value) {
+  if (value === null || value === undefined) return null;
+  const parts = String(value).split('|');
+  if (parts.length !== 4 || parts.some((p) => p === '' || p !== p.trim()))
+    throw new Error(
+      `--dataset ${JSON.stringify(value)} : clé invalide (attendu Corps|MISSION|INSTRUMENT|TYPE, quatre segments non vides)`
+    );
+  return String(value);
+}
+
+/** `--max-pages <n>` : entier strictement positif, ou null si absent. */
+export function parseMaxPages(value) {
+  if (value === null || value === undefined) return null;
+  if (!/^[1-9][0-9]*$/.test(String(value)))
+    throw new Error(
+      `--max-pages ${JSON.stringify(value)} : entier strictement positif attendu`
+    );
+  return Number(value);
+}
+
+/** Refuse la collecte si plus de pages que la limite sont à télécharger (avant toute requête). */
+export function assertMaxPages(pagesToDownload, maxPages) {
+  if (maxPages !== null && pagesToDownload > maxPages)
+    throw new Error(
+      `${pagesToDownload} page(s) à télécharger pour --max-pages ${maxPages} : collecte refusée, rien n'est tiré`
+    );
+}
+
+/**
+ * Jeux retenus : cible == `body` (strict), puis IHID == `only` si donné, puis clé == `dataset`
+ * (égalité exacte) si donnée. Lève si `body` est absent ou inconnu, si la clé n'existe pas ou
+ * appartient à un autre corps, ou si la sélection est vide (une faute de frappe ne doit pas
+ * ressembler à « rien à tirer »).
+ */
+export function selectDatasets(list, { body, only = null, dataset = null }) {
   if (!body)
     throw new Error(
       `--body est obligatoire pour une collecte (${COLLECTABLE_BODIES.join(', ')})`
@@ -86,12 +120,23 @@ export function selectDatasets(list, { body, only = null }) {
     throw new Error(
       `--body ${body} : corps inconnu (${COLLECTABLE_BODIES.join(', ')})`
     );
+  if (dataset !== null) {
+    const found = list.find((s) => s.key === dataset);
+    if (!found) throw new Error(`--dataset ${dataset} : clé absente des jeux`);
+    if (found.target !== body)
+      throw new Error(
+        `--dataset ${dataset} appartient à ${found.target}, pas à --body ${body}`
+      );
+  }
   const picked = list.filter(
-    (s) => s.target === body && (only === null || s.IHID === only)
+    (s) =>
+      s.target === body &&
+      (only === null || s.IHID === only) &&
+      (dataset === null || s.key === dataset)
   );
   if (picked.length === 0)
     throw new Error(
-      `aucun jeu pour --body ${body}${only ? ` --only ${only}` : ''}`
+      `aucun jeu pour --body ${body}${only ? ` --only ${only}` : ''}${dataset ? ` --dataset ${dataset}` : ''}`
     );
   return picked;
 }
