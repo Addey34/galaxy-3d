@@ -1257,23 +1257,24 @@ describe('writeFileExclusive : repli par copie exclusive (COPYFILE_EXCL)', () =>
     ).href;
     const code = `
       import { writeFileExclusive } from ${JSON.stringify(moduleUrl)};
-      const payload = process.env.PAYLOAD;
+      const payload = process.env.LETTRE.repeat(300000);
       const noLink = () => { throw Object.assign(new Error('x'), { code: 'EPERM' }); };
       try { writeFileExclusive(process.env.FILE, payload, { fs: { linkSync: noLink } }); console.log('gagne'); }
       catch (e) { console.log(e.code); process.exitCode = 1; }`;
-    const payloads = ['A', 'B', 'C', 'D'].map((c) => c.repeat(300_000));
-    const run = (payload: string) =>
+    const letters = ['A', 'B', 'C', 'D'];
+    const payloads = letters.map((c) => c.repeat(300_000));
+    const run = (letter: string) =>
       new Promise<{ code: number | null; out: string }>((resolve) => {
         const child = spawn(
           process.execPath,
           ['--input-type=module', '-e', code],
-          { env: { ...process.env, FILE: file, PAYLOAD: payload } }
+          { env: { ...process.env, FILE: file, LETTRE: letter } }
         );
         let out = '';
         child.stdout.on('data', (d) => (out += d));
         child.on('close', (c) => resolve({ code: c, out: out.trim() }));
       });
-    const results = await Promise.all(payloads.map(run));
+    const results = await Promise.all(letters.map(run));
     expect(results.filter((r) => r.code === 0)).toHaveLength(1);
     for (const r of results.filter((r) => r.code !== 0))
       expect(r.out).toBe('EEXIST');
