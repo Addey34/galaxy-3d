@@ -117,9 +117,41 @@ export function readCatalogue(buffer) {
 }
 
 /**
+ * Traces : plusieurs enregistrements pour un même ODEId ne sont admis que s'ils sont PROUVÉS légitimes :
+ * même ProductId pour tous les enregistrements de l'identifiant, et au moins autant d'enregistrements par
+ * identifiant dans chaque variante (c0l/c180l en ont davantage : découpe au méridien). Sinon, refus nommé (comportement d'origine).
+ */
+function traceRecordProblems(variants) {
+  const problems = [];
+  const count = (pairs) => {
+    const m = new Map();
+    for (const [id] of pairs) m.set(id, (m.get(id) ?? 0) + 1);
+    return m;
+  };
+  const gl = variants.gl;
+  const glCount = count(gl.pairs);
+  const pidOf = new Map();
+  // Les ProductId contradictoires à l'intérieur d'une variante sont refusés par `conflicts` (readShapefiles).
+  for (const [id, pid] of gl.pairs) pidOf.set(id, pid);
+  for (const [v, x] of Object.entries(variants)) {
+    if (v === 'gl') continue;
+    const c = count(x.pairs);
+    for (const [id, n] of glCount)
+      if ((c.get(id) ?? 0) < n)
+        problems.push(
+          `variante ${v} : ${c.get(id) ?? 0} enregistrements pour l'ODEId ${id} (${n} en _gl)`
+        );
+    for (const [id, pid] of x.pairs)
+      if (pidOf.has(id) && pidOf.get(id) !== pid)
+        problems.push(`variante ${v} : ProductId différent pour l'ODEId ${id}`);
+  }
+  return problems.slice(0, 5);
+}
+
+/**
  * Lit les shapefiles d'une archive brute. Rend { variants, kind, problems }. La nature (`l` ou `a`) se DÉRIVE
- * des suffixes présents ; une archive qui en mêle plusieurs, ou aucune, est refusée. Pour les traces, une ligne
- * par produit dans `_gl` (exigence d'origine, inchangée). Pour les surfaces, plusieurs enregistrements par ODEId
+ * des suffixes présents ; une archive qui en mêle plusieurs, ou aucune, est refusée. Pour les traces, plusieurs
+ * enregistrements `_gl` d'un même ODEId ne sont admis que prouvés légitimes (`traceRecordProblems`). Pour les surfaces, plusieurs enregistrements par ODEId
  * sont légitimes (anneau découpé à la couture 0/360) mais un ODEId ne porte JAMAIS deux ProductId.
  */
 export function readShapefiles(buffer) {
@@ -148,6 +180,7 @@ export function readShapefiles(buffer) {
       records: rows.length,
       ids: new Set(rows.map((r) => r.ODEId)),
       productIds: new Map(rows.map((r) => [r.ODEId, r.ProductId])),
+      pairs: rows.map((r) => [r.ODEId, r.ProductId]),
     };
     const seen = new Map();
     conflicts[m[1]] = new Set();
@@ -170,10 +203,7 @@ export function readShapefiles(buffer) {
     problems.push(
       `archive sans shapefile \`_${primary}\` (celui que lit le pipeline)`
     );
-  else if (kind === 'l' && variants.gl.records !== variants.gl.ids.size)
-    problems.push(
-      `shapefile _gl : ${variants.gl.records} enregistrements pour ${variants.gl.ids.size} identifiants distincts`
-    );
+  else if (kind === 'l') problems.push(...traceRecordProblems(variants));
   if (kind === 'a')
     for (const v of SURFACE_VARIANTS)
       if (!variants[v])
@@ -183,12 +213,11 @@ export function readShapefiles(buffer) {
       problems.push(
         `surfaces : variante \`_${v}\` sans fichier .shp exploitable`
       );
-  if (kind === 'a')
-    for (const [v, ids] of Object.entries(conflicts))
-      if (ids.size)
-        problems.push(
-          `variante ${v} : ProductId incohérent pour l'ODEId ${[...ids].slice(0, 3).join(', ')}`
-        );
+  for (const [v, ids] of Object.entries(conflicts))
+    if (ids.size)
+      problems.push(
+        `variante ${v} : ProductId incohérent pour l'ODEId ${[...ids].slice(0, 3).join(', ')}`
+      );
   return { variants, kind, problems };
 }
 

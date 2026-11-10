@@ -80,6 +80,8 @@ export function readShapefiles(buffer: Buffer): {
       records: number;
       ids: Set<string>;
       productIds: Map<string, string>;
+      /** Un couple [ODEId, ProductId] par enregistrement, dans l'ordre du fichier. */
+      pairs: [string, string][];
     }
   >;
   kind: string | null;
