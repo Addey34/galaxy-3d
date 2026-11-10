@@ -49,9 +49,11 @@ import {
   PAGE,
   acquireLock,
   assertMaxPages,
+  assertLocalMetadata,
   assertMetadataComplete,
   datasetsFromIipt,
   freezeAction,
+  optionValue,
   parseDatasetArg,
   parseMaxPages,
   resolveCacheDir,
@@ -78,6 +80,8 @@ const BODY = argValue('--body');
 let CACHE;
 let DATASET = null;
 let MAX_PAGES = null;
+/** Un pilote (--dataset / --max-pages) ne sollicite JAMAIS l'ODE pour ses métadonnées. */
+let PILOT = false;
 try {
   CACHE = resolveCacheDir({
     arg: argValue('--cache-dir'),
@@ -85,8 +89,9 @@ try {
     root: ROOT,
     requireExternal: BODY !== null || !argv.includes('--plan'),
   });
-  DATASET = parseDatasetArg(argValue('--dataset'));
-  MAX_PAGES = parseMaxPages(argValue('--max-pages'));
+  DATASET = parseDatasetArg(optionValue(argv, '--dataset'));
+  MAX_PAGES = parseMaxPages(optionValue(argv, '--max-pages'));
+  PILOT = DATASET !== null || MAX_PAGES !== null;
   if (DATASET !== null && BODY === null)
     throw new Error('--dataset exige --body');
   if (BODY !== null && !COLLECTABLE_BODIES.includes(BODY))
@@ -193,6 +198,12 @@ function cached(name, compute) {
   const f = join(CACHE, name);
   if (existsSync(f))
     return Promise.resolve(JSON.parse(readFileSync(f, 'utf8')));
+  if (PILOT)
+    return Promise.reject(
+      new Error(
+        `${name} absent du cache : un pilote ne le récupère pas en ligne`
+      )
+    );
   return compute().then((v) => {
     writeFileAtomic(f, JSON.stringify(v, null, 1));
     return v;
@@ -636,6 +647,8 @@ async function pullRange(s, offset, limit, attempts) {
 const safe = (k) => k.replace(/[^A-Za-z0-9_.-]+/g, '_');
 
 async function main() {
+  // Pilote : tout doit déjà être en local, vérifié AVANT le verrou, le gel et toute requête.
+  if (PILOT) assertLocalMetadata(CACHE);
   mkdirSync(CACHE, { recursive: true });
   // Un seul collecteur par cache : deux processus se réécriraient `unavailable.json`.
   const release = acquireLock(CACHE);

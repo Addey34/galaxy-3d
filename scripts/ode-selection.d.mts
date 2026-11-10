@@ -53,3 +53,13 @@ export function freezeAction(cacheDir: string): 'present' | 'create';
 export function canWriteInto(dir: string): { ok: boolean; detail: string };
 
 export function datasetsFromIipt(raw: unknown): OdeDataset[];
+
+export function optionValue(
+  argv: readonly string[],
+  name: string
+): string | null;
+export const PILOT_METADATA: readonly string[];
+export function assertLocalMetadata(
+  cacheDir: string,
+  exists?: (path: string) => boolean
+): void;

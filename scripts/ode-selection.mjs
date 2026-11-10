@@ -73,6 +73,38 @@ export function datasetsFromIipt(raw) {
 export const COLLECTABLE_BODIES = ['mercury', 'mars'];
 
 /**
+ * Valeur d'une option `--nom valeur`. Absente : null. Présente SANS valeur (argument final) ou
+ * suivie d'une autre option (`--dataset --plan`) : erreur, jamais une valeur silencieusement
+ * lue dans l'argument suivant ni un « option absente ».
+ */
+export function optionValue(argv, name) {
+  const at = argv.indexOf(name);
+  if (at === -1) return null;
+  const value = argv[at + 1];
+  if (value === undefined || value === '' || value.startsWith('-'))
+    throw new Error(`${name} exige une valeur`);
+  return value;
+}
+
+/** Les métadonnées dont un pilote a besoin, lues du cache et JAMAIS récupérées en ligne. */
+export const PILOT_METADATA = [
+  'iipt.json',
+  'counts.json',
+  'redundancy.json',
+  'unfrozen.json',
+  'freeze.json',
+];
+
+/** Lève, avant toute requête, si une métadonnée du pilote manque dans le cache. */
+export function assertLocalMetadata(cacheDir, exists = existsSync) {
+  const missing = PILOT_METADATA.filter((f) => !exists(join(cacheDir, f)));
+  if (missing.length)
+    throw new Error(
+      `métadonnées absentes du cache (${missing.join(', ')}) : un pilote (--dataset / --max-pages) ne les récupère jamais en ligne ; les fournir (copie) ou lancer une collecte normale`
+    );
+}
+
+/**
  * `--dataset <clé>` : syntaxe d'une clé de jeu (`Corps|MISSION|INSTRUMENT|TYPE`, quatre segments
  * non vides, sans espace de bord). Vérifiée AVANT toute requête, sans la liste des jeux. Rend la
  * clé, ou null si l'option est absente ; lève sinon.
@@ -90,9 +122,12 @@ export function parseDatasetArg(value) {
 /** `--max-pages <n>` : entier strictement positif, ou null si absent. */
 export function parseMaxPages(value) {
   if (value === null || value === undefined) return null;
-  if (!/^[1-9][0-9]*$/.test(String(value)))
+  if (
+    !/^[1-9][0-9]*$/.test(String(value)) ||
+    !Number.isSafeInteger(Number(value))
+  )
     throw new Error(
-      `--max-pages ${JSON.stringify(value)} : entier strictement positif attendu`
+      `--max-pages ${JSON.stringify(value)} : entier strictement positif et sûr (≤ ${Number.MAX_SAFE_INTEGER}) attendu`
     );
   return Number(value);
 }
