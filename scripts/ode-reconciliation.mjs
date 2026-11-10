@@ -503,12 +503,110 @@ export function validateManifest(
   return problems;
 }
 
-/** Revérifie les sommes des deux sources sur disque (`<cache>/diagnostics/`). Lève si une diffère. */
+/**
+ * Provenance d'une source : fichier `<source>.json` (captures `.raw`) ou `<source>.provenance.json` (formats
+ * historiques), et somme annexe `<source>.sha256`. Aucune valeur n'est inventée : un fichier absent est un refus.
+ */
+function provenanceFiles(file) {
+  return {
+    provenance: file.endsWith('.raw')
+      ? `${file}.json`
+      : `${file}.provenance.json`,
+    sidecar: `${file}.sha256`,
+  };
+}
+
+/**
+ * Les trois preuves d'une source (provenance, somme annexe, manifeste) doivent décrire EXACTEMENT les octets lus,
+ * et la provenance doit désigner le même jeu, le même gel et la même requête que le manifeste. Rend les problèmes.
+ */
+function provenanceProblems(manifest, label, src, bytes, sum, dir, readFile) {
+  const problems = [];
+  const files = provenanceFiles(src.file);
+  let provenance;
+  try {
+    provenance = JSON.parse(readFile(join(dir, files.provenance), 'utf8'));
+  } catch (error) {
+    return [
+      `source ${label} : provenance illisible (${files.provenance}) : ${error.code ?? error.message}`,
+    ];
+  }
+  let sidecar;
+  try {
+    sidecar = readFile(join(dir, files.sidecar), 'utf8').trim().split(/\s+/)[0];
+  } catch (error) {
+    problems.push(
+      `source ${label} : somme annexe illisible (${files.sidecar}) : ${error.code ?? error.message}`
+    );
+  }
+  if (provenance?.sha256 !== sum)
+    problems.push(
+      `source ${label} : SHA-256 de la provenance différent du contenu`
+    );
+  if (provenance?.receivedBytes !== bytes.length)
+    problems.push(
+      `source ${label} : taille de la provenance différente du contenu`
+    );
+  if (sidecar !== undefined && sidecar !== sum)
+    problems.push(`source ${label} : somme annexe différente du contenu`);
+  // Jeu et gel : présents dans les provenances modernes ; les provenances historiques de métadonnées n'ont pas de `dataset`.
+  if (
+    provenance?.dataset !== undefined &&
+    provenance.dataset !== manifest.dataset
+  )
+    problems.push(
+      `source ${label} : provenance du jeu ${provenance.dataset} (attendu ${manifest.dataset})`
+    );
+  if (label === 'coverage') {
+    if (provenance?.dataset !== manifest.dataset)
+      problems.push(
+        `source coverage : jeu de la provenance absent ou différent`
+      );
+    if (provenance?.offset !== 0)
+      problems.push(
+        `source coverage : offset ${provenance?.offset} (attendu 0)`
+      );
+    if (!sameFreeze(provenance?.freeze, manifest.freeze))
+      problems.push(
+        'source coverage : gel de la provenance différent de celui du manifeste'
+      );
+  } else {
+    // `query` (captures isolées) ou `requete` (captures historiques) : même contenu.
+    const req = provenance?.query ?? provenance?.requete ?? {};
+    const [db, ihid, iid, pt] = manifest.dataset.split('|');
+    const expected = {
+      query: 'product',
+      results: 'm',
+      output: 'JSON',
+      target: db.toLowerCase(),
+      IHID: ihid,
+      IID: iid,
+      PT: pt,
+      offset: '0',
+    };
+    for (const [k, v] of Object.entries(expected))
+      if (req[k] !== v)
+        problems.push(
+          `source metadata : paramètre ${k}=${req[k]} (attendu ${v})`
+        );
+    if (!sameFreeze(req, manifest.freeze))
+      problems.push(
+        'source metadata : gel de la requête différent de celui du manifeste'
+      );
+  }
+  return problems;
+}
+
+/**
+ * Revérifie les deux sources sur disque (`<cache>/diagnostics/`) : octets contre le manifeste, puis cohérence des
+ * trois preuves (provenance, somme annexe, manifeste) et identité du jeu, du gel et de la requête. Lève si une diffère.
+ */
 export function verifySources(manifest, cacheDir, readFile = readFileSync) {
   const problems = [];
   for (const s of ['metadata', 'coverage']) {
     const src = manifest.sources[s];
-    const file = join(cacheDir, 'diagnostics', src.file);
+    const dir = join(cacheDir, 'diagnostics');
+    const file = join(dir, src.file);
     let bytes;
     try {
       bytes = readFile(file);
@@ -522,8 +620,12 @@ export function verifySources(manifest, cacheDir, readFile = readFileSync) {
       problems.push(
         `source ${s} : ${bytes.length} octets pour ${src.receivedBytes}`
       );
-    if (sha256(bytes) !== src.sha256)
+    const sum = sha256(bytes);
+    if (sum !== src.sha256)
       problems.push(`source ${s} : SHA-256 différent de celui du manifeste`);
+    problems.push(
+      ...provenanceProblems(manifest, s, src, bytes, sum, dir, readFile)
+    );
   }
   if (problems.length) throw new ReconciliationError(problems);
 }

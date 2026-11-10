@@ -18,9 +18,11 @@ import {
 } from '../../scripts/ode-reconcile.mjs';
 import {
   ReconciliationError,
+  loadReconciliation,
   manifestPath,
   readShapefiles,
   sha256,
+  verifySources,
 } from '../../scripts/ode-reconciliation.mjs';
 
 /**
@@ -346,6 +348,14 @@ const build = (f: Fixture) =>
     coverageFile: f.covFile,
     now: new Date('2026-11-10T12:00:00Z'),
   });
+const load = () =>
+  loadReconciliation({
+    cacheDir: cache,
+    key: KEY,
+    freeze: FREEZE,
+    catalogueCount: 4,
+    pageSize: 5000,
+  });
 const refused = (fn: () => unknown, pattern: RegExp) => {
   let error: unknown;
   try {
@@ -432,5 +442,136 @@ describe('jeu de traces à doublon : réconciliation, segment dégénéré, page
     );
     refused(() => build(f), /ProductId incohérent/);
     expect(existsSync(manifestPath(cache, KEY))).toBe(false);
+  });
+});
+
+// ---------- 2. provenance : trois preuves cohérentes, jeu, gel, requête ----------
+const edit = (file: string, change: (p: Record<string, unknown>) => void) => {
+  const p = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
+  change(p);
+  writeFileSync(file, JSON.stringify(p));
+};
+describe('provenance des sources réconciliées', () => {
+  for (const historic of [false, true]) {
+    it(`sources valides préservées (${historic ? 'format historique : métadonnées .provenance.json et requete' : 'captures isolées : .raw et query'})`, () => {
+      build(fixture(cache, { historic }));
+      expect(load()?.footprints).toBe(3);
+    });
+  }
+  it('source brute modifiée : refus (SHA-256 et taille du manifeste)', () => {
+    const f = fixture(cache);
+    build(f);
+    const file = join(f.dir, f.covFile);
+    writeFileSync(file, Buffer.concat([readFileSync(file), Buffer.from('x')]));
+    refused(() => load(), /source coverage : .*(SHA-256|octets)/);
+  });
+  it('SHA-256 de la provenance falsifié : refus, pour la coverage et pour les métadonnées', () => {
+    const f = fixture(cache);
+    build(f);
+    edit(
+      join(f.dir, `${f.covFile}.json`),
+      (p) => (p['sha256'] = 'f'.repeat(64))
+    );
+    refused(
+      () => load(),
+      /source coverage : SHA-256 de la provenance différent/
+    );
+    const g = fixture(newCache());
+    build(g);
+    edit(
+      join(g.dir, `${g.metaFile}.json`),
+      (p) => (p['sha256'] = 'f'.repeat(64))
+    );
+    refused(
+      () => load(),
+      /source metadata : SHA-256 de la provenance différent/
+    );
+  });
+  it('taille de la provenance falsifiée : refus', () => {
+    const f = fixture(cache);
+    build(f);
+    edit(join(f.dir, `${f.metaFile}.json`), (p) => (p['receivedBytes'] = 1));
+    refused(
+      () => load(),
+      /source metadata : taille de la provenance différente/
+    );
+  });
+  it('fichier .sha256 falsifié ou absent : refus', () => {
+    const f = fixture(cache);
+    build(f);
+    writeFileSync(
+      join(f.dir, `${f.covFile}.sha256`),
+      `${'0'.repeat(64)}  ${f.covFile}\n`
+    );
+    refused(() => load(), /source coverage : somme annexe différente/);
+    rmSync(join(f.dir, `${f.covFile}.sha256`));
+    refused(() => load(), /source coverage : somme annexe illisible/);
+  });
+  it('provenance absente ou illisible : refus nommé, aucune valeur inventée', () => {
+    const f = fixture(cache);
+    build(f);
+    rmSync(join(f.dir, `${f.covFile}.json`));
+    refused(() => load(), /source coverage : provenance illisible/);
+  });
+  it('provenance de la coverage sans le jeu : refus (le jeu est obligatoire pour la coverage)', () => {
+    const f = fixture(cache);
+    build(f);
+    edit(join(f.dir, `${f.covFile}.json`), (p) => delete p['dataset']);
+    refused(() => load(), /source coverage : jeu de la provenance absent/);
+  });
+  it('provenance d’un autre jeu : refus (coverage et métadonnées)', () => {
+    const f = fixture(cache);
+    build(f);
+    edit(
+      join(f.dir, `${f.covFile}.json`),
+      (p) => (p['dataset'] = 'Mercury|MESSENGER|MLA|scirdrv2')
+    );
+    refused(
+      () => load(),
+      /source coverage : provenance du jeu Mercury\|MESSENGER\|MLA\|scirdrv2/
+    );
+    const g = fixture(newCache());
+    build(g);
+    edit(join(g.dir, `${g.metaFile}.json`), (p) => {
+      (p['query'] as Record<string, string>)['PT'] = 'scirdrv2';
+    });
+    refused(() => load(), /source metadata : paramètre PT=scirdrv2/);
+  });
+  it('gel ou paramètres contradictoires : refus', () => {
+    const f = fixture(cache);
+    build(f);
+    edit(
+      join(f.dir, `${f.covFile}.json`),
+      (p) => (p['freeze'] = { ...FREEZE, maxcreationtime: '2026-10-01' })
+    );
+    refused(() => load(), /source coverage : gel de la provenance/);
+    const g = fixture(newCache());
+    build(g);
+    edit(join(g.dir, `${g.metaFile}.json`), (p) => {
+      (p['query'] as Record<string, string>)['maxcreationtime'] = '2026-10-01';
+    });
+    refused(() => load(), /source metadata : gel de la requête/);
+    const h = fixture(newCache());
+    build(h);
+    edit(join(h.dir, `${h.metaFile}.json`), (p) => {
+      (p['query'] as Record<string, string>)['results'] = 'f';
+    });
+    refused(() => load(), /source metadata : paramètre results=f/);
+  });
+  it('les trois preuves ne sont plus exigées d’une capture dont l’offset diffère : la coverage doit être à l’offset 0', () => {
+    const f = fixture(cache);
+    build(f);
+    edit(join(f.dir, `${f.covFile}.json`), (p) => (p['offset'] = 5000));
+    refused(() => load(), /source coverage : offset 5000/);
+  });
+  it('verifySources est le point commun : rejeu et chargement refusent de la même façon', () => {
+    const f = fixture(cache);
+    const { manifest } = build(f);
+    edit(join(f.dir, `${f.metaFile}.json`), (p) => (p['receivedBytes'] = 1));
+    refused(() => verifySources(manifest, cache), /taille de la provenance/);
+    refused(
+      () => replayReconciled({ cacheDir: cache, key: KEY, dryRun: true }),
+      /taille de la provenance/
+    );
   });
 });
