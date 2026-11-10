@@ -91,7 +91,7 @@ export function isLocalStorageError(error) {
  * Valide le contenu d'une page : gzip ENTIER (un gzip tronqué lève), chaque ligne un JSON, chaque
  * produit avec un `id` et des `shapes`. Renvoie le nombre de produits ; lève sinon.
  */
-export function validatePageBuffer(buffer, { expected } = {}) {
+export function validatePageBuffer(buffer, { expected, excludedIds } = {}) {
   let text;
   try {
     text = gunzipSync(buffer).toString('utf8');
@@ -119,6 +119,12 @@ export function validatePageBuffer(buffer, { expected } = {}) {
     )
       throw new Error(`ligne ${count + 1} : produit sans id ou sans shapes`);
     const id = String(product.id);
+    // Un produit déclaré SANS géométrie par une réconciliation ne doit jamais figurer dans une page.
+    if (excludedIds?.has(id))
+      throw new IncompletePageError(
+        `exclusion injustifiée : le produit ${id}, déclaré sans géométrie, figure dans la page`,
+        { got: count + 1, distinct: ids.size, expected }
+      );
     if (ids.has(id))
       throw new IncompletePageError(`identifiant en double : ${id}`, {
         got: count + 1,
@@ -168,7 +174,7 @@ export function writeAll(fd, buffer, write = writeSync) {
 export function writePageAtomic(
   file,
   products,
-  { hooks = {}, fs = {}, expected } = {}
+  { hooks = {}, fs = {}, expected, excludedIds } = {}
 ) {
   const open = fs.openSync ?? openSync;
   const write = fs.writeSync ?? writeSync;
@@ -190,7 +196,7 @@ export function writePageAtomic(
     fd = null;
     step('tmp-written');
     // Validation du TEMPORAIRE relu depuis le disque, avant toute publication.
-    validatePageFile(tmp, { expected });
+    validatePageFile(tmp, { expected, excludedIds });
     step('tmp-validated');
     rename(tmp, file);
   } catch (error) {
@@ -220,7 +226,7 @@ export function writePageAtomic(
  * attente de validation. Les pages INVALIDES ne sont PAS supprimées : elles sont signalées et
  * seront remplacées atomiquement après un nouveau téléchargement validé.
  */
-export function inspectExistingPages(dir, offsets, expectedFor) {
+export function inspectExistingPages(dir, offsets, expectedFor, excludedFor) {
   const valid = new Set();
   const invalid = [];
   const staleTmp = [];
@@ -234,7 +240,10 @@ export function inspectExistingPages(dir, offsets, expectedFor) {
     const file = join(dir, pageName(offset));
     if (!existsSync(file)) continue;
     try {
-      validatePageFile(file, { expected: expectedFor?.(offset) });
+      validatePageFile(file, {
+        expected: expectedFor?.(offset),
+        excludedIds: excludedFor?.(offset),
+      });
       valid.add(offset);
     } catch (error) {
       if (isLocalStorageError(error) && error.code !== 'ENOENT')
@@ -310,7 +319,10 @@ export async function collectPages({
         continue;
       }
       try {
-        write(task.file, products, { expected: task.expected });
+        write(task.file, products, {
+          expected: task.expected,
+          excludedIds: task.excludedIds,
+        });
       } catch (error) {
         if (isLocalStorageError(error)) {
           stop(asLocal(error, 'écriture'));

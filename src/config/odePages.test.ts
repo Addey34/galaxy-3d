@@ -584,7 +584,14 @@ describe('câblage de pull-ode-footprints.mjs', () => {
     expect(source).toContain("from './ode-pages.mjs'");
     expect(source).toContain('collectPages(');
     expect(source).toContain('inspectExistingPages(');
-    expect(source).toContain('Math.min(PAGE, n[s.key] - off)');
+    // L'attendu d'une page passe par pageExpectation : le catalogue, sauf réconciliation prouvée.
+    expect(source).toContain('pageExpectation(');
+    expect(
+      readFileSync(
+        join(process.cwd(), 'scripts', 'ode-reconciliation.mjs'),
+        'utf8'
+      )
+    ).toContain('Math.min(pageSize, count - offset)');
     expect(source).toContain('incomplete.json');
     expect(source).not.toMatch(/writeFileSync\(\s*t\.file/);
     expect(source).not.toContain('gzipSync');
