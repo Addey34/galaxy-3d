@@ -18,8 +18,11 @@ import { gunzipSync, gzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MaterializeError } from '../../scripts/ode-materialize.mjs';
 import {
+  DATASET_PAGINATION,
   MultipageError,
+  PAGINATION_PROFILES,
   allowedDatasetIdsFromIipt,
+  analyzeWindow,
   buildPageBytes,
   loadQualifiedDataset,
   materializeWindows,
@@ -61,17 +64,34 @@ interface Cfg {
   ds: string;
   kind: 'a' | 'l';
   n: number;
+  /** Profil de pagination dont les captures respectent les offsets réels (défaut : identique). */
+  profile?: 'identique' | 'metadonnees-base-1';
 }
+/** Jeu fictif d'un AUTRE nom que UVVDDR : le profil y est explicite (`identique`), jamais déduit. */
 const CFG: Cfg = {
-  key: 'Mercury|MESSENGER|MASCS|UVVDDR',
-  dir: 'Mercury_MESSENGER_MASCS_UVVDDR',
+  key: 'Mercury|MESSENGER|MASCS|UVVDDX',
+  dir: 'Mercury_MESSENGER_MASCS_UVVDDX',
   ihid: 'MESSENGER',
   iid: 'MASCS',
-  pt: 'UVVDDR',
+  pt: 'UVVDDX',
   ds: 'MESS-E/V/H-MASCS-4-UVVS-DDR-V1.0',
   kind: 'a',
   n: 27146,
 };
+/** Le vrai jeu pilote : son profil est DÉCLARÉ (métadonnées comptées à partir de 1). */
+const REAL_KEY: Cfg = {
+  ...CFG,
+  key: 'Mercury|MESSENGER|MASCS|UVVDDR',
+  dir: 'Mercury_MESSENGER_MASCS_UVVDDR',
+  pt: 'UVVDDR',
+  profile: 'metadonnees-base-1',
+};
+/** Offsets réels des requêtes selon le profil du jeu fictif. */
+const requestOf = (cfg: Cfg, logical: number) => ({
+  coverage: logical,
+  metadata:
+    cfg.profile === 'metadonnees-base-1' && logical > 0 ? logical + 1 : logical,
+});
 const DS_DASH = 'MESS-E-V-H-MASCS-4-UVVS-DDR-V1.0';
 const OFFSETS = [0, 5000, 10000, 15000, 20000, 25000];
 /** Trois produits sans géométrie : leurs indices (jamais dans les shapefiles, sans géométrie dans les métadonnées). */
@@ -275,33 +295,46 @@ function writeWindow(
     covExtra?: object;
     metaExtra?: object;
     covQuery?: object;
+    metaQuery?: object;
+    /** Offset RÉEL de la requête, quand il diffère de celui du profil du jeu. */
+    metaOffset?: number;
+    covOffset?: number;
   } = {}
 ) {
   const dir = join(cache, 'diagnostics');
   mkdirSync(dir, { recursive: true });
   const r = responses(cfg, ps);
+  const want = requestOf(cfg, offset);
+  const mo = edit.metaOffset ?? want.metadata;
+  const co = edit.covOffset ?? want.coverage;
   const q = {
     target: 'mercury',
     IHID: cfg.ihid,
     IID: cfg.iid,
     PT: cfg.pt,
     limit: String(PAGE),
-    offset: String(offset),
     ...FREEZE,
   };
   put(
     dir,
-    `meta-${offset}.raw`,
+    `meta-${mo}.raw`,
     edit.metaBuf ?? r.meta,
-    { query: 'product', results: 'm', output: 'JSON', ...q },
-    { dataset: cfg.key, offset, ...edit.metaExtra }
+    {
+      query: 'product',
+      results: 'm',
+      output: 'JSON',
+      ...q,
+      offset: String(mo),
+      ...edit.metaQuery,
+    },
+    { dataset: cfg.key, offset: mo, ...edit.metaExtra }
   );
   put(
     dir,
-    `cov-${offset}.raw`,
+    `cov-${co}.raw`,
     edit.covBuf ?? r.cov,
-    { query: 'coveragetargz', ...q, ...edit.covQuery },
-    { dataset: cfg.key, offset, ...edit.covExtra }
+    { query: 'coveragetargz', ...q, offset: String(co), ...edit.covQuery },
+    { dataset: cfg.key, offset: co, ...edit.covExtra }
   );
 }
 function makeCache(
@@ -346,7 +379,12 @@ const clone = (src: string) => {
   return dst;
 };
 const manifestOf = (cache: string, cfg: Cfg = CFG) =>
-  qualifyDataset({ cacheDir: cache, key: cfg.key, now: NOW });
+  qualifyDataset({
+    cacheDir: cache,
+    key: cfg.key,
+    pagination: cfg.profile ?? 'identique',
+    now: NOW,
+  });
 const writeManifest = (cache: string, cfg: Cfg = CFG) =>
   writeManifestExclusive(
     multipageManifestPath(cache, cfg.key),
@@ -470,7 +508,7 @@ describe(
           CFG,
           5000,
           products(CFG, 5000).map((p, k) =>
-            k === 1 ? { ...p, id: odeId(4999), pid: 'uvvddr_4999' } : p
+            k === 1 ? { ...p, id: odeId(4999), pid: 'uvvddx_4999' } : p
           )
         );
         refusedMp(
@@ -559,7 +597,7 @@ describe(
         refusedMp(
           () => manifestOf(c),
           new RegExp(
-            `produit ${odeId(5009)} : ProductId autre \\(shapefile\\) différent de uvvddr_5009`
+            `produit ${odeId(5009)} : ProductId autre \\(shapefile\\) différent de uvvddx_5009`
           )
         );
         const m = clone2(manifest);
@@ -762,13 +800,13 @@ describe(
           }).join(NL)
         ).toMatch(/gel du manifeste différent/);
         m.status = 'brouillon';
-        m.version = 2;
+        m.version = 1;
         m.counts.excluded = 9;
         m.windows[4].sources.coverage.sha256 =
           m.windows[3].sources.coverage.sha256;
         const e = validateMultipageManifest(m, freezeCtx).join(NL);
         expect(e).toMatch(/statut brouillon/);
-        expect(e).toMatch(/version 2/);
+        expect(e).toMatch(/version 1 \(attendu 2\)/);
         expect(e).toMatch(/comptes globaux annoncés/);
         expect(e).toMatch(/@20000 : même capture coveragetargz que @15000/);
       });
@@ -919,7 +957,7 @@ describe(
         });
         const good = readFileSync(pagePath(c, 0));
         // Contenu altéré mais gzip et structure valides (un ProductId modifié).
-        const text = require_gunzip(good).replace('uvvddr_1"', 'uvvddr_X"');
+        const text = require_gunzip(good).replace('uvvddx_1"', 'uvvddx_X"');
         rmSync(pagePath(c, 0));
         writeFileSync(pagePath(c, 0), gzipSync(text));
         refusedMat(
@@ -1205,6 +1243,419 @@ describe(
           ])
         ).toThrow(/ne s’applique qu’à materialize/);
       });
+    });
+  }
+);
+
+/**
+ * CONTRAT D'OFFSET (GAL-A003-11C-04). Mesuré sur le vrai UVVDDR : `coveragetargz` à l'offset N et `results=m` à
+ * l'offset N + 1 (N > 0) désignent la même fenêtre. Le jeu fictif REAL_KEY reprend le nom du jeu pilote, dont le
+ * profil est déclaré ; les autres jeux fictifs exigent un profil explicite.
+ */
+describe(
+  'multipage : contrat d’offset explicite (profil metadonnees-base-1)',
+  { timeout: 300_000 },
+  () => {
+    const SH = REAL_KEY;
+    let shifted: string;
+    let manifest: Manifest;
+    let small: string;
+    const metaFiles = (c: string) =>
+      readdirSync(join(c, 'diagnostics')).filter((f) =>
+        /^meta-\d+\.raw$/.test(f)
+      );
+    beforeAll(() => {
+      shifted = makeCache(SH);
+      manifest = manifestOf(shifted, SH);
+      small = makeCache({ ...CFG, n: 6000 });
+    });
+    const ctx = { ...freezeCtx, key: SH.key };
+    type Win = {
+      offset: number;
+      counts: { catalogued: number; footprints: number; excluded: number };
+      sources: Record<
+        'metadata' | 'coverage',
+        { requestOffset: number; file: string }
+      >;
+      catalogueRange: { first: string; last: string };
+    };
+    const wins = (m: Manifest) => m.windows as unknown as Win[];
+
+    it('2. offsets réels : coverage 0, 5000, … ; métadonnées 0, 5001, 10001, 15001, 20001, 25001', () => {
+      expect(manifest.version).toBe(2);
+      expect(manifest.pagination).toEqual({ profile: 'metadonnees-base-1' });
+      expect(wins(manifest).map((w) => w.offset)).toEqual(OFFSETS);
+      expect(
+        wins(manifest).map((w) => w.sources.coverage.requestOffset)
+      ).toEqual(OFFSETS);
+      expect(
+        wins(manifest).map((w) => w.sources.metadata.requestOffset)
+      ).toEqual([0, 5001, 10001, 15001, 20001, 25001]);
+      expect(wins(manifest).map((w) => w.sources.metadata.file)).toEqual(
+        [0, 5001, 10001, 15001, 20001, 25001].map((o) => `meta-${o}.raw`)
+      );
+    });
+    it('3 et 10. les six fenêtres sont qualifiées ; la dernière compte 2 146 produits ; comptes exacts', () => {
+      expect(validateMultipageManifest(manifest, ctx)).toEqual([]);
+      expect(wins(manifest).map((w) => w.counts.catalogued)).toEqual([
+        5000, 5000, 5000, 5000, 5000, 2146,
+      ]);
+      expect(manifest.counts).toEqual({
+        catalogued: 27146,
+        footprints: 27143,
+        excluded: 3,
+        windows: 6,
+      });
+      expect(wins(manifest)[5].catalogueRange).toEqual({
+        first: odeId(25000),
+        last: odeId(27145),
+      });
+    });
+    it('1. offsets identiques : profil explicite, jamais déduit pour un autre jeu', () => {
+      const cfg: Cfg = { ...CFG, n: 6000 };
+      const m = manifestOf(small, cfg);
+      expect(m.pagination).toEqual({ profile: 'identique' });
+      expect(
+        wins(m).every((w) => w.sources.metadata.requestOffset === w.offset)
+      ).toBe(true);
+      refusedMp(
+        () => qualifyDataset({ cacheDir: small, key: CFG.key, now: NOW }),
+        /profil de pagination explicite exigé/
+      );
+      refusedMp(
+        () =>
+          qualifyDataset({
+            cacheDir: small,
+            key: CFG.key,
+            pagination: 'inconnu',
+            now: NOW,
+          }),
+        /profil de pagination inconnu/
+      );
+    });
+    it('le profil déclaré du jeu pilote ne peut pas être remplacé par « identique »', () => {
+      refusedMp(
+        () =>
+          qualifyDataset({
+            cacheDir: shifted,
+            key: SH.key,
+            pagination: 'identique',
+            now: NOW,
+          }),
+        /profil identique refusé, le jeu est déclaré en metadonnees-base-1/
+      );
+      expect(
+        JSON.stringify(
+          qualifyDataset({ cacheDir: shifted, key: SH.key, now: NOW })
+        )
+      ).toBe(JSON.stringify(manifest));
+    });
+    it('5. capture diagnostique @5000 : conservée, jamais sélectionnée, jamais modifiée', () => {
+      const c = clone(shifted);
+      writeWindow(c, SH, 5000, products(SH, 5000), { metaOffset: 5000 });
+      // La capture couverture légitime reste celle d'origine (les octets de remplissage de l'archive sont aléatoires).
+      for (const x of ['', '.json', '.sha256'])
+        cpSync(
+          join(shifted, 'diagnostics', `cov-5000.raw${x}`),
+          join(c, 'diagnostics', `cov-5000.raw${x}`)
+        );
+      const before = sha(readFileSync(join(c, 'diagnostics', 'meta-5000.raw')));
+      expect(metaFiles(c)).toContain('meta-5000.raw');
+      const diagnostics: {
+        file: string;
+        kind: string;
+        requestOffset: number;
+        reason: string;
+      }[] = [];
+      const m = qualifyDataset({
+        cacheDir: c,
+        key: SH.key,
+        now: NOW,
+        diagnostics,
+      });
+      expect(JSON.stringify(m)).toBe(JSON.stringify(manifest));
+      expect(wins(m)[1].sources.metadata.file).toBe('meta-5001.raw');
+      expect(diagnostics).toHaveLength(1);
+      expect(diagnostics[0].file).toBe('meta-5000.raw');
+      expect(diagnostics[0].reason).toMatch(/exige 5001/);
+      expect(sha(readFileSync(join(c, 'diagnostics', 'meta-5000.raw')))).toBe(
+        before
+      );
+    });
+    it('5b. seule la capture @5000 présente : refus, la fenêtre @5000 reste sans métadonnées', () => {
+      const c = clone(shifted);
+      for (const s of ['', '.json', '.sha256'])
+        rmSync(join(c, 'diagnostics', `meta-5001.raw${s}`));
+      writeWindow(c, SH, 5000, products(SH, 5000), { metaOffset: 5000 });
+      refusedMp(
+        () => manifestOf(c, SH),
+        /@5000 : capture de métadonnées absente \(requête offset=5001\)/
+      );
+    });
+    it('6. provenance réécrite à 5001 sur le contenu demandé à 5000 : refus par désalignement', () => {
+      const c = clone(shifted);
+      // Contenu réel d'une requête offset=5000 : le dernier produit de la fenêtre précédente en tête.
+      const real = [
+        ...products(SH, 4999).slice(0, 1),
+        ...products(SH, 5000).slice(0, -1),
+      ];
+      writeWindow(c, SH, 5000, real);
+      refusedMp(() => manifestOf(c, SH), /désalignées|deux fenêtres/);
+    });
+    it('7. offset de requête absent (paramètre ou champ de capture) : refus', () => {
+      const a = clone(shifted);
+      writeWindow(a, SH, 10000, products(SH, 10000), {
+        metaQuery: { offset: undefined },
+      });
+      refusedMp(
+        () => manifestOf(a, SH),
+        /paramètre offset=undefined \(attendu 10001\)/
+      );
+      const b = clone(shifted);
+      writeWindow(b, SH, 10000, products(SH, 10000), {
+        metaExtra: { offset: undefined },
+      });
+      refusedMp(
+        () => manifestOf(b, SH),
+        /@10000 : capture de métadonnées absente \(requête offset=10001\)/
+      );
+      // Capture lue par son emplacement, mais dont la provenance contredit ensuite l'offset exigé : refus d'identité.
+      const dir = join(shifted, 'diagnostics');
+      const rd = (file: string) => ({
+        file,
+        buffer: readFileSync(join(dir, file)),
+        provenance: JSON.parse(readFileSync(join(dir, `${file}.json`), 'utf8')),
+        sidecarSha256: sha(readFileSync(join(dir, file))),
+      });
+      const meta = rd('meta-10001.raw');
+      const cov = rd('cov-10000.raw');
+      const analyse = (metadata: object) =>
+        analyzeWindow({
+          key: SH.key,
+          freeze: FREEZE,
+          catalogueCount: SH.n,
+          offset: 10000,
+          pagination: 'metadonnees-base-1',
+          metadata,
+          coverage: cov,
+          allowedDatasetIds: [SH.ds],
+        }).problems.join(NL);
+      expect(analyse(meta)).toBe('');
+      expect(
+        analyse({
+          ...meta,
+          provenance: { ...meta.provenance, offset: undefined },
+        })
+      ).toMatch(/offset undefined \(attendu 10001\)/);
+      expect(
+        analyse({
+          ...meta,
+          provenance: { ...meta.provenance, offset: 10000 },
+        })
+      ).toMatch(/offset 10000 \(attendu 10001\)/);
+    });
+    it('8. décalage de deux produits : refus (provenance 5002, puis contenu décalé)', () => {
+      const a = clone(shifted);
+      writeWindow(a, SH, 5000, products(SH, 5000), {
+        metaExtra: { offset: 5002 },
+        metaQuery: { offset: '5002' },
+      });
+      refusedMp(
+        () => manifestOf(a, SH),
+        /@5000 : capture de métadonnées absente \(requête offset=5001\)/
+      );
+      const b = clone(shifted);
+      writeWindow(b, SH, 5000, [
+        ...products(SH, 4998).slice(0, 2),
+        ...products(SH, 5000).slice(0, -2),
+      ]);
+      refusedMp(() => manifestOf(b, SH), /désalignées|deux fenêtres/);
+    });
+    it('9. couverture et métadonnées désalignées : refus', () => {
+      const c = clone(shifted);
+      const other = responses(SH, products(SH, 15000));
+      writeWindow(c, SH, 10000, products(SH, 10000), { covBuf: other.cov });
+      refusedMp(() => manifestOf(c, SH), /désalignées/);
+    });
+    it('4, 11 et 12. produit commun à deux fenêtres : refus (empreinte, exclu, ProductId contradictoires)', () => {
+      const c = clone(shifted);
+      const last0 = products(SH, 0).at(-1)!;
+      writeWindow(c, SH, 5000, [last0, ...products(SH, 5000).slice(0, -1)]);
+      refusedMp(
+        () => manifestOf(c, SH),
+        new RegExp(
+          `ODEId ${odeId(4999)} présent dans deux fenêtres @0 et @5000`
+        )
+      );
+      const e = clone(shifted);
+      const gone = { ...last0, metaGeo: false, inCov: false };
+      writeWindow(e, SH, 0, [...products(SH, 0).slice(0, -1), gone]);
+      writeWindow(e, SH, 5000, [gone, ...products(SH, 5000).slice(0, -1)]);
+      refusedMp(
+        () => manifestOf(e, SH),
+        new RegExp(
+          `ODEId ${odeId(4999)} présent dans deux fenêtres @0 et @5000`
+        )
+      );
+      const p = clone(shifted);
+      writeWindow(p, SH, 5000, [
+        { ...last0, pid: 'autre' },
+        ...products(SH, 5000).slice(0, -1),
+      ]);
+      refusedMp(() => manifestOf(p, SH), /ProductId contradictoires/);
+    });
+    it('13. profil modifié dans un manifeste existant : refus à la requalification', () => {
+      const c = clone(shifted);
+      writeManifest(c, SH);
+      const file = multipageManifestPath(c, SH.key);
+      const good = readFileSync(file, 'utf8');
+      const edit = (f: (m: Record<string, unknown>) => void) => {
+        const m = JSON.parse(good);
+        f(m);
+        writeFileSync(file, JSON.stringify(m) + NL);
+      };
+      expect(() =>
+        loadQualifiedDataset({ cacheDir: c, key: SH.key })
+      ).not.toThrow();
+      edit((m) => {
+        m.pagination = { profile: 'identique' };
+      });
+      refusedMat(
+        () => loadQualifiedDataset({ cacheDir: c, key: SH.key }),
+        /profil de pagination identique refusé/
+      );
+      edit((m) => {
+        m.pagination = { profile: 'x' };
+      });
+      refusedMat(
+        () => loadQualifiedDataset({ cacheDir: c, key: SH.key }),
+        /profil de pagination "x" absent ou inconnu/
+      );
+      edit((m) => {
+        delete m.pagination;
+        m.version = 1;
+      });
+      refusedMat(
+        () => loadQualifiedDataset({ cacheDir: c, key: SH.key }),
+        /version 1 \(attendu 2\)/
+      );
+      edit((m) => {
+        (m.windows as Win[])[1].sources.metadata.requestOffset = 5000;
+      });
+      refusedMat(
+        () => loadQualifiedDataset({ cacheDir: c, key: SH.key }),
+        /source metadata demandée à offset 5000 \(profil metadonnees-base-1 : 5001\)/
+      );
+      writeFileSync(file, good);
+      expect(() =>
+        loadQualifiedDataset({ cacheDir: c, key: SH.key })
+      ).not.toThrow();
+    });
+    it('14. publication exclusive et reprise : six pages, contenu et empreintes identiques au manifeste', () => {
+      const c = clone(shifted);
+      writeManifest(c, SH);
+      const first = materializeWindows({
+        cacheDir: c,
+        key: SH.key,
+        offsets: [5000],
+        write: true,
+      });
+      expect(first.report.map((r) => r.status)).toEqual(['publiee']);
+      const all = materializeWindows({
+        cacheDir: c,
+        key: SH.key,
+        offsets: 'all',
+        write: true,
+      });
+      expect(all.report.map((r) => r.status)).toEqual([
+        'publiee',
+        'deja-publiee',
+        'publiee',
+        'publiee',
+        'publiee',
+        'publiee',
+      ]);
+      for (const w of manifest.windows as unknown as {
+        offset: number;
+        page: { sha256: string; bytes: number; products: number };
+      }[]) {
+        const page = readFileSync(
+          join(c, 'pages', SH.dir, `${w.offset}.ndjson.gz`)
+        );
+        expect(sha(page)).toBe(w.page.sha256);
+        expect(page.length).toBe(w.page.bytes);
+        expect(require_gunzip(page).split(NL).filter(Boolean)).toHaveLength(
+          w.page.products
+        );
+      }
+      const again = materializeWindows({
+        cacheDir: c,
+        key: SH.key,
+        offsets: 'all',
+        write: true,
+      });
+      expect(again.report.every((r) => r.status === 'deja-publiee')).toBe(true);
+    });
+    it('analyzeWindow refuse l’absence de profil et un offset logique non aligné', () => {
+      const r = analyzeWindow({
+        key: SH.key,
+        freeze: FREEZE,
+        catalogueCount: SH.n,
+        offset: 5000,
+        allowedDatasetIds: [SH.ds],
+      });
+      expect(r.window).toBeNull();
+      expect(r.problems.join(NL)).toMatch(
+        /profil de pagination absent ou inconnu/
+      );
+      const q = analyzeWindow({
+        key: SH.key,
+        freeze: FREEZE,
+        catalogueCount: SH.n,
+        offset: 5001,
+        pagination: 'metadonnees-base-1',
+        allowedDatasetIds: [SH.ds],
+      });
+      expect(q.problems.join(NL)).toMatch(/non aligné/);
+    });
+    it('profils : définitions et arguments de la ligne de commande', () => {
+      expect(PAGINATION_PROFILES.identique.requestOffsets(5000)).toEqual({
+        coverage: 5000,
+        metadata: 5000,
+      });
+      expect(
+        [0, 5000, 25000].map(
+          (o) =>
+            PAGINATION_PROFILES['metadonnees-base-1'].requestOffsets(o).metadata
+        )
+      ).toEqual([0, 5001, 25001]);
+      expect(DATASET_PAGINATION).toEqual({
+        'Mercury|MESSENGER|MASCS|UVVDDR': 'metadonnees-base-1',
+      });
+      expect(
+        parseArgs([
+          'build',
+          '--cache-dir',
+          'C:/x',
+          '--dataset',
+          CFG.key,
+          '--pagination',
+          'identique',
+        ])
+      ).toMatchObject({ pagination: 'identique' });
+      expect(() =>
+        parseArgs([
+          'materialize',
+          '--cache-dir',
+          'C:/x',
+          '--dataset',
+          CFG.key,
+          '--offset',
+          '0',
+          '--pagination',
+          'identique',
+        ])
+      ).toThrow(/ne s’applique qu’à build/);
     });
   }
 );

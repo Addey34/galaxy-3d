@@ -8,7 +8,8 @@
  * `<cache>/reconciliation/<jeu>.multipage.json`, ignoré par `loadReconciliation`.
  *
  * Principe : on ne SUPPOSE JAMAIS qu'un offset de `coveragetargz` et le même offset de `results=m` désignent les
- * mêmes produits. Pour chaque fenêtre, la correspondance se DÉMONTRE par les identifiants (ODEId) et les ProductId :
+ * mêmes produits (le profil de pagination du jeu, consigné au manifeste, relie l'offset logique de la fenêtre aux offsets
+ * réels de chaque requête). Pour chaque fenêtre, la correspondance se DÉMONTRE par les identifiants (ODEId) et les ProductId :
  * tout produit d'un côté et pas de l'autre est un refus, sauf une exclusion démontrée (métadonnées sans géométrie ET
  * absent de toutes les variantes de shapefile). Puis le jeu entier est validé : toutes les fenêtres, aucun ODEId
  * répété entre fenêtres, catalogue = empreintes + exclusions démontrées. Seul un manifeste qualifié autorise la
@@ -16,7 +17,7 @@
  *
  * Mémoire bornée : les captures sont traitées UNE fenêtre à la fois ; seuls les ensembles d'identifiants restent.
  *
- *   node scripts/ode-multipage.mjs build --cache-dir <abs> --dataset "<clé>" [--write]        (sec par défaut)
+ *   node scripts/ode-multipage.mjs build --cache-dir <abs> --dataset "<clé>" [--pagination <profil>] [--write]   (sec)
  *   node scripts/ode-multipage.mjs materialize --cache-dir <abs> --dataset "<clé>" --offset <n|all> [--write]
  */
 import { Buffer } from 'node:buffer';
@@ -56,8 +57,72 @@ import {
 import { FREEZE, PAGE } from './ode-selection.mjs';
 
 export const MULTIPAGE_KIND = 'reconciliation-multipage';
-export const MULTIPAGE_VERSION = 1;
+/**
+ * Version 2 (GAL-A003-11C-04). La version 1 supposait EN SILENCE le même offset pour `coveragetargz` et pour
+ * `results=m`. Mesuré sur UVVDDR, ce n'est pas vrai (les métadonnées sont comptées à partir de 1 : voir
+ * `PAGINATION_PROFILES`). La version 2 déclare la pagination au manifeste et consigne l'offset RÉEL de chaque requête ;
+ * aucun manifeste v1 n'a jamais été écrit dans le cache réel, et un v1 est refusé (« version 1 (attendu 2) ») au lieu
+ * d'être lu avec l'ancienne hypothèse.
+ */
+export const MULTIPAGE_VERSION = 2;
 const CAP = 20;
+
+/**
+ * Profils de pagination : relation entre l'offset LOGIQUE d'une fenêtre (début scientifique, base zéro : 0, 5000, …)
+ * et l'offset RÉEL envoyé à chaque requête. L'offset logique ne sert jamais à écrire ni à excuser une provenance.
+ *   - `identique` : les deux requêtes portent l'offset logique (mode historique, à n'utiliser que là où c'est démontré).
+ *   - `metadonnees-base-1` : coverage = offset logique ; métadonnées = 0 pour la fenêtre 0, offset logique + 1 sinon.
+ *     Mesuré (GAL-A003-11C-02/03) sur UVVDDR, frontière 0/5000 seulement : `offset=0` et `offset=1` désignent le même
+ *     premier produit des métadonnées, `offset=5000` répète le dernier produit de la fenêtre précédente, `offset=5001`
+ *     commence au suivant.
+ */
+export const PAGINATION_PROFILES = Object.freeze({
+  identique: Object.freeze({
+    id: 'identique',
+    requestOffsets: (logical) => ({ coverage: logical, metadata: logical }),
+  }),
+  'metadonnees-base-1': Object.freeze({
+    id: 'metadonnees-base-1',
+    requestOffsets: (logical) => ({
+      coverage: logical,
+      metadata: logical === 0 ? 0 : logical + 1,
+    }),
+  }),
+});
+
+/** Jeux dont le profil est DÉCLARÉ : jamais étendu à un autre jeu par défaut. */
+export const DATASET_PAGINATION = Object.freeze({
+  'Mercury|MESSENGER|MASCS|UVVDDR': 'metadonnees-base-1',
+});
+
+const profileById = (id) =>
+  typeof id === 'string' && Object.hasOwn(PAGINATION_PROFILES, id)
+    ? PAGINATION_PROFILES[id]
+    : null;
+
+/**
+ * Profil d'un jeu. Un jeu déclaré dans `DATASET_PAGINATION` n'accepte que son profil ; un autre jeu exige un profil
+ * EXPLICITE (aucune valeur par défaut).
+ */
+export function resolvePagination(key, requested) {
+  const declared = DATASET_PAGINATION[key];
+  if (requested === undefined || requested === null) {
+    if (declared) return PAGINATION_PROFILES[declared];
+    throw new MultipageError(
+      `${key} : profil de pagination explicite exigé (${Object.keys(PAGINATION_PROFILES).join(' | ')})`
+    );
+  }
+  const profile = profileById(requested);
+  if (!profile)
+    throw new MultipageError(
+      `${key} : profil de pagination inconnu ${JSON.stringify(requested)} (${Object.keys(PAGINATION_PROFILES).join(' | ')})`
+    );
+  if (declared && declared !== profile.id)
+    throw new MultipageError(
+      `${key} : profil ${profile.id} refusé, le jeu est déclaré en ${declared}`
+    );
+  return profile;
+}
 
 export class ManifestWriteError extends Error {}
 
@@ -118,7 +183,7 @@ function integrityProblems(label, source) {
   return problems;
 }
 
-/** Identité de la requête d'une source : jeu, offset, limite, gel, paramètres. */
+/** Identité de la requête d'une source : jeu, offset RÉEL de la requête (champ de la capture ET paramètre `offset`), limite, gel. */
 function identityProblems(
   label,
   kind,
@@ -175,6 +240,7 @@ export function analyzeWindow({
   pageSize = PAGE,
   catalogueCount,
   offset,
+  pagination,
   metadata,
   coverage,
   allowedDatasetIds,
@@ -183,6 +249,18 @@ export function analyzeWindow({
   const where = `${key} @${offset}`;
   const problems = [];
   const add = (m) => problems.push(`${where} : ${m}`);
+  const profile = profileById(pagination);
+  if (!profile) {
+    add(
+      `profil de pagination absent ou inconnu (${JSON.stringify(pagination)})`
+    );
+    return { window: null, problems };
+  }
+  if (!Number.isInteger(offset) || offset < 0 || offset % pageSize !== 0) {
+    add(`offset logique ${offset} non aligné sur la page de ${pageSize}`);
+    return { window: null, problems };
+  }
+  const request = profile.requestOffsets(offset);
   const expectedCatalogued = Math.min(pageSize, catalogueCount - offset);
   if (!(expectedCatalogued > 0)) {
     add(`offset hors du jeu (${catalogueCount} produits)`);
@@ -196,7 +274,7 @@ export function analyzeWindow({
     problems.push(
       ...identityProblems(`${where} ${label}`, kind, {
         key,
-        offset,
+        offset: request[kind],
         limit: pageSize,
         freeze,
         provenance: src.provenance,
@@ -213,7 +291,11 @@ export function analyzeWindow({
   let products;
   try {
     shp = readShapefiles(coverage.buffer);
-    products = parseCoverageArchive(coverage.buffer, key, offset).products;
+    products = parseCoverageArchive(
+      coverage.buffer,
+      key,
+      request.coverage
+    ).products;
   } catch (error) {
     add(`archive coveragetargz illisible ou tronquée : ${error.message}`);
     return { window: null, problems };
@@ -343,8 +425,13 @@ export function analyzeWindow({
             : 'partiel',
       observed: [...observedTarget].sort(),
     },
+    catalogueRange: {
+      first: cat.products[0].id,
+      last: cat.products.at(-1).id,
+    },
     sources: {
       metadata: {
+        requestOffset: request.metadata,
         file: metadata.file,
         sha256: sha(metadata.buffer),
         receivedBytes: metadata.buffer.length,
@@ -352,6 +439,7 @@ export function analyzeWindow({
         httpStatus: metadata.provenance.http?.status ?? null,
       },
       coverage: {
+        requestOffset: request.coverage,
         file: coverage.file,
         sha256: sha(coverage.buffer),
         receivedBytes: coverage.buffer.length,
@@ -405,6 +493,15 @@ export function validateMultipageManifest(
     add(`statut ${manifest.status} (« qualifie » attendu)`);
   if (!['a', 'l'].includes(manifest.geometryKind))
     add(`nature de géométrie ${manifest.geometryKind} non admise`);
+  const profile = profileById(manifest.pagination?.profile);
+  if (!profile)
+    add(
+      `profil de pagination ${JSON.stringify(manifest.pagination?.profile)} absent ou inconnu`
+    );
+  else if (DATASET_PAGINATION[key] && DATASET_PAGINATION[key] !== profile.id)
+    add(
+      `profil de pagination ${profile.id} refusé : le jeu est déclaré en ${DATASET_PAGINATION[key]}`
+    );
   const windows = Array.isArray(manifest.windows) ? manifest.windows : [];
   const want = windowOffsets(catalogueCount, pageSize);
   const seen = new Map();
@@ -459,6 +556,10 @@ export function validateMultipageManifest(
       add(`${at} : ${w.geometry?.shapes} formes pour ${ids.length} produits`);
     for (const s of ['metadata', 'coverage']) {
       const src = w.sources?.[s];
+      if (profile && src?.requestOffset !== profile.requestOffsets(w.offset)[s])
+        add(
+          `${at} : source ${s} demandée à offset ${src?.requestOffset} (profil ${profile.id} : ${profile.requestOffsets(w.offset)[s]})`
+        );
       if (
         !/^[0-9a-f]{64}$/.test(src?.sha256 ?? '') ||
         !(src?.receivedBytes > 0) ||
@@ -547,6 +648,7 @@ export function buildMultipageManifest({
   catalogueCount,
   allowedDatasetIds,
   target,
+  pagination,
   windows,
   now = new Date(),
 }) {
@@ -563,6 +665,7 @@ export function buildMultipageManifest({
       maxcreationtime: freeze.maxcreationtime,
     },
     pageSize,
+    pagination: { profile: pagination },
     catalogueCount,
     target: target ?? key.split('|')[0],
     allowedDatasetIds: [...(allowedDatasetIds ?? [])].sort(),
@@ -626,8 +729,10 @@ export function allowedDatasetIdsFromIipt(iipt, key) {
 }
 
 /**
- * Cherche dans `diagnostics/` les captures `.raw` d'un jeu (provenance `.raw.json`), par fenêtre et par type.
- * Plusieurs captures pour la même fenêtre et le même type : refus (le choix n'est jamais deviné).
+ * Cherche dans `diagnostics/` les captures `.raw` d'un jeu (provenance `.raw.json`), rangées par OFFSET DE REQUÊTE
+ * déclaré (`offset` de la provenance) et par type : `all` garde toutes les candidates d'un emplacement, `found` la
+ * première. Le choix par fenêtre se fait dans `qualifyDataset` d'après le profil, jamais ici ; deux candidates pour un
+ * même emplacement attendu : refus (le choix n'est jamais deviné).
  */
 export function discoverCaptures(
   cacheDir,
@@ -637,6 +742,7 @@ export function discoverCaptures(
 ) {
   const dir = join(cacheDir, 'diagnostics');
   const found = new Map();
+  const all = new Map();
   const problems = [];
   for (const name of readDir(dir).filter((n) => n.endsWith('.raw.json'))) {
     let p;
@@ -655,26 +761,36 @@ export function discoverCaptures(
     if (!kind) continue;
     const slot = `${p.offset}:${kind}`;
     const file = name.slice(0, -'.json'.length);
+    all.set(slot, [...(all.get(slot) ?? []), file]);
     if (found.has(slot))
       problems.push(
         `plusieurs captures ${kind} pour ${key} @${p.offset} : ${found.get(slot)} et ${file}`
       );
     else found.set(slot, file);
   }
-  return { found, problems };
+  return { found, all, problems };
 }
 
 /**
  * QUALIFIE un jeu à partir des captures de `diagnostics/` : analyse fenêtre par fenêtre (une seule en mémoire à la
  * fois), puis validation globale. Rend le manifeste (non écrit) ; lève MultipageError.
+ *
+ * Les sources de chaque fenêtre sont choisies EXCLUSIVEMENT d'après l'offset réel de requête que le profil de
+ * pagination exige (`PAGINATION_PROFILES`). Une capture dont l'offset réel est celui d'une autre convention (par
+ * exemple des métadonnées demandées à `offset=5000` alors que le profil exige 5001) n'est jamais sélectionnée : elle
+ * est rangée comme DIAGNOSTIQUE (ajoutée à `diagnostics`, tableau optionnel fourni par l'appelant), ni écrasée, ni
+ * renommée, ni supprimée. Toute autre capture inattendue est un refus.
  */
 export function qualifyDataset({
   cacheDir,
   key,
+  pagination,
   now = new Date(),
   readFile = readFileSync,
   readDir = readdirSync,
+  diagnostics = [],
 }) {
+  const profile = resolvePagination(key, pagination);
   const counts = readJson(join(cacheDir, 'counts.json'));
   if (!(key in counts))
     throw new MultipageError(`${key} absent de counts.json`);
@@ -686,26 +802,39 @@ export function qualifyDataset({
     key
   );
   const offsets = windowOffsets(counts[key]);
-  const { found, problems } = discoverCaptures(
-    cacheDir,
-    key,
-    readDir,
-    readFile
-  );
+  const { all } = discoverCaptures(cacheDir, key, readDir, readFile);
+  const problems = [];
+  const expectedSlots = new Set();
   const windows = [];
   for (const offset of offsets) {
-    const meta = found.get(`${offset}:metadata`);
-    const cov = found.get(`${offset}:coverage`);
+    const request = profile.requestOffsets(offset);
+    const pick = (kind) => {
+      const slot = `${request[kind]}:${kind}`;
+      expectedSlots.add(slot);
+      const files = all.get(slot) ?? [];
+      if (files.length > 1)
+        problems.push(
+          `plusieurs captures ${kind} pour ${key} @${offset} (requête offset=${request[kind]}) : ${files.join(' et ')}`
+        );
+      return files.length === 1 ? files[0] : null;
+    };
+    const meta = pick('metadata');
+    const cov = pick('coverage');
     if (!meta)
-      problems.push(`${key} @${offset} : capture de métadonnées absente`);
+      problems.push(
+        `${key} @${offset} : capture de métadonnées absente (requête offset=${request.metadata})`
+      );
     if (!cov)
-      problems.push(`${key} @${offset} : capture coveragetargz absente`);
+      problems.push(
+        `${key} @${offset} : capture coveragetargz absente (requête offset=${request.coverage})`
+      );
     if (!meta || !cov) continue;
     const r = analyzeWindow({
       key,
       freeze,
       catalogueCount: counts[key],
       offset,
+      pagination: profile.id,
       metadata: readCapture(cacheDir, meta, readFile),
       coverage: readCapture(cacheDir, cov, readFile),
       allowedDatasetIds: allowed,
@@ -713,10 +842,22 @@ export function qualifyDataset({
     problems.push(...r.problems);
     if (r.window) windows.push(r.window);
   }
-  for (const k of found.keys()) {
-    const o = Number(k.split(':')[0]);
-    if (!offsets.includes(o))
-      problems.push(`${key} : capture @${o} hors des fenêtres attendues`);
+  for (const [slot, files] of all) {
+    if (expectedSlots.has(slot)) continue;
+    const [o, kind] = [Number(slot.split(':')[0]), slot.split(':')[1]];
+    // Diagnostique reconnu : offset réel = offset LOGIQUE d'une fenêtre alors que le profil exige un autre offset.
+    const shifted =
+      offsets.includes(o) && profile.requestOffsets(o)[kind] !== o;
+    for (const file of files) {
+      if (shifted)
+        diagnostics.push({
+          file,
+          kind,
+          requestOffset: o,
+          reason: `offset de requête ${o} = offset logique, le profil ${profile.id} exige ${profile.requestOffsets(o)[kind]} : conservée, jamais sélectionnée`,
+        });
+      else problems.push(`${key} : capture @${o} hors des fenêtres attendues`);
+    }
   }
   if (problems.length) throw new MultipageError(problems);
   return buildMultipageManifest({
@@ -724,6 +865,7 @@ export function qualifyDataset({
     freeze,
     catalogueCount: counts[key],
     allowedDatasetIds: allowed,
+    pagination: profile.id,
     windows,
     now,
   });
@@ -741,6 +883,12 @@ export function verifyWindowSources(
 ) {
   const w = manifest.windows.find((x) => x.offset === offset);
   const problems = [];
+  const profile = profileById(manifest.pagination?.profile);
+  if (!profile)
+    return [
+      `${manifest.dataset} @${offset} : profil de pagination ${JSON.stringify(manifest.pagination?.profile)} absent ou inconnu`,
+    ];
+  const request = profile.requestOffsets(offset);
   for (const kind of ['metadata', 'coverage']) {
     const src = w.sources[kind];
     let cap;
@@ -763,7 +911,7 @@ export function verifyWindowSources(
     problems.push(
       ...identityProblems(label, kind, {
         key: manifest.dataset,
-        offset,
+        offset: request[kind],
         limit: manifest.pageSize,
         freeze: manifest.freeze,
         provenance: cap.provenance,
@@ -852,6 +1000,7 @@ export function loadQualifiedDataset({
     again = qualifyDataset({
       cacheDir: dir,
       key,
+      pagination: manifest.pagination?.profile,
       now: new Date(manifest.builtAt),
       readFile,
     });
@@ -883,7 +1032,11 @@ export function planWindowPage(ctx, offset, { readFile = readFileSync } = {}) {
   const sp = verifyWindowSources(manifest, offset, cacheDir, readFile);
   if (sp.length) fail(`sources refusées : ${sp.join(' ; ')}`);
   const cov = readCapture(cacheDir, w.sources.coverage.file, readFile);
-  const { products } = parseCoverageArchive(cov.buffer, key, offset);
+  const { products } = parseCoverageArchive(
+    cov.buffer,
+    key,
+    w.sources.coverage.requestOffset
+  );
   const ids = products.map((p) => String(p.id));
   if (new Set(ids).size !== ids.length)
     fail(`${key} @${offset} : identifiants en double après regroupement`);
@@ -1118,17 +1271,21 @@ export function parseArgs(argv) {
     cacheDir: null,
     key: null,
     offset: null,
+    pagination: null,
     write: false,
   };
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === '--write') out.write = true;
-    else if (['--cache-dir', '--dataset', '--offset'].includes(a)) {
+    else if (
+      ['--cache-dir', '--dataset', '--offset', '--pagination'].includes(a)
+    ) {
       const v = rest[++i];
       if (v === undefined || v.startsWith('--'))
         throw new Error(`${a} exige une valeur`);
       if (a === '--cache-dir') out.cacheDir = v;
       else if (a === '--dataset') out.key = v;
+      else if (a === '--pagination') out.pagination = v;
       else out.offset = v;
     } else throw new Error(`option inconnue : ${a}`);
   }
@@ -1142,6 +1299,10 @@ export function parseArgs(argv) {
       throw new Error(`--offset ${out.offset} : entier positif ou all attendu`);
   } else if (out.offset !== null)
     throw new Error('--offset ne s’applique qu’à materialize');
+  if (command === 'materialize' && out.pagination !== null)
+    throw new Error(
+      '--pagination ne s’applique qu’à build (le manifeste la porte)'
+    );
   return out;
 }
 
@@ -1160,8 +1321,16 @@ export function run(argv) {
     throw new MultipageError(
       `un manifeste existe déjà (${file}) : jamais écrasé`
     );
-  const manifest = qualifyDataset({ cacheDir, key: a.key });
+  const diagnostics = [];
+  const manifest = qualifyDataset({
+    cacheDir,
+    key: a.key,
+    pagination: a.pagination,
+    diagnostics,
+  });
   const summary = {
+    pagination: manifest.pagination.profile,
+    capturesDiagnostiques: diagnostics,
     mode: a.write ? 'ecriture' : 'sec',
     dataset: a.key,
     status: manifest.status,

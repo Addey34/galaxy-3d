@@ -1,7 +1,17 @@
 import type { CommitFs, CommitPlan } from './ode-materialize.mjs';
 
 export const MULTIPAGE_KIND: 'reconciliation-multipage';
-export const MULTIPAGE_VERSION: 1;
+export const MULTIPAGE_VERSION: 2;
+export interface PaginationProfile {
+  id: string;
+  requestOffsets: (logical: number) => { coverage: number; metadata: number };
+}
+export const PAGINATION_PROFILES: Readonly<Record<string, PaginationProfile>>;
+export const DATASET_PAGINATION: Readonly<Record<string, string>>;
+export function resolvePagination(
+  key: string,
+  requested?: string | null
+): PaginationProfile;
 export class ManifestWriteError extends Error {}
 export class MultipageError extends Error {
   problems: string[];
@@ -32,6 +42,7 @@ export interface MultipageWindow {
   sources: Record<
     'metadata' | 'coverage',
     {
+      requestOffset: number;
       file: string;
       sha256: string;
       receivedBytes: number;
@@ -39,6 +50,7 @@ export interface MultipageWindow {
       httpStatus: number | null;
     }
   >;
+  catalogueRange: { first: string; last: string };
   footprintIds: string[];
   productIds: string[];
   excluded: MultipageExclusion[];
@@ -51,6 +63,7 @@ export interface MultipageManifest {
   geometryKind: 'a' | 'l' | null;
   freeze: Freeze;
   pageSize: number;
+  pagination: { profile: string };
   catalogueCount: number;
   target: string;
   allowedDatasetIds: string[];
@@ -102,11 +115,22 @@ export function allowedDatasetIdsFromIipt(iipt: unknown, key: string): string[];
 export function discoverCaptures(
   cacheDir: string,
   key: string
-): { found: Map<string, string>; problems: string[] };
+): {
+  found: Map<string, string>;
+  all: Map<string, string[]>;
+  problems: string[];
+};
 export function qualifyDataset(options: {
   cacheDir: string;
   key: string;
+  pagination?: string | null;
   now?: Date;
+  diagnostics?: {
+    file: string;
+    kind: string;
+    requestOffset: number;
+    reason: string;
+  }[];
 }): MultipageManifest;
 export function verifyWindowSources(
   manifest: MultipageManifest,
@@ -146,6 +170,7 @@ export function parseArgs(argv: string[]): {
   cacheDir: string;
   key: string;
   offset: string | null;
+  pagination: string | null;
   write: boolean;
 };
 export function run(argv: string[]): Record<string, unknown>;
