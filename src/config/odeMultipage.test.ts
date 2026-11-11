@@ -18,7 +18,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  compactProof,
+  loadDatasetProof,
+} from '../../scripts/ode-dataset-proof.mjs';
 import { MaterializeError } from '../../scripts/ode-materialize.mjs';
+import {
+  scanDataset,
+  verifyBodyResult,
+} from '../../scripts/place-observations-publish.mjs';
 import {
   DATASET_PAGINATION,
   MultipageError,
@@ -2368,6 +2376,285 @@ describe(
           )
         ).toEqual(['a-b', 'a/b']);
       });
+    });
+  }
+);
+
+describe(
+  'GAL-A003-11C-23 : lecteur commun des preuves (historique, multipage v3, absent)',
+  { timeout: 300_000 },
+  () => {
+    let ready: string;
+    const proofOf = (cache: string, extra: Record<string, unknown> = {}) =>
+      loadDatasetProof({
+        cacheDir: cache,
+        key: CFG.key,
+        freeze: FREEZE,
+        catalogueCount: CFG.n,
+        pageSize: PAGE,
+        ...extra,
+      });
+    const scan = (cache: string, proof: ReturnType<typeof proofOf>) =>
+      scanDataset(join(cache, 'pages', CFG.dir), CFG.n, PAGE, undefined, proof);
+    const rewrite = (cache: string, fn: (m: Manifest) => void) => {
+      const f = multipageManifestPath(cache, CFG.key);
+      const m = JSON.parse(readFileSync(f, 'utf8'));
+      fn(m);
+      writeFileSync(f, JSON.stringify(m));
+    };
+    const readPage = (cache: string, o: number) =>
+      gunzipSync(readFileSync(pagePath(cache, o)))
+        .toString()
+        .split(NL)
+        .filter(Boolean);
+    beforeAll(() => {
+      const base = makeCache(CFG);
+      ready = clone(base);
+      writeManifest(ready);
+      materializeWindows({
+        cacheDir: ready,
+        key: CFG.key,
+        offsets: 'all',
+        write: true,
+      });
+    });
+
+    it('multipage v3 qualifié : 27 146 = empreintes + exclusions, six pages, lecture sans problème', () => {
+      const proof = proofOf(ready);
+      expect(proof).not.toBeNull();
+      expect(proof?.format).toBe('multipage-v3');
+      expect(proof?.catalogued).toBe(CFG.n);
+      expect(proof?.footprints).toBe(CFG.n - EXCLUDED.length);
+      expect((proof?.excludedIds as Set<string>).size).toBe(EXCLUDED.length);
+      expect(proof?.offsets).toEqual(OFFSETS);
+      expect(proof?.status).toBe('qualifie');
+      const seen: string[] = [];
+      const report = scanDataset(
+        join(ready, 'pages', CFG.dir),
+        CFG.n,
+        PAGE,
+        (p: { id: string }) => seen.push(String(p.id)),
+        proof
+      );
+      expect(report.problems).toEqual([]);
+      expect(report.distinct).toBe(CFG.n - EXCLUDED.length);
+      expect(new Set(seen).size).toBe(seen.length);
+      for (const i of EXCLUDED) expect(seen).not.toContain(odeId(i));
+    });
+    it('le résumé publiable est compact : ni exclusion détaillée ni identifiant', () => {
+      const c = compactProof(proofOf(ready)!, CFG.key);
+      expect(c).toMatchObject({
+        catalogued: CFG.n,
+        withFootprint: CFG.n - EXCLUDED.length,
+        withoutGeometry: EXCLUDED.length,
+        windows: 6,
+      });
+      expect(JSON.stringify(c).length).toBeLessThan(600);
+      expect(JSON.stringify(c)).not.toContain(odeId(EXCLUDED[0]));
+    });
+    it('aucun manifeste : null, et le comportement historique (catalogue = empreintes exigé) est conservé', () => {
+      const c = clone(ready);
+      rmSync(multipageManifestPath(c, CFG.key));
+      expect(proofOf(c)).toBeNull();
+      const report = scan(c, proofOf(c));
+      expect(report.problems.join(NL)).toMatch(
+        /27143 produits distincts pour 27146 déclarés/
+      );
+    });
+    it('manifeste historique seul : son chemin de validation est appelé tel quel, le multipage jamais ; scanDataset identique', () => {
+      const c = clone(ready);
+      rmSync(multipageManifestPath(c, CFG.key));
+      const historic = {
+        manifest: { excluded: [] },
+        file: 'h.json',
+        geometryKind: 'a',
+        catalogued: CFG.n,
+        footprints: CFG.n - EXCLUDED.length,
+        excludedIds: new Set(EXCLUDED.map(odeId)),
+        footprintIds: new Set<string>(),
+      };
+      const args: unknown[] = [];
+      const proof = proofOf(c, {
+        exists: (p: string) => /\.json$/.test(p) && !/multipage/.test(p),
+        loadHistoric: (o: unknown) => {
+          args.push(o);
+          return historic;
+        },
+        loadMultipage: () => {
+          throw new Error('ne doit pas être appelé');
+        },
+      });
+      expect(proof).toEqual({ ...historic, format: 'historique' });
+      expect(args).toHaveLength(1);
+      expect(args[0]).toMatchObject({ key: CFG.key, pageSize: PAGE });
+      const dir = join(c, 'pages', CFG.dir);
+      const a = scanDataset(dir, CFG.n, PAGE, undefined, historic);
+      const b = scanDataset(dir, CFG.n, PAGE, undefined, proof);
+      expect(b).toEqual(a);
+    });
+    it('deux manifestes pour un même jeu : refus, aucun n’est choisi', () => {
+      expect(() =>
+        proofOf(ready, { exists: () => true, loadHistoric: () => null })
+      ).toThrow(/deux manifestes/);
+    });
+    it('manifeste v3 corrompu : refus, jamais de repli sur le comportement historique', () => {
+      const c = clone(ready);
+      writeFileSync(multipageManifestPath(c, CFG.key), '{pas du json');
+      expect(() => proofOf(c)).toThrow(/illisible/);
+    });
+    it.each([
+      [
+        'mauvaise version',
+        (m: Manifest) => {
+          (m as unknown as { version: number }).version = 2;
+        },
+      ],
+      [
+        'mauvais profil de pagination',
+        (m: Manifest) => {
+          (m.pagination as { profile: string }).profile = 'base-1-commun';
+        },
+      ],
+      [
+        'provenance incohérente (offset de requête)',
+        (m: Manifest) => {
+          m.windows[1].sources.coverage.requestOffset = 4999;
+        },
+      ],
+      [
+        'ODEId dupliqué entre fenêtres',
+        (m: Manifest) => {
+          m.windows[1].footprintIds[0] = m.windows[0].footprintIds[0];
+        },
+      ],
+      [
+        'ProductId contradictoire',
+        (m: Manifest) => {
+          m.windows[2].productIds[0] = m.windows[0].productIds[0];
+        },
+      ],
+      [
+        'mauvais compte d’exclusions',
+        (m: Manifest) => {
+          m.counts.excluded += 1;
+        },
+      ],
+      [
+        'mauvais compte d’empreintes',
+        (m: Manifest) => {
+          m.counts.footprints -= 1;
+        },
+      ],
+      [
+        'catalogue différent du dénombrement',
+        (m: Manifest) => {
+          (m as unknown as { catalogueCount: number }).catalogueCount += 1;
+        },
+      ],
+    ])('manifeste v3 invalide (%s) : refus', (_n, mutate) => {
+      const c = clone(ready);
+      rewrite(c, mutate);
+      expect(() => proofOf(c)).toThrow();
+    });
+    it('capture source modifiée : refus (la requalification relit les captures)', () => {
+      const c = clone(ready);
+      const m = JSON.parse(
+        readFileSync(multipageManifestPath(c, CFG.key), 'utf8')
+      );
+      const f = join(c, 'diagnostics', m.windows[2].sources.coverage.file);
+      const b = readFileSync(f);
+      b[b.length >> 1] ^= 1;
+      writeFileSync(f, b);
+      expect(() => proofOf(c)).toThrow();
+    });
+    it('page manquante, page surnuméraire, SHA-256 de page divergent : problèmes, jamais de lecture muette', () => {
+      let c = clone(ready);
+      rmSync(pagePath(c, 10000));
+      expect(scan(c, proofOf(c)).problems.join(NL)).toMatch(/manquante/);
+      c = clone(ready);
+      writeFileSync(join(c, 'pages', CFG.dir, '99999.ndjson.gz'), 'x');
+      expect(scan(c, proofOf(c)).problems.join(NL)).toMatch(/hors attendu/);
+      c = clone(ready);
+      const lines = readPage(c, 5000);
+      writeFileSync(pagePath(c, 5000), gzipSync(lines.join(NL), { level: 1 }));
+      expect(
+        gunzipSync(readFileSync(pagePath(c, 5000)))
+          .toString()
+          .split(NL)
+          .filter(Boolean)
+      ).toEqual(lines);
+      expect(scan(c, proofOf(c)).problems.join(NL)).toMatch(
+        /5000\.ndjson\.gz : SHA-256 ou taille différents du manifeste/
+      );
+    });
+    it('produit exclu présent dans une page, produit hors de sa fenêtre, identifiant dupliqué : problèmes', () => {
+      const c = clone(ready);
+      const lines = readPage(c, 5000);
+      const first = JSON.parse(lines[0]);
+      const intruder = { ...first, id: odeId(EXCLUDED[0]) };
+      writeFileSync(
+        pagePath(c, 5000),
+        gzipSync([...lines, JSON.stringify(intruder)].join(NL))
+      );
+      expect(scan(c, proofOf(c)).problems.join(NL)).toMatch(
+        /exclusion injustifiée/
+      );
+      const d = clone(ready);
+      const other = JSON.parse(readPage(d, 0)[0]);
+      writeFileSync(
+        pagePath(d, 5000),
+        gzipSync([...readPage(d, 5000), JSON.stringify(other)].join(NL))
+      );
+      expect(scan(d, proofOf(d)).problems.join(NL)).toMatch(/non attendu/);
+      const e = clone(ready);
+      const l5 = readPage(e, 5000);
+      writeFileSync(pagePath(e, 5000), gzipSync([...l5, l5[0]].join(NL)));
+      expect(scan(e, proofOf(e)).problems.join(NL)).toMatch(/dupliqué/);
+    });
+    it('un cache avec UVVDDR mais sans les neuf jeux historiques ne peut pas régénérer l’index complet de Mercure', () => {
+      const missing: [string, number][] = [
+        ['UVVCDR', 155286],
+        ['VIRCDR', 67529],
+        ['VIRDDR', 28616],
+        ['CDRNAC', 306454],
+        ['DDRNAC', 153281],
+        ['EDRNAC', 153275],
+        ['CDRWAC', 376105],
+        ['DDRWAC', 167317],
+        ['EDRWAC', 128133],
+      ];
+      let missingPages = 0;
+      const pageProblems: string[] = [];
+      for (const [pt, n] of missing) {
+        const r = scanDataset(join(ready, 'pages', `absent_${pt}`), n, PAGE);
+        missingPages += r.missing.length;
+        for (const p of r.problems) pageProblems.push(`${pt} : ${p}`);
+      }
+      expect(missingPages).toBe(312);
+      const seen = CFG.n - EXCLUDED.length;
+      const run = () =>
+        verifyBodyResult(
+          'mercury',
+          {
+            missingPages,
+            extraPages: 0,
+            pageProblems,
+            products: seen,
+            observed: 606,
+            formations: 606,
+            shards: 2,
+            observedIds: [],
+            shardOf: () => 0,
+          },
+          {
+            previous: { products: 1375498 },
+            featureIds: [],
+            partial: false,
+            acceptDrop: false,
+          }
+        );
+      expect(run).toThrow(/312 page\(s\) d'empreintes manquante/);
+      expect(run).toThrow(/baisse de plus de 1 %/);
     });
   }
 );

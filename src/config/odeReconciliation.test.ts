@@ -878,9 +878,11 @@ describe('câblage de la chaîne (sources)', () => {
   it('le collecteur, le générateur et la validation de page lisent la réconciliation', () => {
     expect(read('pull-ode-footprints.mjs')).toMatch(/loadReconciliation/);
     expect(read('pull-ode-footprints.mjs')).toMatch(/excludedIds: expectation/);
-    expect(read('generate-place-observations.mjs')).toMatch(
-      /loadReconciliation/
-    );
+    // Le générateur lit les preuves par le lecteur commun (GAL-A003-11C-23), qui garde `loadReconciliation` pour le
+    // format historique et `loadQualifiedDataset` pour le multipage v3.
+    expect(read('generate-place-observations.mjs')).toMatch(/loadDatasetProof/);
+    expect(read('ode-dataset-proof.mjs')).toMatch(/loadReconciliation/);
+    expect(read('ode-dataset-proof.mjs')).toMatch(/loadQualifiedDataset/);
     expect(read('generate-place-observations.mjs')).toMatch(
       /[\r\n]\s+reconciliation[\r\n]\s*\);/
     );

@@ -28,6 +28,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 
@@ -136,6 +137,8 @@ export function checkPageNames(files, count, page) {
  * Lit un jeu : noms exacts, pages lisibles (gzip + JSON), produits distincts égaux au compte
  * déclaré. `onProduct` reçoit chaque produit au premier passage (les doublons sont écartés).
  */
+const sha256 = (b) => createHash('sha256').update(b).digest('hex');
+
 export function scanDataset(
   dir,
   count,
@@ -168,8 +171,10 @@ export function scanDataset(
   for (const off of present) {
     const file = `${off}.ndjson.gz`;
     let lines;
+    let raw;
     try {
-      lines = gunzipSync(readFileSync(join(dir, file)))
+      raw = readFileSync(join(dir, file));
+      lines = gunzipSync(raw)
         .toString()
         .split('\n')
         .filter(Boolean)
@@ -178,7 +183,22 @@ export function scanDataset(
       report.unreadable.push(file);
       continue;
     }
+    // Preuves d'un manifeste MULTIPAGE v3 (facultatives : le format historique n'en porte pas, rien ne change pour lui).
+    const proof = reconciliation?.pages?.get(off);
+    if (proof && (sha256(raw) !== proof.sha256 || raw.length !== proof.bytes))
+      report.problems.push(
+        `${file} : SHA-256 ou taille différents du manifeste`
+      );
+    const windowIds = reconciliation?.windowIds?.get(off);
     for (const p of lines) {
+      if (
+        windowIds &&
+        !windowIds.has(String(p.id)) &&
+        !excludedIds.has(String(p.id))
+      ) {
+        report.unexpected.push(String(p.id));
+        continue;
+      }
       if (excludedIds.has(String(p.id))) {
         report.forbidden.push(String(p.id));
         continue;
@@ -197,6 +217,10 @@ export function scanDataset(
   }
   report.distinct = ids.size;
   const some = (a) => a.slice(0, 3).join(', ');
+  if (reconciliation?.strict && report.duplicates)
+    report.problems.push(
+      `${report.duplicates} identifiant(s) dupliqué(s) entre les pages`
+    );
   if (names.missing.length)
     report.problems.push(
       `${names.missing.length} page(s) manquante(s) (${some(names.missing)}…)`

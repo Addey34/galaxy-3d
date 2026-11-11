@@ -40,7 +40,7 @@ import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { FREEZE, resolveCacheDir } from './ode-selection.mjs';
-import { loadReconciliation } from './ode-reconciliation.mjs';
+import { compactProof, loadDatasetProof } from './ode-dataset-proof.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /** Le cache d'empreintes : `--cache-dir` ou GALAXY_ODE_CACHE (hors dépôt), sinon l'ancien emplacement. */
 const CACHE = (() => {
@@ -321,7 +321,7 @@ for (const [db, body] of Object.entries(BODY)) {
      * refuse aussi les pages mal nommées ou illisibles et exige autant de produits DISTINCTS que
      * le compte déclaré du jeu.
      */
-    const reconciliation = loadReconciliation({
+    const reconciliation = loadDatasetProof({
       cacheDir: CACHE,
       key,
       freeze: {
@@ -331,7 +331,10 @@ for (const [db, body] of Object.entries(BODY)) {
       catalogueCount: counts[key],
       pageSize: PAGE,
     });
-    if (reconciliation)
+    // Un jeu multipage v3 ne publie qu'un RÉSUMÉ compact (les exclusions détaillées restent dans le cache scientifique).
+    if (reconciliation?.format === 'multipage-v3')
+      reconciled.push(compactProof(reconciliation, key));
+    else if (reconciliation)
       reconciled.push({
         key,
         catalogued: reconciliation.catalogued,
