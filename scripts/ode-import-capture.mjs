@@ -20,18 +20,22 @@
  */
 import { createHash, randomBytes } from 'node:crypto';
 import {
+  closeSync,
   existsSync,
+  fsyncSync,
   linkSync,
   lstatSync,
   mkdirSync,
+  openSync,
   readFileSync,
   realpathSync,
   rmSync,
   statSync,
+  writeSync,
 } from 'node:fs';
 import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { writeFileAtomic, TMP_SUFFIX } from './ode-pages.mjs';
+import { TMP_SUFFIX } from './ode-pages.mjs';
 import { resolveCacheDir } from './ode-selection.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -129,9 +133,61 @@ export function checkDestination(cacheDir, mainFile) {
   return dir;
 }
 
-/** Importe une capture. `write: false` : vérifie tout et n'écrit rien. Rend { status, imported, alreadyPresent }. */
+/**
+ * Écrit `data` dans un temporaire créé EXCLUSIVEMENT (`wx`), fsyncé. Une erreur ferme le descripteur et tente de
+ * retirer le temporaire, sans JAMAIS masquer l'erreur d'origine (un retrait raté est rendu dans `leftovers`).
+ */
+function writeTemp(tmp, data, fs, leftovers) {
+  const open = fs.openSync ?? openSync;
+  const write = fs.writeSync ?? writeSync;
+  const fsync = fs.fsyncSync ?? fsyncSync;
+  const close = fs.closeSync ?? closeSync;
+  let fd = null;
+  try {
+    fd = open(tmp, 'wx');
+    let at = 0;
+    while (at < data.length) {
+      const n = write(fd, data, at, data.length - at);
+      if (!(n > 0))
+        throw Object.assign(new Error('écriture nulle'), { code: 'EIO' });
+      at += n;
+    }
+    fsync(fd);
+    const done = fd;
+    fd = null;
+    close(done);
+  } catch (error) {
+    if (fd !== null) {
+      try {
+        close(fd);
+      } catch {
+        /* le descripteur est perdu avec le volume */
+      }
+    }
+    try {
+      (fs.rmSync ?? rmSync)(tmp, { force: true });
+    } catch (e) {
+      leftovers.push(`${tmp} (${e?.code ?? e?.message})`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Importe une capture. `write: false` : vérifie tout et n'écrit rien. Rend { status, imported, alreadyPresent }.
+ * Garanties (GAL-A003-11B) :
+ *   - ordre de publication : provenance, somme, puis le contenu principal ;
+ *   - une erreur de NETTOYAGE ne masque jamais l'erreur d'origine : elle est ajoutée au message ;
+ *   - un lien réussi suivi d'un temporaire impossible à retirer est un ÉCHEC (le fichier porterait deux noms) ;
+ *   - le retour arrière ne retire un fichier que s'il est bien celui que CET appel a lié (même inode ET même contenu) ; sinon il est
+ *     laissé et signalé ;
+ *   - un retour arrière impossible est annoncé « ÉTAT PARTIEL, intervention manuelle », avec les chemins.
+ */
 export function importCapture({ cacheDir, mainFile, write = false, fs = {} }) {
   const link = fs.linkSync ?? linkSync;
+  const rm = fs.rmSync ?? rmSync;
+  const stat = fs.statSync ?? statSync;
+  const read = fs.readFileSync ?? readFileSync;
   const cache = checkDestination(cacheDir, mainFile);
   const { digest, files } = readCapture(mainFile);
   const dir = join(cache, 'diagnostics');
@@ -155,41 +211,91 @@ export function importCapture({ cacheDir, mainFile, write = false, fs = {} }) {
       alreadyPresent: present,
     };
   mkdirSync(dir, { recursive: true });
-  const created = [];
-  try {
-    for (const f of todo) {
-      const tmp = `${f.dest}.${process.pid}.${randomBytes(4).toString('hex')}${TMP_SUFFIX}`;
+  const created = []; // { dest, ino, data } : ce que CET appel a lié
+  const leftovers = [];
+  let failure = null;
+  for (const f of todo) {
+    const tmp = `${f.dest}.${process.pid}.${randomBytes(4).toString('hex')}${TMP_SUFFIX}`;
+    try {
+      writeTemp(tmp, f.data, fs, leftovers);
+      const ino = stat(tmp, { bigint: true }).ino;
       try {
-        writeFileAtomic(tmp, f.data, { fs });
-        try {
-          link(tmp, f.dest);
-        } catch (error) {
-          if (error?.code === 'EEXIST')
-            fail(
-              `collision : ${f.dest} apparu pendant l'import, laissé intact`
-            );
-          fail(
-            `publication par lien dur impossible (${error?.code ?? error?.message}) : aucun repli par copie`
-          );
-        }
-        created.push(f.dest);
-      } finally {
-        rmSync(tmp, { force: true });
-        rmSync(`${tmp}${TMP_SUFFIX}`, { force: true });
+        link(tmp, f.dest);
+      } catch (error) {
+        if (error?.code === 'EEXIST')
+          fail(`collision : ${f.dest} apparu pendant l'import, laissé intact`);
+        fail(
+          `publication par lien dur impossible (${error?.code ?? error?.message}) : aucun repli par copie`
+        );
       }
-      if (!readFileSync(f.dest).equals(f.data))
-        fail(`copie relue différente : ${f.dest}`);
+      created.push({ dest: f.dest, ino, data: f.data });
+    } catch (e) {
+      failure = e;
     }
-  } catch (error) {
-    for (const c of created) rmSync(c, { force: true });
-    throw error;
+    try {
+      rm(tmp, { force: true });
+    } catch (e) {
+      leftovers.push(`${tmp} (${e?.code ?? e?.message})`);
+    }
+    if (failure) break;
+    if (leftovers.length) {
+      failure = new ImportError(
+        `temporaire non retiré après le lien de ${f.dest} : le fichier porterait plusieurs noms`
+      );
+      break;
+    }
+    try {
+      if (!read(f.dest).equals(f.data))
+        throw new ImportError(`copie relue différente : ${f.dest}`);
+    } catch (e) {
+      failure = e;
+      break;
+    }
   }
-  return {
-    status: 'imported',
-    digest,
-    imported: todo.map((t) => t.name),
-    alreadyPresent: present,
-  };
+  if (!failure)
+    return {
+      status: 'imported',
+      digest,
+      imported: todo.map((t) => t.name),
+      alreadyPresent: present,
+    };
+  // Retour arrière, du dernier fichier créé au premier (le principal d'abord). Seul un fichier dont l'inode est celui
+  // que nous avons lié est retiré ; tout autre est laissé en place et signalé.
+  const stuck = [];
+  for (const c of created.reverse()) {
+    try {
+      let ino;
+      try {
+        ino = stat(c.dest, { bigint: true }).ino;
+      } catch (e) {
+        if (e?.code === 'ENOENT') continue;
+        throw e;
+      }
+      // L'inode seul ne suffit pas (un système de fichiers réattribue un inode libéré) : le contenu doit aussi être le nôtre.
+      if (ino !== c.ino || !read(c.dest).equals(c.data)) {
+        stuck.push(`${c.dest} (n'est plus notre fichier : laissé)`);
+        continue;
+      }
+      rm(c.dest, { force: true });
+    } catch (e) {
+      stuck.push(`${c.dest} (${e?.code ?? e?.message})`);
+    }
+  }
+  if (!stuck.length && !leftovers.length) throw failure;
+  const extra = [
+    stuck.length ? `fichier(s) non retiré(s) : ${stuck.join(', ')}` : null,
+    leftovers.length
+      ? `temporaire(s) non retiré(s), à retirer à la main : ${leftovers.join(', ')}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' ; ');
+  throw new ImportError(
+    stuck.length
+      ? `ÉTAT PARTIEL, intervention manuelle : ${failure.message} ; ${extra}`
+      : `${failure.message} ; en plus, ${extra}`,
+    { cause: failure }
+  );
 }
 
 function main() {

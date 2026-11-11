@@ -241,13 +241,21 @@ export function planReconciledPage({ cacheDir, key }) {
  * nettoyer d'autre. Une erreur de nettoyage ne masque jamais l'erreur d'origine et n'autorise jamais le succès. N'écrit
  * aucun autre fichier du cache. `fs` n'existe que pour les tests (injection de pannes).
  */
-export function commitPage(plan, { fs = {}, cacheDir } = {}) {
+export function commitPage(
+  plan,
+  { fs = {}, cacheDir, allowSiblingPages = false } = {}
+) {
   const link = fs.linkSync ?? linkSync;
   const lock = join(cacheDir ?? plan.cacheDir, 'collect.lock');
   if (existsSync(lock)) fail('un collecteur tient collect.lock sur ce cache');
   if (existsSync(plan.target))
     fail(`la page cible existe déjà : ${plan.target}`);
-  if (existsSync(plan.dir) && readdirSync(plan.dir).length)
+  // Un jeu multipage publie ses pages une à une : les pages sœurs (déjà validées par l'appelant) sont admises.
+  if (
+    !allowSiblingPages &&
+    existsSync(plan.dir) &&
+    readdirSync(plan.dir).length
+  )
     fail(`le dossier du jeu n'est pas vide : ${plan.dir}`);
   mkdirSync(plan.dir, { recursive: true });
   const rm = fs.rmSync ?? rmSync;
