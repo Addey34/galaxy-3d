@@ -698,7 +698,8 @@ export class PlanetarySurfaceEngine {
                   index,
                   tileset.matrix,
                   tileset.maxLevel,
-                  regional.source
+                  regional.source,
+                  regionalMax
                 ),
             }
           : {}),

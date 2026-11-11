@@ -72,6 +72,10 @@ export interface TileSelectionOptions {
    * Niveau le plus fin PAR CARREAU, quand il dépend du lieu (lot 53, pas 4 : une imagerie
    * régionale plus fine que la base, dans sa seule couverture, `core/regionalImagery.ts`).
    * Absent : `maxLevel` partout, comme avant.
+   *
+   * CONTRAT : fonction PURE de l'index pendant UN appel de `selectTiles` (même index, même
+   * réponse, sans effet de bord). La sélection la lit au plus une fois par carreau et garde la
+   * réponse le temps de l'appel ; elle ne la garde jamais d'un appel à l'autre.
    */
   maxLevelAt?: (index: TileIndex) => number;
 }
@@ -79,6 +83,13 @@ export interface TileSelectionOptions {
 interface Node {
   index: TileIndex;
   pixelsPerTexel: number;
+  /**
+   * Niveau le plus fin de CE carreau, calculé à la première lecture puis gardé. `maxLevelAt` est
+   * pur, mais il coûte (emprise du carreau, couverture régionale) et la boucle ci-dessous relit
+   * chaque nœud à chaque balayage : sans ce cache le coût de la sélection croissait comme le
+   * carré du nombre de carreaux, à chaque image (mesuré le 2026-11-11).
+   */
+  limit?: number;
 }
 
 const childrenOf = (index: TileIndex): TileIndex[] => {
@@ -104,7 +115,8 @@ export function selectTiles(
   options: TileSelectionOptions
 ): TileIndex[] {
   const { shape, maxLevel, firstDrawableLevel, maxTiles } = options;
-  const limit = options.maxLevelAt ?? ((): number => maxLevel);
+  const limitAt = options.maxLevelAt ?? ((): number => maxLevel);
+  const limit = (node: Node): number => (node.limit ??= limitAt(node.index));
   if (maxTiles <= 0 || firstDrawableLevel > maxLevel) return [];
   const root = tileMatrix(shape.referenceLevel ?? 0, shape);
   const visit = (index: TileIndex): Node | null =>
@@ -130,7 +142,7 @@ export function selectTiles(
     let best = -1;
     for (let i = 0; i < nodes.length; i += 1) {
       const node = nodes[i]!;
-      if (node.index.level >= limit(node.index)) continue;
+      if (node.index.level >= limit(node)) continue;
       // Un carreau non peignable se subdivise toujours ; un carreau peint, s'il est grossi.
       if (drawable(node) && node.pixelsPerTexel <= 1) continue;
       if (best < 0 || node.pixelsPerTexel > nodes[best]!.pixelsPerTexel)
