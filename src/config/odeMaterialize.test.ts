@@ -558,9 +558,10 @@ describe.each(['a', 'l'] as Kind[])('page valide, nature %s', (kind) => {
     };
     refused(
       () => commitPage(p, { cacheDir: fx.cache, fs: { linkSync: link } }),
-      /retirée après relecture/
+      /ÉTAT PARTIEL[^]*relecture différente[^]*laissée/
     );
-    expect(existsSync(p.target)).toBe(false);
+    // Contenu modifié SUR PLACE : ce n'est plus prouvé le nôtre, la page est laissée (jamais retirée à l'aveugle).
+    expect(existsSync(p.target)).toBe(true);
   });
 
   it('altération APRÈS le lien laissant un gzip VALIDE (libellé ou coordonnée) : l’égalité des octets la détecte, page retirée', () => {
@@ -574,7 +575,6 @@ describe.each(['a', 'l'] as Kind[])('page valide, nature %s', (kind) => {
     for (const mutate of mutations) {
       const fx = fixture({ kind });
       const p = fx.plan();
-      const before = snap(fx.cache);
       const link = (a: string, b: string) => {
         linkSync(a, b);
         const products = lines(b);
@@ -599,12 +599,10 @@ describe.each(['a', 'l'] as Kind[])('page valide, nature %s', (kind) => {
       expect(sha(altered)).not.toBe(p.pageSha256);
       refused(
         () => commitPage(p, { cacheDir: fx.cache, fs: { linkSync: link } }),
-        /retirée après relecture : relecture différente/
+        /ÉTAT PARTIEL[^]*relecture différente[^]*laissée/
       );
-      expect(existsSync(p.target)).toBe(false);
-      const after = snap(fx.cache);
-      expect(Object.keys(after)).toHaveLength(Object.keys(before).length);
-      for (const k of Object.keys(before)) expect(after[k]).toBe(before[k]);
+      expect(existsSync(p.target)).toBe(true);
+      expect(readdirSync(p.dir)).toEqual(['0.ndjson.gz']);
     }
   });
 
@@ -621,6 +619,151 @@ describe.each(['a', 'l'] as Kind[])('page valide, nature %s', (kind) => {
       /plusieurs noms/
     );
     expect(existsSync(p.target)).toBe(false);
+  });
+
+  describe('retour arrière après le lien : seule la page liée par CET appel est retirée', () => {
+    /** Fait échouer la relecture de la cible UNE fois, après `act` (autrui agit entre le lien et le retour arrière). */
+    const hooked = (target: string, act: () => void) => {
+      let first = true;
+      return {
+        readFileSync: (f: string) => {
+          if (first && f === target) {
+            first = false;
+            act();
+            return Buffer.from('relecture différente');
+          }
+          return readFileSync(f);
+        },
+      };
+    };
+    it('cible toujours identique (même inode, mêmes octets) : retour arrière autorisé, cause d’origine gardée', () => {
+      const fx = fixture({ kind });
+      const p = fx.plan();
+      refused(
+        () =>
+          commitPage(p, {
+            cacheDir: fx.cache,
+            fs: hooked(p.target, () => undefined),
+          }),
+        /^page retirée après relecture : relecture différente/
+      );
+      expect(existsSync(p.target)).toBe(false);
+      expect(readdirSync(p.dir)).toEqual([]);
+    });
+    it('cible remplacée par un AUTRE contenu : fichier d’autrui préservé, état partiel', () => {
+      const fx = fixture({ kind });
+      const p = fx.plan();
+      const keep = join(fx.cache, 'ancien-inode');
+      const fs = hooked(p.target, () => {
+        // Un lien garde l'ancien inode vivant : le test ne dépend jamais de sa réattribution.
+        linkSync(p.target, keep);
+        rmSync(p.target);
+        writeFileSync(p.target, 'contenu d’autrui');
+      });
+      refused(
+        () => commitPage(p, { cacheDir: fx.cache, fs }),
+        /ÉTAT PARTIEL, intervention manuelle : relecture différente[^]*laissée/
+      );
+      expect(readFileSync(p.target, 'utf8')).toBe('contenu d’autrui');
+      expect(readdirSync(p.dir)).toEqual(['0.ndjson.gz']);
+    });
+    it('DÉFAUT D’ORIGINE : un fichier d’autrui posé juste après le lien n’est jamais supprimé', () => {
+      const fx = fixture({ kind });
+      const p = fx.plan();
+      const keep = join(fx.cache, 'ancien-inode');
+      const link = (a: string, b: string) => {
+        linkSync(a, b);
+        linkSync(b, keep);
+        rmSync(b);
+        writeFileSync(b, 'contenu d’autrui');
+      };
+      expect(() =>
+        commitPage(p, { cacheDir: fx.cache, fs: { linkSync: link } })
+      ).toThrow(/ÉTAT PARTIEL|plusieurs noms|relecture/);
+      expect(existsSync(p.target)).toBe(true);
+      expect(readFileSync(p.target, 'utf8')).toBe('contenu d’autrui');
+    });
+    it('cible recréée avec les MÊMES octets mais un autre inode : préservée', () => {
+      const fx = fixture({ kind });
+      const p = fx.plan();
+      const keep = join(fx.cache, 'ancien-inode');
+      const fs = hooked(p.target, () => {
+        linkSync(p.target, keep);
+        rmSync(p.target);
+        writeFileSync(p.target, p.bytes);
+      });
+      refused(
+        () => commitPage(p, { cacheDir: fx.cache, fs }),
+        /ÉTAT PARTIEL[^]*laissée/
+      );
+      expect(readFileSync(p.target).equals(p.bytes)).toBe(true);
+      expect(statSync(p.target, { bigint: true }).ino).not.toBe(
+        statSync(keep, { bigint: true }).ino
+      );
+    });
+    it('même inode, contenu modifié sur place : préservée', () => {
+      const fx = fixture({ kind });
+      const p = fx.plan();
+      const fs = hooked(p.target, () =>
+        writeFileSync(p.target, 'modifié sur place')
+      );
+      refused(
+        () => commitPage(p, { cacheDir: fx.cache, fs }),
+        /ÉTAT PARTIEL[^]*laissée/
+      );
+      expect(readFileSync(p.target, 'utf8')).toBe('modifié sur place');
+    });
+    it('cible disparue : aucun autre fichier n’est retiré, la cause d’origine est rendue', () => {
+      const fx = fixture({ kind });
+      const p = fx.plan();
+      const sibling = join(p.dir, '9.ndjson.gz');
+      mkdirSync(p.dir, { recursive: true });
+      writeFileSync(sibling, 'page sœur');
+      const fs = hooked(p.target, () => rmSync(p.target));
+      refused(
+        () =>
+          commitPage(p, { cacheDir: fx.cache, fs, allowSiblingPages: true }),
+        /^page retirée après relecture : relecture différente/
+      );
+      expect(readFileSync(sibling, 'utf8')).toBe('page sœur');
+      expect(existsSync(p.target)).toBe(false);
+    });
+    it('retrait impossible de la cible (identique) : état partiel explicite avec le chemin', () => {
+      const fx = fixture({ kind });
+      const p = fx.plan();
+      const fs = {
+        ...hooked(p.target, () => undefined),
+        rmSync: (f: string, o?: { force?: boolean }) => {
+          if (f === p.target)
+            throw Object.assign(new Error('x'), { code: 'EBUSY' });
+          rmSync(f, o);
+        },
+      };
+      refused(
+        () => commitPage(p, { cacheDir: fx.cache, fs }),
+        /ÉTAT PARTIEL, intervention manuelle : relecture différente[^]*n'a pas pu être retirée \(EBUSY\)/
+      );
+      expect(existsSync(p.target)).toBe(true);
+    });
+    it('page sœur déjà présente : jamais réécrite ni retirée par un échec voisin', () => {
+      const fx = fixture({ kind });
+      const p = fx.plan();
+      const sibling = join(p.dir, '9.ndjson.gz');
+      mkdirSync(p.dir, { recursive: true });
+      writeFileSync(sibling, 'page sœur');
+      const before = statSync(sibling, { bigint: true });
+      refused(
+        () =>
+          commitPage(p, {
+            cacheDir: fx.cache,
+            allowSiblingPages: true,
+            fs: hooked(p.target, () => undefined),
+          }),
+        /page retirée après relecture/
+      );
+      expect(statSync(sibling, { bigint: true }).ino).toBe(before.ino);
+      expect(readFileSync(sibling, 'utf8')).toBe('page sœur');
+    });
   });
 
   it('page contenant l’exclu ou un identifiant hors manifeste : la validation refuse et retire la page liée', () => {
@@ -817,7 +960,7 @@ describe('finalisation après le lien (GAL-A003-10B)', () => {
     const e = catchError(() => commitPage(p, { cacheDir: fx.cache, fs }));
     expect(e).toBeInstanceOf(MaterializeError);
     expect(e?.message).toMatch(
-      /ÉTAT PARTIEL, intervention manuelle[^]*relecture différente[^]*n'a pas pu être retirée \(EPERM\)/
+      /ÉTAT PARTIEL, intervention manuelle[^]*relecture différente[^]*laissée/
     );
     expect(e?.message).toContain(p.target);
     // État sur disque : la page altérée est LAISSÉE (non retirable de façon sûre), aucun autre fichier du cache ne change.

@@ -246,6 +246,8 @@ export function commitPage(
   { fs = {}, cacheDir, allowSiblingPages = false } = {}
 ) {
   const link = fs.linkSync ?? linkSync;
+  const stat = fs.statSync ?? statSync;
+  const read = fs.readFileSync ?? readFileSync;
   const lock = join(cacheDir ?? plan.cacheDir, 'collect.lock');
   if (existsSync(lock)) fail('un collecteur tient collect.lock sur ce cache');
   if (existsSync(plan.target))
@@ -261,10 +263,13 @@ export function commitPage(
   const rm = fs.rmSync ?? rmSync;
   const tmp = `${plan.target}.${process.pid}.${randomBytes(4).toString('hex')}${TMP_SUFFIX}`;
   let failure = null;
+  let ino = null;
   try {
     writeFileAtomic(tmp, plan.bytes, { fs });
-    if (!readFileSync(tmp).equals(plan.bytes))
+    if (!read(tmp).equals(plan.bytes))
       fail('le temporaire relu diffère des octets planifiés');
+    // Identité du fichier qui sera lié : le retour arrière ne retirera que CELUI-LÀ.
+    ino = stat(tmp, { bigint: true }).ino;
     try {
       link(tmp, plan.target);
     } catch (error) {
@@ -301,7 +306,7 @@ export function commitPage(
       throw new MaterializeError(
         `${manual} : la page porterait plusieurs noms`
       );
-    back = readFileSync(plan.target);
+    back = read(plan.target);
     if (!back.equals(plan.bytes))
       throw new MaterializeError('relecture différente');
     if (sha(back) !== plan.pageSha256 || back.length !== plan.pageBytes)
@@ -311,19 +316,34 @@ export function commitPage(
       excludedIds: plan.excludedIds,
       allowedIds: plan.footprintIds,
     });
-    if (statSync(plan.target).nlink !== 1)
+    if (stat(plan.target).nlink !== 1)
       throw new MaterializeError(
         'la page a plusieurs noms après retrait du temporaire'
       );
   } catch (e) {
-    // La cible a été liée par NOUS : seule elle peut être retirée. Si elle ne l'est pas, l'état est partiel.
+    // La cible a été liée par NOUS : seule elle peut être retirée, et seulement si c'est encore ce fichier (même inode ET
+    // mêmes octets). Un fichier remplacé par autrui est LAISSÉ et l'état partiel annoncé ; une cible disparue ne
+    // déclenche aucun retrait. Garantie pratique, non une atomicité face à tout accès concurrent (comme `importCapture`).
+    let stuck = null;
     try {
-      rm(plan.target, { force: true });
+      let current = null;
+      try {
+        current = stat(plan.target, { bigint: true }).ino;
+      } catch (gone) {
+        if (gone?.code !== 'ENOENT') throw gone;
+      }
+      if (current !== null) {
+        if (current !== ino || !read(plan.target).equals(plan.bytes))
+          stuck = `la page ${plan.target} n'est plus celle que cet appel a liée : laissée`;
+        else rm(plan.target, { force: true });
+      }
     } catch (removal) {
-      throw new MaterializeError(
-        `ÉTAT PARTIEL, intervention manuelle : ${e.message} ; la page ${plan.target} n'a pas pu être retirée (${removal?.code ?? removal?.message})${leftovers.length ? ` ; ${manual}` : ''}`
-      );
+      stuck = `la page ${plan.target} n'a pas pu être retirée (${removal?.code ?? removal?.message})`;
     }
+    if (stuck)
+      throw new MaterializeError(
+        `ÉTAT PARTIEL, intervention manuelle : ${e.message} ; ${stuck}${leftovers.length ? ` ; ${manual}` : ''}`
+      );
     throw new MaterializeError(
       `page retirée après relecture : ${e.message}${leftovers.length && !String(e.message).includes('à retirer à la main') ? ` ; ${manual}` : ''}`
     );

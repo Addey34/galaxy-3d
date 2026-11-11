@@ -99,6 +99,12 @@ repli, relecture des octets, taille, SHA-256 et `nlink`. Une page déjà présen
 au manifeste ; une page divergente, un temporaire ou un fichier inattendu arrêtent tout, sans correction. Reprise après
 interruption : relancer la même commande, les pages valides sont laissées en place.
 
+Retour arrière de `commitPage` : si un contrôle échoue après le lien, la page n'est retirée que si elle est encore celle
+que cet appel a liée (même inode ET mêmes octets que le plan). Une page remplacée par autrui, recréée avec les mêmes
+octets sous un autre inode ou modifiée sur place est LAISSÉE et l'état partiel est annoncé (« ÉTAT PARTIEL, intervention
+manuelle »), la cause d'origine restant la première information ; une cible disparue n'entraîne le retrait d'aucun autre
+fichier. Garantie pratique, pas une atomicité face à tout accès concurrent (un inode libéré peut être réattribué).
+
 ## Limites
 
 Les enregistrements `_gl` à plusieurs parties dans un même enregistrement ne sont pas pris en charge (traces). Les
