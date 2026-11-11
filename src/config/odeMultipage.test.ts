@@ -1343,6 +1343,9 @@ describe(
                 readFileSync: (p: string) => {
                   if (first && p === f) {
                     first = false;
+                    // Un lien dur garde l'ancien inode vivant : sans lui, Linux réattribue aussitôt l'inode libéré au
+                    // nouveau fichier et les deux seraient indiscernables (limite connue, GAL-A003-11B).
+                    linkSync(f, `${f}.garde`);
                     rmSync(f);
                     writeFileSync(f, 'même contenu');
                     return Buffer.from('relecture différente');
@@ -1354,6 +1357,7 @@ describe(
           );
           expect(e.message).toMatch(/n'est plus notre fichier : laissé/);
           expect(readFileSync(f, 'utf8')).toBe('même contenu');
+          rmSync(`${f}.garde`);
         });
         it('même inode mais contenu modifié sur place : jamais supprimé', () => {
           const { f } = fresh();
