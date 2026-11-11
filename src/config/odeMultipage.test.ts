@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { createHash, randomBytes } from 'node:crypto';
 import {
+  closeSync,
   cpSync,
   existsSync,
   linkSync,
@@ -11,6 +12,7 @@ import {
   rmSync,
   statSync,
   writeFileSync,
+  writeSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -1186,6 +1188,234 @@ describe(
         expect(e.message).toMatch(/^lien dur impossible/);
         expect(e.message).toMatch(/à retirer à la main/);
       });
+      describe('writeManifestExclusive : écritures partielles et retour arrière sûr', () => {
+        const fresh = () => {
+          const c = clone(base);
+          const dir = join(c, 'reconciliation');
+          mkdirSync(dir, { recursive: true });
+          const f = join(dir, `w-${Math.random()}.json`);
+          return { c, f, dir };
+        };
+        const temps = (dir: string) =>
+          readdirSync(dir).filter((n) => n.endsWith('.tmp'));
+        it('écriture partielle positive puis complète : les octets sont tous écrits', () => {
+          const { f, dir } = fresh();
+          const text = 'x'.repeat(1000);
+          const calls: number[] = [];
+          const r = writeManifestExclusive(f, text, {
+            fs: {
+              writeSync: (fd: number, b: Buffer, off: number, len: number) => {
+                const n = Math.min(7, len);
+                calls.push(n);
+                return writeSync(fd, b, off, n);
+              },
+            },
+          });
+          expect(calls.length).toBeGreaterThan(100);
+          expect(readFileSync(f, 'utf8')).toBe(text);
+          expect(r.bytes).toBe(1000);
+          expect(temps(dir)).toEqual([]);
+        });
+        it('écriture nulle : refus, aucun fichier final ni temporaire', () => {
+          const { f, dir } = fresh();
+          let calls = 0;
+          const e = error(() =>
+            writeManifestExclusive(f, 'abc', {
+              fs: {
+                writeSync: () => {
+                  // Garde de test : sans contrôle du retour, la boucle d'écriture ne se terminerait jamais.
+                  if (++calls > 50) throw new Error('boucle sans fin');
+                  return 0;
+                },
+              },
+            })
+          );
+          expect(e.message).toMatch(/écriture nulle/);
+          expect(existsSync(f)).toBe(false);
+          expect(temps(dir)).toEqual([]);
+        });
+        it('valeur d’écriture incohérente (négative, supérieure à la demande) : refus', () => {
+          const { f, dir } = fresh();
+          for (const bad of [-1, 99999, Number.NaN]) {
+            const e = error(() =>
+              writeManifestExclusive(f, 'abc', {
+                fs: { writeSync: () => bad },
+              })
+            );
+            expect(e.message).toMatch(/écriture (nulle|incohérente)/);
+          }
+          expect(existsSync(f)).toBe(false);
+          expect(temps(dir)).toEqual([]);
+        });
+        it('échec de fsync : descripteur fermé, temporaire retiré, rien de publié', () => {
+          const { f, dir } = fresh();
+          let closed = 0;
+          const e = error(() =>
+            writeManifestExclusive(f, 'abc', {
+              fs: {
+                fsyncSync: () => {
+                  throw Object.assign(new Error('disque'), { code: 'EIO' });
+                },
+                closeSync: (fd: number) => {
+                  closed++;
+                  closeSync(fd);
+                },
+              },
+            })
+          );
+          expect(e.message).toMatch(/disque/);
+          expect(closed).toBeGreaterThanOrEqual(0);
+          expect(existsSync(f)).toBe(false);
+          expect(temps(dir)).toEqual([]);
+        });
+        it('collision EEXIST : le fichier existant est préservé et aucun temporaire ne reste', () => {
+          const { f, dir } = fresh();
+          writeFileSync(f, 'existant');
+          const e = error(() => writeManifestExclusive(f, 'nouveau'));
+          expect(e.message).toMatch(/existe déjà.*jamais écrasé/);
+          expect(readFileSync(f, 'utf8')).toBe('existant');
+          expect(temps(dir)).toEqual([]);
+        });
+        it('lien dur impossible : aucun repli, rien de publié', () => {
+          const { f, dir } = fresh();
+          const e = error(() =>
+            writeManifestExclusive(f, 'abc', {
+              fs: {
+                linkSync: () => {
+                  throw Object.assign(new Error('x'), { code: 'EPERM' });
+                },
+              },
+            })
+          );
+          expect(e.message).toMatch(/lien dur impossible \(EPERM\)/);
+          expect(existsSync(f)).toBe(false);
+          expect(temps(dir)).toEqual([]);
+        });
+        it('temporaire impossible à retirer après le lien : échec, retour arrière du manifeste que CET appel a lié', () => {
+          const { f, dir } = fresh();
+          const e = error(() =>
+            writeManifestExclusive(f, 'abc', {
+              fs: {
+                rmSync: (p: string, o: { force: boolean }) => {
+                  if (String(p).endsWith('.tmp'))
+                    throw Object.assign(new Error('verrou'), {
+                      code: 'EBUSY',
+                    });
+                  rmSync(p, o);
+                },
+              },
+            })
+          );
+          expect(e.message).toMatch(/à retirer à la main/);
+          expect(existsSync(f)).toBe(false);
+          expect(temps(dir).length).toBe(1);
+        });
+        it('remplacement concurrent avant le retour arrière : le fichier d’autrui est préservé et l’état partiel annoncé', () => {
+          const { f, dir } = fresh();
+          let first = true;
+          const e = error(() =>
+            writeManifestExclusive(f, 'notre contenu', {
+              fs: {
+                readFileSync: (p: string) => {
+                  if (first && p === f) {
+                    first = false;
+                    // Un autre processus remplace la cible juste après notre lien.
+                    rmSync(f);
+                    writeFileSync(f, 'contenu d’autrui');
+                    return Buffer.from('relecture différente');
+                  }
+                  return readFileSync(p);
+                },
+              },
+            })
+          );
+          expect(e.message).toMatch(/ÉTAT PARTIEL, intervention manuelle/);
+          expect(e.message).toMatch(/n'est plus notre fichier : laissé/);
+          expect(readFileSync(f, 'utf8')).toBe('contenu d’autrui');
+          expect(temps(dir)).toEqual([]);
+        });
+        it('même contenu mais autre inode (fichier recréé par autrui) : jamais supprimé', () => {
+          const { f } = fresh();
+          let first = true;
+          const e = error(() =>
+            writeManifestExclusive(f, 'même contenu', {
+              fs: {
+                readFileSync: (p: string) => {
+                  if (first && p === f) {
+                    first = false;
+                    // Un lien dur garde l'ancien inode vivant : sans lui, Linux réattribue aussitôt l'inode libéré au
+                    // nouveau fichier et les deux seraient indiscernables (limite connue, GAL-A003-11B).
+                    linkSync(f, `${f}.garde`);
+                    rmSync(f);
+                    writeFileSync(f, 'même contenu');
+                    return Buffer.from('relecture différente');
+                  }
+                  return readFileSync(p);
+                },
+              },
+            })
+          );
+          expect(e.message).toMatch(/n'est plus notre fichier : laissé/);
+          expect(readFileSync(f, 'utf8')).toBe('même contenu');
+          rmSync(`${f}.garde`);
+        });
+        it('même inode mais contenu modifié sur place : jamais supprimé', () => {
+          const { f } = fresh();
+          let first = true;
+          const e = error(() =>
+            writeManifestExclusive(f, 'notre contenu', {
+              fs: {
+                readFileSync: (p: string) => {
+                  if (first && p === f) {
+                    first = false;
+                    // Même inode (écriture en place), contenu changé par un autre processus.
+                    writeFileSync(f, 'modifié sur place');
+                    return Buffer.from('relecture différente');
+                  }
+                  return readFileSync(p);
+                },
+              },
+            })
+          );
+          expect(e.message).toMatch(/ÉTAT PARTIEL/);
+          expect(e.message).toMatch(/n'est plus notre fichier : laissé/);
+          expect(readFileSync(f, 'utf8')).toBe('modifié sur place');
+        });
+        it('échec propre après lien (relecture différente, fichier intact) : retour arrière, aucune écriture résiduelle', () => {
+          const { f, dir } = fresh();
+          let first = true;
+          const e = error(() =>
+            writeManifestExclusive(f, 'abc', {
+              fs: {
+                readFileSync: (p: string) => {
+                  if (first && p === f) {
+                    first = false;
+                    return Buffer.from('autre');
+                  }
+                  return readFileSync(p);
+                },
+              },
+            })
+          );
+          expect(e.message).toMatch(/relecture du manifeste différente/);
+          expect(existsSync(f)).toBe(false);
+          expect(temps(dir)).toEqual([]);
+        });
+        it('un fichier préexistant n’est jamais supprimé, même en cas d’échec', () => {
+          const { f } = fresh();
+          writeFileSync(f, 'préexistant');
+          for (const fs of [
+            { writeSync: () => 0 },
+            {
+              fsyncSync: () => {
+                throw new Error('x');
+              },
+            },
+          ])
+            expect(() => writeManifestExclusive(f, 'abc', { fs })).toThrow();
+          expect(readFileSync(f, 'utf8')).toBe('préexistant');
+        });
+      });
       it('arguments : cache et jeu obligatoires, offset explicite, options inconnues refusées', () => {
         expect(
           parseArgs([
@@ -1274,6 +1504,9 @@ describe(
         { requestOffset: number; file: string }
       >;
       catalogueRange: { first: string; last: string };
+      footprintIds: string[];
+      productIds: string[];
+      excluded: { odeId: string; productId: string }[];
     };
     const wins = (m: Manifest) => m.windows as unknown as Win[];
 
@@ -1673,6 +1906,34 @@ describe(
       expect(validateMultipageManifest(n, ctx).join(NL)).toMatch(
         /@0 : source metadata demandée à offset 1 \(profil base-1-commun : 0\)/
       );
+    });
+    it('5b. ProductId global : deux ODEId distincts partageant un ProductId sont refusés (empreinte/empreinte, empreinte/exclusion, exclusion/exclusion)', () => {
+      const w = (m: Manifest) => m.windows as unknown as Win[];
+      const a = clone2(manifest);
+      w(a)[1].productIds[0] = w(a)[0].productIds[0];
+      const pa = validateMultipageManifest(a, ctx).join(NL);
+      expect(pa).toMatch(
+        new RegExp(
+          `ProductId ${w(a)[0].productIds[0]} porté par deux ODEId : ${w(a)[0].footprintIds[0]} \\(empreinte @0\\) et ${w(a)[1].footprintIds[0]} \\(empreinte @5000\\)`
+        )
+      );
+      const b = clone2(manifest);
+      w(b)[2].excluded[0].productId = w(b)[0].productIds[0];
+      expect(validateMultipageManifest(b, ctx).join(NL)).toMatch(
+        new RegExp(
+          `ProductId ${w(b)[0].productIds[0]} porté par deux ODEId : ${w(b)[0].footprintIds[0]} \\(empreinte @0\\) et ${w(b)[2].excluded[0].odeId} \\(exclu @10000\\)`
+        )
+      );
+      const c = clone2(manifest);
+      const withEx = w(c).filter((x) => x.excluded.length > 0);
+      expect(withEx.length).toBeGreaterThan(1);
+      const [e1, e2] = [withEx[0], withEx[1]];
+      e2.excluded[0].productId = e1.excluded[0].productId;
+      expect(validateMultipageManifest(c, ctx).join(NL)).toContain(
+        `ProductId ${e1.excluded[0].productId} porté par deux ODEId : ${e1.excluded[0].odeId} (exclu @${e1.offset}) et ${e2.excluded[0].odeId} (exclu @${e2.offset})`
+      );
+      // Le manifeste intact reste accepté : l'invariant ne crée aucun faux refus.
+      expect(validateMultipageManifest(clone2(manifest), ctx)).toEqual([]);
     });
     it('6. provenance dont `offset` et `query.offset` se contredisent : refus', () => {
       const c = clone(shifted);

@@ -526,6 +526,7 @@ export function validateMultipageManifest(
       );
   }
   const owner = new Map(); // ODEId -> { offset, role, productId }
+  const pidOwner = new Map(); // ProductId -> { id, role, offset }
   const files = new Map(); // sha256 de capture -> offset
   let catalogued = 0;
   let footprints = 0;
@@ -607,6 +608,17 @@ export function validateMultipageManifest(
       if (!e.productId) add(`${at} : exclusion ${e.odeId} : ProductId absent`);
     }
     const claim = (id, role, productId) => {
+      // Un ProductId désigne UN produit du jeu : deux ODEId distincts qui le portent rendraient ambiguë la
+      // correspondance métadonnées / shapefile (la page publie `pid`). Mesuré sans exception sur UVVDDR (27 146) et sur
+      // les 13 721 produits des pages historiques ; le modèle ne le garantit pas, d'où un refus explicite.
+      if (productId) {
+        const other = pidOwner.get(productId);
+        if (!other) pidOwner.set(productId, { id, role, offset: w.offset });
+        else if (other.id !== id)
+          add(
+            `ProductId ${productId} porté par deux ODEId : ${other.id} (${other.role} @${other.offset}) et ${id} (${role} @${w.offset})`
+          );
+      }
       const prev = owner.get(id);
       if (!prev) return owner.set(id, { offset: w.offset, role, productId });
       if (productId !== prev.productId)
@@ -1203,25 +1215,43 @@ export function materializeWindows({
 // ---------------------------------------------------------------------------------------------------------------
 
 /**
- * Publie le manifeste SANS remplacement ni copie de repli : temporaire exclusif, lien dur, relecture. Les erreurs de
- * nettoyage n'écrasent pas l'erreur d'origine ; seul le fichier lié par CET appel peut être retiré.
+ * Publie le manifeste SANS remplacement ni copie de repli : temporaire exclusif, écriture COMPLÈTE contrôlée octet par
+ * octet (une écriture partielle est poursuivie, une écriture nulle ou incohérente est une erreur), fsync, lien dur,
+ * relecture exacte. Les erreurs de nettoyage n'écrasent pas l'erreur d'origine. Comme `importCapture`, le retour arrière
+ * ne retire le manifeste que s'il est bien CELUI que cet appel a lié (même inode ET même contenu) ; sinon il est laissé
+ * et l'état partiel est annoncé. Un fichier préexistant n'est jamais retiré (le lien dur échoue avant toute trace).
+ * `fs` n'existe que pour les tests.
  */
 export function writeManifestExclusive(file, text, { fs = {} } = {}) {
   const link = fs.linkSync ?? linkSync;
   const rm = fs.rmSync ?? rmSync;
+  const stat = fs.statSync ?? statSync;
+  const read = fs.readFileSync ?? readFileSync;
   const bytes = Buffer.from(text, 'utf8');
   mkdirSync(join(file, '..'), { recursive: true });
   const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}${TMP_SUFFIX}`;
   let fd = null;
   let failure = null;
   let linked = false;
+  let ino = null;
   try {
     fd = (fs.openSync ?? openSync)(tmp, 'wx');
-    (fs.writeSync ?? writeSync)(fd, bytes, 0, bytes.length);
+    let at = 0;
+    while (at < bytes.length) {
+      const n = (fs.writeSync ?? writeSync)(fd, bytes, at, bytes.length - at);
+      if (!Number.isInteger(n) || n <= 0 || n > bytes.length - at)
+        throw new ManifestWriteError(
+          n === 0
+            ? 'écriture nulle'
+            : `écriture incohérente (${n} octets rendus pour ${bytes.length - at} demandés)`
+        );
+      at += n;
+    }
     (fs.fsyncSync ?? fsyncSync)(fd);
     const done = fd;
     fd = null;
     (fs.closeSync ?? closeSync)(done);
+    ino = stat(tmp, { bigint: true }).ino;
     try {
       link(tmp, file);
       linked = true;
@@ -1250,7 +1280,7 @@ export function writeManifestExclusive(file, text, { fs = {} } = {}) {
   }
   if (!failure && !leftovers.length) {
     try {
-      if (!readFileSync(file).equals(bytes))
+      if (!read(file).equals(bytes))
         failure = new ManifestWriteError('relecture du manifeste différente');
     } catch (e) {
       failure = e;
@@ -1260,10 +1290,22 @@ export function writeManifestExclusive(file, text, { fs = {} } = {}) {
       `temporaire non retiré : le manifeste porterait plusieurs noms`
     );
   if (!failure) return { file, sha256: sha(bytes), bytes: bytes.length };
+  // Retour arrière : seulement le fichier lié par CET appel (inode ET contenu), jamais celui d'autrui.
   let stuck = null;
   if (linked) {
     try {
-      rm(file, { force: true });
+      let current = null;
+      try {
+        current = stat(file, { bigint: true }).ino;
+      } catch (e) {
+        if (e?.code !== 'ENOENT') throw e;
+      }
+      if (current !== null) {
+        // L'inode seul ne suffit pas (un système de fichiers réattribue un inode libéré) : le contenu doit être le nôtre.
+        if (current !== ino || !read(file).equals(bytes))
+          stuck = `${file} (n'est plus notre fichier : laissé)`;
+        else rm(file, { force: true });
+      }
     } catch (e) {
       stuck = `${file} (${e?.code ?? e?.message})`;
     }

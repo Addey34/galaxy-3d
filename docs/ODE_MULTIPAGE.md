@@ -62,9 +62,19 @@ Le manifeste est déterministe, à l'exception de `builtAt` et des dates de lect
 ## Validation du jeu entier
 
 Avant toute publication : toutes les fenêtres attendues (ni manquante, ni répétée, ni surnuméraire), aucun ODEId dans
-deux fenêtres, aucun ProductId contradictoire, aucun produit exclu ici et géolocalisé là, catalogué = empreintes +
+deux fenêtres, aucun ProductId contradictoire, aucun ProductId porté par deux ODEId distincts (empreintes comme
+exclusions, avec les deux ODEId et leurs fenêtres dans l'erreur), aucun produit exclu ici et géolocalisé là, catalogué = empreintes +
 exclusions démontrées pour chaque fenêtre et pour le jeu, sources de toutes les fenêtres revérifiées (SHA-256, taille,
 somme annexe, jeu, offset, limite, gel, requête). Les captures sont lues une fenêtre à la fois.
+
+Unicité du ProductId : elle est mesurée (27 146 produits d'UVVDDR, 13 721 produits des pages historiques, aucune
+répétition) mais le modèle ODE ne la garantit pas ; le manifeste multipage la refuse donc explicitement, car la page
+publie `pid` et une répétition rendrait ambiguë la correspondance métadonnées / shapefile. Un futur jeu qui la violerait
+légitimement s'arrêterait sur cette erreur : c'est alors une décision à prendre, jamais un contournement silencieux.
+
+Écriture du manifeste : temporaire exclusif, écriture contrôlée octet par octet (écriture partielle poursuivie, nulle ou
+incohérente refusée), fsync, lien dur, relecture exacte. Le retour arrière ne retire le manifeste que s'il est celui que
+l'appel a lié (même inode et même contenu) ; sinon il est laissé et l'état partiel annoncé.
 
 Requalification : à chaque chargement du manifeste pour publier, les affirmations de chaque fenêtre sont recalculées
 depuis les captures brutes (même code que la qualification, une fenêtre à la fois) et le manifeste doit être identique
