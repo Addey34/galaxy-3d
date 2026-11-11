@@ -32,6 +32,8 @@ export interface CommitFs {
   linkSync?: (existing: string, target: string) => void;
   rmSync?: (path: string, options?: { force?: boolean }) => void;
   writeSync?: (...args: unknown[]) => number;
+  statSync?: (path: string, options?: { bigint?: boolean }) => unknown;
+  readFileSync?: (path: string) => Buffer;
   [name: string]: unknown;
 }
 
