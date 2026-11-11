@@ -110,8 +110,11 @@ function integrityProblems(label, source) {
     problems.push(`${label} : somme annexe absente`);
   else if (source.sidecarSha256 !== sum)
     problems.push(`${label} : somme .sha256 différente du contenu`);
-  if (p.http !== undefined && p.http?.status !== 200)
-    problems.push(`${label} : statut HTTP ${p.http?.status} (200 attendu)`);
+  // Captures multipages : format moderne, la preuve explicite `http.status === 200` est OBLIGATOIRE (absence = refus).
+  if (p.http?.status !== 200)
+    problems.push(
+      `${label} : statut HTTP ${p.http?.status} (200 attendu, preuve explicite exigée)`
+    );
   return problems;
 }
 
@@ -604,13 +607,19 @@ function readCapture(cacheDir, file, readFile = readFileSync) {
 
 /** DatasetId autorisés pour un jeu, tels que `iipt.json` les déclare (toutes les écritures présentes). */
 export function allowedDatasetIdsFromIipt(iipt, key) {
-  const [, ihid, iid, pt] = key.split('|');
+  const [db, ihid, iid, pt] = key.split('|');
   let sets = iipt?.ODEResults?.IIPTSets?.IIPTSet ?? [];
   if (!Array.isArray(sets)) sets = [sets];
   return [
     ...new Set(
       sets
-        .filter((s) => s.IHID === ihid && s.IID === iid && s.PT === pt)
+        .filter(
+          (s) =>
+            String(s.ODEMetaDB ?? '').toLowerCase() === db.toLowerCase() &&
+            s.IHID === ihid &&
+            s.IID === iid &&
+            s.PT === pt
+        )
         .map((s) => s.DataSetId)
     ),
   ].sort();
@@ -772,6 +781,27 @@ const fail = (m) => {
   throw new MaterializeError(m);
 };
 
+/** Différences entre le manifeste lu et son recalcul depuis les captures : niveau jeu, puis fenêtre par fenêtre. */
+export function requalificationDiffs(manifest, recomputed) {
+  const diffs = [];
+  const { windows: mw, ...mTop } = manifest;
+  const { windows: rw, ...rTop } = recomputed;
+  for (const k of new Set([...Object.keys(mTop), ...Object.keys(rTop)]))
+    if (k !== 'note' && JSON.stringify(mTop[k]) !== JSON.stringify(rTop[k]))
+      diffs.push(`champ ${k}`);
+  for (const w of mw ?? []) {
+    const r = rw.find((x) => x.offset === w.offset);
+    if (!r) {
+      diffs.push(`@${w.offset} absente du recalcul`);
+      continue;
+    }
+    for (const k of new Set([...Object.keys(w), ...Object.keys(r)]))
+      if (JSON.stringify(w[k]) !== JSON.stringify(r[k]))
+        diffs.push(`@${w.offset} ${k}`);
+  }
+  return diffs;
+}
+
 /**
  * Charge le manifeste d'un jeu et le valide GLOBALEMENT : structure, fenêtres, identifiants distincts, comptes, puis
  * les sources de TOUTES les fenêtres (une à la fois). Rien n'est publiable sans ce contexte. N'écrit rien.
@@ -814,6 +844,27 @@ export function loadQualifiedDataset({
     problems.push(...verifyWindowSources(manifest, w.offset, dir, readFile));
   if (problems.length)
     fail(`manifeste refusé : ${new MultipageError(problems).message}`);
+  // REQUALIFICATION : les affirmations du manifeste (identifiants, ProductId, exclusions, preuves, DatasetId, cible,
+  // variantes, page prévue) sont recalculées depuis les captures brutes, une fenêtre à la fois, par le même code que la
+  // qualification. Le manifeste doit être IDENTIQUE à ce recalcul : aucun champ déclaratif n'est cru sur parole.
+  let again;
+  try {
+    again = qualifyDataset({
+      cacheDir: dir,
+      key,
+      now: new Date(manifest.builtAt),
+      readFile,
+    });
+  } catch (e) {
+    fail(
+      `manifeste refusé : requalification impossible depuis les captures : ${e.message}`
+    );
+  }
+  const diffs = requalificationDiffs(manifest, again);
+  if (diffs.length)
+    fail(
+      `manifeste refusé : requalification : le manifeste diverge des captures (${diffs.join(' ; ')})`
+    );
   return { cacheDir: dir, key, manifest, file };
 }
 

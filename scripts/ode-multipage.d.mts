@@ -113,6 +113,10 @@ export function verifyWindowSources(
   offset: number,
   cacheDir: string
 ): string[];
+export function requalificationDiffs(
+  manifest: MultipageManifest,
+  recomputed: MultipageManifest
+): string[];
 export function loadQualifiedDataset(options: {
   cacheDir: string;
   key: string;

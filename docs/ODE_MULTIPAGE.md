@@ -32,6 +32,15 @@ deux fenêtres, aucun ProductId contradictoire, aucun produit exclu ici et géol
 exclusions démontrées pour chaque fenêtre et pour le jeu, sources de toutes les fenêtres revérifiées (SHA-256, taille,
 somme annexe, jeu, offset, limite, gel, requête). Les captures sont lues une fenêtre à la fois.
 
+Requalification : à chaque chargement du manifeste pour publier, les affirmations de chaque fenêtre sont recalculées
+depuis les captures brutes (même code que la qualification, une fenêtre à la fois) et le manifeste doit être identique
+au recalcul. Aucun champ déclaratif (`status`, `metadataGeometry`, `inShapefiles`, comptes, identifiants) n'est cru sur
+parole, et rien n'est écrit avant que toutes les fenêtres aient été requalifiées.
+
+Preuves de source : le statut HTTP 200 doit figurer explicitement dans la provenance des deux captures (son absence est
+un refus). Les DatasetId autorisés se lisent dans `iipt.json` avec l'égalité sur la base ODE (`ODEMetaDB`), l'instrument
+(IHID, IID) et le type de produit (PT).
+
 ## Processus
 
 ```bash

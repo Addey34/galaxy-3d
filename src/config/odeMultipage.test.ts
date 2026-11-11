@@ -19,6 +19,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MaterializeError } from '../../scripts/ode-materialize.mjs';
 import {
   MultipageError,
+  allowedDatasetIdsFromIipt,
   buildPageBytes,
   loadQualifiedDataset,
   materializeWindows,
@@ -319,6 +320,7 @@ function makeCache(
       ODEResults: {
         IIPTSets: {
           IIPTSet: [cfg.ds, DS_DASH].map((DataSetId) => ({
+            ODEMetaDB: 'Mercury',
             IHID: cfg.ihid,
             IID: cfg.iid,
             PT: cfg.pt,
@@ -1059,7 +1061,7 @@ describe(
               offsets: [10000],
               write: true,
             }),
-          /page reconstruite .* différente de celle prévue au manifeste/
+          /requalification.*@10000 page/
         );
         m.status = 'brouillon';
         writeFileSync(file, JSON.stringify(m));
@@ -1210,3 +1212,218 @@ describe(
 function require_gunzip(b: Buffer): string {
   return gunzipSync(b).toString('utf8');
 }
+
+describe(
+  '11B-R1 : requalification, statut HTTP, base ODE',
+  { timeout: 300_000 },
+  () => {
+    let base: string;
+    let withManifest: string;
+    beforeAll(() => {
+      base = makeCache(CFG);
+      withManifest = clone(base);
+      writeManifest(withManifest);
+    });
+    const edited = (fn: (m: Manifest) => void) => {
+      const c = clone(withManifest);
+      const f = multipageManifestPath(c, CFG.key);
+      const m = JSON.parse(readFileSync(f, 'utf8'));
+      fn(m);
+      writeFileSync(f, JSON.stringify(m));
+      return c;
+    };
+    const noPage = (c: string) => expect(pagesOf(c)).toEqual([]);
+
+    describe('A. le manifeste est requalifié à partir des captures', () => {
+      it('exclusion : un ODEId inexistant, comptes et preuves conservés, est refusé avant toute écriture', () => {
+        const c = edited((m) => {
+          m.windows[1].excluded[0].odeId = '99999999';
+        });
+        refusedMat(
+          () =>
+            materializeWindows({
+              cacheDir: c,
+              key: CFG.key,
+              offsets: 'all',
+              write: true,
+            }),
+          /requalification.*@5000/
+        );
+        noPage(c);
+      });
+      it.each([
+        [
+          'ProductId d’une empreinte',
+          (m: Manifest) => {
+            m.windows[2].productIds[0] = 'altere';
+          },
+        ],
+        [
+          'ProductId d’une exclusion',
+          (m: Manifest) => {
+            m.windows[1].excluded[0].productId = 'altere';
+          },
+        ],
+        [
+          'identifiant d’empreinte inexistant',
+          (m: Manifest) => {
+            m.windows[3].footprintIds[0] = '88888888';
+          },
+        ],
+        [
+          'identifiants autorisés',
+          (m: Manifest) => {
+            m.allowedDatasetIds.push('AUTRE-JEU');
+          },
+        ],
+        [
+          'DatasetId observés',
+          (m: Manifest) => {
+            m.windows[0].datasetIds = ['AUTRE-JEU'];
+          },
+        ],
+        [
+          'cible observée',
+          (m: Manifest) => {
+            m.windows[0].target.check = 'verifie';
+            m.windows[0].target.observed = ['VENUS'];
+          },
+        ],
+        [
+          'preuve déclarative de l’exclusion',
+          (m: Manifest) => {
+            m.windows[1].excluded[0].inShapefiles = {
+              ga: false,
+              c0a: false,
+              c180a: false,
+              x: false,
+            };
+          },
+        ],
+        [
+          'variantes observées',
+          (m: Manifest) => {
+            m.windows[4].geometry.variants.ga.records += 1;
+            m.windows[4].geometry.shapes += 1;
+          },
+        ],
+      ])('altération du manifeste (%s) : refusée', (_n, mutate) => {
+        const c = edited(mutate);
+        const e = error(() =>
+          loadQualifiedDataset({ cacheDir: c, key: CFG.key })
+        );
+        expect(e).toBeInstanceOf(MaterializeError);
+        expect(e.message).toMatch(/refusé/);
+        noPage(c);
+      });
+      it('le manifeste intact reste accepté', () => {
+        const c = clone(withManifest);
+        expect(
+          loadQualifiedDataset({ cacheDir: c, key: CFG.key }).manifest.status
+        ).toBe('qualifie');
+      });
+    });
+
+    describe('B. statut HTTP explicite obligatoire', () => {
+      const run = (extra: object, which: 'cov' | 'meta') => {
+        const c = clone(base);
+        writeWindow(
+          c,
+          CFG,
+          10000,
+          products(CFG, 10000),
+          which === 'cov' ? { covExtra: extra } : { metaExtra: extra }
+        );
+        return () => manifestOf(c);
+      };
+      it.each(['cov', 'meta'] as const)('200 accepté (%s)', (w) => {
+        expect(run({ http: { status: 200 } }, w)()).toMatchObject({
+          status: 'qualifie',
+        });
+      });
+      it.each(['cov', 'meta'] as const)(
+        '206, 403, http absent, status absent : refusés (%s)',
+        (w) => {
+          refusedMp(run({ http: { status: 206 } }, w), /statut HTTP 206/);
+          refusedMp(run({ http: { status: 403 } }, w), /statut HTTP 403/);
+          refusedMp(run({ http: undefined }, w), /statut HTTP undefined/);
+          refusedMp(run({ http: {} }, w), /statut HTTP undefined/);
+        }
+      );
+      it('la vérification des sources à la publication exige aussi le statut', () => {
+        const c = clone(withManifest);
+        const f = join(c, 'diagnostics', 'cov-0.raw.json');
+        const p = JSON.parse(readFileSync(f, 'utf8'));
+        delete p.http;
+        writeFileSync(f, JSON.stringify(p));
+        refusedMat(
+          () => loadQualifiedDataset({ cacheDir: c, key: CFG.key }),
+          /statut HTTP undefined/
+        );
+      });
+    });
+
+    describe('C. DatasetId et base ODE', () => {
+      it('une entrée d’un autre corps aux mêmes IHID, IID et PT n’est pas acceptée', () => {
+        const c = clone(base);
+        const f = join(c, 'iipt.json');
+        const iipt = JSON.parse(readFileSync(f, 'utf8'));
+        iipt.ODEResults.IIPTSets.IIPTSet.push({
+          ODEMetaDB: 'Mars',
+          IHID: CFG.ihid,
+          IID: CFG.iid,
+          PT: CFG.pt,
+          DataSetId: 'MARS-ETRANGER',
+        });
+        writeFileSync(f, JSON.stringify(iipt));
+        expect(manifestOf(c).allowedDatasetIds).toEqual(
+          [CFG.ds, DS_DASH].sort()
+        );
+        writeWindow(
+          c,
+          CFG,
+          0,
+          products(CFG, 0).map((p, k) =>
+            k === 1 ? { ...p, ds: 'MARS-ETRANGER' } : p
+          )
+        );
+        refusedMp(
+          () => manifestOf(c),
+          /DatasetId "MARS-ETRANGER" non autorisé/
+        );
+      });
+      it('une entrée sans ODEMetaDB n’autorise rien ; les écritures de Mercure restent toutes admises', () => {
+        const wrap = (l: object[]) => ({
+          ODEResults: { IIPTSets: { IIPTSet: l } },
+        });
+        expect(
+          allowedDatasetIdsFromIipt(
+            wrap([{ IHID: 'M', IID: 'I', PT: 'P', DataSetId: 'X' }]),
+            'Mercury|M|I|P'
+          )
+        ).toEqual([]);
+        expect(
+          allowedDatasetIdsFromIipt(
+            wrap([
+              {
+                ODEMetaDB: 'Mercury',
+                IHID: 'M',
+                IID: 'I',
+                PT: 'P',
+                DataSetId: 'a/b',
+              },
+              {
+                ODEMetaDB: 'Mercury',
+                IHID: 'M',
+                IID: 'I',
+                PT: 'P',
+                DataSetId: 'a-b',
+              },
+            ]),
+            'Mercury|M|I|P'
+          )
+        ).toEqual(['a-b', 'a/b']);
+      });
+    });
+  }
+);
