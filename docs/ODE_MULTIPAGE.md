@@ -105,6 +105,20 @@ octets sous un autre inode ou modifiée sur place est LAISSÉE et l'état partie
 manuelle »), la cause d'origine restant la première information ; une cible disparue n'entraîne le retrait d'aucun autre
 fichier. Garantie pratique, pas une atomicité face à tout accès concurrent (un inode libéré peut être réattribué).
 
+## Lecture par le croisement des observations
+
+`scripts/ode-dataset-proof.mjs` (`loadDatasetProof`) est le lecteur commun que le générateur d'observations utilise à la
+place de `loadReconciliation` : manifeste historique (une page) = son chemin de validation inchangé ; manifeste multipage
+v3 = `loadQualifiedDataset` (validation, sources de toutes les fenêtres, requalification), jamais converti en manifeste
+historique ; aucun manifeste = comportement historique ; un v3 invalide, ou deux manifestes pour un même jeu = refus.
+`scanDataset` vérifie alors en plus le SHA-256 et la taille de chaque page, que chaque identifiant appartient à SA fenêtre
+et qu'aucun n'est dupliqué. L'index ne reçoit qu'un résumé compact (`compactProof`) : les exclusions détaillées restent
+dans le cache scientifique.
+
+Cette compatibilité permet de LIRE et valider un jeu multipage, pas de l'ajouter à l'index : un cache auquel il manque
+des jeux du corps reste refusé par `verifyBodyResult` (pages manquantes, baisse de plus de 1 % des produits livrés), et
+rien ne contourne ces protections.
+
 ## Limites
 
 Les enregistrements `_gl` à plusieurs parties dans un même enregistrement ne sont pas pris en charge (traces). Les

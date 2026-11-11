@@ -71,6 +71,10 @@ export function scanDataset(
   reconciliation?: {
     excludedIds: ReadonlySet<string>;
     footprintIds?: ReadonlySet<string>;
+    /** Preuves d'un manifeste multipage v3 (absentes du format historique). */
+    pages?: ReadonlyMap<number, { sha256: string; bytes: number }>;
+    windowIds?: ReadonlyMap<number, ReadonlySet<string>>;
+    strict?: boolean;
   } | null
 ): DatasetReport;
 
