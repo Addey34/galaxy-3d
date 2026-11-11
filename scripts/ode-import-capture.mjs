@@ -179,7 +179,7 @@ function writeTemp(tmp, data, fs, leftovers) {
  *   - ordre de publication : provenance, somme, puis le contenu principal ;
  *   - une erreur de NETTOYAGE ne masque jamais l'erreur d'origine : elle est ajoutée au message ;
  *   - un lien réussi suivi d'un temporaire impossible à retirer est un ÉCHEC (le fichier porterait deux noms) ;
- *   - le retour arrière ne retire un fichier que s'il est bien celui que CET appel a lié (même inode) ; sinon il est
+ *   - le retour arrière ne retire un fichier que s'il est bien celui que CET appel a lié (même inode ET même contenu) ; sinon il est
  *     laissé et signalé ;
  *   - un retour arrière impossible est annoncé « ÉTAT PARTIEL, intervention manuelle », avec les chemins.
  */
@@ -211,7 +211,7 @@ export function importCapture({ cacheDir, mainFile, write = false, fs = {} }) {
       alreadyPresent: present,
     };
   mkdirSync(dir, { recursive: true });
-  const created = []; // { dest, ino, size } : ce que CET appel a lié
+  const created = []; // { dest, ino, data } : ce que CET appel a lié
   const leftovers = [];
   let failure = null;
   for (const f of todo) {
@@ -228,7 +228,7 @@ export function importCapture({ cacheDir, mainFile, write = false, fs = {} }) {
           `publication par lien dur impossible (${error?.code ?? error?.message}) : aucun repli par copie`
         );
       }
-      created.push({ dest: f.dest, ino, size: f.data.length });
+      created.push({ dest: f.dest, ino, data: f.data });
     } catch (e) {
       failure = e;
     }
@@ -271,7 +271,8 @@ export function importCapture({ cacheDir, mainFile, write = false, fs = {} }) {
         if (e?.code === 'ENOENT') continue;
         throw e;
       }
-      if (ino !== c.ino) {
+      // L'inode seul ne suffit pas (un système de fichiers réattribue un inode libéré) : le contenu doit aussi être le nôtre.
+      if (ino !== c.ino || !read(c.dest).equals(c.data)) {
         stuck.push(`${c.dest} (n'est plus notre fichier : laissé)`);
         continue;
       }
