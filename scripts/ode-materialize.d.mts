@@ -43,9 +43,22 @@ export function planReconciledPage(options: {
   cacheDir: string;
   key: string;
 }): MaterializePlan;
+/** Ce que `commitPage` lit d'un plan : celui d'un jeu d'une page ou celui d'une fenêtre multipage. */
+export type CommitPlan = Pick<
+  MaterializePlan,
+  | 'cacheDir'
+  | 'count'
+  | 'excludedIds'
+  | 'footprintIds'
+  | 'bytes'
+  | 'pageSha256'
+  | 'pageBytes'
+  | 'dir'
+  | 'target'
+>;
 export function commitPage(
-  plan: MaterializePlan,
-  options?: { fs?: CommitFs; cacheDir?: string }
+  plan: CommitPlan,
+  options?: { fs?: CommitFs; cacheDir?: string; allowSiblingPages?: boolean }
 ): { target: string; sha256: string; bytes: number };
 export function parseArgs(argv: string[]): {
   cacheDir: string;
