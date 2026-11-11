@@ -58,28 +58,37 @@ import { FREEZE, PAGE } from './ode-selection.mjs';
 
 export const MULTIPAGE_KIND = 'reconciliation-multipage';
 /**
- * Version 2 (GAL-A003-11C-04). La version 1 supposait EN SILENCE le même offset pour `coveragetargz` et pour
- * `results=m`. Mesuré sur UVVDDR, ce n'est pas vrai (les métadonnées sont comptées à partir de 1 : voir
- * `PAGINATION_PROFILES`). La version 2 déclare la pagination au manifeste et consigne l'offset RÉEL de chaque requête ;
- * aucun manifeste v1 n'a jamais été écrit dans le cache réel, et un v1 est refusé (« version 1 (attendu 2) ») au lieu
- * d'être lu avec l'ancienne hypothèse.
+ * Version 3 (GAL-A003-11C-09). La version 1 supposait EN SILENCE le même offset pour `coveragetargz` et `results=m` ; la
+ * version 2 déclarait la pagination mais décrivait UVVDDR avec une coverage à base 0 (profil `metadonnees-base-1`),
+ * ce que la mesure a réfuté à la deuxième frontière (GAL-A003-11C-06 à 08 : la coverage d'offset 10000 perdait le
+ * dernier produit de la fenêtre). La version 3 porte la pagination corrigée ; les manifestes v1 et v2 ne sont JAMAIS
+ * migrés, ils sont refusés (aucun n'a jamais été écrit dans le cache réel).
  */
-export const MULTIPAGE_VERSION = 2;
+export const MULTIPAGE_VERSION = 3;
 const CAP = 20;
 
 /**
  * Profils de pagination : relation entre l'offset LOGIQUE d'une fenêtre (début scientifique, base zéro : 0, 5000, …)
  * et l'offset RÉEL envoyé à chaque requête. L'offset logique ne sert jamais à écrire ni à excuser une provenance.
  *   - `identique` : les deux requêtes portent l'offset logique (mode historique, à n'utiliser que là où c'est démontré).
- *   - `metadonnees-base-1` : coverage = offset logique ; métadonnées = 0 pour la fenêtre 0, offset logique + 1 sinon.
- *     Mesuré (GAL-A003-11C-02/03) sur UVVDDR, frontière 0/5000 seulement : `offset=0` et `offset=1` désignent le même
- *     premier produit des métadonnées, `offset=5000` répète le dernier produit de la fenêtre précédente, `offset=5001`
- *     commence au suivant.
+ *   - `base-1-commun` : coverage ET métadonnées comptées à partir de 1 : offset réel = 0 pour la fenêtre 0, offset
+ *     logique + 1 sinon (`offset=0` et `offset=1` désignent le même premier produit). Mesuré sur UVVDDR : métadonnées
+ *     @5000/5001 (GAL-A003-11C-03), puis coverage ET métadonnées à 10001 (GAL-A003-11C-08 : 1 379 empreintes, toutes
+ *     les géométries des métadonnées, dont 13742444 que la coverage d'offset 10000 ne livrait pas).
+ *   - `metadonnees-base-1` (coverage à l'offset logique, métadonnées à +1) : profil de la version 2, RÉFUTÉ pour UVVDDR,
+ *     conservé pour audit et refusé pour ce jeu.
  */
 export const PAGINATION_PROFILES = Object.freeze({
   identique: Object.freeze({
     id: 'identique',
     requestOffsets: (logical) => ({ coverage: logical, metadata: logical }),
+  }),
+  'base-1-commun': Object.freeze({
+    id: 'base-1-commun',
+    requestOffsets: (logical) => {
+      const real = logical === 0 ? 0 : logical + 1;
+      return { coverage: real, metadata: real };
+    },
   }),
   'metadonnees-base-1': Object.freeze({
     id: 'metadonnees-base-1',
@@ -92,7 +101,7 @@ export const PAGINATION_PROFILES = Object.freeze({
 
 /** Jeux dont le profil est DÉCLARÉ : jamais étendu à un autre jeu par défaut. */
 export const DATASET_PAGINATION = Object.freeze({
-  'Mercury|MESSENGER|MASCS|UVVDDR': 'metadonnees-base-1',
+  'Mercury|MESSENGER|MASCS|UVVDDR': 'base-1-commun',
 });
 
 const profileById = (id) =>
@@ -477,7 +486,9 @@ export function validateMultipageManifest(
   if (!manifest || typeof manifest !== 'object')
     return [`${key} : manifeste illisible`];
   if (manifest.version !== MULTIPAGE_VERSION)
-    add(`version ${manifest.version} (attendu ${MULTIPAGE_VERSION})`);
+    add(
+      `version ${manifest.version} refusée (attendu ${MULTIPAGE_VERSION} ; les manifestes v1 et v2 ne sont jamais migrés)`
+    );
   if (manifest.kind !== MULTIPAGE_KIND)
     add(`nature ${manifest.kind} (attendu ${MULTIPAGE_KIND})`);
   if (manifest.dataset !== key) add(`jeu ${manifest.dataset}`);
@@ -743,6 +754,7 @@ export function discoverCaptures(
   const dir = join(cacheDir, 'diagnostics');
   const found = new Map();
   const all = new Map();
+  const probes = [];
   const problems = [];
   for (const name of readDir(dir).filter((n) => n.endsWith('.raw.json'))) {
     let p;
@@ -759,8 +771,13 @@ export function discoverCaptures(
           ? 'metadata'
           : null;
     if (!kind) continue;
-    const slot = `${p.offset}:${kind}`;
     const file = name.slice(0, -'.json'.length);
+    // Sonde de diagnostic : limite autre que la page (par exemple `limit=4`) ; jamais une source de fenêtre.
+    if (p.limit !== undefined && String(p.limit) !== String(PAGE)) {
+      probes.push({ file, kind, requestOffset: p.offset, limit: p.limit });
+      continue;
+    }
+    const slot = `${p.offset}:${kind}`;
     all.set(slot, [...(all.get(slot) ?? []), file]);
     if (found.has(slot))
       problems.push(
@@ -768,7 +785,7 @@ export function discoverCaptures(
       );
     else found.set(slot, file);
   }
-  return { found, all, problems };
+  return { found, all, probes, problems };
 }
 
 /**
@@ -802,7 +819,14 @@ export function qualifyDataset({
     key
   );
   const offsets = windowOffsets(counts[key]);
-  const { all } = discoverCaptures(cacheDir, key, readDir, readFile);
+  const { all, probes } = discoverCaptures(cacheDir, key, readDir, readFile);
+  for (const pr of probes)
+    diagnostics.push({
+      file: pr.file,
+      kind: pr.kind,
+      requestOffset: pr.requestOffset,
+      reason: `sonde de diagnostic (limit=${pr.limit}) : conservée, jamais sélectionnée`,
+    });
   const problems = [];
   const expectedSlots = new Set();
   const windows = [];

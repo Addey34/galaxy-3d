@@ -1,7 +1,7 @@
 import type { CommitFs, CommitPlan } from './ode-materialize.mjs';
 
 export const MULTIPAGE_KIND: 'reconciliation-multipage';
-export const MULTIPAGE_VERSION: 2;
+export const MULTIPAGE_VERSION: 3;
 export interface PaginationProfile {
   id: string;
   requestOffsets: (logical: number) => { coverage: number; metadata: number };
@@ -118,6 +118,12 @@ export function discoverCaptures(
 ): {
   found: Map<string, string>;
   all: Map<string, string[]>;
+  probes: {
+    file: string;
+    kind: string;
+    requestOffset: number;
+    limit: unknown;
+  }[];
   problems: string[];
 };
 export function qualifyDataset(options: {
