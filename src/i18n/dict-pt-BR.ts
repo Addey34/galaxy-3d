@@ -283,7 +283,7 @@ export const ptBR: Record<MessageKey, string> = {
     'Clique no relógio para abrir os ajustes avançados de data e velocidade.',
   'tour.step.info.title': '5. Inspecionar um alvo',
   'tour.step.info.text':
-    'Depois de selecionar um corpo, abra a ficha dele pelo botão de informações do alvo.',
+    'Ao selecionar um astro, a ficha se abre automaticamente. Use o botão de informações para ocultá-la ou reabri-la.',
   'tour.step.settings.title': '6. Ajustar a exibição',
   'tour.step.settings.text':
     'Abra os ajustes de exibição para mostrar ou ocultar os rótulos, os objetos e as órbitas, grupo por grupo ou objeto por objeto.',
