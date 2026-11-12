@@ -272,7 +272,7 @@ export const ptBR: Record<MessageKey, string> = {
   'tour.progress': 'Etapa {current} de {total}',
   'tour.step.navigation.title': '1. Navegar',
   'tour.step.navigation.text':
-    'Escolha um planeta na barra superior ou arraste a cena.',
+    'Use o botão de busca para escolher um astro ou arraste a cena.',
   'tour.step.mode.title': '2. Escolher uma vista',
   'tour.step.mode.text':
     'Educativo simplifica as distâncias enquanto Exploração mostra a escala real.',

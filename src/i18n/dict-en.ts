@@ -291,7 +291,7 @@ export const en = {
   'tour.progress': 'Step {current} of {total}',
   'tour.step.navigation.title': '1. Navigate',
   'tour.step.navigation.text':
-    'Choose a planet in the top bar or drag the scene.',
+    'Use the search button to choose a body, or drag the scene.',
   'tour.step.mode.title': '2. Choose your view',
   'tour.step.mode.text':
     'Educational stays simple while Exploration shows the true scale.',
