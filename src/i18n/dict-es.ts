@@ -275,7 +275,7 @@ export const es: Record<MessageKey, string> = {
   'tour.progress': 'Paso {current} de {total}',
   'tour.step.navigation.title': '1. Navegar',
   'tour.step.navigation.text':
-    'Elija un planeta en la barra superior o arrastre la escena.',
+    'Use el botón de búsqueda para elegir un astro o arrastre la escena.',
   'tour.step.mode.title': '2. Elegir una vista',
   'tour.step.mode.text':
     'Educativo simplifica las distancias mientras Exploración muestra la escala real.',
