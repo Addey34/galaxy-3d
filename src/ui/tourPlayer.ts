@@ -31,6 +31,7 @@ import type { SurfaceChoiceId } from './surfaceChoices';
 import type { SurfacePanelHandle } from './surfacePanel';
 import type { setupPlaceDive } from './placeDive';
 import type { OverlayCoordinator } from './overlayCoordinator';
+import type { PlaybackControls } from './playback';
 
 export interface TourPlayer {
   /** Lance une visite par son identifiant ; `false` si aucune ne le porte (`?tour=`, lot 58). */
@@ -71,7 +72,13 @@ export function setupTourPlayer(
    * Plonger sur un lieu, c'est le REGARDER : la fiche du corps, ouverte par le vol, couvrait le
    * centre d'un écran de téléphone et cachait l'imagerie que la visite montre (mesuré à 390 px).
    */
-  overlays: Pick<OverlayCoordinator, 'closeAll'>
+  overlays: Pick<OverlayCoordinator, 'closeAll'>,
+  /**
+   * La vitesse, et NON `om.setSimulationSpeed` : `ui/playback` possède le curseur, le libellé,
+   * l'ARIA et le plafond du lien. Une visite qui écrivait l'horloge en direct les laissait dire
+   * une autre vitesse que celle qui s'appliquait, et remettait 1:1 en dur à la fin (GAL-PRODUCT-013).
+   */
+  speed: Pick<PlaybackControls, 'borrowSpeed' | 'releaseSpeed'>
 ): TourPlayer {
   const helpPopover = document.getElementById('help-popover');
   if (!helpPopover) return { start: () => false, dispose: () => {} };
@@ -147,10 +154,9 @@ export function setupTourPlayer(
 
   let active = false;
   let signal: TourSignal = { cancelled: false, paused: false };
-  let speedChanged = false;
   /**
    * Le mode dans lequel l'utilisateur était AVANT la visite, ou `null` si elle n'y a pas
-   * touché. Symétrique de `speedChanged` : une visite emprunte l'application, elle ne la
+   * touché. Symétrique de la vitesse (`speed`) : une visite emprunte l'application, elle ne la
    * reconfigure pas. Et on restaure le mode de DÉPART, jamais « éduc » en dur — l'utilisateur
    * pouvait déjà être en Explo, et le ramener de force serait un autre réglage volé.
    */
@@ -299,7 +305,9 @@ export function setupTourPlayer(
   const finish = (): void => {
     active = false;
     hideOverlay();
-    if (speedChanged) om.setSimulationSpeed(1);
+    // La vitesse que le visiteur avait DEMANDÉE avant la visite, signe compris, plafond du lien
+    // compris. Sans effet quand la visite n'a pas emprunté la vitesse : elle ne la touche pas.
+    speed.releaseSpeed();
     if (modeBeforeTour !== null) modeSwitcher.setMode(modeBeforeTour);
     if (baseBeforeTour !== null) surface.setBase(baseBeforeTour);
     navigation.selectBody('overview');
@@ -314,7 +322,6 @@ export function setupTourPlayer(
 
     currentScript = script;
     signal = { cancelled: false, paused: false };
-    speedChanged = false;
     modeBeforeTour = null;
     baseBeforeTour = null;
     active = true;
@@ -341,10 +348,7 @@ export function setupTourPlayer(
         const date = resolveEventDate(event, om.simulationDate, body);
         if (date) om.jumpToDate(date);
       },
-      setTimeScale: (scale) => {
-        speedChanged = true;
-        om.setSimulationSpeed(scale);
-      },
+      setTimeScale: (scale) => speed.borrowSpeed(scale),
       setMode: (mode) => {
         modeBeforeTour ??= modeSwitcher.getMode();
         modeSwitcher.setMode(mode);

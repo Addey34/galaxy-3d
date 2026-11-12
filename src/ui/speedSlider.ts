@@ -60,6 +60,20 @@ export function sliderFromMagnitude(magnitude: number): number {
   );
 }
 
+/**
+ * Position de curseur d'une vitesse SIGNÉE : l'inverse de `scaleFromSlider`, signe compris. Une
+ * vitesse que le curseur ne sait pas poser (0, ou celle de la zone morte) tombe au centre.
+ *
+ * Sert à une visite, qui impose une vitesse en secondes simulées par seconde réelle : le curseur
+ * et le libellé doivent la dire sans que la visite recopie l'arithmétique du curseur.
+ */
+export function sliderFromScale(scale: number): number {
+  return (
+    SPEED_SLIDER_CENTER +
+    Math.sign(scale) * sliderFromMagnitude(Math.abs(scale))
+  );
+}
+
 /** Ce que le curseur applique vraiment, une fois le plafond du lien pris en compte. */
 export interface CappedSpeed {
   /** Vitesse appliquée à l'horloge, signée. */

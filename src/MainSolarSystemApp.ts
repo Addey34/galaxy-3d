@@ -852,7 +852,8 @@ function wireChrome(): {
       modeSwitcher,
       surfacePanel,
       placeDive,
-      overlayCoordinator
+      overlayCoordinator,
+      playback
     );
     hideLoader();
     // La visite demandée remplace la découverte de premier passage, qui se superposerait à elle.

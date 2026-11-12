@@ -15,7 +15,13 @@
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import { onLocaleChange, t } from '@/i18n';
-import { applyCeiling, speedLabel, SPEED_SLIDER_CENTER } from './speedSlider';
+import {
+  applyCeiling,
+  sliderFromScale,
+  speedLabel,
+  SPEED_SLIDER_CENTER,
+  type CappedSpeed,
+} from './speedSlider';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -58,6 +64,18 @@ export interface PlaybackControls {
    * Le calcul complet n'a lieu que si le débit ou le jour affiché a changé.
    */
   syncCeiling(): void;
+  /**
+   * Une visite impose cette vitesse (signée, en secondes simulées par seconde réelle) : l'horloge,
+   * le curseur, le libellé et l'ARIA la disent ensemble, plafond du lien compris. La vitesse
+   * demandée par le visiteur n'est pas touchée. C'est le SEUL chemin d'une visite vers la vitesse :
+   * elle n'écrit ni l'horloge ni le DOM.
+   */
+  borrowSpeed(scale: number): void;
+  /**
+   * La visite rend la main : la vitesse DEMANDÉE avant elle, signe compris, revient partout. Sans
+   * effet si aucune vitesse n'était empruntée, ce qui laisse intact le réglage du visiteur.
+   */
+  releaseSpeed(): void;
 }
 
 /**
@@ -71,23 +89,16 @@ const speedRange = document.getElementById('speed-range') as HTMLInputElement;
 const speedValue = document.getElementById('speed-value')!;
 
 /**
- * Applique une position de curseur, PLAFONNÉE à ce que la connexion soutient.
+ * Applique une vitesse déjà RÉSOLUE (`ui/speedRequests`, plafond du lien compris) : l'horloge, la
+ * poignée, le libellé et l'ARIA, d'une seule voix.
  *
  * Décision du § 9b du plan du lot 17, prise le 2026-09-24 : la date reste exacte (D3), et c'est
  * le curseur qui renonce, en le disant. Le plafond est mesuré (`core/playbackBudget` sur le
  * débit de `core/transferRate`) ; l'arithmétique vit dans `ui/speedSlider`, ce module ne fait
  * que la câbler au DOM.
  */
-function applySpeed(
-  sliderValue: number,
-  om: OrbitalMechanics,
-  ceiling: number | null
-): void {
-  const {
-    scale,
-    sliderValue: value,
-    limited,
-  } = applyCeiling(sliderValue, ceiling);
+function applySpeed(applied: CappedSpeed, om: OrbitalMechanics): void {
+  const { scale, sliderValue: value, limited } = applied;
   const label = limited
     ? `${speedLabel(scale)} · ${t('speed.limited')}`
     : speedLabel(scale);
@@ -115,6 +126,16 @@ export function setupPlayback(
    * connexion de trois secondes aurait brimé la lecture pour le reste de la session.
    */
   let askedValue = SPEED_SLIDER_CENTER;
+  /**
+   * La position de curseur que la vitesse d'une VISITE représente, ou `null`.
+   * Constaté sur la production le 2026-11-12 : une visite qui écrivait l'horloge en direct laissait
+   * le curseur et le libellé sur une autre vitesse que celle qui s'appliquait, puis remettait 1:1
+   * en dur. Trois choses se distinguent : la demande du visiteur (`askedValue`, que la visite ne
+   * touche JAMAIS), l'emprunt de la visite, et ce qui s'applique (l'un des deux, plafonné).
+   */
+  let borrowed: number | null = null;
+  const apply = (): void =>
+    applySpeed(applyCeiling(borrowed ?? askedValue, cap), om);
   // Synchronise l'icône, les classes et l'ARIA du bouton sur l'état de pause donné.
   const syncPauseButton = (paused: boolean): void => {
     playPauseBtn.replaceChildren(createPlaybackIcon(paused));
@@ -130,16 +151,18 @@ export function setupPlayback(
     syncPauseButton(anim.togglePause());
   });
 
+  // Le choix du visiteur gagne : il met fin à un emprunt en cours.
   speedRange.addEventListener('input', () => {
     askedValue = Number(speedRange.value);
-    applySpeed(askedValue, om, cap);
+    borrowed = null;
+    apply();
   });
 
   // Démarrage au CENTRE = temps réel 1:1.
-  applySpeed(askedValue, om, cap);
+  apply();
   playPauseBtn.setAttribute('aria-label', t('playback.pause'));
   onLocaleChange(() => {
-    applySpeed(askedValue, om, cap);
+    apply();
     playPauseBtn.setAttribute(
       'aria-label',
       playPauseBtn.classList.contains('is-paused')
@@ -151,7 +174,8 @@ export function setupPlayback(
   return {
     selectRealtime: () => {
       askedValue = SPEED_SLIDER_CENTER;
-      applySpeed(askedValue, om, cap);
+      borrowed = null;
+      apply();
     },
     pause: () => {
       anim.setPaused(true);
@@ -161,8 +185,18 @@ export function setupPlayback(
       const next = ceiling();
       if (next === cap) return;
       cap = next;
-      // Depuis la position DEMANDÉE : un plafond qui se relâche rend la vitesse demandée.
-      applySpeed(askedValue, om, cap);
+      // Depuis la position DEMANDÉE (ou l'emprunt en cours) : un plafond qui se relâche rend la
+      // vitesse demandée.
+      apply();
+    },
+    borrowSpeed: (scale) => {
+      borrowed = sliderFromScale(scale);
+      apply();
+    },
+    releaseSpeed: () => {
+      // Sans effet visible quand rien n'était emprunté : la même vitesse est réaffirmée.
+      borrowed = null;
+      apply();
     },
   };
 }
