@@ -89,7 +89,7 @@ const speedRange = document.getElementById('speed-range') as HTMLInputElement;
 const speedValue = document.getElementById('speed-value')!;
 
 /**
- * Applique une vitesse déjà RÉSOLUE (`ui/speedRequests`, plafond du lien compris) : l'horloge, la
+ * Applique une vitesse déjà RÉSOLUE (plafond du lien compris) : l'horloge, la
  * poignée, le libellé et l'ARIA, d'une seule voix.
  *
  * Décision du § 9b du plan du lot 17, prise le 2026-09-24 : la date reste exacte (D3), et c'est

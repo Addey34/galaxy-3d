@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { clickWhenCalm, waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
+import { scaleFromSlider } from '../src/ui/speedSlider';
 
 /**
  * UNE VISITE EMPRUNTE LA VITESSE ET LA RENDUE TELLE QUE LE VISITEUR LA VOULAIT (GAL-PRODUCT-013).
@@ -19,7 +20,7 @@ import { blockExternalNetwork } from './netBlock';
  *     et l'horloge la suit (mesurée, pas déduite du libellé) ;
  *   - une visite qui ne touche pas à la vitesse ne la touche pas ;
  *   - la date atteinte reste (GAL-PRODUCT-012) et ne fait aucun saut au moment du retour.
- * Le plafond de débit qui bouge pendant une visite est tenu par `ui/speedRequests.test.ts`, où il
+ * Le plafond de débit qui bouge pendant une visite est tenu par `ui/playbackTour.test.ts`, où il
  * se règle à la main ; ici un lien lent donnerait une mesure de l'horloge sans valeur.
  */
 const TOURS = resolve(import.meta.dirname, '../src/registry/tours');
@@ -37,6 +38,7 @@ const FORWARD = { slider: 80, label: '6.6 h/s' };
 const BACKWARD = { slider: 20, label: '◀ 6.6 h/s (past)' };
 /** 200 000x, ce que la visite des Galiléennes impose, vu par le libellé. */
 const TOUR_LABEL = '2.3 d/s';
+const TOUR_SCALE = 200_000;
 
 const JUMP_TIMEOUT = 90_000;
 
@@ -78,24 +80,50 @@ async function speedUi(
   });
 }
 
-/** La vitesse EFFECTIVE de l'horloge, mesurée sur deux relevés de l'affichage de l'heure. */
-async function clockRate(
-  page: Page
-): Promise<{ real: boolean; diff: number; elapsed: number }> {
-  const sample = (): Promise<{ sec: number; t: number }> =>
+/**
+ * La vitesse EFFECTIVE de l'horloge, SIGNÉE : le déplacement de la date et de l'heure de
+ * simulation (lues ensemble, minuit compris) par seconde réelle sur deux relevés.
+ */
+async function clockRate(page: Page): Promise<{
+  simSeconds: number;
+  elapsed: number;
+  rate: number;
+}> {
+  const sample = (): Promise<{ sim: number; t: number }> =>
     page.evaluate(() => {
-      const [h = 0, m = 0, s = 0] = document
-        .getElementById('clock-display')!
-        .textContent!.split(':')
-        .map(Number);
-      return { sec: h * 3600 + m * 60 + s, t: performance.now() };
+      const date = (document.getElementById('date-input') as HTMLInputElement)
+        .value;
+      const time = document.getElementById('clock-display')!.textContent!;
+      return {
+        sim: Date.parse(`${date}T${time}Z`) / 1000,
+        t: performance.now(),
+      };
     });
   const a = await sample();
   await page.waitForTimeout(2000);
   const b = await sample();
-  const diff = (((b.sec - a.sec) % 86400) + 86400) % 86400;
+  const simSeconds = b.sim - a.sim;
   const elapsed = (b.t - a.t) / 1000;
-  return { real: Math.abs(diff - elapsed) < 2.5, diff, elapsed };
+  return { simSeconds, elapsed, rate: simSeconds / elapsed };
+}
+
+/** 6,6 h/s, la vitesse des deux positions de départ (80 en avant, 20 en arrière). */
+const SIX_POINT_SIX_HOURS = 23_760;
+
+function expectRate(measured: { rate: number }, startSlider: number): void {
+  const info = JSON.stringify(measured);
+  if (startSlider === 50) {
+    // 1:1 : progression cohérente avec le temps réel.
+    expect(Math.abs(measured.rate - 1), info).toBeLessThan(0.5);
+  } else if (startSlider > 50) {
+    // En avant : le temps avance, à 6,6 h/s (la lecture est à la seconde près).
+    expect(measured.rate, info).toBeGreaterThan(SIX_POINT_SIX_HOURS * 0.5);
+    expect(measured.rate, info).toBeLessThan(SIX_POINT_SIX_HOURS * 1.5);
+  } else {
+    // En arrière : le temps RECULE, à la même magnitude.
+    expect(measured.rate, info).toBeLessThan(-SIX_POINT_SIX_HOURS * 0.5);
+    expect(measured.rate, info).toBeGreaterThan(-SIX_POINT_SIX_HOURS * 1.5);
+  }
 }
 
 async function startTour(page: Page, index: number): Promise<void> {
@@ -113,7 +141,7 @@ async function advanceToEnd(page: Page): Promise<void> {
     if (!(await next.isDisabled())) await clickWhenCalm(page, next);
     else await page.waitForTimeout(250);
   }
-  await expect(card).toBeHidden({ timeout: 30_000 });
+  await expect(card).toBeHidden({ timeout: JUMP_TIMEOUT });
 }
 
 /** Attend que la visite ait imposé SA vitesse : le libellé quitte celui de départ. */
@@ -152,6 +180,17 @@ for (const [name, viewport] of [
         const during = await speedUi(page);
         expect(during.label).toBe(TOUR_LABEL);
         expect(during.aria).toBe(TOUR_LABEL);
+        // Le curseur natif (`step="1"`) arrondit la position : sa vitesse mathématique n'est
+        // qu'une représentation APPROCHÉE de celle qui s'applique. L'horloge, le libellé et
+        // l'ARIA, eux, disent la vitesse exacte de la visite. Mesuré : voir l'annotation.
+        const implied = scaleFromSlider(during.value);
+        test.info().annotations.push({
+          type: 'curseur',
+          description: `valeur DOM ${during.value}, vitesse implicite ${implied}, visite ${TOUR_SCALE}, rapport ${(implied / TOUR_SCALE).toFixed(3)}`,
+        });
+        expect(Number.isInteger(during.value)).toBe(true);
+        expect(implied / TOUR_SCALE).toBeGreaterThan(1 / 1.5);
+        expect(implied / TOUR_SCALE).toBeLessThan(1.5);
         expect(during.value).toBeGreaterThan(50);
         expect(during.value).not.toBe(start.slider);
 
@@ -163,7 +202,7 @@ for (const [name, viewport] of [
           else await page.keyboard.press('Escape');
         }
         await expect(page.locator('.stour-card')).toBeHidden({
-          timeout: 30_000,
+          timeout: JUMP_TIMEOUT,
         });
 
         // La date de la visite reste, sans saut au retour (GAL-PRODUCT-012) : lue AVANT toute
@@ -181,9 +220,7 @@ for (const [name, viewport] of [
         expect(after.aria).toBe(start.label);
         expect(after.value).toBe(start.slider);
         expect(after.capped).toBe(false);
-        const rate = await clockRate(page);
-        expect(rate.real, JSON.stringify(rate)).toBe(start.slider === 50);
-        if (start.slider !== 50) expect(rate.diff).toBeGreaterThan(20);
+        expectRate(await clockRate(page), start.slider);
       });
     }
 
@@ -204,7 +241,7 @@ for (const [name, viewport] of [
       expect(after.label).toBe(FORWARD.label);
       expect(after.aria).toBe(FORWARD.label);
       expect(after.value).toBe(FORWARD.slider);
-      expect((await clockRate(page)).real).toBe(false);
+      expectRate(await clockRate(page), FORWARD.slider);
     });
   });
 }
