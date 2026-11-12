@@ -8,7 +8,7 @@ import { blockExternalNetwork } from './netBlock';
  * LA DATE QU'UNE VISITE ATTEINT RESTE LA DATE DE LA SIMULATION (décision CTO, GAL-PRODUCT-012).
  *
  * Contrat écrit dans `docs/ARCHITECTURE.md`, § « Ce qu'une visite rend, et ce qu'elle laisse » :
- * une visite EMPRUNTE des réglages (vitesse, mode, fond d'imagerie) et les rend à la fin ; la DATE
+ * une visite EMPRUNTE des réglages (mode, fond d'imagerie, fiche) et les rend à la fin ; la DATE
  * n'est pas un réglage emprunté, c'est l'état de la simulation. Le visiteur qui vient de voir
  * l'éclipse peut donc continuer à l'explorer à sa date, son lien la porte, et le bouton « retour
  * au présent » l'en ramène. Mesuré sur la production le 2026-11-12 (GAL-PRODUCT-011) : les dix
@@ -102,7 +102,11 @@ test.describe('la date après une visite', () => {
     await expect.poll(() => permalinkDate(page)?.slice(0, 10)).toBe(reached);
     const linked = permalinkDate(page)!;
 
-    // Les réglages EMPRUNTÉS, eux, sont rendus : l'échelle de départ et la vitesse de départ.
+    // Le mode de départ est rendu. La vitesse n'est comparée que parce que CE scénario part de
+    // 1:1 et que la visite de l'éclipse ne la change pas : l'égalité n'atteste PAS une
+    // restauration générale de la vitesse de départ. `finish()` remet aujourd'hui 1:1 en dur quand
+    // une visite a changé la vitesse, ce que ce test ne couvre pas (anomalie UX identifiée, à
+    // traiter séparément).
     expect(await borrowed(page)).toEqual(before);
 
     // 2 bis. Ouvrir le lien retrouve la même date (ce que reçoit quelqu'un à qui on le passe).

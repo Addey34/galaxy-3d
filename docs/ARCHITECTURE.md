@@ -5502,9 +5502,13 @@ sortes d'état, et le contrat les sépare.
 
 - **Les réglages EMPRUNTÉS, que `tourPlayer.finish()` rend** : le mode (celui du DÉPART), le fond
   d'imagerie (celui du DÉPART), la fiche ouverte (refermée, retour à la vue globale) et le
-  permalien (suspendu pendant la visite, rendu à la fin). La vitesse est remise à 1:1 quand la
-  visite l'a changée ; `finish()` ne mémorise pas la vitesse de départ, et le libellé et le
-  curseur de vitesse ne suivent pas ce retour (constaté sur la production le 2026-11-12).
+  permalien (suspendu pendant la visite, rendu à la fin).
+- **La vitesse : comportement ACTUEL, et anomalie UX identifiée.** Quand une visite change la
+  vitesse, `finish()` la remet à 1:1. Ce n'est pas une restitution : la vitesse demandée avant la
+  visite n'est pas mémorisée, et le libellé et le curseur de vitesse ne suivent pas ce retour,
+  donc l'affichage peut annoncer une vitesse que l'horloge n'applique plus (constaté sur la
+  production le 2026-11-12, avec une vitesse de départ différente de 1:1). Ce comportement n'est
+  pas le contrat visé ; sa correction est une décision séparée, et aucun test ne le fige.
 - **La DATE de la simulation, que la visite laisse.** Ce n'est pas un réglage emprunté, c'est
   l'état de la simulation. Une visite qui saute à une date (`jumpToDate`, `jumpToEvent`) laisse la
   date atteinte, que la fin soit normale, le bouton « Fermer » ou la touche Échap : le visiteur
