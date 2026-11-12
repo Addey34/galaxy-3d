@@ -113,10 +113,16 @@ export function maxLevelFor(
   index: TileIndex,
   shape: TileMatrixShape,
   baseMaxLevel: number,
-  region: RegionalSource | null
+  region: RegionalSource | null,
+  /**
+   * `regionalMaxLevel(shape, region.publishedPixelsPerDegree)` déjà calculé par l'appelant : il ne
+   * dépend ni du carreau ni de l'image, et l'appelant de la sélection interroge chaque nœud.
+   */
+  regionalLevel?: number
 ): number {
   if (!region || index.level < baseMaxLevel) return baseMaxLevel;
-  const regional = regionalMaxLevel(shape, region.publishedPixelsPerDegree);
+  const regional =
+    regionalLevel ?? regionalMaxLevel(shape, region.publishedPixelsPerDegree);
   if (regional <= baseMaxLevel) return baseMaxLevel;
   return touchesCoverage(tileBounds(index, shape), region.coverage)
     ? regional
