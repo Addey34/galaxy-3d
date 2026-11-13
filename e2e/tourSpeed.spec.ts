@@ -80,15 +80,62 @@ async function speedUi(
   });
 }
 
+/** Deux réécritures effectives de l'horloge affichée (voir `waitForFreshClock`). */
+const FRESH_CLOCK_CHANGES = 2;
+/** À 1:1 une réécriture tombe chaque seconde : de la marge pour une machine chargée. */
+const FRESH_CLOCK_TIMEOUT = 20_000;
+
+/**
+ * Attend que l'horloge AFFICHÉE ait été réécrite deux fois depuis l'appel.
+ *
+ * `ui/timePanel` ne réécrit `#clock-display` et `#date-input` que toutes les 250 ms. Le libellé
+ * de vitesse, lui, change tout de suite : à la fermeture d'une visite qui imposait 200 000x, un
+ * relevé pris aussitôt lit encore une heure d'AVANT la restitution, et la mesure de vitesse
+ * inclut alors jusqu'à 250 ms de temps écoulé à 200 000x (+50 000 s : un échec mesuré à +2 412 s/s
+ * au lieu de -23 760 s/s, GAL-RELEASE-013). Une réécriture observée APRÈS l'appel lit une horloge
+ * postérieure à la restitution ; la seconde écarte une réécriture déjà en route. On observe un
+ * CHANGEMENT de l'affichage, jamais un délai : à 1:1 il tombe chaque seconde, à haute vitesse à
+ * chaque cycle, et un délai fixe ne garantirait rien sur une machine chargée.
+ */
+async function waitForFreshClock(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    delete (window as unknown as { __clockWatch?: unknown }).__clockWatch;
+  });
+  await page.waitForFunction(
+    (changes) => {
+      const watch = window as unknown as {
+        __clockWatch?: { last: string; seen: number };
+      };
+      const shown =
+        (document.getElementById('date-input') as HTMLInputElement).value +
+        'T' +
+        document.getElementById('clock-display')!.textContent;
+      if (!watch.__clockWatch) {
+        watch.__clockWatch = { last: shown, seen: 0 };
+        return false;
+      }
+      if (shown !== watch.__clockWatch.last) {
+        watch.__clockWatch.last = shown;
+        watch.__clockWatch.seen++;
+      }
+      return watch.__clockWatch.seen >= changes;
+    },
+    FRESH_CLOCK_CHANGES,
+    { polling: 25, timeout: FRESH_CLOCK_TIMEOUT }
+  );
+}
+
 /**
  * La vitesse EFFECTIVE de l'horloge, SIGNÉE : le déplacement de la date et de l'heure de
- * simulation (lues ensemble, minuit compris) par seconde réelle sur deux relevés.
+ * simulation (lues ensemble, minuit compris) par seconde réelle sur deux relevés. Le premier ne
+ * part qu'une fois l'affichage réécrit après l'appel (`waitForFreshClock`).
  */
 async function clockRate(page: Page): Promise<{
   simSeconds: number;
   elapsed: number;
   rate: number;
 }> {
+  await waitForFreshClock(page);
   const sample = (): Promise<{ sim: number; t: number }> =>
     page.evaluate(() => {
       const date = (document.getElementById('date-input') as HTMLInputElement)
@@ -125,6 +172,17 @@ function expectRate(measured: { rate: number }, startSlider: number): void {
     expect(measured.rate, info).toBeGreaterThan(-SIX_POINT_SIX_HOURS * 1.5);
   }
 }
+
+test('la mesure refuse un mauvais signe, un mauvais module et une lecture trop précoce', () => {
+  expect(() => expectRate({ rate: -SIX_POINT_SIX_HOURS }, 20)).not.toThrow();
+  expect(() => expectRate({ rate: SIX_POINT_SIX_HOURS }, 20)).toThrow();
+  // Le relevé trop précoce mesuré le 2026-11-13 : le temps de la visite (200 000x) y est mêlé.
+  expect(() => expectRate({ rate: 2_412 }, 20)).toThrow();
+  expect(() => expectRate({ rate: -SIX_POINT_SIX_HOURS }, 80)).toThrow();
+  expect(() => expectRate({ rate: 1 }, 80)).toThrow();
+  expect(() => expectRate({ rate: 1 }, 50)).not.toThrow();
+  expect(() => expectRate({ rate: SIX_POINT_SIX_HOURS }, 50)).toThrow();
+});
 
 async function startTour(page: Page, index: number): Promise<void> {
   await page.locator('#help-btn').click();
