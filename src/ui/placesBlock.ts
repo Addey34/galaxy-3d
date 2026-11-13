@@ -22,10 +22,11 @@ import {
   loadPlaceObservations,
   placeCoverage,
   placeProvenance,
-  type PlaceObservation,
+  type PlaceObservationResult,
 } from '@/config/placeObservations';
 import type { NamedFeature } from '@/core/gazetteer';
 import { formatIsoDay } from '@/core/dateText';
+import { fold } from '@/core/textFold';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -36,6 +37,33 @@ const formatDay = (iso: string): string =>
   formatIsoDay(iso, getLocale(), intlLocale());
 
 const NAMED = new Set(Object.keys(gazetteerIndex.bodies));
+
+/** La phrase d'un état qui n'est pas une liste d'observations. */
+export function statusKey(
+  answer: Exclude<PlaceObservationResult, { status: 'observed' }>
+): 'bi.places.none' | 'bi.places.notEvaluated' | 'bi.places.unavailable' {
+  if (answer.status === 'zero-proven') return 'bi.places.none';
+  if (answer.status === 'not-evaluated') return 'bi.places.notEvaluated';
+  return 'bi.places.unavailable';
+}
+
+/**
+ * Une formation se retrouve par son nom SANS accent ni casse (« Na Hye-sŏk » comme « na hye-sok »),
+ * comme la recherche universelle (`fold`), sans toucher à la donnée officielle. Une correspondance
+ * exacte l'emporte ; une correspondance repliée doit être UNIQUE, sinon on ne devine pas.
+ */
+export function matchFormation(
+  names: readonly NamedFeature[],
+  typed: string
+): NamedFeature | null {
+  const lower = typed.trim().toLocaleLowerCase();
+  const exact = names.find((f) => f.name.toLocaleLowerCase() === lower);
+  if (exact) return exact;
+  const folded = fold(typed);
+  if (!folded) return null;
+  const found = names.filter((f) => fold(f.name) === folded);
+  return found.length === 1 ? found[0]! : null;
+}
 
 export function setupPlacesBlock(
   api: PublicAPI,
@@ -71,8 +99,13 @@ export function setupPlacesBlock(
   let shown: {
     body: string;
     feature: NamedFeature;
-    obs: PlaceObservation[] | null;
+    result: PlaceObservationResult;
   } | null = null;
+  /**
+   * Le numéro de la DERNIÈRE question posée. Une réponse qui arrive après une question plus récente
+   * (même corps, autre formation) ou après un changement de corps ne remplace rien.
+   */
+  let asked = 0;
 
   const renderFrame = (body: string): void => {
     const cover = placeCoverage(body);
@@ -101,10 +134,22 @@ export function setupPlacesBlock(
       note.textContent = '';
     } else {
       const n = new Intl.NumberFormat(intlLocale());
-      countEl.textContent = t('bi.places.count', {
-        observed: n.format(cover.observed),
-        total: n.format(cover.formations),
-      });
+      // TROIS nombres, trois sens : ce que l'ODE a observé, ce qu'il a ÉVALUÉ (le jeu publié), ce
+      // que l'UAI nomme. Une fraction « x sur y » ne disait pas lequel des deux y était.
+      const named = (
+        gazetteerIndex.bodies as Record<string, { count: number } | undefined>
+      )[body]?.count;
+      countEl.textContent = [
+        t('bi.places.count', {
+          observed: n.format(cover.observed),
+          evaluated: n.format(cover.formations),
+        }),
+        named !== undefined && named !== cover.formations
+          ? t('bi.places.countNamed', { named: n.format(named) })
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ');
       form.hidden = false;
       intro.textContent = t('bi.places.hint');
       note.textContent = t('bi.places.note', {
@@ -118,25 +163,19 @@ export function setupPlacesBlock(
   const renderResult = (): void => {
     result.replaceChildren();
     if (!shown) return;
-    const { feature, obs } = shown;
+    const { feature, result: answer } = shown;
     const title = document.createElement('p');
     title.className = 'bi-places-title';
     title.textContent = `${feature.name} · ${feature.type}`;
     result.append(title);
-    if (obs === null) {
+    if (answer.status !== 'observed') {
       const p = document.createElement('p');
-      p.textContent = t('bi.places.unavailable');
-      result.append(p);
-      return;
-    }
-    if (obs.length === 0) {
-      const p = document.createElement('p');
-      p.textContent = t('bi.places.none');
+      p.textContent = t(statusKey(answer));
       result.append(p);
       return;
     }
     const ul = document.createElement('ul');
-    for (const o of obs) {
+    for (const o of answer.observations) {
       const li = document.createElement('li');
       // Les noms sont ceux que l'ODE PUBLIE, jamais traduits ni réécrits.
       li.append(
@@ -198,9 +237,9 @@ export function setupPlacesBlock(
   const ask = (): void => {
     const body = rendered;
     if (!body || !names) return;
-    const wanted = input.value.trim().toLocaleLowerCase();
-    if (!wanted) return;
-    const feature = names.find((f) => f.name.toLocaleLowerCase() === wanted);
+    if (!input.value.trim()) return;
+    const feature = matchFormation(names, input.value);
+    const mine = ++asked;
     if (!feature) {
       shown = null;
       result.replaceChildren();
@@ -210,14 +249,17 @@ export function setupPlacesBlock(
       getAnnouncer().announce(t('bi.places.unknown'), 'places');
       return;
     }
-    void loadPlaceObservations(body, feature.iauId).then((obs) => {
-      if (rendered !== body) return;
-      shown = { body, feature, obs };
+    void loadPlaceObservations(body, feature.iauId).then((answer) => {
+      if (rendered !== body || mine !== asked) return;
+      shown = { body, feature, result: answer };
       renderResult();
       getAnnouncer().announce(
-        obs && obs.length
-          ? t('bi.places.announce', { name: feature.name, count: obs.length })
-          : `${feature.name}. ${t(obs ? 'bi.places.none' : 'bi.places.unavailable')}`,
+        answer.status === 'observed'
+          ? t('bi.places.announce', {
+              name: feature.name,
+              count: answer.observations.length,
+            })
+          : `${feature.name}. ${t(statusKey(answer))}`,
         'places'
       );
     });
@@ -253,6 +295,7 @@ export function setupPlacesBlock(
         if (!loaded || bodyInfo.currentBody() !== current) return;
         covered = loaded.bodies;
         rendered = current;
+        asked++;
         shown = null;
         input.value = '';
         result.replaceChildren();

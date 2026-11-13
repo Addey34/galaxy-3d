@@ -173,13 +173,17 @@ export const cardEn = {
   'bi.instruments.absentNote': 'Read in the PDS archive on {date}.',
   'bi.instruments.note':
     'What the PDS archive declares this spacecraft carries, read on {date}. Each name is the one the archive publishes, and the identifier below it is its citation.',
-  'bi.places.count': '{observed} of {total} named',
+  'bi.places.count':
+    '{observed} observed of {evaluated} evaluated in the published ODE dataset.',
+  'bi.places.countNamed': '{named} named in the IAU catalogue.',
   'bi.places.search': 'Named formation',
   'bi.places.hint':
     'Type the name of a formation to see which orbiters imaged it.',
   'bi.places.unknown': 'No formation of this body has that name.',
   'bi.places.none':
     'No footprint published by the Orbital Data Explorer touches this formation.',
+  'bi.places.notEvaluated':
+    'This formation was not evaluated in the ODE dataset currently published.',
   'bi.places.unavailable':
     'The observations of this formation could not be loaded.',
   'bi.places.observations': 'Observations: {count}, {span}',

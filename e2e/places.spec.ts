@@ -146,15 +146,14 @@ test('un nom INCONNU le dit, sans rien demander d’autre', async ({ page }) => 
   await expect(places.locator('.bi-places-result li')).toHaveCount(0);
 });
 
-test('une formation que RIEN ne touche le DIT, au lieu d’afficher une liste vide', async ({
+test('une formation ABSENTE du morceau est « non évaluée », jamais « aucune empreinte »', async ({
   page,
 }) => {
   /**
-   * CE CAS N'EXISTE PLUS DANS LA DONNÉE RÉELLE, et c'est pourquoi il est simulé : depuis le
-   * tirage complet, les 9 087 formations lunaires sont toutes observées, et le scénario qui
-   * cherchait une formation non touchée se SAUTAIT en silence. Le message « aucune empreinte »
-   * n'était donc plus exercé par aucun test. On intercepte le morceau pour rendre une réponse
-   * vide, et c'est le RENDU qu'on vérifie, pas la donnée.
+   * GAL-SCIENCE-022A. Une clé absente d'un morceau n'est pas un zéro prouvé : seul `zeroIds` (de
+   * l'index) en est la preuve, et il est vide dans la donnée publiée. On intercepte le morceau pour
+   * rendre une réponse sans l'identifiant demandé : c'est le RENDU qu'on vérifie. Avant ce lot, ce
+   * scénario affichait « aucune empreinte ne touche cette formation », ce qui était FAUX.
    */
   await page.route('**/assets/place-observations/moon/*.json', (route) =>
     route.fulfill({
@@ -168,10 +167,87 @@ test('une formation que RIEN ne touche le DIT, au lieu d’afficher une liste vi
   await places.locator('summary').click();
   await ask(page, MOON_NAMES[0]!.name);
   await expect(places.locator('.bi-places-result')).toContainText(
-    /No footprint/,
+    /not evaluated in the ODE dataset currently published/,
     { timeout: 15_000 }
   );
+  await expect(places.locator('.bi-places-result')).not.toContainText(
+    /No footprint/
+  );
   await expect(places.locator('.bi-places-result li')).toHaveCount(0);
+});
+
+test('un morceau INVALIDE ou indisponible dit « n’a pas pu être chargé », pas « aucune empreinte »', async ({
+  page,
+}) => {
+  await page.route('**/assets/place-observations/moon/*.json', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ instruments: [] }),
+    })
+  );
+  await boot(page, `moon/?date=${MOON_SCENE_DATE}`);
+  const places = block(page);
+  await expect(places).toBeVisible({ timeout: 15_000 });
+  await places.locator('summary').click();
+  await ask(page, MOON_NAMES[0]!.name);
+  await expect(places.locator('.bi-places-result')).toContainText(
+    /could not be loaded/,
+    { timeout: 15_000 }
+  );
+  await expect(places.locator('.bi-places-result')).not.toContainText(
+    /No footprint/
+  );
+});
+
+test('la recherche ignore les accents : « Tÿcho » trouve « Tycho »', async ({
+  page,
+}) => {
+  await boot(page, `moon/?date=${MOON_SCENE_DATE}`);
+  const places = block(page);
+  await expect(places).toBeVisible({ timeout: 15_000 });
+  await places.locator('summary').click();
+  const target = MOON_NAMES.find((f) => f.name === 'Tycho')!;
+  expect(target, 'Tycho absent du gazetteer lunaire').toBeDefined();
+  await ask(page, 'Tÿcho');
+  await expect(places.locator('.bi-places-title')).toContainText('Tycho', {
+    timeout: 15_000,
+  });
+  await expect(places.locator('.bi-places-result')).not.toContainText(
+    /No formation/
+  );
+});
+
+test('une réponse ANCIENNE ne remplace pas la sélection plus récente', async ({
+  page,
+}) => {
+  const shards = INDEX.bodies['moon']!.shards;
+  const slow = MOON_NAMES.find((f) => MOON_OBSERVED.has(String(f.iauId)))!;
+  const fast = MOON_NAMES.find(
+    (f) =>
+      MOON_OBSERVED.has(String(f.iauId)) &&
+      f.iauId % shards !== slow.iauId % shards
+  )!;
+  const slowFile = `/${slow.iauId % shards}.json`;
+  await page.route(
+    '**/assets/place-observations/moon/*.json',
+    async (route) => {
+      if (new URL(route.request().url()).pathname.endsWith(slowFile))
+        await new Promise((r) => setTimeout(r, 2500));
+      await route.continue();
+    }
+  );
+  await boot(page, `moon/?date=${MOON_SCENE_DATE}`);
+  const places = block(page);
+  await expect(places).toBeVisible({ timeout: 15_000 });
+  await places.locator('summary').click();
+  await ask(page, slow.name);
+  await ask(page, fast.name);
+  await expect(places.locator('.bi-places-title')).toContainText(fast.name, {
+    timeout: 15_000,
+  });
+  // La réponse lente arrive APRÈS : elle ne doit rien remplacer.
+  await page.waitForTimeout(3500);
+  await expect(places.locator('.bi-places-title')).toContainText(fast.name);
 });
 
 test('un corps NOMMÉ que le service ne couvre pas le DIT, sans rien demander', async ({
