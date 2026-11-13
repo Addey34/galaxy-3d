@@ -155,24 +155,44 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Temps ACTIF écoulé, lu sur l'horloge monotone : le temps réel passé hors pause. Compter les tours
+ * de polling (50 ms chacun) faisait durer une légende de 9 s autant de fois que le fil principal
+ * mettait de temps à réveiller le minuteur (mesuré : 2,4 fois sur un poste libre, bien plus sur un
+ * processeur chargé). Un intervalle ne compte que si la visite n'était en pause à aucune de ses
+ * deux extrémités. Limite assumée : une pause posée ET levée entre deux réveils d'un même
+ * minuteur n'est pas observable (le signal est un simple objet muté par l'interface) ; elle compte
+ * alors comme du temps de visite, au plus la durée d'un réveil.
+ */
+function activeClock(signal: TourSignal): () => number {
+  let last = performance.now();
+  let wasPaused = signal.paused;
+  let active = 0;
+  return () => {
+    const now = performance.now();
+    if (!wasPaused && !signal.paused) active += now - last;
+    last = now;
+    wasPaused = signal.paused;
+    return active;
+  };
+}
+
 async function waitUntil(
   predicate: () => boolean,
   signal: TourSignal,
   timeoutMs = Infinity
 ): Promise<void> {
-  let waited = 0;
-  while (!predicate() && !signal.cancelled && waited < timeoutMs) {
+  const active = activeClock(signal);
+  while (!predicate() && !signal.cancelled && active() < timeoutMs) {
     await sleep(POLL_MS);
-    if (!signal.paused) waited += POLL_MS;
   }
 }
 
 /** Délai interruptible par annulation, et suspendu (pas annulé) pendant une pause. */
 async function delay(ms: number, signal: TourSignal): Promise<void> {
-  let elapsed = 0;
-  while (elapsed < ms && !signal.cancelled) {
+  const active = activeClock(signal);
+  while (active() < ms && !signal.cancelled) {
     await sleep(POLL_MS);
-    if (!signal.paused) elapsed += POLL_MS;
   }
 }
 

@@ -575,3 +575,178 @@ describe('runTour : la plongée est rejouée jusqu’à son cadrage', () => {
     vi.useRealTimers();
   });
 });
+
+describe('runTour : les durées sont du temps réel écoulé, pas des tours de polling', () => {
+  const timed = (ms: number): TourScript => ({
+    id: 't',
+    title: text,
+    steps: [
+      { kind: 'caption', text, durationMs: ms },
+      { kind: 'setTimeScale', scale: 1 },
+    ],
+  });
+  /** Un fil principal saturé : le minuteur de 50 ms ne se réveille qu'après `ms`, d'un seul coup. */
+  const lateWake = async (ms: number): Promise<void> => {
+    vi.advanceTimersByTime(ms);
+    await vi.advanceTimersByTimeAsync(0);
+  };
+
+  it('un délai nominal dure sa durée déclarée, ni moins ni beaucoup plus', async () => {
+    vi.useFakeTimers();
+    const host = makeHost();
+    const run = runTour(timed(9000), host, () => {}, makeSignal());
+    await vi.advanceTimersByTimeAsync(8900);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(150);
+    await run;
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('un minuteur réveillé très en retard ne rallonge pas le délai : 9 s de temps réel suffisent', async () => {
+    vi.useFakeTimers();
+    const host = makeHost();
+    const run = runTour(timed(9000), host, () => {}, makeSignal());
+    // UN seul réveil, 9 s plus tard : l'ancien compte (50 ms par tour) en aurait attendu 179 de plus.
+    await lateWake(9000);
+    await run;
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('une pause suspend le délai, la reprise continue avec le temps RESTANT', async () => {
+    vi.useFakeTimers();
+    const host = makeHost();
+    const signal = makeSignal();
+    const run = runTour(timed(1000), host, () => {}, signal);
+    await vi.advanceTimersByTimeAsync(400);
+    signal.paused = true;
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    // Maintien de pause avec un réveil très tardif : toujours rien, la pause ne compte pas.
+    await lateWake(60_000);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    signal.paused = false;
+    // Restent environ 600 ms : 400 ne suffisent pas, 300 de plus (marge d'un tour) suffisent.
+    await vi.advanceTimersByTimeAsync(400);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(300);
+    await run;
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('l’annulation interrompt l’attente tout de suite, sans en attendre la durée restante', async () => {
+    vi.useFakeTimers();
+    const host = makeHost();
+    const signal = makeSignal();
+    const run = runTour(timed(9000), host, () => {}, signal);
+    await vi.advanceTimersByTimeAsync(100);
+    signal.cancelled = true;
+    await vi.advanceTimersByTimeAsync(100);
+    await run;
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  const dive: TourScript = {
+    id: 't',
+    title: text,
+    steps: [
+      { kind: 'diveTo', place: 'Nile Delta' },
+      { kind: 'setTimeScale', scale: 1 },
+    ],
+  };
+
+  it('le plafond d’une attente est du temps réel : un fil ralenti ne le prolonge pas', async () => {
+    vi.useFakeTimers();
+    const host = makeHost({ isSurfaceBusy: () => true });
+    const run = runTour(dive, host, () => {}, makeSignal());
+    // Quelques réveils très tardifs suffisent (le délai d'attention, puis le plafond) : l'ancien
+    // compte aurait exigé 500 tours de 50 ms.
+    let done = false;
+    void run.then(() => (done = true));
+    let wakes = 0;
+    while (!done && wakes < 6) {
+      await lateWake(SURFACE_SETTLE_TIMEOUT_MS + 1000);
+      wakes++;
+    }
+    expect(done).toBe(true);
+    expect(wakes).toBeLessThanOrEqual(4);
+    // Expiré : la visite continue (secours prévu), la surface n'est pas déclarée calme.
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    expect(host.isSurfaceBusy()).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('le plafond n’expire pas avant son temps : 24 s de surface occupée attendent encore', async () => {
+    vi.useFakeTimers();
+    const host = makeHost({ isSurfaceBusy: () => true });
+    const run = runTour(dive, host, () => {}, makeSignal());
+    await vi.advanceTimersByTimeAsync(SURFACE_SETTLE_TIMEOUT_MS - 3000);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(5000);
+    await run;
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('un plafond ne compte pas la pause', async () => {
+    vi.useFakeTimers();
+    const host = makeHost({ isSurfaceBusy: () => true });
+    const signal = makeSignal();
+    const run = runTour(dive, host, () => {}, signal);
+    await vi.advanceTimersByTimeAsync(10_000);
+    signal.paused = true;
+    await vi.advanceTimersByTimeAsync(120_000);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    signal.paused = false;
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(8000);
+    await run;
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('un prédicat qui devient vrai avant le plafond libère l’attente aussitôt', async () => {
+    vi.useFakeTimers();
+    let busy = true;
+    const host = makeHost({ isSurfaceBusy: () => busy });
+    const run = runTour(dive, host, () => {}, makeSignal());
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    busy = false;
+    await vi.advanceTimersByTimeAsync(100);
+    await run;
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('une attente SANS plafond reste sans plafond, même après un très long moment', async () => {
+    vi.useFakeTimers();
+    let flying = true;
+    const host = makeHost({ isFlying: () => flying });
+    const run = runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [
+          { kind: 'flyTo', body: 'jupiter' },
+          { kind: 'setTimeScale', scale: 1 },
+        ],
+      },
+      host,
+      () => {},
+      makeSignal()
+    );
+    await vi.advanceTimersByTimeAsync(3_600_000);
+    await lateWake(3_600_000);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    flying = false;
+    await vi.advanceTimersByTimeAsync(100);
+    await run;
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+});
