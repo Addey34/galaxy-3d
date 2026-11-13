@@ -5497,6 +5497,32 @@ Explo ne doit pas en être sorti par une visite. La preuve qu'une forme n'est pa
 qu'une fiche s'en serve : « Voyage aux confins » passe en Explo juste avant Sedna, là où la
 ceinture cesse d'être une file de points bien rangés.
 
+**Ce qu'une visite rend, et ce qu'elle laisse (décision du 2026-11-12).** Une visite touche deux
+sortes d'état, et le contrat les sépare.
+
+- **Les réglages EMPRUNTÉS, que `tourPlayer.finish()` rend** : le mode (celui du DÉPART), le fond
+  d'imagerie (celui du DÉPART), la fiche ouverte (refermée, retour à la vue globale) et le
+  permalien (suspendu pendant la visite, rendu à la fin).
+- **La vitesse : comportement ACTUEL, et anomalie UX identifiée.** Quand une visite change la
+  vitesse, `finish()` la remet à 1:1. Ce n'est pas une restitution : la vitesse demandée avant la
+  visite n'est pas mémorisée, et le libellé et le curseur de vitesse ne suivent pas ce retour,
+  donc l'affichage peut annoncer une vitesse que l'horloge n'applique plus (constaté sur la
+  production le 2026-11-12, avec une vitesse de départ différente de 1:1). Ce comportement n'est
+  pas le contrat visé ; sa correction est une décision séparée, et aucun test ne le fige.
+- **La DATE de la simulation, que la visite laisse.** Ce n'est pas un réglage emprunté, c'est
+  l'état de la simulation. Une visite qui saute à une date (`jumpToDate`, `jumpToEvent`) laisse la
+  date atteinte, que la fin soit normale, le bouton « Fermer » ou la touche Échap : le visiteur
+  qui vient de voir l'éclipse la poursuit à sa date. Conséquences voulues : le lien porte cette
+  date (`date=`, écrit par `permalink.sync()` à la fin) et rouvert il la retrouve ; l'horloge
+  continue à vitesse réelle depuis cette date ; le point à côté de l'horloge passe de « présent »
+  à « hors présent » ; le bouton « retour au présent » ramène à aujourd'hui, et le lien le suit.
+  Une visite qui accélère le temps avance aussi la date, et la règle est la même.
+
+`e2e/tourDateContract.spec.ts` garde ce contrat avec la visite de l'éclipse : date finale conservée
+après la fin normale et après « Fermer », date du lien cohérente avec le champ de date et retrouvée
+à la réouverture du lien, retour au présent, mode de départ rendu (la visite de l'éclipse passe
+en Explo puis le rend).
+
 **La visite qui montre un lieu à deux dates (« Le delta du Nil dans le temps », 2026-10-20).** Deux
 formes de plus, `diveTo` et `setSurface`, pour qu'une fiche puisse montrer le MÊME cadrage à deux
 dates sans qu'aucun module ne connaisse le Nil. Ce que la mesure a imposé, et qu'un lecteur de la
