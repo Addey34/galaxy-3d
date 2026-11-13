@@ -161,7 +161,9 @@ function placesCell(row: InventoryRow): string {
   if (!row.applicable.includes('places')) return '-';
   if (row.places === null) return 'TIRAGE INCOMPLET';
   if (row.places === 'non-couvert') return 'non couvert';
-  return `${row.places.observed}/${row.places.formations}`;
+  const { observed, formations, named } = row.places;
+  // Trois nombres, trois sens : une fraction `x/y` ne disait pas si y était évalué ou nommé.
+  return `${observed} obs, ${formations} eval, ${named} nommees`;
 }
 
 function factsCell(row: InventoryRow): string {

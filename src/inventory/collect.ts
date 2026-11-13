@@ -205,7 +205,16 @@ export interface InventoryRow {
    * non un trou ; `null` quand le corps est couvert mais que son tirage est incomplet.
    */
   readonly places:
-    { observed: number; formations: number } | 'non-couvert' | null;
+    | {
+        /** Formations avec au moins une empreinte. */
+        observed: number;
+        /** Formations ÉVALUÉES par le croisement ODE publié (observées + zéros prouvés). */
+        formations: number;
+        /** Formations que l'UAI nomme aujourd'hui : l'écart avec `formations` est non évalué. */
+        named: number;
+      }
+    | 'non-couvert'
+    | null;
   /**
    * Combien d'INSTRUMENTS le registre de contexte du PDS déclare sur cette sonde (lot 42).
    *
@@ -615,6 +624,13 @@ export function collectInventory(root: string): Inventory {
           : {
               observed: placeCover.observed,
               formations: placeCover.formations,
+              named:
+                (
+                  gazetteerIndex.bodies as Record<
+                    string,
+                    { count: number } | undefined
+                  >
+                )[id]?.count ?? placeCover.formations,
             };
     const instruments = applicable.includes('instruments')
       ? ((

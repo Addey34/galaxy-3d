@@ -153,13 +153,17 @@ export const cardEs: Record<CardMessageKey, string> = {
   'bi.instruments.absentNote': 'Leído en el archivo del PDS el {date}.',
   'bi.instruments.note':
     'Lo que el archivo del PDS declara que lleva esta sonda, leído el {date}. Cada nombre es el que publica el archivo, y el identificador debajo es su cita.',
-  'bi.places.count': '{observed} de {total} con nombre',
+  'bi.places.count':
+    '{observed} observadas de {evaluated} evaluadas en el conjunto ODE publicado.',
+  'bi.places.countNamed': '{named} con nombre en el catálogo de la UAI.',
   'bi.places.search': 'Formación con nombre',
   'bi.places.hint':
     'Escriba el nombre de una formación para ver qué orbitadores la observaron.',
   'bi.places.unknown': 'Ninguna formación de este cuerpo lleva ese nombre.',
   'bi.places.none':
     'Ninguna huella publicada por el Orbital Data Explorer toca esta formación.',
+  'bi.places.notEvaluated':
+    'Esta formación no se evaluó en el conjunto de datos ODE publicado actualmente.',
   'bi.places.unavailable':
     'No se pudieron cargar las observaciones de esta formación.',
   'bi.places.observations': 'Observaciones: {count}, {span}',

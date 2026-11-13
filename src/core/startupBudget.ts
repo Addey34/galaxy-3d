@@ -509,6 +509,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le chargeur des formations nommées et de leurs observations (`config/placeObservations`) est partagé par deux morceaux hors démarrage, les blocs de fiche (`cardBlocks`) et la recherche typée (`paletteSearch`, qui y lit la position d'une formation choisie) : Vite l'en a sorti en morceau commun au lot 47, et il n'est chargé qu'avec l'un d'eux.",
   },
   {
+    chunk: 'textFold',
+    reason:
+      "le repli des accents et de la casse (`core/textFold`, GAL-SCIENCE-022A) est partagé par deux morceaux hors démarrage, la recherche typée (`paletteSearch`) et le bloc « Formations observées » de la fiche (`cardBlocks`) : Vite l'en a sorti en morceau commun, et il n'est chargé qu'avec l'un d'eux.",
+  },
+  {
     chunk: 'WindParticles',
     reason:
       "les particules du vent (lot 46) ne naissent qu'à la première activation de la couche de vent, éteinte au démarrage.",

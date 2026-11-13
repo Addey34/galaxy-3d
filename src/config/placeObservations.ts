@@ -35,6 +35,12 @@ interface PlaceObservationIndex {
       globalExcluded: number;
       shards: number;
       bytes: number;
+      /**
+       * Les identifiants évalués par le croisement et SANS aucune empreinte : la preuve d'un zéro.
+       * Facultatif, absent = ensemble vide. Un identifiant absent des morceaux ET de cette liste
+       * n'est PAS « sans observation » : il n'a pas été évalué (GAL-SCIENCE-022A).
+       */
+      zeroIds?: readonly number[];
     }
   >;
   readonly complete: boolean;
@@ -150,44 +156,223 @@ interface Shard {
     ReadonlyArray<readonly [number, number, string, string, string]>
   >;
 }
-const shards = new Map<string, Promise<Shard | null>>();
 
 /**
- * Ce que l'ODE a observé d'une formation. `[]` est une RÉPONSE (aucune empreinte ne la touche) ;
- * `null` veut dire que la question n'a pas pu être posée (corps non couvert, réseau).
+ * POURQUOI LA RÉPONSE A QUATRE ÉTATS (GAL-SCIENCE-022A). Avant, `shard.observed[id] ?? []` faisait
+ * d'une CLÉ ABSENTE une réponse « aucune empreinte ne touche cette formation ». Or une clé absente
+ * dit seulement que le croisement ne l'a pas listée : une formation que l'UAI a nommée après le
+ * tirage, ou que le tirage n'a jamais évaluée, y ressemblait à s'y méprendre. Un zéro est donc une
+ * PREUVE POSITIVE (l'identifiant figure dans `zeroIds` de l'index), jamais un défaut.
+ *
+ *   - `observed`      : des observations attestées, jamais vides ;
+ *   - `zero-proven`   : croisement fait, aucune empreinte (l'identifiant est dans `zeroIds`) ;
+ *   - `not-evaluated` : aucune preuve de croisement pour cet identifiant ;
+ *   - `unavailable`   : la question n'a pas pu être posée, ou les données sont invalides.
  */
-export async function loadPlaceObservations(
+export type PlaceUnavailableReason =
+  | 'body-not-covered'
+  | 'index-unavailable'
+  | 'shard-unavailable'
+  | 'invalid-data';
+
+export type PlaceObservationResult =
+  | { readonly status: 'observed'; readonly observations: PlaceObservation[] }
+  | { readonly status: 'zero-proven' }
+  | { readonly status: 'not-evaluated' }
+  | {
+      readonly status: 'unavailable';
+      readonly reason: PlaceUnavailableReason;
+      /** Ce qui est invalide, pour le journal : jamais affiché. */
+      readonly detail?: string;
+    };
+
+const unavailable = (
+  reason: PlaceUnavailableReason,
+  detail?: string
+): PlaceObservationResult => ({ status: 'unavailable', reason, detail });
+
+const isId = (n: unknown): n is number =>
+  typeof n === 'number' && Number.isSafeInteger(n) && n > 0;
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const isText = (v: unknown): v is string => typeof v === 'string';
+
+/** Le premier défaut d'un morceau, ou `null` s'il est sain. Une observation vide n'est JAMAIS un zéro. */
+function shardDefect(raw: unknown, k: number, shards: number): string | null {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw))
+    return 'morceau : pas un objet';
+  const { instruments, observed } = raw as Record<string, unknown>;
+  if (!Array.isArray(instruments)) return 'morceau : instruments absents';
+  for (const inst of instruments) {
+    const i = inst as Record<string, unknown> | null;
+    if (
+      typeof i !== 'object' ||
+      i === null ||
+      !isText(i.host) ||
+      !isText(i.id) ||
+      !isText(i.mission) ||
+      !isText(i.instrument)
+    )
+      return 'morceau : instrument malformé';
+  }
+  if (
+    typeof observed !== 'object' ||
+    observed === null ||
+    Array.isArray(observed)
+  )
+    return 'morceau : observed absent';
+  for (const [key, entries] of Object.entries(observed)) {
+    if (!/^[1-9]\d*$/.test(key) || !isId(Number(key)))
+      return `morceau : identifiant illisible « ${key} »`;
+    if (Number(key) % shards !== k)
+      return `identifiant ${key} dans le mauvais morceau (${k})`;
+    if (!Array.isArray(entries) || entries.length === 0)
+      return `identifiant ${key} : observations vides sans preuve de zéro`;
+    for (const entry of entries as unknown[]) {
+      if (!Array.isArray(entry) || entry.length !== 5)
+        return `identifiant ${key} : ligne malformée`;
+      const [inst, count, first, last, label] = entry as unknown[];
+      if (
+        typeof inst !== 'number' ||
+        !Number.isInteger(inst) ||
+        inst < 0 ||
+        inst >= instruments.length
+      )
+        return `identifiant ${key} : instrument inconnu`;
+      if (!isId(count)) return `identifiant ${key} : compte invalide`;
+      if (!isText(first) || !isText(last) || !isText(label))
+        return `identifiant ${key} : champ texte invalide`;
+      // Absente DES DEUX CÔTÉS (Viking n'en publie aucune), ou un jour de chaque côté, dans l'ordre.
+      if (first !== '' || last !== '') {
+        if (!DAY.test(first) || !DAY.test(last) || first > last)
+          return `identifiant ${key} : dates invalides`;
+      }
+    }
+  }
+  return null;
+}
+
+/** Un morceau se contrôle UNE fois : la Lune en porte des milliers de lignes. */
+const checked = new WeakMap<object, string | null>();
+function checkedShard(raw: unknown, k: number, shards: number): string | null {
+  if (typeof raw !== 'object' || raw === null)
+    return shardDefect(raw, k, shards);
+  if (!checked.has(raw)) checked.set(raw, shardDefect(raw, k, shards));
+  return checked.get(raw) ?? null;
+}
+
+/** Les `zeroIds` d'un corps : un ensemble, ou le défaut qui les invalide. */
+function zeroSet(cover: { zeroIds?: unknown }): Set<number> | string {
+  if (cover.zeroIds === undefined) return new Set();
+  if (!Array.isArray(cover.zeroIds)) return 'zeroIds : pas une liste';
+  const set = new Set<number>();
+  for (const id of cover.zeroIds as unknown[]) {
+    if (!isId(id)) return 'zeroIds : identifiant invalide';
+    if (set.has(id)) return `zeroIds : ${id} en double`;
+    set.add(id);
+  }
+  return set;
+}
+
+/**
+ * La classification, pure : un morceau déjà lu, l'index du corps, un identifiant. Elle ne fabrique
+ * jamais de zéro. Une contradiction (observé ET zéro prouvé) est une donnée invalide, pas un choix.
+ */
+export function classifyPlace(
+  cover: PlaceObservationIndex['bodies'][string],
+  rawShard: unknown,
+  iauId: number
+): PlaceObservationResult {
+  if (!isId(iauId)) return unavailable('invalid-data', `iauId ${iauId}`);
+  if (!isId(cover.shards))
+    return unavailable('invalid-data', 'shards invalide');
+  const zeros = zeroSet(cover);
+  if (typeof zeros === 'string') return unavailable('invalid-data', zeros);
+  const k = iauId % cover.shards;
+  const defect = checkedShard(rawShard, k, cover.shards);
+  if (defect) return unavailable('invalid-data', defect);
+  const shard = rawShard as Shard;
+  // L'intersection se contrôle sur TOUT le morceau, pas sur la seule formation demandée.
+  for (const id of zeros)
+    if (id % cover.shards === k && String(id) in shard.observed)
+      return unavailable(
+        'invalid-data',
+        `${id} à la fois observé et zéro prouvé`
+      );
+  const entries = shard.observed[String(iauId)];
+  if (entries)
+    return {
+      status: 'observed',
+      observations: entries.map(([inst, count, first, last, label]) => ({
+        instrument: shard.instruments[inst],
+        count,
+        first,
+        last,
+        label,
+      })),
+    };
+  if (zeros.has(iauId)) return { status: 'zero-proven' };
+  return { status: 'not-evaluated' };
+}
+
+/**
+ * La résolution complète, avec ses dépendances passées en argument pour être testée sans réseau :
+ * `index` (null = indisponible) et `readShard` (rend le JSON brut du morceau, ou lève).
+ */
+export async function resolvePlaceObservations(
+  deps: {
+    index: PlaceObservationIndex | null;
+    readShard: (body: string, k: number) => Promise<unknown>;
+  },
   body: string,
   iauId: number
-): Promise<PlaceObservation[] | null> {
-  const loaded = await loadPlaceIndex();
-  const cover = loaded?.bodies[body];
-  if (!cover) return null;
-  const k = iauId % cover.shards;
+): Promise<PlaceObservationResult> {
+  if (!deps.index) return unavailable('index-unavailable');
+  const cover = deps.index.bodies[body];
+  if (!cover) return unavailable('body-not-covered');
+  if (!isId(cover.shards) || !isId(iauId))
+    return classifyPlace(cover, null, iauId);
+  let raw: unknown;
+  try {
+    raw = await deps.readShard(body, iauId % cover.shards);
+  } catch (error: unknown) {
+    return unavailable('shard-unavailable', String(error));
+  }
+  return classifyPlace(cover, raw, iauId);
+}
+
+const shards = new Map<string, Promise<unknown>>();
+
+function readShardOverNetwork(body: string, k: number): Promise<unknown> {
   const key = `${body}/${k}`;
   let p = shards.get(key);
   if (!p) {
     p = fetch(`/assets/place-observations/${body}/${k}.json`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<Shard>;
+        return res.json() as Promise<unknown>;
       })
       .catch((error: unknown) => {
         shards.delete(key);
         Logger.warn(`[Lieux] ${key} indisponible : ${String(error)}`);
-        return null;
+        throw error;
       });
     shards.set(key, p);
   }
-  const shard = await p;
-  if (!shard) return null;
-  return (shard.observed[String(iauId)] ?? []).map(
-    ([inst, count, first, last, label]) => ({
-      instrument: shard.instruments[inst],
-      count,
-      first,
-      last,
-      label,
-    })
+  return p;
+}
+
+/** Ce que l'ODE a observé d'une formation, en quatre états (cf. `PlaceObservationResult`). */
+export async function loadPlaceObservations(
+  body: string,
+  iauId: number
+): Promise<PlaceObservationResult> {
+  const result = await resolvePlaceObservations(
+    { index: await loadPlaceIndex(), readShard: readShardOverNetwork },
+    body,
+    iauId
   );
+  if (result.status === 'unavailable' && result.reason === 'invalid-data')
+    Logger.warn(`[Lieux] ${body} ${iauId} : ${result.detail ?? 'invalide'}`);
+  return result;
 }
