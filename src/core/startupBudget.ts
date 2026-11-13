@@ -365,8 +365,19 @@ export const EPHEMERIS_STARTUP_BUDGET_BYTES = 1_800_000;
  * à la demande : une case dans les réglages, son libellé et le crédit de la source, en quatre langues
  * (475 o mesurés), tandis que le fichier, les repères et les noms sont dans un morceau hors démarrage
  * (`NON_BOOT_CHUNKS`). +5 000 o couvrent une dizaine de cases de cette taille ; au-delà, regarder.
+ *
+ * RELEVÉ DE 1 305 000 À 1 306 000 le 2026-11-13 (décision du CTO, GAL-RELEASE-012-013-BUDGET-02),
+ * pour la correction de la vitesse après une visite (GAL-PRODUCT-013). Mesuré sur l'arbre qui réunit
+ * les deux PR en attente (#511 et #512), avec les variables VITE de la CI : 1 305 026 o, soit 26 o
+ * AU-DELÀ de l'ancien plafond, alors que chaque PR passait seule (`main` 1 304 898 o ; #511 +39 o,
+ * le texte anglais du dictionnaire, déjà dans le démarrage ; #512 +89 o, `borrowSpeed` et
+ * `releaseSpeed` de `ui/playback`). La CI Linux avait mesuré les mêmes octets que le local pour #511
+ * et #512 : l'écart de 158 o cité plus haut ne s'applique pas à ces deux mesures. Marge THÉORIQUE
+ * après ce relevé : 974 o, calculée sur cette mesure et non encore relevée par la CI. Le budget reste
+ * BLOQUANT (`pnpm budget:startup`) : +1 000 o couvrent la correction et un peu d'air, pas une
+ * nouvelle fonction ; au-delà, alléger ou regarder.
  */
-export const JAVASCRIPT_STARTUP_BUDGET_BYTES = 1_305_000;
+export const JAVASCRIPT_STARTUP_BUDGET_BYTES = 1_306_000;
 
 /**
  * Les morceaux que le démarrage charge par import DYNAMIQUE, nommés avec leur raison.

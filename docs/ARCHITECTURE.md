@@ -1028,7 +1028,7 @@ légèrement au-DESSUS de 1, leurs en-têtes pesant plus que ce qu'un `206` éco
 | textures | 6 580 464 o | **dérivé** : la somme du palier PLANCHER (`core/textureLadder.TIERS[0]`, soit 1k) des 60 couches que le démarrage touche (5 601 457 o), plus le raffinement de première vue nommé (le ciel, 979 007 o). C'était 6 979 356 o avec le Soleil en 2k (398 892 o de plus), jusqu'au 2026-10-25 |
 | modèles | 1 079 152 o | **dérivé** : le niveau le plus léger (`core/modelLod`) des 15 corps modélisés |
 | éphémérides | 1 800 000 o | **posé** : le pire cas mesuré sur toute la couverture, plus 5,3 % |
-| JavaScript | 1 305 000 o | **posé** : la mesure, plus environ huit lots de croissance ordinaire |
+| JavaScript | 1 306 000 o | **posé** : la mesure, plus environ huit lots de croissance ordinaire |
 
 Un plafond **dérivé** ne se choisit pas, il se recalcule, et c'est ce qui rend ces deux familles
 insensibles à la pression : ajouter un palier 2k, 4k ou 8k ne coûte RIEN au démarrage, qui ne
