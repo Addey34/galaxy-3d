@@ -287,7 +287,7 @@ export const es: Record<MessageKey, string> = {
     'Haga clic en el reloj para desplegar los ajustes avanzados de fecha y velocidad.',
   'tour.step.info.title': '5. Inspeccionar un objetivo',
   'tour.step.info.text':
-    'Tras seleccionar un cuerpo, abra su ficha con el botón de información del objetivo.',
+    'Al seleccionar un astro, su ficha se abre automáticamente. Use el botón de información para ocultarla o volver a abrirla.',
   'tour.step.settings.title': '6. Ajustar la visualización',
   'tour.step.settings.text':
     'Abra los ajustes de visualización para mostrar u ocultar las etiquetas, los objetos y las órbitas, grupo por grupo u objeto por objeto.',

@@ -276,7 +276,7 @@ export const fr: Record<MessageKey, string> = {
     'Cliquez sur l’horloge pour déplier les réglages avancés de date et de vitesse.',
   'tour.step.info.title': '5. Inspecter une cible',
   'tour.step.info.text':
-    'Après avoir sélectionné un corps, ouvrez sa fiche avec le bouton d’information de la cible.',
+    'La fiche s’ouvre quand vous choisissez un astre. Le bouton d’information permet de la masquer ou de la rouvrir.',
   'tour.step.settings.title': '6. Régler l’affichage',
   'tour.step.settings.text':
     'Ouvrez les réglages d’affichage pour montrer ou masquer les étiquettes, les objets et les orbites, groupe par groupe ou objet par objet.',

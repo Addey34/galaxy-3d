@@ -303,7 +303,7 @@ export const en = {
     'Click the clock to unfold the advanced date and speed settings.',
   'tour.step.info.title': '5. Inspect a target',
   'tour.step.info.text':
-    'After selecting a body, open its information panel from the target button.',
+    'Selecting a body opens its information panel. Use the information button to hide or reopen it.',
   'tour.step.settings.title': '6. Adjust display',
   'tour.step.settings.text':
     'Open display settings to show or hide labels, objects and orbits, group by group or one object at a time.',
