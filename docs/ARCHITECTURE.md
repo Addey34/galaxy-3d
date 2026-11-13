@@ -866,6 +866,8 @@ saut, et l'annoncer ferait clignoter un bandeau à chaque clic dans le panneau d
 | `ui/speedSlider.test.ts` | l'inverse du curseur est exact sur toute la demi-course, la poignée revient sur le plafond, le plafond porte sur la magnitude et garde le sens du temps, et un plafond absurde ne fige pas la scène |
 | `ui/ephemerisNotice.test.ts` | un fichier manquant PRIME sur une attente, le seuil de 1,5 s se tait juste en dessous, et une reprise réussie garde sa ligne |
 | `core/ephemerisClockGate.test.ts` | l'attente se compte en temps RÉEL, se remet à zéro dès que la date repart, et cesse d'être une attente quand on renonce à attendre |
+| `ui/playbackTour.test.ts` | une visite emprunte sa vitesse : le plafond baisse puis remonte pendant ou après la visite, et la vitesse demandée avant la visite revient, signe compris |
+| `e2e/tourSpeed.spec.ts` | dans un vrai navigateur : curseur, libellé, ARIA et horloge mesurée disent la vitesse de la visite, puis celle du visiteur, en avant comme en arrière |
 | `e2e/playbackCeiling.spec.ts` | dans un vrai navigateur : sur un lien lent le curseur affiche la vitesse soutenable et sa raison, la poignée y revient, la fiche dit toujours « JPL Horizons » ; quand les octets ne viennent pas le bandeau dit que la date attend, sans le mot « precision » et sans reprise ; et à 390 px il ne couvre aucun dock, passe axe et ne déborde pas |
 
 ### Ce que l'appareil tient, et qui ne se redemande pas (lot 17, phase 17E)
@@ -5492,7 +5494,7 @@ l'hôte agit, puis le moteur attend un FAIT (`isMorphing`), jamais une durée. R
 `MORPH_DURATION_S` ici l'aurait rendue silencieusement trop courte le jour où elle change, et la
 légende suivante se serait affichée sur une scène à mi-chemin, c'est-à-dire sur aucune des deux
 échelles. **Une visite RESTITUE ce qu'elle emprunte** : `tourPlayer.finish()` remet le mode du
-DÉPART, comme il remettait déjà la vitesse, et jamais « éduc » en dur — un utilisateur déjà en
+DÉPART, comme il rend la vitesse demandée, et jamais « éduc » en dur — un utilisateur déjà en
 Explo ne doit pas en être sorti par une visite. La preuve qu'une forme n'est pas spéculative est
 qu'une fiche s'en serve : « Voyage aux confins » passe en Explo juste avant Sedna, là où la
 ceinture cesse d'être une file de points bien rangés.
@@ -5503,12 +5505,21 @@ sortes d'état, et le contrat les sépare.
 - **Les réglages EMPRUNTÉS, que `tourPlayer.finish()` rend** : le mode (celui du DÉPART), le fond
   d'imagerie (celui du DÉPART), la fiche ouverte (refermée, retour à la vue globale) et le
   permalien (suspendu pendant la visite, rendu à la fin).
-- **La vitesse : comportement ACTUEL, et anomalie UX identifiée.** Quand une visite change la
-  vitesse, `finish()` la remet à 1:1. Ce n'est pas une restitution : la vitesse demandée avant la
-  visite n'est pas mémorisée, et le libellé et le curseur de vitesse ne suivent pas ce retour,
-  donc l'affichage peut annoncer une vitesse que l'horloge n'applique plus (constaté sur la
-  production le 2026-11-12, avec une vitesse de départ différente de 1:1). Ce comportement n'est
-  pas le contrat visé ; sa correction est une décision séparée, et aucun test ne le fige.
+- **La vitesse, EMPRUNTÉE puis rendue (GAL-PRODUCT-013).** Une visite n'écrit jamais l'horloge :
+  elle emprunte la vitesse par `playback.borrowSpeed(scale)` et la rend par `releaseSpeed()`, que
+  `MainSolarSystemApp` fournit à `tourPlayer`. `ui/playback` distingue trois vitesses : celle que le
+  visiteur a DEMANDÉE (`askedValue`, signe compris, que la visite n'écrit jamais), celle que la
+  visite EMPRUNTE (stockée comme une position de curseur, `sliderFromScale`) et celle qui
+  s'APPLIQUE (l'une des deux, plafonnée par le lien). L'horloge, la poignée, le libellé et
+  l'`aria-valuetext` disent toujours la vitesse appliquée, d'une seule voix, pendant la visite comme
+  après. À la fin (normale, « Fermer », Échap) la vitesse demandée avant la visite revient, même
+  dans le sens du passé. Un geste du visiteur pendant la visite met fin à l'emprunt et gagne. Une
+  visite qui ne change pas la vitesse ne la change pas. Le plafond de débit s'applique à l'emprunt
+  comme à la demande, sur la magnitude et en gardant le sens du temps : s'il se relâche, la vitesse
+  empruntée (pendant la visite) ou demandée (après) revient. La poignée est arrondie par le curseur
+  natif (`step="1"`) : sa position n'est qu'une représentation APPROCHÉE de la vitesse appliquée
+  (mesuré à 200 000x : valeur 86, soit un facteur 1,025, et au pire environ 1,2), tandis que le
+  libellé, l'ARIA et l'horloge portent la vitesse exacte.
 - **La DATE de la simulation, que la visite laisse.** Ce n'est pas un réglage emprunté, c'est
   l'état de la simulation. Une visite qui saute à une date (`jumpToDate`, `jumpToEvent`) laisse la
   date atteinte, que la fin soit normale, le bouton « Fermer » ou la touche Échap : le visiteur
@@ -5521,7 +5532,13 @@ sortes d'état, et le contrat les sépare.
 `e2e/tourDateContract.spec.ts` garde ce contrat avec la visite de l'éclipse : date finale conservée
 après la fin normale et après « Fermer », date du lien cohérente avec le champ de date et retrouvée
 à la réouverture du lien, retour au présent, mode de départ rendu (la visite de l'éclipse passe
-en Explo puis le rend).
+en Explo puis le rend). La vitesse n'y est comparée que sur ce scénario, qui part de 1:1 et que
+la visite de l'éclipse ne change pas : la restitution d'une vitesse empruntée est gardée par
+`ui/playbackTour.test.ts` (le vrai `ui/playback`, DOM simulé, plafond réglé à la main : sept
+transitions du plafond, en avant et en arrière, une visite qui finit pendant un creux du lien, un
+geste du visiteur pendant la visite) et `e2e/tourSpeed.spec.ts` (vitesse signée MESURÉE sur la date
+de simulation, départ 1:1, en avant et en arrière, fin normale, « Fermer » et Échap, desktop et
+390 px, date atteinte conservée).
 
 **La visite qui montre un lieu à deux dates (« Le delta du Nil dans le temps », 2026-10-20).** Deux
 formes de plus, `diveTo` et `setSurface`, pour qu'une fiche puisse montrer le MÊME cadrage à deux

@@ -103,10 +103,8 @@ test.describe('la date après une visite', () => {
     const linked = permalinkDate(page)!;
 
     // Le mode de départ est rendu. La vitesse n'est comparée que parce que CE scénario part de
-    // 1:1 et que la visite de l'éclipse ne la change pas : l'égalité n'atteste PAS une
-    // restauration générale de la vitesse de départ. `finish()` remet aujourd'hui 1:1 en dur quand
-    // une visite a changé la vitesse, ce que ce test ne couvre pas (anomalie UX identifiée, à
-    // traiter séparément).
+    // 1:1 et que la visite de l'éclipse ne la change pas : l'égalité n'atteste PAS la restitution
+    // d'une vitesse empruntée, que gardent `e2e/tourSpeed.spec.ts` et `ui/playbackTour.test.ts`.
     expect(await borrowed(page)).toEqual(before);
 
     // 2 bis. Ouvrir le lien retrouve la même date (ce que reçoit quelqu'un à qui on le passe).
