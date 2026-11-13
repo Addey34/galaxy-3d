@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   applyCeiling,
@@ -6,6 +8,7 @@ import {
   MAX_SIMULATION_SCALE,
   scaleFromSlider,
   sliderFromMagnitude,
+  sliderFromScale,
   SPEED_CENTER_DEADZONE,
   SPEED_SLIDER_CENTER,
   SPEED_SLIDER_MAX,
@@ -149,5 +152,68 @@ describe('le libellé de vitesse', () => {
     expect(speedLabel(1, 'fr')).toContain('1:1');
     expect(speedLabel(-86_400, 'fr')).toContain('(passé)');
     expect(speedLabel(-86_400, 'en')).toContain('(past)');
+  });
+});
+
+/**
+ * UNE VISITE EMPRUNTE LA VITESSE (GAL-PRODUCT-013) : `ui/playback` pose la vitesse d'une visite
+ * comme une position de curseur (`sliderFromScale`), plafond du lien compris. Le navigateur est
+ * tenu par `e2e/tourSpeed.spec.ts` ; ici, l'arithmétique qui le permet.
+ */
+describe('sliderFromScale', () => {
+  it('est l’inverse de scaleFromSlider, signe compris', () => {
+    for (const value of [0, 10, 20, 30, 53, 60, 80, 90, 100]) {
+      const scale = scaleFromSlider(value);
+      expect(scaleFromSlider(sliderFromScale(scale))).toBe(scale);
+    }
+  });
+
+  it('pose le temps réel et les valeurs inposables au centre', () => {
+    for (const scale of [1, -1, 0])
+      expect(sliderFromScale(scale)).toBe(SPEED_SLIDER_CENTER);
+  });
+
+  it('garde le signe et reste dans la course', () => {
+    expect(sliderFromScale(200_000)).toBeGreaterThan(SPEED_SLIDER_CENTER);
+    expect(sliderFromScale(-200_000)).toBeLessThan(SPEED_SLIDER_CENTER);
+    expect(sliderFromScale(10 * MAX_SIMULATION_SCALE)).toBeLessThanOrEqual(
+      SPEED_SLIDER_MAX
+    );
+  });
+
+  const TOURS = resolve(import.meta.dirname, '../registry/tours');
+  const order = (
+    JSON.parse(readFileSync(resolve(TOURS, 'order.json'), 'utf-8')) as {
+      order: string[];
+    }
+  ).order;
+  const scales = order.flatMap((id) =>
+    (
+      JSON.parse(readFileSync(resolve(TOURS, `${id}.json`), 'utf-8')) as {
+        steps: { kind: string; scale?: number }[];
+      }
+    ).steps
+      .filter((step) => step.kind === 'setTimeScale')
+      .map((step) => step.scale!)
+  );
+
+  it('couvre au moins une vitesse de visite (sinon ce garde ne garde rien)', () => {
+    expect(scales.length).toBeGreaterThan(0);
+  });
+
+  it.each(scales)(
+    'la vitesse %s de visite s’applique telle quelle',
+    (scale) => {
+      const applied = applyCeiling(sliderFromScale(scale), null);
+      expect(applied.scale).toBe(scale);
+      expect(applied.limited).toBe(false);
+    }
+  );
+
+  it('une vitesse de visite plafonnée garde son signe, et revient sans plafond', () => {
+    const slow = applyCeiling(sliderFromScale(-200_000), 3_600);
+    expect(slow.scale).toBe(-3_600);
+    expect(slow.limited).toBe(true);
+    expect(applyCeiling(sliderFromScale(-200_000), null).scale).toBe(-200_000);
   });
 });
