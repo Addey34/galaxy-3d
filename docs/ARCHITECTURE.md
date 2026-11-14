@@ -4141,8 +4141,21 @@ c'est vérifiable en cherchant `renderSphere` dans `dist/assets/*.js`.
    ouvrir `/jupiter/` ciblait Jupiter, mais naviguer ensuite vers Titan écrivait `?body=titan`
    sur ce même chemin — une adresse qui nommait deux corps différents, et un lien partagé qui
    montrait la vignette du mauvais. Chaque sélection remonte maintenant à l'adresse indexable
-   du corps par `history.replaceState`, donc **sans rechargement** : vérifié par un marqueur
-   JavaScript qui survit à toute la navigation et par zéro document HTML retéléchargé.
+   du corps par l'API History (`pushState` ou `replaceState`, voir ci-dessous), donc **sans
+   rechargement** : vérifié par un marqueur JavaScript qui survit à toute la navigation et par
+   zéro document HTML retéléchargé.
+
+   **L'historique du navigateur (GAL-PRODUCT-015).** `ui/permalink.ts` mémorise le corps que décrit
+   l'entrée d'historique courante. Choisir un AUTRE corps ajoute une entrée (`pushState`) ; tout
+   le reste réécrit l'entrée courante (`replaceState`) : changement de date ou de mode, lecture du
+   temps, partage, ouverture d'une formation, même corps choisi une seconde fois. Retour et Suivant
+   (`popstate`) restaurent le corps, vue d'ensemble comprise, par la commande de sélection
+   habituelle et sans ajouter d'entrée ; ils ne rejouent NI la date NI le mode, qu'un retour
+   arrière ne doit pas remonter. Une visite guidée suspend l'écriture de l'adresse : ses vols
+   n'ajoutent rien, et sa fin ajoute au plus l'entrée de la vue d'ensemble. Un saut de date qui
+   attend ses octets retarde l'écriture jusqu'à son application, qui ajoute alors l'entrée.
+   Limite connue : deux sélections faites pendant l'attente d'un même saut ne laissent qu'une
+   entrée, celle du dernier corps.
    `serializePermalink` omettait déjà `?body=` quand le chemin nomme ce corps, donc l'omission
    se déclenche d'elle-même et l'URL cesse d'affirmer deux fois la même chose.
 

@@ -77,6 +77,19 @@ export function setupPermalinks(
 ): PermalinkController {
   let applying = false;
   let suspended = false;
+  // Le corps que décrit l'entrée d'historique COURANTE (`overview` = vue d'ensemble). C'est lui qui
+  // sépare une navigation d'une simple mise à jour : choisir un AUTRE corps ajoute une entrée (le
+  // bouton Retour le restaure), tout le reste (date, mode, partage, même corps) réécrit l'entrée.
+  let entryBody = 'overview';
+  const writeUrl = (url: string, body: string | null): void => {
+    const next = body ?? 'overview';
+    window.history[next === entryBody ? 'replaceState' : 'pushState'](
+      null,
+      '',
+      url
+    );
+    entryBody = next;
+  };
   // Éclipse nommée par le chemin d'ENTRÉE (`/eclipse/2026-08-12/`). Recalculée une seule fois :
   // tant que l'état la décrit, l'adresse la garde ; dès qu'il ne la décrit plus, elle est
   // oubliée et l'adresse redevient le permalien ordinaire, sans retour possible.
@@ -109,8 +122,7 @@ export function setupPermalinks(
         window.location.search
       )}${window.location.hash}`;
       const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      if (eclipseUrl !== currentUrl)
-        window.history.replaceState(null, '', eclipseUrl);
+      if (eclipseUrl !== currentUrl) writeUrl(eclipseUrl, selectedBody);
       eclipseHooks.onEclipseAddress?.(eclipse);
       return;
     }
@@ -141,7 +153,7 @@ export function setupPermalinks(
     );
     const nextUrl = `${nextPathname}${nextSearch}${window.location.hash}`;
     const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (nextUrl !== currentUrl) window.history.replaceState(null, '', nextUrl);
+    if (nextUrl !== currentUrl) writeUrl(nextUrl, selectedBody);
   };
 
   /**
@@ -152,17 +164,30 @@ export function setupPermalinks(
    */
   om.onDateSettled(() => sync());
 
-  const applyInitialState = (): void => {
+  const applyInitialState = (popped = false): void => {
     const state = parsePermalink(
       window.location.search,
       selectableBodies,
       window.location.pathname
     );
+    // L'entrée que le navigateur vient de rouvrir décrit CE corps : l'écriture qui suit la
+    // restauration la réécrit au lieu d'en ajouter une.
+    const pathEclipse = eclipseFromPathname(window.location.pathname);
+    entryBody =
+      state.body ??
+      (pathEclipse && eclipseFocusBody(pathEclipse)) ??
+      'overview';
+    if (popped) {
+      // Retour/Suivant : seul le corps est restauré, vue d'ensemble comprise. La date, le mode, le
+      // cadrage et la formation ne sont pas une destination (un Retour qui remonterait l'horloge ou
+      // basculerait de mode surprendrait), et aucune entrée n'est ajoutée.
+      state.mode = state.date = state.view = state.place = undefined;
+      state.body = entryBody;
+    }
     // Une page d'éclipse porte sa date et son corps dans le CHEMIN (la CSP interdit de les
     // transmettre par un script en ligne). La query, si quelqu'un en ajoute une, prime encore.
-    const pathEclipse = eclipseFromPathname(window.location.pathname);
     if (pathEclipse) {
-      state.date ??= pathEclipse.date;
+      if (!popped) state.date ??= pathEclipse.date;
       state.body ??= eclipseFocusBody(pathEclipse);
     }
     if (!state.mode && !state.body && !state.date && !state.view) return;
@@ -227,7 +252,7 @@ export function setupPermalinks(
     );
   });
 
-  window.addEventListener('popstate', applyInitialState);
+  window.addEventListener('popstate', () => applyInitialState(true));
   return {
     applyInitialState,
     sync,

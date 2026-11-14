@@ -2,7 +2,7 @@
  * Bouton « Partager cette vue » (#share-btn).
  *
  * Le corps/date/mode courants sont déjà encodés dans l'URL par le système de permaliens
- * (`history.replaceState` à chaque changement). Ce bouton fait deux choses : 1) capture
+ * (l'API History à chaque changement : `ui/permalink.ts`). Ce bouton fait deux choses : 1) capture
  * l'angle de caméra EXACT du moment (azimut/polaire/distance, cf. CameraSystem.getViewAngles)
  * et le grave dans l'URL — sans ça, ouvrir le lien retomberait sur le cadrage par défaut du
  * corps plutôt que la vue précise regardée ; 2) la RENDS PARTAGEABLE : partage natif sur
