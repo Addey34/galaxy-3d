@@ -173,6 +173,10 @@ export const cardEn = {
   'bi.instruments.absentNote': 'Read in the PDS archive on {date}.',
   'bi.instruments.note':
     'What the PDS archive declares this spacecraft carries, read on {date}. Each name is the one the archive publishes, and the identifier below it is its citation.',
+  'place.marker.hint':
+    'View turned toward this place. Move closer to see names on the surface.',
+  'place.marker.announce':
+    '{place}, {body}: the view is turned toward this place. Move closer to see names on the surface.',
   'bi.places.count':
     '{observed} observed of {evaluated} evaluated in the published ODE dataset.',
   'bi.places.countNamed': '{named} named in the IAU catalogue.',
