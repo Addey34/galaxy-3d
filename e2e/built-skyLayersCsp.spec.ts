@@ -32,16 +32,14 @@ const SATELLITES = readFileSync(
   new URL('./satellites.fixture.json', import.meta.url),
   'utf8'
 );
-/** Date de l'époque de la fixture des satellites (cf. `satelliteLayer.spec.ts`). */
-const SATELLITES_DATE = '2026-11-02T19:00:00Z';
 /**
- * Date et cible de `constellationNames.spec.ts` et `deepSkyLayer.spec.ts`. Mesurée sur ce build : des
- * constellations et des objets du ciel profond sont dans le champ, des radiants de météores
- * seulement sur la largeur du bureau (un radiant est dans le champ « ou non » selon la date, cf.
- * `meteorLayer.spec.ts` : on ne l'impose donc que là où cette mesure l'établit).
+ * Date de l'époque de la fixture des satellites (cf. `satelliteLayer.spec.ts`), pour toute la scène.
+ * Sur la Terre à cette date, des constellations et des objets du ciel profond sont dans le champ
+ * (mesuré, les objets du ciel profond seulement sur la largeur du bureau) ; un radiant de météores
+ * y est « dans le champ ou non » (cf. `meteorLayer.spec.ts`) : pour eux on ne contrôle que la mise
+ * en page, pas un compte de noms.
  */
-const SKY_DATE = '2026-09-15T11:00:00Z';
-
+const SATELLITES_DATE = '2026-11-02T19:00:00Z';
 /** Le JS ou le CSS d'une de ces couches : rien de tout cela ne se charge tant qu'elles sont éteintes. */
 const LAYER_ASSET =
   /\/assets\/(skyLabels|constellationNames|deepSkyLayer|meteorLayer|satelliteLayer)-[^/]*\.(js|css)$/;
@@ -202,29 +200,36 @@ const LAYERS = [
     'constellations-toggle',
     '.constellation-names',
     '.constellation-names-item',
-    true,
+    'all',
   ],
-  ['deepsky-toggle', '.deepsky-names', '.deepsky-names-item', true],
-  ['meteors-toggle', '.meteor-names', '.meteor-names-item', false],
+  ['deepsky-toggle', '.deepsky-names', '.deepsky-names-item', 'desktop'],
+  ['meteors-toggle', '.meteor-names', '.meteor-names-item', 'none'],
 ] as const;
 
+/**
+ * Une seule scène par configuration : le démarrage WebGL d'un runner en rendu logiciel coûte
+ * 30 à 60 s, et `pnpm test:pages` tourne dans le job `verify` (garde-fou de 15 minutes). Les
+ * satellites d'abord, puis les trois couches de noms, sur la Terre à la date de la fixture.
+ * Délais larges (démarrage 90 s, attentes 60 s) : sur ce runner l'image met plusieurs centaines de
+ * millisecondes, et un marqueur ne se peint qu'à l'image suivante.
+ */
 for (const [label, viewName, csp] of [
   ['sous la CSP', 'desktop', true],
   ['sous la CSP', 'phone', true],
   ['sans CSP (témoin)', 'desktop', false],
 ] as const) {
-  test(`noms du ciel, ${viewName} ${label} : dans la fenêtre, activés, éteints, rallumés`, async ({
+  test(`couches du ciel, ${viewName} ${label} : satellites et noms, activés, éteints, rallumés`, async ({
     page,
   }) => {
+    test.setTimeout(300_000);
     await page.setViewportSize(VIEWS[viewName]);
     const { assets } = await boot(page, {
       csp,
-      url: `/?mode=explo&body=neptune&date=${SKY_DATE}`,
-      toggle: 'meteors-toggle',
+      url: `/?mode=explo&body=earth&date=${SATELLITES_DATE}`,
+      toggle: 'satellites-toggle',
     });
     // Éteintes au démarrage : ni JS, ni CSS, ni feuille de ces couches.
     expect(assets, 'rien de ces couches avant activation').toEqual([]);
-    const baseline = await styleViolations(page);
     expect(
       await page.evaluate(() =>
         [...document.styleSheets].some((s) =>
@@ -232,18 +237,49 @@ for (const [label, viewName, csp] of [
         )
       )
     ).toBe(false);
+    const baseline = await styleViolations(page);
 
     await page.locator('#settings-trigger').dispatchEvent('click');
     await openSettingsTab(page, 'scene');
 
-    for (const [toggle, host, item, everyView] of LAYERS) {
-      const named = everyView || viewName === 'desktop';
+    // --- Satellites : un canvas fixe, plein écran, sous la capture.
+    const overlay = page.locator('#satellite-overlay');
+    const markers = async (): Promise<number> =>
+      Number(await overlay.getAttribute('data-markers'));
+    await page.locator('#satellites-toggle').check();
+    await expect.poll(markers, { timeout: 60_000 }).toBeGreaterThan(0);
+    await expectHostLayout(page, '#satellite-overlay', '21');
+    await expectNoParasiticScroll(page);
+
+    // Pendant une capture d'image, la couche s'efface.
+    await page.evaluate(() => document.body.classList.add('is-capturing'));
+    await expect(overlay).toBeHidden();
+    await page.evaluate(() => document.body.classList.remove('is-capturing'));
+    await expect(overlay).toBeVisible();
+
+    await page.locator('#satellites-toggle').uncheck();
+    await expect(overlay).toBeHidden();
+    await expect(overlay).toHaveAttribute('data-markers', '0');
+    await page.locator('#satellites-toggle').check();
+    await expect.poll(markers, { timeout: 60_000 }).toBeGreaterThan(0);
+    await expectNoParasiticScroll(page);
+    await page.locator('#satellites-toggle').uncheck();
+    expect(assets.some((u) => /satelliteLayer-[^/]*\.css$/.test(u))).toBe(true);
+
+    // --- Les noms écrits sur le ciel.
+    for (const [toggle, host, item, expectNames] of LAYERS) {
+      // Où un compte de noms est établi par la mesure (la vue change avec la largeur) : ailleurs, la
+      // mise en page est seule contrôlée, et tout nom affiché doit tout de même être dans la fenêtre.
+      const named =
+        expectNames === 'all' ||
+        (expectNames === 'desktop' && viewName === 'desktop');
+      await expect(page.locator(`#${toggle}`)).toBeEnabled({ timeout: 60_000 });
       await page.locator(`#${toggle}`).check();
       await expect(page.locator(host)).toBeVisible();
       if (named)
         await expect
           .poll(async () => (await shownInViewport(page, item)).inside, {
-            timeout: 20_000,
+            timeout: 60_000,
             message: `${item} dans la fenêtre`,
           })
           .toBeGreaterThan(0);
@@ -261,60 +297,15 @@ for (const [label, viewName, csp] of [
       if (named)
         await expect
           .poll(async () => (await shownInViewport(page, item)).inside, {
-            timeout: 20_000,
+            timeout: 60_000,
           })
           .toBeGreaterThan(0);
       await expectNoParasiticScroll(page);
       await page.locator(`#${toggle}`).uncheck();
     }
 
-    // La feuille a bien été demandée avec la couche, et seulement alors.
+    // La feuille des noms a bien été demandée avec la couche, et seulement alors.
     expect(assets.some((u) => /skyLabels-[^/]*\.css$/.test(u))).toBe(true);
-    await expectNoNewStyleViolations(page, baseline);
-  });
-
-  test(`satellites, ${viewName} ${label} : canvas fixe plein écran, marqueurs, capture`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(VIEWS[viewName]);
-    const { assets } = await boot(page, {
-      csp,
-      url: `/?mode=explo&body=earth&date=${SATELLITES_DATE}`,
-      toggle: 'satellites-toggle',
-    });
-    expect(assets, 'rien de cette couche avant activation').toEqual([]);
-    const baseline = await styleViolations(page);
-
-    await page.locator('#settings-trigger').dispatchEvent('click');
-    await openSettingsTab(page, 'scene');
-    await page.locator('#satellites-toggle').check();
-    const overlay = page.locator('#satellite-overlay');
-    await expect
-      .poll(async () => Number(await overlay.getAttribute('data-markers')), {
-        timeout: 20_000,
-      })
-      .toBeGreaterThan(0);
-    await expectHostLayout(page, '#satellite-overlay', '21');
-    await expectNoParasiticScroll(page);
-
-    // Pendant une capture d'image, la couche s'efface.
-    await page.evaluate(() => document.body.classList.add('is-capturing'));
-    await expect(overlay).toBeHidden();
-    await page.evaluate(() => document.body.classList.remove('is-capturing'));
-    await expect(overlay).toBeVisible();
-
-    await page.locator('#satellites-toggle').uncheck();
-    await expect(overlay).toBeHidden();
-    await expect(overlay).toHaveAttribute('data-markers', '0');
-    await page.locator('#satellites-toggle').check();
-    await expect
-      .poll(async () => Number(await overlay.getAttribute('data-markers')), {
-        timeout: 20_000,
-      })
-      .toBeGreaterThan(0);
-    await expectNoParasiticScroll(page);
-
-    expect(assets.some((u) => /satelliteLayer-[^/]*\.css$/.test(u))).toBe(true);
     await expectNoNewStyleViolations(page, baseline);
   });
 }
