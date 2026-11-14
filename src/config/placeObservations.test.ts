@@ -34,8 +34,14 @@ describe('placeObservationIndex', () => {
   it('ne couvre que des corps qui portent des noms, et en compte les formations exactes', () => {
     for (const [body, cover] of Object.entries(index.bodies)) {
       expect(Object.keys(gazetteerIndex.bodies)).toContain(body);
-      const names = read(`public/assets/gazetteer/${body}.json`) as unknown[];
-      expect(cover.formations, body).toBe(names.length);
+      const names = read(`public/assets/gazetteer/${body}.json`) as {
+        approved: string;
+      }[];
+      // Le tirage ODE est GELÉ (`frozenAt`) : il compte les formations nommées à cette date.
+      // Celles que l'UAI adopte ensuite sont dans le gazetteer et PAS dans le tirage : elles ne
+      // sont ni observées ni « zéro », elles ne sont pas évaluées (`placeCoverage.test.ts`).
+      const named = names.filter((f) => f.approved <= index.frozenAt);
+      expect(cover.formations, body).toBe(named.length);
     }
   });
 

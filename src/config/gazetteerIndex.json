@@ -12,7 +12,7 @@
   "rightsStatedAt": "https://planetarynames.wr.usgs.gov/Page/FAQ",
   "rightsQuote": "Everything in the Gazetteer of Planetary Nomenclature is in the public domain.",
   "citation": "International Astronomical Union Working Group for Planetary System Nomenclature. \"Gazetteer of Planetary Nomenclature.\" https://planetarynames.wr.usgs.gov/",
-  "accessed": "2026-10-23"
+  "accessed": "2026-11-03"
  },
  "bodies": {
   "amalthea": {
@@ -108,16 +108,16 @@
    "bytes": 8071
   },
   "mars": {
-   "count": 2051,
-   "bytes": 361401
+   "count": 2054,
+   "bytes": 362402
   },
   "mathilde": {
    "count": 23,
    "bytes": 3759
   },
   "mercury": {
-   "count": 606,
-   "bytes": 122229
+   "count": 613,
+   "bytes": 123734
   },
   "mimas": {
    "count": 42,
