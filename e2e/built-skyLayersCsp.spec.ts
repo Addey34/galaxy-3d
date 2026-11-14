@@ -255,7 +255,7 @@ for (const [label, viewName, csp] of [
   ['sous la CSP', 'phone', true],
   ['sans CSP (témoin)', 'desktop', false],
 ] as const) {
-  test(`couches du ciel, ${viewName} ${label} : satellites et noms, activés, éteints, rallumés`, async ({
+  test(`couches du ciel, ${viewName} ${label} : ${csp ? 'satellites et noms, activés, éteints, rallumés' : 'attribution (satellites et constellations, une activation)'}`, async ({
     page,
   }) => {
     test.setTimeout(300_000);
@@ -275,6 +275,12 @@ for (const [label, viewName, csp] of [
       )
     ).toBe(false);
     const baseline = await styleViolations(page);
+    // Le témoin sans CSP ne sert qu'à ATTRIBUER le défaut : il montre que, sans CSP, la mise en page
+    // est correcte (conteneur fixe, noms et marqueurs dans la fenêtre), donc que la cause est bien la
+    // feuille refusée et non les données. Il ne rejoue ni capture, ni extinction/réactivation, ni
+    // ciel profond, ni météores (les deux scénarios sous CSP les couvrent, et chaque scène coûte
+    // plusieurs minutes sur le runner, dans un job borné à 15 minutes).
+    const control = !csp;
 
     await page.locator('#settings-trigger').dispatchEvent('click');
     await openSettingsTab(page, 'scene');
@@ -298,23 +304,27 @@ for (const [label, viewName, csp] of [
       `${VALID_AT_SATELLITES_DATE} satellites`
     );
 
-    // Pendant une capture d'image, la couche s'efface.
-    await page.evaluate(() => document.body.classList.add('is-capturing'));
-    await expect(overlay).toBeHidden();
-    await page.evaluate(() => document.body.classList.remove('is-capturing'));
-    await expect(overlay).toBeVisible();
+    if (!control) {
+      // Pendant une capture d'image, la couche s'efface.
+      await page.evaluate(() => document.body.classList.add('is-capturing'));
+      await expect(overlay).toBeHidden();
+      await page.evaluate(() => document.body.classList.remove('is-capturing'));
+      await expect(overlay).toBeVisible();
 
-    await page.locator('#satellites-toggle').uncheck();
-    await expect(overlay).toBeHidden();
-    await expect(overlay).toHaveAttribute('data-markers', '0');
-    await page.locator('#satellites-toggle').check();
-    await expect.poll(markers, { timeout: 60_000 }).toBeGreaterThan(0);
-    await expectNoParasiticScroll(page);
+      await page.locator('#satellites-toggle').uncheck();
+      await expect(overlay).toBeHidden();
+      await expect(overlay).toHaveAttribute('data-markers', '0');
+      await page.locator('#satellites-toggle').check();
+      await expect.poll(markers, { timeout: 60_000 }).toBeGreaterThan(0);
+      await expectNoParasiticScroll(page);
+    }
     await page.locator('#satellites-toggle').uncheck();
     expect(assets.some((u) => /satelliteLayer-[^/]*\.css$/.test(u))).toBe(true);
 
     // --- Les noms écrits sur le ciel.
-    for (const [toggle, host, item, expectNames] of LAYERS) {
+    for (const [toggle, host, item, expectNames] of control
+      ? LAYERS.slice(0, 1)
+      : LAYERS) {
       // Où un compte de noms est établi par la mesure (la vue change avec la largeur) : ailleurs, la
       // mise en page est seule contrôlée, et tout nom affiché doit tout de même être dans la fenêtre.
       const named =
@@ -337,17 +347,19 @@ for (const [label, viewName, csp] of [
       await expectHostLayout(page, host, '3');
       await expectNoParasiticScroll(page);
 
-      await page.locator(`#${toggle}`).uncheck();
-      await expect(page.locator(host)).toBeHidden();
-      await page.locator(`#${toggle}`).check();
-      await expect(page.locator(host)).toBeVisible();
-      if (named)
-        await expect
-          .poll(async () => (await shownInViewport(page, item)).inside, {
-            timeout: 60_000,
-          })
-          .toBeGreaterThan(0);
-      await expectNoParasiticScroll(page);
+      if (!control) {
+        await page.locator(`#${toggle}`).uncheck();
+        await expect(page.locator(host)).toBeHidden();
+        await page.locator(`#${toggle}`).check();
+        await expect(page.locator(host)).toBeVisible();
+        if (named)
+          await expect
+            .poll(async () => (await shownInViewport(page, item)).inside, {
+              timeout: 60_000,
+            })
+            .toBeGreaterThan(0);
+        await expectNoParasiticScroll(page);
+      }
       await page.locator(`#${toggle}`).uncheck();
     }
 
