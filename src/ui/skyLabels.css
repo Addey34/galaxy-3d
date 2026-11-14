@@ -1,0 +1,38 @@
+/*
+ * Les noms écrits sur le ciel (constellations, ciel profond, pluies de météores), noyau commun
+ * `skyLabels.ts`. Feuille EXTERNE : la CSP de production est `style-src 'self'`, un <style> injecté
+ * est refusé et les noms tombaient hors de l'écran (GAL-CSP-001). Vite la sort avec le morceau
+ * `skyLabels` et ne la charge qu'avec lui. Les classes sont celles que `className` désigne dans
+ * chaque couche ; seule la teinte du texte change de l'une à l'autre.
+ */
+.constellation-names,
+.deepsky-names,
+.meteor-names {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+.constellation-names-item,
+.deepsky-names-item,
+.meteor-names-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+  will-change: transform;
+}
+.constellation-names-item {
+  color: rgba(160, 190, 235, 0.78);
+}
+.deepsky-names-item {
+  color: rgba(255, 205, 150, 0.8);
+}
+.meteor-names-item {
+  color: rgba(150, 225, 255, 0.85);
+}

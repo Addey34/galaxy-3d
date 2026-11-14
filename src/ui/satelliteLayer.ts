@@ -39,6 +39,7 @@ import {
 import type { SatelliteElements } from '@/core/satellites';
 import type { CelestialBodyConfig } from '@/types';
 import Logger from '@/utils/Logger';
+import './satelliteLayer.css';
 
 export const SATELLITES_URL = `${GALAXY_DATA_ORIGIN}/satellites/elements.json`;
 
@@ -76,11 +77,6 @@ interface Entry {
   readonly epoch: number;
 }
 
-const STYLE = `
-#satellite-overlay { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 21; pointer-events: none; }
-#satellite-overlay[hidden], body.is-capturing #satellite-overlay { display: none; }
-`;
-
 export async function setupSatelliteLayer(
   env: SatelliteLayerEnvironment,
   fetchImpl: typeof fetch = fetch
@@ -105,9 +101,6 @@ export async function setupSatelliteLayer(
   }
   const epochs = entries.map((e) => e.epoch);
 
-  const style = document.createElement('style');
-  style.textContent = STYLE;
-  document.head.append(style);
   const canvas = document.createElement('canvas');
   canvas.id = 'satellite-overlay';
   canvas.setAttribute('aria-hidden', 'true');
