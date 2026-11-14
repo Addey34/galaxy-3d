@@ -1,6 +1,6 @@
 # Licence
 
-Required Notice: Copyright © 2026 Adrian34
+Required Notice: Copyright © 2026 Addey34
 
 Ce logiciel est distribué sous la **PolyForm Noncommercial License 1.0.0**.
 Vous pouvez le consulter, l'étudier, le modifier et l'utiliser à des fins **non
