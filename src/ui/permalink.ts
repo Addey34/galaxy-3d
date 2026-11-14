@@ -77,6 +77,19 @@ export function setupPermalinks(
 ): PermalinkController {
   let applying = false;
   let suspended = false;
+  // Le corps que décrit l'entrée d'historique COURANTE (`overview` = vue d'ensemble). C'est lui qui
+  // sépare une navigation d'une simple mise à jour : choisir un AUTRE corps ajoute une entrée (le
+  // bouton Retour le restaure), tout le reste (date, mode, partage, même corps) réécrit l'entrée.
+  let entryBody = 'overview';
+  const writeUrl = (url: string, body: string | null): void => {
+    const next = body ?? 'overview';
+    window.history[next === entryBody ? 'replaceState' : 'pushState'](
+      null,
+      '',
+      url
+    );
+    entryBody = next;
+  };
   // Éclipse nommée par le chemin d'ENTRÉE (`/eclipse/2026-08-12/`). Recalculée une seule fois :
   // tant que l'état la décrit, l'adresse la garde ; dès qu'il ne la décrit plus, elle est
   // oubliée et l'adresse redevient le permalien ordinaire, sans retour possible.
@@ -109,8 +122,7 @@ export function setupPermalinks(
         window.location.search
       )}${window.location.hash}`;
       const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      if (eclipseUrl !== currentUrl)
-        window.history.replaceState(null, '', eclipseUrl);
+      if (eclipseUrl !== currentUrl) writeUrl(eclipseUrl, selectedBody);
       eclipseHooks.onEclipseAddress?.(eclipse);
       return;
     }
@@ -141,7 +153,7 @@ export function setupPermalinks(
     );
     const nextUrl = `${nextPathname}${nextSearch}${window.location.hash}`;
     const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (nextUrl !== currentUrl) window.history.replaceState(null, '', nextUrl);
+    if (nextUrl !== currentUrl) writeUrl(nextUrl, selectedBody);
   };
 
   /**
@@ -152,17 +164,35 @@ export function setupPermalinks(
    */
   om.onDateSettled(() => sync());
 
-  const applyInitialState = (): void => {
+  const applyInitialState = (popped = false): void => {
+    // Une ancienne entrée garde l'adresse de la langue d'alors : la langue CHOISIE prime.
+    if (popped) alignLocalePath();
     const state = parsePermalink(
       window.location.search,
       selectableBodies,
       window.location.pathname
     );
+    // L'entrée que le navigateur vient de rouvrir décrit CE corps : l'écriture qui suit la
+    // restauration la réécrit au lieu d'en ajouter une.
+    const pathEclipse = eclipseFromPathname(window.location.pathname);
+    entryBody =
+      state.body ??
+      (pathEclipse && eclipseFocusBody(pathEclipse)) ??
+      'overview';
+    // Pendant une visite guidée, la caméra est à la visite : le navigateur a changé d'entrée, mais
+    // le corps suivi ne bouge pas, et la fin de la visite écrira l'adresse.
+    if (popped && suspended) return;
+    if (popped) {
+      // Retour/Suivant : seul le corps est restauré, vue d'ensemble comprise. La date, le mode, le
+      // cadrage et la formation ne sont pas une destination (un Retour qui remonterait l'horloge ou
+      // basculerait de mode surprendrait), et aucune entrée n'est ajoutée.
+      state.mode = state.date = state.view = state.place = undefined;
+      state.body = entryBody;
+    }
     // Une page d'éclipse porte sa date et son corps dans le CHEMIN (la CSP interdit de les
     // transmettre par un script en ligne). La query, si quelqu'un en ajoute une, prime encore.
-    const pathEclipse = eclipseFromPathname(window.location.pathname);
     if (pathEclipse) {
-      state.date ??= pathEclipse.date;
+      if (!popped) state.date ??= pathEclipse.date;
       state.body ??= eclipseFocusBody(pathEclipse);
     }
     if (!state.mode && !state.body && !state.date && !state.view) return;
@@ -178,7 +208,7 @@ export function setupPermalinks(
       if (state.body) navigation.selectBody(state.body);
       // Au pic, et pas une seconde plus tard : sans pause, l'horloge repart en temps réel et
       // l'état cesse de décrire l'éclipse avant même que le visiteur l'ait regardée.
-      if (pathEclipse) eclipseHooks.playback?.pause();
+      if (pathEclipse && !popped) eclipseHooks.playback?.pause();
     } finally {
       applying = false;
     }
@@ -196,7 +226,7 @@ export function setupPermalinks(
       // recherche ; l'adresse réécrite ne la garde pas, c'est une ouverture, pas un état.
       eclipseHooks.lookAtPlace(state.body, state.place);
       sync();
-    } else if (pathEclipse && state.body) {
+    } else if (pathEclipse && !popped && state.body) {
       // Aucun angle demandé : on impose celui qui MONTRE l'éclipse (cf. eclipseViewFrom),
       // une fois le vol terminé, sinon le tween écraserait la pose.
       const from = eclipseViewFrom(pathEclipse);
@@ -215,7 +245,7 @@ export function setupPermalinks(
   // l'anglais écrit `/moon/` : sans cela, un rechargement relirait `/fr/` et rendrait le français
   // contre son choix, puisque le chemin décide de la langue au démarrage (`localeOfPathname`). La
   // vue d'ensemble reste `/`, qu'aucune langue ne préfixe.
-  onLocaleChange(() => {
+  const alignLocalePath = (): void => {
     const { prefix, segments } = splitLocalePath(window.location.pathname);
     const wanted = LOCALE_PATH[getLocale()];
     if (segments.length === 0 || prefix === wanted) return;
@@ -225,9 +255,10 @@ export function setupPermalinks(
       '',
       `${next}${window.location.search}${window.location.hash}`
     );
-  });
+  };
+  onLocaleChange(alignLocalePath);
 
-  window.addEventListener('popstate', applyInitialState);
+  window.addEventListener('popstate', () => applyInitialState(true));
   return {
     applyInitialState,
     sync,
