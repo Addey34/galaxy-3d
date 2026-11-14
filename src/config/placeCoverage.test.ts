@@ -246,14 +246,21 @@ describe('la donnée publiée, lue sans être modifiée', () => {
       ).toEqual([]);
   });
 
+  // Les formations que l'UAI a adoptées APRÈS le gel du tirage ODE (GAL-SCIENCE-024) : exactement
+  // celles-ci, jamais davantage. Une liste exacte, pour qu'un identifiant de plus ne passe pas.
+  const ADOPTED_AFTER_FREEZE: Record<string, number[]> = {
+    mercury: [16508, 16509, 16510, 16511, 16512, 16513, 16514],
+    mars: [16515, 16516, 16517],
+  };
+
   for (const [body, c] of bodies) {
-    it(`${body} : chaque formation du gazetteer est « observed », comme avant`, () => {
+    it(`${body} : les formations nommées au gel sont « observed », les adoptées depuis sont « not-evaluated »`, () => {
       const names = JSON.parse(
         readFileSync(
           resolve(ROOT, `public/assets/gazetteer/${body}.json`),
           'utf8'
         )
-      ) as { iauId: number }[];
+      ) as { iauId: number; approved: string }[];
       const raw = new Map<number, unknown>();
       for (let k = 0; k < c.shards; k++) {
         const p = resolve(
@@ -263,12 +270,27 @@ describe('la donnée publiée, lue sans être modifiée', () => {
         expect(existsSync(p)).toBe(true);
         raw.set(k, JSON.parse(readFileSync(p, 'utf8')));
       }
+      const after = names
+        .filter((f) => f.approved > index.frozenAt)
+        .map((f) => f.iauId)
+        .sort((x, y) => x - y);
+      expect(after, `${body} : adoptées après le gel`).toEqual(
+        ADOPTED_AFTER_FREEZE[body] ?? []
+      );
+      const afterSet = new Set(after);
       const counts: Record<string, number> = {};
       for (const f of names) {
         const r = classifyPlace(c, raw.get(f.iauId % c.shards), f.iauId);
+        // Aucune formation n'est convertie en zéro prouvé, ancienne ou nouvelle.
+        expect(status(r), `${body} ${f.iauId}`).toBe(
+          afterSet.has(f.iauId) ? 'not-evaluated' : 'observed'
+        );
         counts[status(r)] = (counts[status(r)] ?? 0) + 1;
       }
-      expect(counts).toEqual({ observed: names.length });
+      // Les anciennes gardent leur couverture et leur compte enregistrés.
+      expect(counts.observed, body).toBe(c.formations);
+      expect(counts['not-evaluated'] ?? 0, body).toBe(after.length);
+      expect(names.length, body).toBe(c.formations + after.length);
       // Une formation inconnue du tirage : jamais « aucune empreinte ».
       const absent = 999_999_999;
       expect(status(classifyPlace(c, raw.get(absent % c.shards), absent))).toBe(
@@ -322,6 +344,20 @@ describe('matchFormation : recherche insensible aux diacritiques', () => {
     expect(matchFormation(names, 'na hye-sŏk')?.iauId).toBe(16512);
     expect(matchFormation(names, '  NA HYE SOK ')?.iauId).toBe(16512);
     expect(names[0]!.name).toBe('Na Hye-sok');
+  });
+
+  it('sur la donnée publiée, « Na Hye-sŏk » retrouve la formation 16512 sans alias inventé', () => {
+    const mercury = JSON.parse(
+      readFileSync(
+        resolve(ROOT, 'public/assets/gazetteer/mercury.json'),
+        'utf8'
+      )
+    ) as NamedFeature[];
+    expect(matchFormation(mercury, 'Na Hye-sŏk')?.iauId).toBe(16512);
+    expect(matchFormation(mercury, 'na hye-sok')?.iauId).toBe(16512);
+    // Le nom publié reste le nom propre de l'UAI (« Clean Name »), jamais un alias ajouté.
+    expect(mercury.find((m) => m.iauId === 16512)?.name).toBe('Na Hye-sok');
+    expect(mercury.some((m) => m.name === 'Na Hye-sŏk')).toBe(false);
   });
 
   it('une correspondance exacte l’emporte ; une repliée ambiguë ne se devine pas', () => {
