@@ -7,6 +7,7 @@
  * priorité supérieure est masqué. Piloté par sa propre boucle d'images, inerte quand éteint.
  */
 import * as THREE from 'three';
+import './skyLabels.css';
 
 export interface SkyLabelItem {
   readonly text: string;
@@ -27,8 +28,6 @@ export interface SkyLabelLayerOptions {
   className: string;
   /** Décalage vertical du nom sous sa direction, en pixels (0 : centré ; un repère visible en demande un). */
   offsetY?: number;
-  /** Feuille de style, posée avec la couche (un `.css` importé alourdirait le démarrage). */
-  style: string;
 }
 
 export interface SkyLabelLayer {
@@ -49,9 +48,6 @@ export function createSkyLabelLayer(
   items: readonly SkyLabelItem[],
   options: SkyLabelLayerOptions
 ): SkyLabelLayer {
-  const style = document.createElement('style');
-  style.textContent = options.style;
-  document.head.append(style);
   const host = document.createElement('div');
   host.className = options.className;
   host.setAttribute('aria-hidden', 'true');
@@ -144,9 +140,4 @@ export function createSkyLabelLayer(
       }
     },
   };
-}
-
-/** Feuille de style commune ; `name` est la classe du conteneur, `color` la teinte du texte. */
-export function skyLabelStyle(name: string, color: string): string {
-  return `.${name} { position: fixed; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; } .${name}-item { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: ${color}; text-shadow: 0 0 4px rgba(0, 0, 0, 0.9); will-change: transform; }`;
 }

@@ -14,11 +14,7 @@ import {
 } from '@/components/celestial/MeteorRadiants';
 import { meteorLabel, parseMeteorsFile } from '@/core/meteors';
 import Logger from '@/utils/Logger';
-import {
-  createSkyLabelLayer,
-  skyLabelStyle,
-  type SkyLabelLayer,
-} from './skyLabels';
+import { createSkyLabelLayer, type SkyLabelLayer } from './skyLabels';
 
 export const METEORS_URL = '/assets/sky/meteors.json';
 
@@ -71,7 +67,6 @@ export async function setupMeteorLayer(
       className: 'meteor-names',
       // Sous l'anneau : centré dessus, il le traverserait.
       offsetY: 15,
-      style: skyLabelStyle('meteor-names', 'rgba(150, 225, 255, 0.85)'),
     }
   );
 

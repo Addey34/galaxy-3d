@@ -12,11 +12,7 @@ import { DeepSkyMarkers } from '@/components/celestial/DeepSkyMarkers';
 import { DEEPSKY_SKY_RADIUS } from '@/components/celestial/DeepSkyMarkers';
 import { deepSkyLabel, type DeepSkyFile } from '@/core/deepsky';
 import Logger from '@/utils/Logger';
-import {
-  createSkyLabelLayer,
-  skyLabelStyle,
-  type SkyLabelLayer,
-} from './skyLabels';
+import { createSkyLabelLayer, type SkyLabelLayer } from './skyLabels';
 
 export const DEEPSKY_URL = '/assets/sky/deepsky.json';
 
@@ -77,7 +73,6 @@ export async function setupDeepSkyLayer(
       className: 'deepsky-names',
       // Sous le losange : centré dessus, il le traverserait.
       offsetY: 13,
-      style: skyLabelStyle('deepsky-names', 'rgba(255, 205, 150, 0.8)'),
     }
   );
 

@@ -15,11 +15,7 @@ import { CONSTELLATIONS_URL } from '@/components/celestial/Starfield';
 import { constellationAnchor, distinctStars } from '@/core/constellationAnchor';
 import type { ConstellationFile } from '@/core/constellations';
 import Logger from '@/utils/Logger';
-import {
-  createSkyLabelLayer,
-  skyLabelStyle,
-  type SkyLabelLayer,
-} from './skyLabels';
+import { createSkyLabelLayer, type SkyLabelLayer } from './skyLabels';
 
 export type ConstellationNames = SkyLabelLayer;
 
@@ -67,7 +63,6 @@ export async function setupConstellationNames(
       camera: env.camera,
       canvas: env.canvas,
       className: 'constellation-names',
-      style: skyLabelStyle('constellation-names', 'rgba(160, 190, 235, 0.78)'),
     }
   );
 }

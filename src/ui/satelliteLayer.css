@@ -1,0 +1,17 @@
+/*
+ * Le canvas des satellites (GAL-CSP-001). Feuille EXTERNE, importée par `satelliteLayer.ts` : la CSP
+ * de production est `style-src 'self'`, un <style> injecté est refusé et le canvas restait dans le
+ * flux, sous l'écran, avec ses marqueurs peints pour rien.
+ */
+#satellite-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 21;
+  pointer-events: none;
+}
+#satellite-overlay[hidden],
+body.is-capturing #satellite-overlay {
+  display: none;
+}
