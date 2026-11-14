@@ -40,9 +40,27 @@ const SATELLITES = readFileSync(
  * en page, pas un compte de noms.
  */
 const SATELLITES_DATE = '2026-11-02T19:00:00Z';
+/** Fenêtre de validité d'un élément autour de son époque (`ELEMENT_VALIDITY_DAYS`, 7 jours). */
+const VALID_AT_SATELLITES_DATE = (
+  JSON.parse(SATELLITES) as { objects: { epoch: string }[] }
+).objects.filter(
+  (o) =>
+    Math.abs(Date.parse(`${o.epoch}Z`) - Date.parse(SATELLITES_DATE)) <=
+    7 * 86_400_000
+).length;
 /** Le JS ou le CSS d'une de ces couches : rien de tout cela ne se charge tant qu'elles sont éteintes. */
 const LAYER_ASSET =
   /\/assets\/(skyLabels|constellationNames|deepSkyLayer|meteorLayer|satelliteLayer)-[^/]*\.(js|css)$/;
+
+/**
+ * Les service workers sont bloqués. Le `sw.js` du build répond lui-même aux requêtes vers
+ * `galaxy-data` (route `NetworkFirst`), que `page.route` ne voit alors plus : selon le moment où il
+ * prend le contrôle de la page, les éléments des satellites sont ceux de la fixture ou les VRAIS
+ * éléments du jour, hors de leur fenêtre de validité à la date de la fixture (0 marqueur, mesuré
+ * sur le runner : 173 satellites valides avec le SW bloqué, 0 avec). Le SW est un cache de
+ * lecture : il n'a aucun rôle dans la CSP des feuilles de style que ce fichier contrôle.
+ */
+test.use({ serviceWorkers: 'block' });
 
 const VIEWS = {
   desktop: { width: 1280, height: 800 },
@@ -67,6 +85,25 @@ async function boot(
 ): Promise<{ assets: string[] }> {
   expect(CSP, 'la CSP de firebase.json').toContain("style-src 'self'");
   await blockExternalNetwork(page);
+  // Une build dotée de `VITE_ASSET_ORIGIN` (celle de la CI) demande les éphémérides à
+  // `galaxy-data`, que `blockExternalNetwork` coupe : on les sert depuis le build servi (Range
+  // compris), faute de quoi l'horloge attend des octets qui ne viennent jamais.
+  const origin = test.info().project.use.baseURL;
+  await page.route(
+    '**galaxy-data.adrianguichard.dev/assets/ephemerides/**',
+    async (route) => {
+      const path = new URL(route.request().url()).pathname;
+      const response = await route.fetch({ url: new URL(path, origin).href });
+      await route.fulfill({
+        response,
+        headers: {
+          ...response.headers(),
+          'access-control-allow-origin': '*',
+          'access-control-expose-headers': '*',
+        },
+      });
+    }
+  );
   await page.route('**/satellites/elements.json', (route) =>
     route.fulfill({
       status: 200,
@@ -213,8 +250,6 @@ const LAYERS = [
  * Délais larges (démarrage 90 s, attentes 60 s) : sur ce runner l'image met plusieurs centaines de
  * millisecondes, et un marqueur ne se peint qu'à l'image suivante.
  */
-test.describe.configure({ retries: 0 });
-
 for (const [label, viewName, csp] of [
   ['sous la CSP', 'desktop', true],
   ['sous la CSP', 'phone', true],
@@ -223,8 +258,7 @@ for (const [label, viewName, csp] of [
   test(`couches du ciel, ${viewName} ${label} : satellites et noms, activés, éteints, rallumés`, async ({
     page,
   }) => {
-    test.setTimeout(100_000);
-    test.info().annotations.push({ type: 'diag', description: 'GAL-CSP-001' });
+    test.setTimeout(300_000);
     await page.setViewportSize(VIEWS[viewName]);
     const { assets } = await boot(page, {
       csp,
@@ -253,6 +287,16 @@ for (const [label, viewName, csp] of [
     await expect.poll(markers, { timeout: 60_000 }).toBeGreaterThan(0);
     await expectHostLayout(page, '#satellite-overlay', '21');
     await expectNoParasiticScroll(page);
+    // La scène est bien à la date de la fixture et les éléments sont ceux de la fixture : le nombre
+    // de satellites dans leur fenêtre de validité (7 jours autour de l'époque) est celui du fichier
+    // servi, pas celui des éléments réels du jour.
+    const sceneDate = await page.evaluate(() =>
+      new URLSearchParams(location.search).get('date')
+    );
+    expect(sceneDate).toBe(SATELLITES_DATE);
+    await expect(page.locator('#satellites-status')).toContainText(
+      `${VALID_AT_SATELLITES_DATE} satellites`
+    );
 
     // Pendant une capture d'image, la couche s'efface.
     await page.evaluate(() => document.body.classList.add('is-capturing'));
