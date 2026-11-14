@@ -170,3 +170,39 @@ test('the marker never takes focus nor adds a tab stop', async ({ page }) => {
     await marker(page).locator('a, button, input, [tabindex]').count()
   ).toBe(0);
 });
+
+for (const [place, body] of [
+  ['Olympus Mons', 'Mars'],
+  ['Caloris Planitia', 'Mercury'],
+] as const) {
+  test(`${place} on ${body}: the marker names both and sits on the formation`, async ({
+    page,
+  }) => {
+    await openPalette(page);
+    await searchPlace(page, place, place);
+    const canvas = page.locator('canvas').first();
+    await expect(canvas).toHaveAttribute(
+      'data-search-focus',
+      new RegExp(`^${place}[|]`),
+      { timeout: 60_000 }
+    );
+    const [, offset, side] = (
+      (await canvas.getAttribute('data-search-focus')) ?? ''
+    ).split('|');
+    expect(side).toBe('front');
+    expect(Number(offset)).toBeLessThan(0.05);
+    await expect(marker(page)).toBeVisible();
+    await expect(marker(page)).toContainText(place);
+    await expect(marker(page)).toContainText(body);
+    const ring = await marker(page)
+      .locator('.formation-marker-ring')
+      .boundingBox();
+    const view = page.viewportSize();
+    expect(ring).not.toBeNull();
+    if (ring && view) {
+      expect(Math.abs(ring.x + ring.width / 2 - view.width / 2)).toBeLessThan(
+        view.width * 0.1
+      );
+    }
+  });
+}

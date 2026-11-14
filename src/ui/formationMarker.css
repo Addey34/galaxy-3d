@@ -1,0 +1,68 @@
+/*
+ * Le repère d'une formation choisie (GAL-PRODUCT-014). Feuille EXTERNE importée par
+ * `formationMarker.ts` : la CSP de production est `style-src 'self'`, un <style> injecté serait
+ * refusé. Vite la sort avec le morceau `lookAtFormation` et ne la charge qu'avec lui.
+ */
+#formation-marker {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+#formation-marker .formation-marker-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+#formation-marker .formation-marker-ring {
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(0, 0, 0, 0.6);
+}
+#formation-marker .formation-marker-caption {
+  position: absolute;
+  left: 0;
+  top: 22px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(16rem, calc(100vw - 32px));
+  text-align: center;
+  color: #fff;
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.95),
+    0 0 2px rgba(0, 0, 0, 0.95);
+}
+#formation-marker .formation-marker-name {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+#formation-marker .formation-marker-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: no-preference) {
+  #formation-marker .formation-marker-pin {
+    animation: formation-marker-in 0.25s ease-out;
+  }
+}
+@keyframes formation-marker-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

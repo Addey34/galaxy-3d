@@ -5,6 +5,9 @@
  * disait ce qui avait été choisi. Ce module pose UN élément DOM, un anneau et une légende, sur
  * le point de surface projeté.
  *
+ * Sa feuille de style est EXTERNE (`formationMarker.css`) : la CSP de production est `style-src 'self'`,
+ * un `<style>` injecté serait refusé. Seules des écritures CSSOM (`el.style.transform`) positionnent le repère.
+ *
  * Une couche d'instrument, jamais un mesh : aucune échelle de scène, aucun zoom, aucune tuile.
  * Éphémère et sans coût au repos : la boucle d'images n'existe que tant que le repère est affiché
  * (elle reprojette un seul point), et tout est libéré à la disparition. Il disparaît :
@@ -15,6 +18,7 @@
  *  - quand un nouveau repère le remplace.
  */
 import * as THREE from 'three';
+import './formationMarker.css';
 import { getAnnouncer } from './announcer';
 import { t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
@@ -23,15 +27,6 @@ import type { CameraSystem } from '@/components/systems/CameraSystem';
 export const FORMATION_MARKER_ID = 'formation-marker';
 /** Durée d'affichage : de quoi lire, pas de quoi s'installer. */
 export const LIFETIME_MS = 12_000;
-
-const STYLE = `#${FORMATION_MARKER_ID} { position: fixed; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
-#${FORMATION_MARKER_ID} .formation-marker-pin { position: absolute; left: 0; top: 0; will-change: transform; }
-#${FORMATION_MARKER_ID} .formation-marker-ring { position: absolute; left: -14px; top: -14px; box-sizing: border-box; width: 28px; height: 28px; border: 2px solid rgba(255, 255, 255, 0.9); border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 8px rgba(0, 0, 0, 0.6); }
-#${FORMATION_MARKER_ID} .formation-marker-caption { position: absolute; left: 0; top: 22px; transform: translateX(-50%); width: max-content; max-width: min(16rem, calc(100vw - 32px)); text-align: center; color: #fff; text-shadow: 0 0 4px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.95); }
-#${FORMATION_MARKER_ID} .formation-marker-name { display: block; font-size: 0.95rem; font-weight: 600; }
-#${FORMATION_MARKER_ID} .formation-marker-hint { display: block; margin-top: 2px; font-size: 0.75rem; opacity: 0.85; }
-@media (prefers-reduced-motion: no-preference) { #${FORMATION_MARKER_ID} .formation-marker-pin { animation: formation-marker-in 0.25s ease-out; } }
-@keyframes formation-marker-in { from { opacity: 0; } to { opacity: 1; } }`;
 
 export interface FormationMarkerRequest {
   readonly camera: CameraSystem;
@@ -46,7 +41,6 @@ export interface FormationMarkerRequest {
 }
 
 let stop: (() => void) | null = null;
-let styleEl: HTMLStyleElement | null = null;
 
 /** Retire le repère affiché, s'il y en a un : écouteurs, minuteur et boucle d'images compris. */
 export function clearFormationMarker(): void {
@@ -57,12 +51,6 @@ export function showFormationMarker(request: FormationMarkerRequest): void {
   clearFormationMarker();
   const { camera, body, place } = request;
   const canvas = camera.renderer.domElement;
-
-  if (!styleEl) {
-    styleEl = document.createElement('style');
-    styleEl.textContent = STYLE;
-    document.head.append(styleEl);
-  }
 
   const name = bodyDisplayName(body);
   const host = document.createElement('div');
