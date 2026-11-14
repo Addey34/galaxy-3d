@@ -152,6 +152,10 @@ export const cardFr: Record<CardMessageKey, string> = {
   'bi.instruments.absentNote': 'Lu dans l’archive du PDS le {date}.',
   'bi.instruments.note':
     'Ce que l’archive du PDS déclare que cette sonde embarque, lu le {date}. Chaque nom est celui que l’archive publie, et l’identifiant sous lui en est la citation.',
+  'place.marker.hint':
+    'Vue tournée vers ce lieu. Approchez-vous pour voir les noms de la surface.',
+  'place.marker.announce':
+    '{place}, {body} : la vue est tournée vers ce lieu. Approchez-vous pour voir les noms de la surface.',
   'bi.places.count':
     '{observed} observées sur {evaluated} évaluées dans le jeu ODE publié.',
   'bi.places.countNamed': '{named} nommées dans le catalogue UAI.',

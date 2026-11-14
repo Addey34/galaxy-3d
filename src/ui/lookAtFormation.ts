@@ -7,7 +7,15 @@ import * as THREE from 'three';
 import { iauLongitudeToSceneLongitude } from '@/core/gazetteer';
 import { viewAnglesFromDirection } from '@/core/viewAngles';
 import { loadFormations } from '@/config/placeObservations';
+import { loadDeferredMessages } from '@/i18n/deferredMessages';
 import type { PublicAPI } from '@/SolarSystemApp';
+import { clearFormationMarker, showFormationMarker } from './formationMarker';
+
+/**
+ * Numéro de la dernière demande : une réponse asynchrone (`loadFormations`, fin du vol) qui
+ * n'est plus la courante ne doit ni tourner la caméra ni afficher un repère périmé.
+ */
+let latest = 0;
 
 /**
  * La caméra face à une formation : la direction va du centre du corps RENDU au point de surface
@@ -20,11 +28,22 @@ export async function lookAtFormation(
   name: string,
   onDone: () => void
 ): Promise<void> {
-  const features = await loadFormations(body);
-  const feature = features?.find((f) => f.name === name);
   const camera = api.cameraSystem;
-  if (!feature) return;
+  const mine = ++latest;
+  clearFormationMarker();
+  // Identité de la cible, pas son nom : un autre corps, la vue globale ou la même cible
+  // re-sélectionnée en font une autre, et la demande n'a plus lieu d'être.
+  const target = camera.currentTarget;
+  const [features] = await Promise.all([
+    loadFormations(body),
+    loadDeferredMessages(),
+  ]);
+  const feature = features?.find((f) => f.name === name);
+  const current = (): boolean =>
+    mine === latest && camera.currentTarget === target && target !== null;
+  if (!feature || !current()) return;
   camera.whenSettled(() => {
+    if (!current()) return;
     const object = api.sceneSystem.getBody(body);
     const view = camera.getViewAngles();
     if (!object || !view) return;
@@ -37,6 +56,29 @@ export async function lookAtFormation(
     if (!angles) return;
     camera.applyViewAngles(angles.azimuthDeg, angles.polarDeg, view.distance);
     publishFocus(name, point, centre, camera.camera);
+    showFormationMarker({
+      camera,
+      body,
+      place: name,
+      target,
+      point: (out) => {
+        const live = api.sceneSystem.getBody(body);
+        if (!live) return false;
+        out.copy(
+          live.surfacePointToWorld(
+            feature.lat,
+            iauLongitudeToSceneLongitude(feature.lon)
+          )
+        );
+        return true;
+      },
+      centre: (out) => {
+        const live = api.sceneSystem.getBody(body);
+        if (!live) return false;
+        live.group.getWorldPosition(out);
+        return true;
+      },
+    });
     onDone();
   });
 }
