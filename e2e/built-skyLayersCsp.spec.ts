@@ -213,6 +213,8 @@ const LAYERS = [
  * Délais larges (démarrage 90 s, attentes 60 s) : sur ce runner l'image met plusieurs centaines de
  * millisecondes, et un marqueur ne se peint qu'à l'image suivante.
  */
+test.describe.configure({ retries: 0 });
+
 for (const [label, viewName, csp] of [
   ['sous la CSP', 'desktop', true],
   ['sous la CSP', 'phone', true],
@@ -221,7 +223,8 @@ for (const [label, viewName, csp] of [
   test(`couches du ciel, ${viewName} ${label} : satellites et noms, activés, éteints, rallumés`, async ({
     page,
   }) => {
-    test.setTimeout(300_000);
+    test.setTimeout(100_000);
+    test.info().annotations.push({ type: 'diag', description: 'GAL-CSP-001' });
     await page.setViewportSize(VIEWS[viewName]);
     const { assets } = await boot(page, {
       csp,
