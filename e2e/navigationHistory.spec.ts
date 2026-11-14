@@ -9,6 +9,9 @@ import {
   path,
   quietStart,
   scenarioBackForward,
+  scenarioEclipseBack,
+  scenarioLocaleBack,
+  scenarioTourBack,
   scenarioOverview,
   scenarioPermalinks,
   scenarioRepeatAndRapid,
@@ -92,4 +95,22 @@ test('une visite guidée n’accumule pas ses étapes dans l’historique', asyn
   await expectBody(page, '/', null);
   expect(await historyLength(page)).toBe(start);
   expect(await alive(page)).toBe('yes');
+});
+
+test('Retour vers une page d’éclipse restaure le corps sans imposer pause, date ni cadrage', async ({
+  page,
+}) => {
+  await scenarioEclipseBack(page);
+});
+
+test('Retour après un changement de langue garde la langue choisie', async ({
+  page,
+}) => {
+  await scenarioLocaleBack(page);
+});
+
+test('Retour pendant une visite guidée ne déplace pas la caméra de la visite', async ({
+  page,
+}) => {
+  await scenarioTourBack(page);
 });

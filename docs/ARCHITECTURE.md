@@ -4154,6 +4154,12 @@ c'est vérifiable en cherchant `renderSphere` dans `dist/assets/*.js`.
    arrière ne doit pas remonter. Une visite guidée suspend l'écriture de l'adresse : ses vols
    n'ajoutent rien, et sa fin ajoute au plus l'entrée de la vue d'ensemble. Un saut de date qui
    attend ses octets retarde l'écriture jusqu'à son application, qui ajoute alors l'entrée.
+   Retour vers une page d'éclipse ne rejoue ni la pause du pic ni le cadrage de l'éclipse : ils
+   n'appartiennent qu'à l'OUVERTURE directe de cette page. Un Retour après un changement de langue
+   réécrit l'adresse de l'entrée rouverte avec la langue choisie (le chemin décide de la langue au
+   rechargement). Un Retour pendant une visite guidée ne change pas le corps suivi : la visite
+   garde la caméra, et sa fin écrit l'adresse. Aucune action différée de la caméra (`whenSettled`)
+   n'est armée par une restauration, donc aucune ne peut écraser une sélection plus récente.
    Limite connue : deux sélections faites pendant l'attente d'un même saut ne laissent qu'une
    entrée, celle du dernier corps.
    `serializePermalink` omettait déjà `?body=` quand le chemin nomme ce corps, donc l'omission

@@ -2,6 +2,8 @@ import { test } from '@playwright/test';
 import {
   quietStart,
   scenarioBackForward,
+  scenarioEclipseBack,
+  scenarioLocaleBack,
   scenarioOverview,
   scenarioPermalinks,
   scenarioRepeatAndRapid,
@@ -32,4 +34,12 @@ test('la vue d’ensemble est une destination, et les choix répétés ne font p
 test('un permalien existant s’ouvre et se recharge', async ({ page }) => {
   test.setTimeout(240_000);
   await scenarioPermalinks(page);
+});
+
+test('Retour vers une éclipse ou après un changement de langue', async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  await scenarioEclipseBack(page);
+  await scenarioLocaleBack(page);
 });

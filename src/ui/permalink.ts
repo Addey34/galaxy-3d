@@ -165,6 +165,8 @@ export function setupPermalinks(
   om.onDateSettled(() => sync());
 
   const applyInitialState = (popped = false): void => {
+    // Une ancienne entrée garde l'adresse de la langue d'alors : la langue CHOISIE prime.
+    if (popped) alignLocalePath();
     const state = parsePermalink(
       window.location.search,
       selectableBodies,
@@ -177,6 +179,9 @@ export function setupPermalinks(
       state.body ??
       (pathEclipse && eclipseFocusBody(pathEclipse)) ??
       'overview';
+    // Pendant une visite guidée, la caméra est à la visite : le navigateur a changé d'entrée, mais
+    // le corps suivi ne bouge pas, et la fin de la visite écrira l'adresse.
+    if (popped && suspended) return;
     if (popped) {
       // Retour/Suivant : seul le corps est restauré, vue d'ensemble comprise. La date, le mode, le
       // cadrage et la formation ne sont pas une destination (un Retour qui remonterait l'horloge ou
@@ -203,7 +208,7 @@ export function setupPermalinks(
       if (state.body) navigation.selectBody(state.body);
       // Au pic, et pas une seconde plus tard : sans pause, l'horloge repart en temps réel et
       // l'état cesse de décrire l'éclipse avant même que le visiteur l'ait regardée.
-      if (pathEclipse) eclipseHooks.playback?.pause();
+      if (pathEclipse && !popped) eclipseHooks.playback?.pause();
     } finally {
       applying = false;
     }
@@ -221,7 +226,7 @@ export function setupPermalinks(
       // recherche ; l'adresse réécrite ne la garde pas, c'est une ouverture, pas un état.
       eclipseHooks.lookAtPlace(state.body, state.place);
       sync();
-    } else if (pathEclipse && state.body) {
+    } else if (pathEclipse && !popped && state.body) {
       // Aucun angle demandé : on impose celui qui MONTRE l'éclipse (cf. eclipseViewFrom),
       // une fois le vol terminé, sinon le tween écraserait la pose.
       const from = eclipseViewFrom(pathEclipse);
@@ -240,7 +245,7 @@ export function setupPermalinks(
   // l'anglais écrit `/moon/` : sans cela, un rechargement relirait `/fr/` et rendrait le français
   // contre son choix, puisque le chemin décide de la langue au démarrage (`localeOfPathname`). La
   // vue d'ensemble reste `/`, qu'aucune langue ne préfixe.
-  onLocaleChange(() => {
+  const alignLocalePath = (): void => {
     const { prefix, segments } = splitLocalePath(window.location.pathname);
     const wanted = LOCALE_PATH[getLocale()];
     if (segments.length === 0 || prefix === wanted) return;
@@ -250,7 +255,8 @@ export function setupPermalinks(
       '',
       `${next}${window.location.search}${window.location.hash}`
     );
-  });
+  };
+  onLocaleChange(alignLocalePath);
 
   window.addEventListener('popstate', () => applyInitialState(true));
   return {

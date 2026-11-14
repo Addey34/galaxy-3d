@@ -188,3 +188,85 @@ export async function scenarioPermalinks(page: Page): Promise<void> {
   await expectBody(page, '/mars/', 'Mars');
   expect(new URL(page.url()).searchParams.get('mode')).toBe('explo');
 }
+
+/**
+ * Retour vers une page d'éclipse ouverte plus tôt : le corps est restauré, mais ni la pause du pic
+ * ni le cadrage de l'éclipse ne sont rejoués, et la date choisie depuis reste la date courante.
+ */
+export async function scenarioEclipseBack(page: Page): Promise<void> {
+  await boot(page, '/eclipse/2026-08-12/');
+  await expectBody(page, '/eclipse/2026-08-12/', 'Earth');
+  // Ouverte au pic, la lecture est figée (comportement d'ouverture, inchangé).
+  await expect(page.locator('#play-pause-btn')).toHaveClass(/is-paused/);
+
+  await pick(page, 'mars');
+  await expectBody(page, '/mars/', 'Mars');
+  // `change` direct : WebKit ne valide pas un `<input type="date">` par Entrée.
+  await page.evaluate(() => {
+    const input = document.getElementById('date-input') as HTMLInputElement;
+    input.value = '2030-01-15';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await expect(page.locator('#date-input')).toHaveValue('2030-01-15');
+  await page.locator('#play-pause-btn').click(); // reprend la lecture
+  await expect(page.locator('#play-pause-btn')).not.toHaveClass(/is-paused/);
+
+  await page.goBack();
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Earth');
+  // Le Retour n'impose ni la pause de l'éclipse, ni sa date : l'horloge continue où elle en était.
+  await page.waitForTimeout(1500);
+  await expect(page.locator('#play-pause-btn')).not.toHaveClass(/is-paused/);
+  await expect(page.locator('#date-input')).toHaveValue('2030-01-15');
+  expect(await alive(page)).toBe('yes');
+}
+
+/** Après un changement de langue, Retour garde la langue choisie dans le chemin. */
+export async function scenarioLocaleBack(page: Page): Promise<void> {
+  await boot(page, '/earth/');
+  await pick(page, 'mars');
+  await expectBody(page, '/mars/', 'Mars');
+  await page.evaluate(() =>
+    (
+      document.querySelector('.lang-btn[data-locale="fr"]') as HTMLElement
+    ).click()
+  );
+  await expect.poll(() => path(page)).toBe('/fr/mars/');
+
+  await page.goBack();
+  // L'entrée rouverte datait de l'anglais : son adresse reprend le préfixe de la langue choisie, et
+  // un rechargement rendrait donc bien le français.
+  await expect.poll(() => path(page)).toBe('/fr/earth/');
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Terre');
+  expect(await page.evaluate(() => document.documentElement.lang)).toBe('fr');
+  expect(await alive(page)).toBe('yes');
+}
+
+/** Retour pendant une visite guidée : la visite garde la caméra, rien n'est sélectionné sous elle. */
+export async function scenarioTourBack(page: Page): Promise<void> {
+  await boot(page, '/mars/');
+  await expectBody(page, '/mars/', 'Mars');
+  await pick(page, 'jupiter');
+  await expectBody(page, '/jupiter/', 'Jupiter');
+  await page.evaluate(() =>
+    (document.querySelector('.stour-start') as HTMLElement).click()
+  );
+  await page.evaluate(() =>
+    (document.querySelector('.stour-picker-item') as HTMLElement).click()
+  );
+  // La première visite emmène la caméra sur la Terre.
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Earth', {
+    timeout: 30_000,
+  });
+  await expect(page.locator('.stour-card')).toBeVisible();
+
+  await page.goBack(); // le navigateur remonte à l'entrée de Mars
+  await page.waitForTimeout(2500);
+  await expect(page.locator('.stour-card')).toBeVisible();
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Earth');
+
+  const close = page.locator('.stour-close');
+  if (await close.isVisible()) await close.click();
+  await expect(page.locator('.stour-card')).toBeHidden();
+  await expectBody(page, '/', null);
+  expect(await alive(page)).toBe('yes');
+}
