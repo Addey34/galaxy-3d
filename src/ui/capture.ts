@@ -168,15 +168,13 @@ function drawCartouche(
   ctx.textAlign = 'left';
 }
 
-export function setupCapture(
+/** Une capture, déclenchée par `captureButton.ts` au PREMIER clic (ce module est chargé alors). */
+export async function runCapture(
   camera: CameraSystem,
   om: OrbitalMechanics,
   navigation: PlanetNavigation
-): void {
-  const btn = document.getElementById('capture-btn');
-  if (!btn) return;
-
-  btn.addEventListener('click', async () => {
+): Promise<void> {
+  {
     // Lu AVANT le masquage : c'est ce que la licence des données exige de voir.
     const credit = onScreenCredit();
     document.body.classList.add('is-capturing');
@@ -241,5 +239,5 @@ export function setupCapture(
     } finally {
       document.body.classList.remove('is-capturing');
     }
-  });
+  }
 }

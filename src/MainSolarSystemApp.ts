@@ -26,12 +26,15 @@ import {
   setupTextureLoadState,
 } from './ui/textureLoadState';
 import { setupShare } from './ui/share';
-import { setupCapture } from './ui/capture';
-import { setupWebXR } from './ui/webxr';
+import { setupCaptureButton } from './ui/captureButton';
+import { setupWebXR } from './ui/webxrLauncher';
 import { setupHelp } from './ui/help';
 import { setupKeyboardShortcuts } from './ui/keyboardShortcuts';
-import { setupGuidedTour } from './ui/guidedTour';
-import { setupTourPlayer } from './ui/tourPlayer';
+import {
+  setupGuidedTourOnDemand,
+  setupTourPlayerOnDemand,
+  type GuidedTourLauncher,
+} from './ui/tourLaunchers';
 import { TOUR_SCRIPTS } from './config/tourScripts';
 import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
@@ -80,7 +83,7 @@ import { setupColorblindToggle } from './ui/colorblindToggle';
 import { setupSettingsTabs } from './ui/settingsTabs';
 import { setupSurfacePanel } from './ui/surfacePanel';
 import { setupUnitsToggle } from './ui/unitsToggle';
-import { setupOfflineData } from './ui/offlineData';
+import { setupOfflineDataOnDemand } from './ui/offlineDataLauncher';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
 import { setupCloudModelLayer } from './ui/cloudModelLayer';
 import { setupPrecipLayer } from './ui/precipLayer';
@@ -184,7 +187,7 @@ function positionContextualSurface(id: SecondaryOverlayId): void {
  */
 function wireChrome(): {
   overlayCoordinator: ReturnType<typeof setupOverlayCoordinator>;
-  guidedTour: ReturnType<typeof setupGuidedTour>;
+  guidedTour: GuidedTourLauncher;
 } {
   // Traduit les chaînes statiques du HTML avant tout et synchronise <html lang> ; les modules
   // dynamiques (loader, bodyInfo…) se retraduisent ensuite via leurs propres abonnements.
@@ -195,7 +198,7 @@ function wireChrome(): {
   setupKeyboardShortcuts();
   const overlayCoordinator = setupOverlayCoordinator();
   setupHelp(overlayCoordinator);
-  const guidedTour = setupGuidedTour();
+  const guidedTour = setupGuidedTourOnDemand();
   // Une surface contextuelle ne se ferme PAS au clic sur la scène (desktop) : seulement par son
   // déclencheur, par l'ouverture d'une autre surface (le coordinateur ferme la précédente) ou
   // Échap, mobile compris : le scrim n'est qu'un voile (pointer-events: none), il ne capte ni
@@ -467,7 +470,7 @@ function wireChrome(): {
     // « Préparer le hors-ligne » (lot 17E) : depuis 17C les fenêtres sont servies en 206, que
     // ni le cache du navigateur ni le service worker ne gardent. Cette section rend le
     // hors-ligne, à la DEMANDE, et dit ce que l'appareil tient déjà.
-    setupOfflineData(api.horizonsEphemeris);
+    setupOfflineDataOnDemand(api.horizonsEphemeris);
 
     // Champ de masse des petits corps — couche instrument 2D, chargée en tâche de fond depuis
     // l'INSTANTANÉ livré (`/assets/small-bodies/dataset.json`, relevé au build). L'application
@@ -836,14 +839,14 @@ function wireChrome(): {
       layers: weatherPanel.states(),
       field: smallBodyFilters.states().filter((c) => !c.on),
     }));
-    setupCapture(cameraSystem, orbitalMechanics, planetNav);
+    setupCaptureButton(cameraSystem, orbitalMechanics, planetNav);
     setupAstronomicalEvents(orbitalMechanics, {
       onDateChange: () => syncPermalink(),
       coordinator: overlayCoordinator,
       navigation: planetNav,
       playback,
     });
-    const tourPlayer = setupTourPlayer(
+    const tourPlayer = setupTourPlayerOnDemand(
       cameraSystem,
       orbitalMechanics,
       planetNav,
@@ -862,7 +865,9 @@ function wireChrome(): {
     if (requestedTour !== undefined) permalink.sync();
     // Le préréglage est une ouverture lui aussi : l'adresse qui suit ne doit plus le porter.
     else if (requestedPreset !== undefined) permalink.sync();
-    if (!(requestedTour !== undefined && tourPlayer.start(requestedTour)))
+    if (!(
+      requestedTour !== undefined && (await tourPlayer.start(requestedTour))
+    ))
       guidedTour.startIfFirstVisit();
   } catch (err) {
     showError(err instanceof Error ? err : new Error(String(err)));

@@ -5,6 +5,7 @@ import {
   FIRST_VIEW_TEXTURE_REFINEMENTS,
   MODEL_FLOOR_QUALITY,
   NON_BOOT_CHUNKS,
+  CONDITIONAL_START_PROFILES,
   TEXTURE_FLOOR_TIER,
   bootTierForFarLayer,
   classifyStartupUrl,
@@ -216,5 +217,26 @@ describe('la partition des morceaux JavaScript', () => {
       expect(entry.chunk).not.toMatch(/\.js$|-[A-Za-z0-9_-]{8}$/);
       expect(entry.reason.length).toBeGreaterThan(20);
     }
+  });
+});
+
+describe('les démarrages conditionnels', () => {
+  it('ne citent que des morceaux déclarés hors démarrage, sans doublon par profil', () => {
+    const out = NON_BOOT_CHUNKS.map((entry) => entry.chunk);
+    for (const profile of CONDITIONAL_START_PROFILES) {
+      expect(profile.chunks.length).toBeGreaterThan(0);
+      expect(new Set(profile.chunks).size).toBe(profile.chunks.length);
+      for (const chunk of profile.chunks) expect(out).toContain(chunk);
+    }
+  });
+
+  it('nomment les trois déclencheurs et leur cumul', () => {
+    const ids = CONDITIONAL_START_PROFILES.map((profile) => profile.id);
+    expect(ids).toEqual([
+      'first-visit',
+      'tour-link',
+      'immersive-vr',
+      'worst-case',
+    ]);
   });
 });

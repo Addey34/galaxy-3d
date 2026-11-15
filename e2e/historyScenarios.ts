@@ -247,9 +247,9 @@ export async function scenarioTourBack(page: Page): Promise<void> {
   await expectBody(page, '/mars/', 'Mars');
   await pick(page, 'jupiter');
   await expectBody(page, '/jupiter/', 'Jupiter');
-  await page.evaluate(() =>
-    (document.querySelector('.stour-start') as HTMLElement).click()
-  );
+  // Les visites sont chargées à la première ouverture de l'aide : le bouton paraît après le clic.
+  await page.locator('#help-btn').click();
+  await page.locator('.stour-start').click();
   await page.evaluate(() =>
     (document.querySelector('.stour-picker-item') as HTMLElement).click()
   );

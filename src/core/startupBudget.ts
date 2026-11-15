@@ -409,6 +409,31 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'capture',
+    reason:
+      "la capture d'image (2026-11-15, GAL-PERF-001A) : cartouche, crédit et téléchargement PNG, importée par `ui/captureButton` au premier clic sur « Capturer cette vue ». Le lanceur reste au démarrage, le clic est consommé par lui, un échec de chargement est annoncé.",
+  },
+  {
+    chunk: 'offlineData',
+    reason:
+      "la section « Hors ligne » des réglages (2026-11-15, GAL-PERF-001A) : lecture du magasin d'éphémérides, boutons Préparer et Libérer, importée par `ui/offlineDataLauncher` à la première ouverture des réglages (clic sur `#settings-trigger`).",
+  },
+  {
+    chunk: 'webxr',
+    reason:
+      "le cycle de vie d'une session VR (2026-11-15, GAL-PERF-001A) : contrôleurs, locomotion, sélection, panneau d'information, importé par `ui/webxrLauncher` SEULEMENT sur un appareil où `isSessionSupported('immersive-vr')` est vrai (jamais sur Safari/iOS ni sans casque). La demande de session reste synchrone dans le clic, pour garder le geste utilisateur.",
+  },
+  {
+    chunk: 'guidedTour',
+    reason:
+      "la découverte de premier passage (2026-11-15, GAL-PERF-001A) : bulles ancrées et bouton de relance du popover d'aide, importée par `ui/tourLaunchers` tout de suite pour un premier passage, sinon à la première ouverture de l'aide.",
+  },
+  {
+    chunk: 'tourPlayer',
+    reason:
+      "les visites scénarisées (2026-11-15, GAL-PERF-001A) : lecteur, moteur et résolution de date, importés par `ui/tourLaunchers` à la première ouverture de l'aide, ou tout de suite pour `?tour=`.",
+  },
+  {
     chunk: 'meteorLayer',
     reason:
       "la couche des pluies de météores (2026-11-03) : radiants (`MeteorRadiants`), noms et calendrier d'activité (`core/meteors`, longitude solaire par Astronomy Engine), importée par `ui/skyLayerToggles` à la première activation de la case « Pluies de météores », éteinte au démarrage. Elle lit `sky/meteors.json` une seule fois.",
@@ -704,6 +729,47 @@ export function exclusiveGroupCost(
   }
   return worst;
 }
+
+/**
+ * Les démarrages CONDITIONNELS (GAL-PERF-001A, REV1). Le chiffre officiel est celui d'un visiteur de
+ * retour sur un navigateur sans VR : il ne compte pas les morceaux que d'autres démarrages chargent
+ * AUSSI avant que la scène soit utilisable. Ces profils les nomment, `pnpm budget:startup` les
+ * additionne à la mesure officielle et échoue si l'un d'eux dépasse le plafond : le plafond reste
+ * UN seul nombre, et aucun profil ne le franchit en silence. Chaque morceau cité doit être dans
+ * `NON_BOOT_CHUNKS` (un test le vérifie), donc jamais compté deux fois ni oublié.
+ */
+export interface ConditionalStartProfile {
+  readonly id: string;
+  readonly label: string;
+  /** Morceaux `NON_BOOT_CHUNKS` que CE démarrage charge en plus, noms sans empreinte. */
+  readonly chunks: readonly string[];
+}
+
+export const CONDITIONAL_START_PROFILES: readonly ConditionalStartProfile[] = [
+  {
+    id: 'first-visit',
+    label: 'premier passage : la découverte guidée démarre tout de suite',
+    chunks: ['guidedTour'],
+  },
+  {
+    id: 'tour-link',
+    label:
+      'ouverture directe par `?tour=` : le lecteur de visites démarre la visite',
+    chunks: ['tourPlayer'],
+  },
+  {
+    id: 'immersive-vr',
+    label:
+      'navigateur compatible `immersive-vr` : le cycle de session est demandé dès la détection',
+    chunks: ['webxr'],
+  },
+  {
+    id: 'worst-case',
+    label:
+      'pire cas cumulé : premier passage avec `?tour=` inconnu (repli sur la découverte) sur un appareil VR',
+    chunks: ['guidedTour', 'tourPlayer', 'webxr'],
+  },
+];
 
 export const BOOT_DYNAMIC_CHUNKS: readonly BootDynamicChunk[] = [
   {

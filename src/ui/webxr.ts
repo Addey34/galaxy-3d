@@ -35,70 +35,22 @@ import { t } from '@/i18n';
 import * as THREE from 'three';
 import { formatFixed } from './localNumber';
 
-export interface WebXRHandle {
-  /** À appeler depuis le callback de bascule de mode (Éduc ↔ Explo). */
-  setMode(mode: 'educ' | 'explo'): void;
-}
-
-export function setupWebXR(
+/**
+ * Cycle de vie d'une session VR : contrôleurs, locomotion, sélection, panneau d'information.
+ * Chargé PAR `webxrLauncher.ts`, et seulement sur un appareil qui sait faire de la VR : le bouton,
+ * la détection et la demande de session (qui exige un geste de l'utilisateur) restent dans le
+ * lanceur, au démarrage. À appeler une fois ; les écouteurs doivent être posés AVANT `setSession`.
+ */
+export function attachWebXR(
   camera: CameraSystem,
   scene: SceneSystem,
   animationSystem: AnimationSystem,
   nav: PlanetNavigation,
-  bodyNames: ReadonlySet<string>
-): WebXRHandle {
-  let mode: 'educ' | 'explo' = 'educ';
-  const handle: WebXRHandle = {
-    setMode: (next) => {
-      mode = next;
-    },
-  };
-
-  const button = document.getElementById('webxr-btn');
-  if (!navigator.xr || !button) return handle;
-
+  bodyNames: ReadonlySet<string>,
+  getMode: () => 'educ' | 'explo'
+): void {
   const catalog = flattenBodies(CELESTIAL_CONFIG);
-
-  void navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
-    if (!supported) return;
-
-    button.hidden = false;
-    let activeSession: XRSession | null = null;
-
-    const setButtonLabel = (entering: boolean): void => {
-      const title = t(
-        entering ? 'webxr.btn.enter.title' : 'webxr.btn.exit.title'
-      );
-      const aria = t(entering ? 'webxr.btn.enter.aria' : 'webxr.btn.exit.aria');
-      button.setAttribute('title', title);
-      button.setAttribute('aria-label', aria);
-    };
-
-    button.addEventListener('click', () => {
-      if (activeSession) {
-        void activeSession.end();
-        return;
-      }
-      void navigator.xr
-        ?.requestSession('immersive-vr', {
-          optionalFeatures: ['local-floor', 'bounded-floor'],
-        })
-        .then((session) => {
-          activeSession = session;
-          setButtonLabel(false);
-          session.addEventListener('end', () => {
-            activeSession = null;
-            setButtonLabel(true);
-          });
-          void camera.renderer.xr.setSession(session);
-        })
-        .catch(() => {
-          // Capacité déjà confirmée par isSessionSupported ; un rejet ici signifie que
-          // l'utilisateur a refusé la permission ou qu'aucun runtime XR n'a répondu — pas la
-          // peine d'un message dédié, le bouton reste utilisable pour réessayer.
-        });
-    });
-
+  {
     const infoPanel: XRInfoPanel = createInfoPanel();
     scene.scene.add(infoPanel.mesh);
 
@@ -131,7 +83,7 @@ export function setupWebXR(
         if (config && body) {
           body.group.updateWorldMatrix(true, false);
           const worldPos = body.group.getWorldPosition(new THREE.Vector3());
-          const radius = body.getFrameRadius(mode);
+          const radius = body.getFrameRadius(getMode());
           const lines = [
             config.realData?.radiusKm
               ? `${Math.round(config.realData.radiusKm).toLocaleString()} km`
@@ -147,7 +99,7 @@ export function setupWebXR(
         // libre) ; en Éduc la gâchette ne fait que sélectionner, le vol libre suffit à se
         // déplacer. Réutilise cameraDistance.explo, la même distance de cadrage que le vol
         // caméra desktop (cf. CameraSystem.getDefaultDistance).
-        if (mode !== 'explo' || !body) return;
+        if (getMode() !== 'explo' || !body) return;
         body.group.updateWorldMatrix(true, false);
         const bodyWorldPos = body.group.getWorldPosition(new THREE.Vector3());
         const viewDistance =
@@ -183,7 +135,7 @@ export function setupWebXR(
         lastTime = now;
 
         let changed = pollSnapTurn(session, locomotion.state);
-        if (mode === 'educ') {
+        if (getMode() === 'educ') {
           changed =
             pollMovement(session, camera.camera, locomotion.state, dt) ||
             changed;
@@ -214,7 +166,5 @@ export function setupWebXR(
       resetSnapTurnArming();
       locomotion.reset();
     });
-  });
-
-  return handle;
+  }
 }

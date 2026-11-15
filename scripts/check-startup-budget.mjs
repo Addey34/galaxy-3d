@@ -51,6 +51,7 @@ const {
   BOOT_EXCLUSIVE_CHUNK_GROUPS,
   exclusiveGroupCost,
   NON_BOOT_CHUNKS,
+  CONDITIONAL_START_PROFILES,
   JAVASCRIPT_STARTUP_BUDGET_BYTES,
   judgeFamilies,
 } = await loader.ssrLoadModule('/src/core/startupBudget.ts');
@@ -384,6 +385,37 @@ console.log(
     `modèles) sont tenues par src/config/startupBudget.test.ts, dans \`pnpm verify\`.\n` +
     `  La mesure de bout en bout, en vrai navigateur : node scripts/measure-startup-bytes.mjs\n`
 );
+
+// Les démarrages conditionnels (premier passage, `?tour=`, VR) : mesure officielle + leurs morceaux.
+console.log(`
+  démarrages conditionnels (en plus de la mesure ci-dessus, même plafond) :`);
+let profileOver = false;
+for (const profile of CONDITIONAL_START_PROFILES) {
+  const files = profile.chunks.map((name) => {
+    const file = allChunks.find((candidate) => chunkName(candidate) === name);
+    if (!file) {
+      console.error(
+        `le profil « ${profile.id} » cite « ${name} », qui n'existe pas dans dist/assets.`
+      );
+      process.exit(1);
+    }
+    return file;
+  });
+  const total = bootBytes + files.reduce((sum, file) => sum + sizeOf(file), 0);
+  const left = JAVASCRIPT_STARTUP_BUDGET_BYTES - total;
+  if (left < 0) profileOver = true;
+  console.log(
+    `  ${String(total).padStart(8)} o  ${profile.id} (${profile.label}) : ` +
+      `+${total - bootBytes} o, marge ${left} o`
+  );
+}
+if (profileOver) {
+  console.error(
+    `BUDGET DÉPASSÉ par un démarrage conditionnel : voir la liste ci-dessus. Le plafond est ` +
+      `unique : alléger, ou relever le plafond dans un commit qui écrit pourquoi.`
+  );
+  process.exit(1);
+}
 
 if (!verdict.withinBudget) {
   console.error(

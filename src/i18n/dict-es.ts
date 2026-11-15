@@ -216,6 +216,10 @@ export const es: Record<MessageKey, string> = {
   'capture.btn.aria': 'Capturar esta vista',
   'capture.success': 'Imagen descargada',
   'capture.failed': 'No se ha podido capturar',
+  'feature.loadFailed':
+    'No se pudo cargar esta función. Compruebe su conexión e inténtelo de nuevo.',
+  'feature.loadFailedAgain':
+    'Esta función sigue sin poder cargarse. Recargue la página y vuelva a intentarlo.',
   'webxr.btn.enter.title': 'Entrar en RV',
   'webxr.btn.enter.aria': 'Entrar en realidad virtual',
   'webxr.btn.exit.title': 'Salir de la RV',
