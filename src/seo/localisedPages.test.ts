@@ -1,3 +1,4 @@
+import { matchesGlob } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   bodyLandingPages,
@@ -208,7 +209,6 @@ describe('pages d’atterrissage localisées', () => {
     const denied = (path: string): boolean =>
       NAVIGATE_FALLBACK_DENYLIST.some((pattern) => pattern.test(path));
     for (const locale of LOCALES) {
-      const segment = LOCALE_PATH[locale];
       const body = `/${bodyPagePath('jupiter', locale)}/`;
       expect(denied(body), `body ${locale}`).toBe(true);
       const eclipse = eclipsePagePath(
@@ -219,8 +219,16 @@ describe('pages d’atterrissage localisées', () => {
       for (const slug of DOC_SLUGS)
         expect(denied(docPath(slug, locale)), `doc ${locale}`).toBe(true);
       // Et ces pages ne sont pas PRÉCACHÉES : ce sont des quasi-copies de l'app shell.
-      if (segment !== '')
-        expect(LANDING_PAGE_GLOB_IGNORES).toContain(`${segment}/*/index.html`);
+      // GAL-PERF-PWA-001 : le motif à toute profondeur remplace un motif par langue ; on vérifie
+      // l'EFFET sur la page de corps et celle de la méthodologie de chaque langue.
+      for (const file of [
+        `${bodyPagePath('jupiter', locale)}/index.html`,
+        `${docPath(DOC_SLUGS[0]!, locale).replace(/^\//, '')}index.html`,
+      ])
+        expect(
+          LANDING_PAGE_GLOB_IGNORES.some((glob) => matchesGlob(file, glob)),
+          `${file} serait précachée`
+        ).toBe(true);
     }
     // Témoin : l'accueil et les vrais fichiers ne sont pas exclus, sinon la règle ne dirait rien.
     expect(denied('/')).toBe(false);

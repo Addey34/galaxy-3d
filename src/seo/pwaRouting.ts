@@ -14,8 +14,29 @@
  *     de l'accueil, au lieu de la page demandée. L'application ouvre quand même la bonne
  *     vue (le chemin suffit), mais le document servi est le mauvais.
  *
- * `pwaRouting.test.ts` confronte les deux listes à TOUTES les pages que le build produit.
- * Pas d'import ici : `vite.config.ts` le charge avant que l'alias `@/` n'existe.
+ * `pwaRouting.test.ts` confronte les deux listes aux pages que le build produit ; la garde
+ * `e2e/built-pwaPrecache.spec.ts` les confronte au VRAI `dist/` (manifeste de précache lu dans
+ * `sw.js`, tous les `index.html` écrits). Pas d'import ici : `vite.config.ts` le charge avant que
+ * l'alias `@/` n'existe.
+ *
+ * GAL-PERF-PWA-001 (2026-11-15) : la troisième fois que cette liste est fausse, et la plus chère. Les
+ * pages de formations (`/places/<corps>/<nom>/`, TROIS niveaux, 3 420 pages, 28 Mo bruts, 8 à 9 Mo
+ * transférés) et les activités (`/activities/<id>/`) n'étaient dans aucune liste : le service worker
+ * les précachait, soit 92 % de son installation. Deux changements, pour que cela ne puisse plus
+ * recommencer :
+ *   - l'ignorance du précache ne nomme plus les familles : TOUT `index.html` sous un dossier, à
+ *     toute profondeur et dans toute langue, est exclu (le motif glob `GLOB_ANY_DEPTH_INDEX`, ci-dessous). Seuls `index.html` et
+ *     `privacy.html` de la racine restent précachés. Une famille de pages nouvelle est donc exclue
+ *     par défaut ; il faudrait une exception écrite pour la précacher ;
+ *   - le repli SPA (`NAVIGATE_FALLBACK_DENYLIST`) reste explicite, parce qu'il décide du document
+ *     SERVI et que les pages de corps et d'éclipse portent des permaliens interactifs (`?mode=`,
+ *     `?date=`, `?place=`) qui doivent, eux, ouvrir l'application. Workbox applique ces motifs à
+ *     `pathname + search` : les motifs ancrés par `$` ne reconnaissent donc PAS une adresse avec
+ *     paramètres, et c'est voulu pour les familles interactives. Les familles purement
+ *     documentaires (`places`, `activities`) tolèrent au contraire paramètres, absence de slash
+ *     final et `index.html`, parce qu'aucune application n'est à ouvrir à leur place.
+ * Conséquence assumée : hors ligne, ces pages ne sont plus lisibles (elles ne l'étaient que par effet
+ * de bord du précache) ; en ligne, un visiteur revenu reçoit leur vrai document.
  */
 
 /** Segment des pages d'éclipse — le même que `core/eclipsePages.ts::ECLIPSE_PATH_SEGMENT`. */
@@ -74,17 +95,31 @@ const LOCALISED_SEGMENTS = ['fr', 'es', 'pt-br'];
  */
 const VALIDATION_SUMMARY_GLOB = 'assets/horizons-validation-summary-*.js';
 
-/** Fichiers générés à NE PAS précacher (motifs glob, relatifs à `dist/`). */
+/**
+ * Fichiers générés à NE PAS précacher (motifs glob, relatifs à `dist/`).
+ *
+ * Le motif `GLOB_ANY_DEPTH_INDEX` : un `index.html` sous au moins un dossier, à toute profondeur. Sémantique
+ * vérifiée avec le `glob` de `workbox-build` sur le vrai `dist/` : `index.html` et `privacy.html` de la
+ * racine restent, les 5 000 pages générées sortent. Ne pas le remplacer par une liste de familles :
+ * c'est la forme qui a été fausse trois fois.
+ */
+const GLOB_ANY_DEPTH_INDEX = '*/**/index.html';
+
 export const LANDING_PAGE_GLOB_IGNORES: string[] = [
-  '*/index.html',
-  ...NESTED_SEGMENTS.map((nested) => `${nested}/*/index.html`),
-  ...LOCALISED_SEGMENTS.map((segment) => `${segment}/*/index.html`),
-  // Les éclipses et les missions traduites ont TROIS segments : `es/eclipse/2026-08-12/index.html`.
-  ...LOCALISED_SEGMENTS.flatMap((segment) =>
-    NESTED_SEGMENTS.map((nested) => `${segment}/${nested}/*/index.html`)
-  ),
+  GLOB_ANY_DEPTH_INDEX,
   VALIDATION_SUMMARY_GLOB,
 ];
+
+/**
+ * Familles de pages PUREMENT documentaires, sans application à ouvrir à leur place : elles ont au
+ * moins deux niveaux sous la langue et `depth` segments après `segment`. Leur adresse est refusée au
+ * repli SPA avec ou sans slash final, avec `index.html`, et avec n'importe quels paramètres
+ * (`?utm_source=`, `?foo=`), qu'un motif ancré par `$` ne verrait pas (Workbox teste `pathname + search`).
+ */
+const DOCUMENT_ONLY_FAMILIES = [
+  { segment: 'places', depth: 2 }, // /places/moon/tycho/
+  { segment: 'activities', depth: 1 }, // /activities/eclipse/
+] as const;
 
 /** Navigations à NE PAS remplacer par l'app shell en cache. */
 export const NAVIGATE_FALLBACK_DENYLIST: RegExp[] = [
@@ -104,6 +139,13 @@ export const NAVIGATE_FALLBACK_DENYLIST: RegExp[] = [
     NESTED_SEGMENTS.map(
       (nested) => new RegExp(`^\\/${segment}\\/${nested}\\/[^/.]+\\/?$`)
     )
+  ),
+  // Pages purement documentaires (GAL-PERF-PWA-001) : paramètres, slash final et `index.html` tolérés.
+  ...DOCUMENT_ONLY_FAMILIES.map(
+    ({ segment, depth }) =>
+      new RegExp(
+        `^\\/(?:(?:${LOCALISED_SEGMENTS.join('|')})\\/)?${segment}(?:\\/[^/.]+){${depth}}(?:\\/(?:index\\.html)?)?(?:\\?.*)?$`
+      )
   ),
 ];
 

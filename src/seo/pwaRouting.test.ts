@@ -105,4 +105,73 @@ describe('routage du service worker pour les pages d’atterrissage', () => {
         false
       );
   });
+
+  it('exclut du précache tout index.html sous un dossier, à toute profondeur et dans toute langue', () => {
+    // GAL-PERF-PWA-001 : une famille NOUVELLE (ici inventée) est exclue par défaut. Les formations
+    // (trois niveaux) et les activités étaient précachées parce qu'aucune liste ne les nommait.
+    const generated = [
+      'places/vesta/albana/index.html',
+      'es/places/vesta/albana/index.html',
+      'pt-br/places/moon/tycho/index.html',
+      'activities/eclipse/index.html',
+      'fr/activities/seasons/index.html',
+      'une-famille-inventee/a/b/c/index.html',
+      'jupiter/index.html',
+    ];
+    for (const file of generated)
+      expect(
+        LANDING_PAGE_GLOB_IGNORES.some((glob) => matchesGlob(file, glob)),
+        `${file} serait précachée`
+      ).toBe(true);
+    for (const file of ['index.html', 'privacy.html', 'assets/index-abc.js'])
+      expect(
+        LANDING_PAGE_GLOB_IGNORES.some((glob) => matchesGlob(file, glob)),
+        `${file} doit rester précaché`
+      ).toBe(false);
+  });
+
+  it('ne sert jamais l’app shell à la place d’une page de formation ou d’activité, avec ou sans paramètres', () => {
+    const paths = [
+      '/places/vesta/albana/',
+      '/places/vesta/albana',
+      '/places/vesta/albana/index.html',
+      '/places/vesta/albana/?utm_source=x',
+      '/places/vesta/albana?foo=1&bar=2',
+      '/activities/eclipse/',
+      '/activities/eclipse/index.html',
+      '/activities/eclipse/?utm_campaign=y',
+    ];
+    for (const lang of ['', '/fr', '/es', '/pt-br'])
+      for (const path of paths)
+        expect(
+          NAVIGATE_FALLBACK_DENYLIST.some((rule) => rule.test(lang + path)),
+          `${lang}${path} recevrait l'index.html en cache`
+        ).toBe(true);
+  });
+
+  it('laisse les permaliens interactifs ouvrir l’application : un corps ou une éclipse avec paramètres', () => {
+    // Workbox teste `pathname + search`. `/mars/?mode=explo` n'est pas refusé au repli : le shell
+    // (précaché) ouvre la vue demandée, y compris hors ligne. Aucune règle de ce lot n'y touche.
+    for (const path of [
+      '/mars/?mode=explo&date=2026-11-20T18%3A00%3A00Z',
+      '/vesta/?place=albana',
+      '/eclipse/2026-08-12/?mode=educ',
+    ])
+      expect(
+        NAVIGATE_FALLBACK_DENYLIST.some((rule) => rule.test(path)),
+        `${path} doit retomber sur l'app shell`
+      ).toBe(false);
+  });
+
+  it('ne refuse pas une langue inconnue ni un niveau de trop', () => {
+    for (const path of [
+      '/de/places/vesta/albana/',
+      '/places/vesta/albana/extra/',
+      '/places/vesta/',
+    ])
+      expect(
+        NAVIGATE_FALLBACK_DENYLIST.some((rule) => rule.test(path)),
+        `${path}`
+      ).toBe(false);
+  });
 });
