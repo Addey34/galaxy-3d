@@ -409,6 +409,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'capture',
+    reason:
+      "la capture d'image (2026-11-15, GAL-PERF-001A) : cartouche, crédit et téléchargement PNG, importée par `ui/captureButton` au premier clic sur « Capturer cette vue ». Le lanceur reste au démarrage, le clic est consommé par lui, un échec de chargement est annoncé.",
+  },
+  {
     chunk: 'meteorLayer',
     reason:
       "la couche des pluies de météores (2026-11-03) : radiants (`MeteorRadiants`), noms et calendrier d'activité (`core/meteors`, longitude solaire par Astronomy Engine), importée par `ui/skyLayerToggles` à la première activation de la case « Pluies de météores », éteinte au démarrage. Elle lit `sky/meteors.json` une seule fois.",

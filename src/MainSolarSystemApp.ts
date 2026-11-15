@@ -26,7 +26,7 @@ import {
   setupTextureLoadState,
 } from './ui/textureLoadState';
 import { setupShare } from './ui/share';
-import { setupCapture } from './ui/capture';
+import { setupCaptureButton } from './ui/captureButton';
 import { setupWebXR } from './ui/webxr';
 import { setupHelp } from './ui/help';
 import { setupKeyboardShortcuts } from './ui/keyboardShortcuts';
@@ -836,7 +836,7 @@ function wireChrome(): {
       layers: weatherPanel.states(),
       field: smallBodyFilters.states().filter((c) => !c.on),
     }));
-    setupCapture(cameraSystem, orbitalMechanics, planetNav);
+    setupCaptureButton(cameraSystem, orbitalMechanics, planetNav);
     setupAstronomicalEvents(orbitalMechanics, {
       onDateChange: () => syncPermalink(),
       coordinator: overlayCoordinator,
