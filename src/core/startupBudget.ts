@@ -414,6 +414,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "la capture d'image (2026-11-15, GAL-PERF-001A) : cartouche, crédit et téléchargement PNG, importée par `ui/captureButton` au premier clic sur « Capturer cette vue ». Le lanceur reste au démarrage, le clic est consommé par lui, un échec de chargement est annoncé.",
   },
   {
+    chunk: 'offlineData',
+    reason:
+      "la section « Hors ligne » des réglages (2026-11-15, GAL-PERF-001A) : lecture du magasin d'éphémérides, boutons Préparer et Libérer, importée par `ui/offlineDataLauncher` à la première ouverture des réglages (clic sur `#settings-trigger`).",
+  },
+  {
     chunk: 'meteorLayer',
     reason:
       "la couche des pluies de météores (2026-11-03) : radiants (`MeteorRadiants`), noms et calendrier d'activité (`core/meteors`, longitude solaire par Astronomy Engine), importée par `ui/skyLayerToggles` à la première activation de la case « Pluies de météores », éteinte au démarrage. Elle lit `sky/meteors.json` une seule fois.",
