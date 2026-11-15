@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { noteTrail, reportFailureDiagnostics } from './failureDiagnostics';
 import { waitForCalmMainThread } from './mainThread';
 import { MOON_SCENE_DATE } from './moonScene';
 import { blockExternalNetwork } from './netBlock';
@@ -16,6 +17,10 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
     localStorage.setItem('ssv-locale', 'en');
   });
+});
+
+test.afterEach(async ({ page }, testInfo) => {
+  await reportFailureDiagnostics(page, testInfo);
 });
 
 const marker = (page: Page): Locator => page.locator('#formation-marker');
@@ -116,6 +121,14 @@ test('two quick choices leave only the last formation marked', async ({
 }) => {
   await openPalette(page);
   await searchPlace(page, 'Tycho', 'Tycho');
+  // Le fil principal est saturé par le vol vers la Lune et ses textures : un clic de Playwright
+  // y attend son tour (« waiting for scheduled navigations », puis « scrolling into view »), et
+  // à 15 s il tombait (run `43641969374`, shard 4). Reproduit en local sous frein CPU ×8 : 4
+  // échecs sur 6 avant. On attend donc que le fil réponde, comme `openPalette` le fait au
+  // départ. Le CHEVAUCHEMENT des deux choix n'est plus l'affaire de ce test, qui joue le
+  // parcours d'un utilisateur : il est garanti, et prouvé, par le test déterministe qui suit
+  // (la réponse du premier choix y est retenue pendant que le second est fait).
+  await waitForCalmMainThread(page);
   await page.locator('#body-search-trigger').click();
   await expect(page.locator('#palette-input')).toBeFocused();
   await searchPlace(page, 'Copernicus', 'Copernicus');
@@ -128,6 +141,104 @@ test('two quick choices leave only the last formation marked', async ({
   await page.waitForTimeout(1500);
   await expect(canvas).toHaveAttribute('data-search-focus', /^Copernicus\|/);
   await expect(marker(page)).toHaveCount(1);
+});
+
+/**
+ * LE CHEVAUCHEMENT, CETTE FOIS DÉTERMINISTE. Le test précédent joue le scénario d'un utilisateur
+ * pressé, mais sous `prefers-reduced-motion` (celui de la suite) le vol est instantané et la
+ * réponse de `loadFormations` arrive souvent avant le second choix : le chevauchement y dépend de
+ * la machine. Ici on RETIENT la réponse du fichier des formations de la Lune : le premier choix
+ * est alors forcément en attente quand le second est fait, puis on libère les deux.
+ *
+ * Les deux choix sont de vrais clics sur de vraies entrées de la palette. Ce que l'on exige :
+ * LES DEUX FORMATIONS SONT SUR LA LUNE (« Copernicus » désigne d'abord un cratère de Mars : le
+ * second choix aurait alors changé de corps, et la garde de CIBLE de `lookAtFormation` aurait écarté
+ * la première réponse à elle seule, sans éprouver la garde du NUMÉRO de demande qu'on veut tenir).
+ * Ce que l'on exige : le premier ne tourne jamais la caméra et ne pose jamais de repère (on enregistre CHAQUE valeur
+ * de `data-search-focus` et CHAQUE texte du repère, pas seulement l'état final, qu'un premier
+ * repère vite remplacé laisserait identique), le dernier gagne, et il n'y a qu'un repère.
+ */
+test('a first choice still waiting when the second is made never turns the camera nor marks', async ({
+  page,
+}, testInfo) => {
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let requested = 0;
+  await page.route('**/assets/gazetteer/moon.json', async (route) => {
+    requested += 1;
+    await gate;
+    await route.continue();
+  });
+  await openPalette(page);
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as { __formationSeen: string[] }).__formationSeen = seen;
+    // On lit les ENREGISTREMENTS, pas l'état au moment du rappel : deux écritures dans la même
+    // tâche (un premier choix périmé suivi du second) ne donnent qu'un rappel, qui ne verrait que
+    // la dernière valeur. `oldValue` et les nœuds ajoutés gardent chacune des valeurs posées.
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      new MutationObserver((records) => {
+        for (const record of records) {
+          if (record.oldValue)
+            seen.push(`focus:${record.oldValue.split('|')[0]}`);
+        }
+        const focus = canvas.getAttribute('data-search-focus');
+        if (focus) seen.push(`focus:${focus.split('|')[0]}`);
+      }).observe(canvas, {
+        attributes: true,
+        attributeOldValue: true,
+        attributeFilter: ['data-search-focus'],
+      });
+    }
+    new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of Array.from(record.addedNodes)) {
+          if ((node as Element).id === 'formation-marker') {
+            const text = node.textContent?.replace(/\s+/g, ' ').trim();
+            if (text) seen.push(`marker:${text}`);
+          }
+        }
+      }
+    }).observe(document.body, { childList: true });
+  });
+
+  await searchPlace(page, 'Tycho', 'Tycho');
+  // Le premier choix est EN ATTENTE : sa réponse est demandée et retenue.
+  await expect.poll(() => requested, { timeout: 60_000 }).toBeGreaterThan(0);
+  noteTrail(
+    testInfo,
+    `fichier des formations demandé ${requested} fois, retenu`
+  );
+  await expect(marker(page)).toHaveCount(0);
+  await expect(page.locator('canvas').first()).not.toHaveAttribute(
+    'data-search-focus',
+    /.+/
+  );
+
+  // Attendre le calme ne change rien au chevauchement : c'est la réponse RETENUE, et non la
+  // vitesse du second clic, qui garde le premier choix en attente.
+  await waitForCalmMainThread(page);
+  await page.locator('#body-search-trigger').click();
+  await expect(page.locator('#palette-input')).toBeFocused();
+  await searchPlace(page, 'Clavius', 'Clavius');
+  noteTrail(testInfo, 'second choix fait, première réponse toujours retenue');
+
+  release();
+  const canvas = page.locator('canvas').first();
+  await expect(canvas).toHaveAttribute('data-search-focus', /^Clavius\|/, {
+    timeout: 60_000,
+  });
+  await expect(marker(page)).toContainText('Clavius');
+  await expect(marker(page)).toHaveCount(1);
+  const seen = await page.evaluate(
+    () => (window as unknown as { __formationSeen: string[] }).__formationSeen
+  );
+  noteTrail(testInfo, `valeurs vues : ${JSON.stringify(seen)}`);
+  expect(seen.filter((entry) => entry.includes('Tycho'))).toEqual([]);
+  expect(seen.some((entry) => entry.includes('Clavius'))).toBe(true);
 });
 
 test('a choice overtaken by the global view neither turns the camera nor marks', async ({

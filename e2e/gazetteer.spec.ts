@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { noteTrail, reportFailureDiagnostics } from './failureDiagnostics';
 import { waitForCalmMainThread } from './mainThread';
 import { MOON_SCENE_DATE } from './moonScene';
 import { blockExternalNetwork } from './netBlock';
@@ -43,6 +44,37 @@ test.beforeEach(async ({ page }) => {
  * supprime la cause, donc l'exception, qui la masquait, est retirée.
  */
 
+test.afterEach(async ({ page }, testInfo) => {
+  await reportFailureDiagnostics(page, testInfo);
+});
+
+/**
+ * Attendre que l'application ait DESSINÉ des images après un geste, au lieu d'une durée.
+ *
+ * La molette déplace la caméra tout de suite (amortissement désactivé), mais la couche des noms
+ * ne relit la caméra qu'à l'image suivante, et `data-names` ne change qu'alors. Avec 400 ms
+ * d'attente fixe, une machine dont l'image dure plus (jusqu'à ~600 ms en CI, rendu logiciel)
+ * relisait l'état d'AVANT le geste, croyait ne rien voir, et zoomait encore : la couche n'écrit
+ * des noms que dans une fenêtre étroite (mesurée en local, pas d'attente fixe : 5 noms au 1er pas,
+ * 3 au 2e, 0 dès le 3e). Le test dépassait la fenêtre et concluait « aucun nom écrit ». Trois
+ * `requestAnimationFrame` successifs garantissent au moins deux images de l'application après le
+ * geste, à la cadence de la machine.
+ */
+async function afterRenderedFrames(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        let left = 3;
+        const tick = (): void => {
+          left -= 1;
+          if (left <= 0) resolve();
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      })
+  );
+}
+
 async function boot(page: Page, query: string): Promise<void> {
   await page.goto(`/${query}`);
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
@@ -64,7 +96,7 @@ test('ne demande AUCUN répertoire au démarrage, ni de loin', async ({
 
 test('charge le répertoire d’un corps À L’APPROCHE, et écrit ses noms', async ({
   page,
-}) => {
+}, testInfo) => {
   const asked: string[] = [];
   page.on('request', (r) => {
     if (r.url().includes('/assets/gazetteer/moon.json')) asked.push(r.url());
@@ -82,10 +114,11 @@ test('charge le répertoire d’un corps À L’APPROCHE, et écrit ses noms', a
   if (!box) throw new Error('canvas absent');
   for (let i = 0; i < 14; i += 1) {
     const drawn = Number((await overlay.getAttribute('data-names')) ?? '0');
+    noteTrail(testInfo, `approche pas ${i} : data-names=${drawn}`);
     if (drawn > 0) break;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.wheel(0, -1200);
-    await page.waitForTimeout(400);
+    await afterRenderedFrames(page);
   }
   expect(
     asked.length,
@@ -99,10 +132,12 @@ test('charge le répertoire d’un corps À L’APPROCHE, et écrit ses noms', a
   // la caméra assez près pour que le chargement soit légitime, ce qu'une première version de
   // ce test affirmait à tort. Sans cette assertion, retirer le garde-fou laissait tout vert.
   for (let i = 0; i < 20; i += 1) {
-    if (Number((await overlay.getAttribute('data-names')) ?? '0') === 0) break;
+    const now = Number((await overlay.getAttribute('data-names')) ?? '0');
+    noteTrail(testInfo, `éloignement pas ${i} : data-names=${now}`);
+    if (now === 0) break;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.wheel(0, 9000);
-    await page.waitForTimeout(250);
+    await afterRenderedFrames(page);
   }
   expect(
     Number((await overlay.getAttribute('data-names')) ?? '0'),
