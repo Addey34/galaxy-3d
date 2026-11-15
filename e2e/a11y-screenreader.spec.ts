@@ -338,7 +338,11 @@ test.describe('les dialogues modaux tiennent ce qu’ils déclarent', () => {
     ).not.toBe('');
 
     // La carte de visite scriptée déclare la même modalité : elle porte son nom dès sa
-    // création, donc on peut le lire sans lancer une visite.
+    // création, donc on peut le lire sans lancer une visite. Son module n'est plus chargé au
+    // démarrage (GAL-PERF-001A) mais à la première ouverture de l'aide : on l'ouvre, puis on attend
+    // la carte.
+    await page.evaluate(() => document.getElementById('help-btn')?.click());
+    await page.locator('.stour-card').waitFor({ state: 'attached' });
     expect(
       await page.locator('.stour-card').getAttribute('aria-label')
     ).toBeTruthy();
