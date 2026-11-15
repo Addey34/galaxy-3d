@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { clickWhenCalm, waitForCalmMainThread } from './mainThread';
+import {
+  clickWhenCalm,
+  clickWhenInteractive,
+  waitForCalmMainThread,
+  waitForInteractiveMainThread,
+} from './mainThread';
+import { reportFailureDiagnostics } from './failureDiagnostics';
 import { blockExternalNetwork } from './netBlock';
 
 /**
@@ -22,7 +28,7 @@ const FICHES = ORDER.map(
   (id) =>
     JSON.parse(readFileSync(resolve(TOURS, `${id}.json`), 'utf-8')) as {
       title: { en: string };
-      steps: { kind: string; text?: { en: string } }[];
+      steps: { kind: string; text?: { en: string }; durationMs?: number }[];
     }
 );
 /** La légende anglaise la plus longue du registre, et la visite qui la porte. */
@@ -34,6 +40,10 @@ const LONGEST_CAPTION = FICHES.flatMap((fiche, index) =>
   entry.text.length > best.text.length ? entry : best
 );
 const TITLES_EN = FICHES.map((fiche) => fiche.title.en);
+
+test.afterEach(async ({ page }, testInfo) => {
+  await reportFailureDiagnostics(page, testInfo);
+});
 
 test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);
@@ -89,7 +99,42 @@ async function advanceToEnd(page: Page): Promise<void> {
 async function startTour(page: Page, index: number): Promise<void> {
   await page.locator('.stour-picker-item').nth(index).click();
   await expect(page.locator('.stour-card')).toBeVisible();
-  await waitForCalmMainThread(page);
+  if (!reachesAGestureCaption(index)) {
+    // Aucune légende n'attend un geste (visite à légendes minutées) : rien ne dit quand ses
+    // étapes automatiques sont finies, on garde l'attente de calme d'avant, sans changement.
+    await waitForCalmMainThread(page);
+    return;
+  }
+  // DISPONIBLE POUR UN CLIC, pas « surface entièrement peinte » (GAL-CI-STABILITY-001C).
+  //
+  // Le défaut : `waitForCalmMainThread` exige aussi `data-surface-busy` à zéro. Les visites de la
+  // Terre plongent sur des lieux et chargent des dizaines de carreaux, que le moteur admet un par
+  // image : le compte descend de 51 à 0 en autant d'images, soit plus d'une minute quand l'image
+  // dure 650 ms (delta du Nil, run `43641969374` : images de 528 à 696 ms, sous le budget de
+  // 1 500, 2 carreaux restants à l'expiration des 60 s).
+  //
+  // Ignorer ce compte seul ne suffit PAS, mesuré en local sous frein ×8 : le fil paraît calme
+  // 0,6 à 4 s après le départ, alors que la visite joue encore ses étapes automatiques (vol, saut
+  // de date, plongée) ; la vague de carreaux et de textures arrive ensuite, et le clic sur
+  // « Fermer » tombait dessus (2 échecs sur 6, 15 s à « scrolling into view »). Le compte de
+  // carreaux était, sans le dire, ce qui retenait le test jusqu'à la fin de ces étapes.
+  //
+  // On attend donc l'ÉTAT QUI LE DIT VRAIMENT : la visite s'est arrêtée sur une légende qui
+  // attend un geste (« Suivant » actif), donc ses étapes automatiques sont finies ; puis le fil
+  // doit répondre (images sous le budget, aucune texture en vol, scène immobile). Les carreaux
+  // encore en file à ce moment ne gênent pas un clic : mesuré, leurs images font 25 à 80 ms.
+  await expect(page.locator('.stour-next')).toBeEnabled({ timeout: 60_000 });
+  await waitForInteractiveMainThread(page);
+}
+
+/**
+ * Cette visite a-t-elle une légende sans durée, donc qui attend un geste ? Lu dans la fiche, comme
+ * le reste du fichier : la boucle sur le registre n'a pas de liste à tenir à la main.
+ */
+function reachesAGestureCaption(index: number): boolean {
+  return FICHES[index]!.steps.some(
+    (step) => step.kind === 'caption' && step.durationMs === undefined
+  );
 }
 
 test.describe('scripted tour picker', () => {
@@ -160,7 +205,7 @@ test.describe('eclipse tour', () => {
 
     const card = page.locator('.stour-card');
     await expect(card).toBeVisible();
-    await clickWhenCalm(page, page.locator('.stour-close'));
+    await clickWhenInteractive(page, page.locator('.stour-close'));
     await expect(card).toBeHidden();
     await expect(page.locator('#body-info')).toBeHidden();
   });
@@ -201,7 +246,7 @@ test.describe('every tour of the registry', () => {
 
       // La visite CONTINUE de jouer pendant qu'on regarde : on ferme quand la scène a rendu la
       // main, sinon le clic tombe dans le vol ou le saut de date de l'étape suivante.
-      await clickWhenCalm(page, page.locator('.stour-close'));
+      await clickWhenInteractive(page, page.locator('.stour-close'));
       await expect(card).toBeHidden();
       await expect(page.locator('#body-info')).toBeHidden();
     });
