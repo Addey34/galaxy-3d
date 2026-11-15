@@ -89,7 +89,45 @@ export interface CalmOptions {
  */
 export async function waitForCalmMainThread(
   page: Page,
-  { budgetMs, frames, timeoutMs }: CalmOptions = {}
+  options: CalmOptions = {}
+): Promise<string[]> {
+  return observeMainThread(page, options, true);
+}
+
+/**
+ * Rend la main quand la page est DISPONIBLE POUR UN CLIC, sans exiger que la surface ait fini de
+ * se peindre (GAL-CI-STABILITY-001C). `waitForCalmMainThread` reste le contrat de « scène
+ * entièrement stabilisée » et n'est pas modifié ; celle-ci en garde trois conditions sur quatre :
+ *
+ *  - CONSERVÉ : chaque image sous le budget, `frames` images de suite. C'est la mesure du fil
+ *    principal lui-même, donc de ce dont un clic de Playwright a besoin (cf. l'en-tête du fichier) ;
+ *    un carreau qui se décode ou se téléverse pèse dans cette durée d'image et casse la série.
+ *  - CONSERVÉ : aucune texture en vol (`data-textures-loading`). Leur décodage et leur envoi
+ *    produisent les pics de 2,5 à 5,5 s mesurés plus haut, que la durée d'image ne voit qu'une
+ *    fois subis.
+ *  - CONSERVÉ : pas de vol de caméra ni de glissement d'échelle (`data-scene-moving`) : le clic
+ *    tomberait dans la cible qui bouge.
+ *  - ÉCARTÉ : `data-surface-busy`, le compte de carreaux de surface en vol, en file ou en fondu.
+ *    C'est un compte de TRAVAIL RESTANT, pas un signal d'indisponibilité : le moteur en admet un
+ *    par image et le fondu dure 400 ms. Run `43641969374`, delta du Nil : images de 528 à 696 ms
+ *    (sous le budget de 1 500) pendant que le compte descendait de 51 à 2, un carreau par image,
+ *    et la minute de `waitForCalmMainThread` expirait à 2 carreaux de la fin, alors que le clic
+ *    suivant n'avait besoin que de ce fil.
+ *
+ * À employer pour un clic dont l'effet ne dépend pas de l'état final de la surface ; une
+ * assertion sur la surface elle-même attend `data-surface-busy` par son propre sondage.
+ */
+export async function waitForInteractiveMainThread(
+  page: Page,
+  options: CalmOptions = {}
+): Promise<string[]> {
+  return observeMainThread(page, options, false);
+}
+
+async function observeMainThread(
+  page: Page,
+  { budgetMs, frames, timeoutMs }: CalmOptions,
+  surfaceMustBeIdle: boolean
 ): Promise<string[]> {
   const budget = budgetMs ?? CALM_BUDGET_MS;
   const wanted = frames ?? CALM_FRAMES;
@@ -99,7 +137,7 @@ export async function waitForCalmMainThread(
   for (;;) {
     // Attributs absents (page sans l'application) : rien en vol, rien en mouvement.
     const observed = await page.evaluate(
-      ({ budget, wanted, windowMs }) =>
+      ({ budget, wanted, windowMs, tilesMatter }) =>
         new Promise<{ calm: boolean; series: string[] }>((resolve) => {
           const canvas = document.querySelector('canvas');
           const start = performance.now();
@@ -121,7 +159,10 @@ export async function waitForCalmMainThread(
               `${took}${loading === '0' ? '' : `+${loading}tex`}${tiles === '0' ? '' : `+${tiles}tile`}${moving ? '~' : ''}`
             );
             streak =
-              took <= budget && loading === '0' && tiles === '0' && !moving
+              took <= budget &&
+              loading === '0' &&
+              (!tilesMatter || tiles === '0') &&
+              !moving
                 ? streak + 1
                 : 0;
             if (streak >= wanted) resolve({ calm: true, series: out });
@@ -131,14 +172,20 @@ export async function waitForCalmMainThread(
           };
           requestAnimationFrame(tick);
         }),
-      { budget, wanted, windowMs: OBSERVATION_WINDOW_MS }
+      {
+        budget,
+        wanted,
+        windowMs: OBSERVATION_WINDOW_MS,
+        tilesMatter: surfaceMustBeIdle,
+      }
     );
     series.push(...observed.series);
     if (observed.calm) return series;
     if (Date.now() > deadline)
       throw new Error(
         `le thread principal n'a pas enchaîné ${wanted} images sous ${budget} ms sans texture ` +
-          `en vol ni scène en mouvement : série mesurée (ms par image, +N tex = N textures en ` +
+          `en vol ${surfaceMustBeIdle ? 'ni carreau de surface en vol ' : '(carreaux de surface ignorés) '}` +
+          `ni scène en mouvement : série mesurée (ms par image, +N tex = N textures en ` +
           `vol, ~ = vol de caméra ou glissement d'échelle) ${series.slice(-60).join(' ')}`
       );
   }
@@ -179,5 +226,19 @@ export async function clickWhenCalm(
   options: CalmOptions = {}
 ): Promise<void> {
   await waitForCalmMainThread(page, options);
+  await locator.click();
+}
+
+/**
+ * Comme `clickWhenCalm`, pour un clic qui n'a besoin que d'une page disponible
+ * (`waitForInteractiveMainThread`). Le clic reste un vrai clic de Playwright : ni `evaluate`, ni
+ * `dispatchEvent`, ni `force`.
+ */
+export async function clickWhenInteractive(
+  page: Page,
+  locator: Locator,
+  options: CalmOptions = {}
+): Promise<void> {
+  await waitForInteractiveMainThread(page, options);
   await locator.click();
 }
