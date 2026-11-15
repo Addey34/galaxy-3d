@@ -137,8 +137,8 @@ test('sous réseau lent, un seul clic suffit et un double clic ne capture qu’u
 }) => {
   await boot(page);
   await slow(page, 'capture', 3000);
-  await slow(page, 'tourPlayer', 3000);
-  await slow(page, 'guidedTour', 3000);
+  const releasePlayer = await hold(page, 'tourPlayer');
+  const releaseTour = await hold(page, 'guidedTour');
   let downloads = 0;
   page.on('download', () => downloads++);
   const first = page.waitForEvent('download', { timeout: 60_000 });
@@ -147,11 +147,12 @@ test('sous réseau lent, un seul clic suffit et un double clic ne capture qu’u
   await page.waitForTimeout(3000);
   expect(downloads).toBe(1);
 
-  // L'aide s'ouvre tout de suite ; le bouton des visites paraît quand leur module est arrivé.
-  const start = Date.now();
+  // L'aide s'ouvre tout de suite, sans attendre les modules ; leur bouton paraît quand ils arrivent.
   await page.locator('#help-btn').click();
   await expect(page.locator('#help-popover')).toBeVisible();
-  expect(Date.now() - start).toBeLessThan(2500);
+  await expect(page.locator('.stour-start')).toHaveCount(0);
+  releasePlayer();
+  releaseTour();
   await expect(page.locator('.stour-start')).toBeVisible({ timeout: 20_000 });
   await page.locator('.stour-start').click();
   await expect(page.locator('.stour-picker-item').first()).toBeVisible();
