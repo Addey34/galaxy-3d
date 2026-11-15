@@ -419,6 +419,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "la section « Hors ligne » des réglages (2026-11-15, GAL-PERF-001A) : lecture du magasin d'éphémérides, boutons Préparer et Libérer, importée par `ui/offlineDataLauncher` à la première ouverture des réglages (clic sur `#settings-trigger`).",
   },
   {
+    chunk: 'webxr',
+    reason:
+      "le cycle de vie d'une session VR (2026-11-15, GAL-PERF-001A) : contrôleurs, locomotion, sélection, panneau d'information, importé par `ui/webxrLauncher` SEULEMENT sur un appareil où `isSessionSupported('immersive-vr')` est vrai (jamais sur Safari/iOS ni sans casque). La demande de session reste synchrone dans le clic, pour garder le geste utilisateur.",
+  },
+  {
     chunk: 'meteorLayer',
     reason:
       "la couche des pluies de météores (2026-11-03) : radiants (`MeteorRadiants`), noms et calendrier d'activité (`core/meteors`, longitude solaire par Astronomy Engine), importée par `ui/skyLayerToggles` à la première activation de la case « Pluies de météores », éteinte au démarrage. Elle lit `sky/meteors.json` une seule fois.",

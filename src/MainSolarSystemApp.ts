@@ -27,7 +27,7 @@ import {
 } from './ui/textureLoadState';
 import { setupShare } from './ui/share';
 import { setupCaptureButton } from './ui/captureButton';
-import { setupWebXR } from './ui/webxr';
+import { setupWebXR } from './ui/webxrLauncher';
 import { setupHelp } from './ui/help';
 import { setupKeyboardShortcuts } from './ui/keyboardShortcuts';
 import { setupGuidedTour } from './ui/guidedTour';
