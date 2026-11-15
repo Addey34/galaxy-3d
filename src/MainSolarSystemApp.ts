@@ -30,8 +30,11 @@ import { setupCaptureButton } from './ui/captureButton';
 import { setupWebXR } from './ui/webxrLauncher';
 import { setupHelp } from './ui/help';
 import { setupKeyboardShortcuts } from './ui/keyboardShortcuts';
-import { setupGuidedTour } from './ui/guidedTour';
-import { setupTourPlayer } from './ui/tourPlayer';
+import {
+  setupGuidedTourOnDemand,
+  setupTourPlayerOnDemand,
+  type GuidedTourLauncher,
+} from './ui/tourLaunchers';
 import { TOUR_SCRIPTS } from './config/tourScripts';
 import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
@@ -184,7 +187,7 @@ function positionContextualSurface(id: SecondaryOverlayId): void {
  */
 function wireChrome(): {
   overlayCoordinator: ReturnType<typeof setupOverlayCoordinator>;
-  guidedTour: ReturnType<typeof setupGuidedTour>;
+  guidedTour: GuidedTourLauncher;
 } {
   // Traduit les chaînes statiques du HTML avant tout et synchronise <html lang> ; les modules
   // dynamiques (loader, bodyInfo…) se retraduisent ensuite via leurs propres abonnements.
@@ -195,7 +198,7 @@ function wireChrome(): {
   setupKeyboardShortcuts();
   const overlayCoordinator = setupOverlayCoordinator();
   setupHelp(overlayCoordinator);
-  const guidedTour = setupGuidedTour();
+  const guidedTour = setupGuidedTourOnDemand();
   // Une surface contextuelle ne se ferme PAS au clic sur la scène (desktop) : seulement par son
   // déclencheur, par l'ouverture d'une autre surface (le coordinateur ferme la précédente) ou
   // Échap, mobile compris : le scrim n'est qu'un voile (pointer-events: none), il ne capte ni
@@ -843,7 +846,7 @@ function wireChrome(): {
       navigation: planetNav,
       playback,
     });
-    const tourPlayer = setupTourPlayer(
+    const tourPlayer = setupTourPlayerOnDemand(
       cameraSystem,
       orbitalMechanics,
       planetNav,
@@ -862,7 +865,9 @@ function wireChrome(): {
     if (requestedTour !== undefined) permalink.sync();
     // Le préréglage est une ouverture lui aussi : l'adresse qui suit ne doit plus le porter.
     else if (requestedPreset !== undefined) permalink.sync();
-    if (!(requestedTour !== undefined && tourPlayer.start(requestedTour)))
+    if (!(
+      requestedTour !== undefined && (await tourPlayer.start(requestedTour))
+    ))
       guidedTour.startIfFirstVisit();
   } catch (err) {
     showError(err instanceof Error ? err : new Error(String(err)));

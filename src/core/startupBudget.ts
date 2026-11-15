@@ -424,6 +424,16 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le cycle de vie d'une session VR (2026-11-15, GAL-PERF-001A) : contrôleurs, locomotion, sélection, panneau d'information, importé par `ui/webxrLauncher` SEULEMENT sur un appareil où `isSessionSupported('immersive-vr')` est vrai (jamais sur Safari/iOS ni sans casque). La demande de session reste synchrone dans le clic, pour garder le geste utilisateur.",
   },
   {
+    chunk: 'guidedTour',
+    reason:
+      "la découverte de premier passage (2026-11-15, GAL-PERF-001A) : bulles ancrées et bouton de relance du popover d'aide, importée par `ui/tourLaunchers` tout de suite pour un premier passage, sinon à la première ouverture de l'aide.",
+  },
+  {
+    chunk: 'tourPlayer',
+    reason:
+      "les visites scénarisées (2026-11-15, GAL-PERF-001A) : lecteur, moteur et résolution de date, importés par `ui/tourLaunchers` à la première ouverture de l'aide, ou tout de suite pour `?tour=`.",
+  },
+  {
     chunk: 'meteorLayer',
     reason:
       "la couche des pluies de météores (2026-11-03) : radiants (`MeteorRadiants`), noms et calendrier d'activité (`core/meteors`, longitude solaire par Astronomy Engine), importée par `ui/skyLayerToggles` à la première activation de la case « Pluies de météores », éteinte au démarrage. Elle lit `sky/meteors.json` une seule fois.",

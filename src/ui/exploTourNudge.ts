@@ -67,9 +67,16 @@ export function setupExploTourNudge(): ExploTourNudge {
       // Ouvre le popover d'aide puis révèle le picker de tours via leurs propres boutons —
       // un délai court laisse le popover se rendre avant de cibler .stour-start (son enfant).
       document.getElementById('help-btn')?.click();
-      window.setTimeout(() => {
-        document.querySelector<HTMLButtonElement>('.stour-start')?.click();
-      }, 300);
+      // Le module des visites est chargé à la PREMIÈRE ouverture de l'aide (`tourLaunchers`) : son
+      // bouton paraît quand il est là, pas après un délai fixe. On attend donc qu'il existe (5 s).
+      let tries = 0;
+      const timer = window.setInterval(() => {
+        const start = document.querySelector<HTMLButtonElement>('.stour-start');
+        if (start || ++tries > 50) {
+          window.clearInterval(timer);
+          start?.click();
+        }
+      }, 100);
     });
 
     const close = document.createElement('button');
