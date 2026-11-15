@@ -730,6 +730,47 @@ export function exclusiveGroupCost(
   return worst;
 }
 
+/**
+ * Les démarrages CONDITIONNELS (GAL-PERF-001A, REV1). Le chiffre officiel est celui d'un visiteur de
+ * retour sur un navigateur sans VR : il ne compte pas les morceaux que d'autres démarrages chargent
+ * AUSSI avant que la scène soit utilisable. Ces profils les nomment, `pnpm budget:startup` les
+ * additionne à la mesure officielle et échoue si l'un d'eux dépasse le plafond : le plafond reste
+ * UN seul nombre, et aucun profil ne le franchit en silence. Chaque morceau cité doit être dans
+ * `NON_BOOT_CHUNKS` (un test le vérifie), donc jamais compté deux fois ni oublié.
+ */
+export interface ConditionalStartProfile {
+  readonly id: string;
+  readonly label: string;
+  /** Morceaux `NON_BOOT_CHUNKS` que CE démarrage charge en plus, noms sans empreinte. */
+  readonly chunks: readonly string[];
+}
+
+export const CONDITIONAL_START_PROFILES: readonly ConditionalStartProfile[] = [
+  {
+    id: 'first-visit',
+    label: 'premier passage : la découverte guidée démarre tout de suite',
+    chunks: ['guidedTour'],
+  },
+  {
+    id: 'tour-link',
+    label:
+      'ouverture directe par `?tour=` : le lecteur de visites démarre la visite',
+    chunks: ['tourPlayer'],
+  },
+  {
+    id: 'immersive-vr',
+    label:
+      'navigateur compatible `immersive-vr` : le cycle de session est demandé dès la détection',
+    chunks: ['webxr'],
+  },
+  {
+    id: 'worst-case',
+    label:
+      'pire cas cumulé : premier passage avec `?tour=` inconnu (repli sur la découverte) sur un appareil VR',
+    chunks: ['guidedTour', 'tourPlayer', 'webxr'],
+  },
+];
+
 export const BOOT_DYNAMIC_CHUNKS: readonly BootDynamicChunk[] = [
   {
     chunk: 'GLTFLoader',

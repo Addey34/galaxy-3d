@@ -46,7 +46,7 @@ describe('chargement différé du démarrage', () => {
       'webxrLauncher',
       'tourLaunchers',
     ])
-      expect(read(`src/ui/${f}.ts`)).toContain("t('feature.loadFailed')");
+      expect(read(`src/ui/${f}.ts`)).toContain("announceLoadFailure('");
   });
 
   it('WebXR : la session est demandée avant tout await, pour garder le geste utilisateur', () => {

@@ -71,6 +71,11 @@ export function setupExploTourNudge(): ExploTourNudge {
       // bouton paraît quand il est là, pas après un délai fixe. On attend donc qu'il existe (5 s).
       let tries = 0;
       const timer = window.setInterval(() => {
+        // Le visiteur a refermé l'aide pendant le chargement : on n'ouvre pas un sélecteur à son insu.
+        if (document.getElementById('help-popover')?.hidden) {
+          window.clearInterval(timer);
+          return;
+        }
         const start = document.querySelector<HTMLButtonElement>('.stour-start');
         if (start || ++tries > 50) {
           window.clearInterval(timer);

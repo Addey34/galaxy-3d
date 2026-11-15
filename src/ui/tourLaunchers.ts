@@ -11,10 +11,9 @@
  * chargé, l'écouteur est retiré : une initialisation, un écouteur. Les boutons de visite apparaissent
  * dans le popover une fraction de seconde après l'ouverture de l'aide, au premier clic seulement.
  */
-import { t } from '@/i18n';
 import { STORAGE_KEYS } from '@/config/storageKeys';
 import type { setupTourPlayer } from './tourPlayer';
-import { getAnnouncer } from './announcer';
+import { announceLoadFailure } from './loadFailure';
 
 /** Charge `load` une seule fois, au premier clic sur l'aide, ou tout de suite sur demande. */
 function onDemandWithHelp<T>(load: () => Promise<T>): () => Promise<T | null> {
@@ -28,7 +27,7 @@ function onDemandWithHelp<T>(load: () => Promise<T>): () => Promise<T | null> {
       })
       .catch(() => {
         pending = null; // le prochain clic réessaie
-        getAnnouncer().announce(t('feature.loadFailed'));
+        announceLoadFailure('tours');
         return null;
       });
     return pending;

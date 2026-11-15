@@ -15,7 +15,7 @@ import type { SceneSystem } from '@/components/systems/SceneSystem';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import { t } from '@/i18n';
 import type { PlanetNavigation } from './planetNav';
-import { getAnnouncer } from './announcer';
+import { announceLoadFailure } from './loadFailure';
 
 export interface WebXRHandle {
   /** À appeler depuis le callback de bascule de mode (Éduc ↔ Explo). */
@@ -91,7 +91,7 @@ export function setupWebXR(
             await attach();
           } catch {
             await session.end();
-            getAnnouncer().announce(t('feature.loadFailed'));
+            announceLoadFailure('webxr');
             return;
           }
           activeSession = session;

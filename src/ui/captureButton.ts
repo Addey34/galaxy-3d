@@ -4,11 +4,10 @@
  * du budget de démarrage. Le clic est consommé par ce lanceur : un seul écouteur, un seul chargement
  * à la fois, pas de second clic nécessaire. Un échec de chargement est DIT (annonceur), jamais muet.
  */
-import { t } from '@/i18n';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { PlanetNavigation } from './planetNav';
-import { getAnnouncer } from './announcer';
+import { announceLoadFailure } from './loadFailure';
 
 export function setupCaptureButton(
   camera: CameraSystem,
@@ -23,7 +22,7 @@ export function setupCaptureButton(
     busy = true;
     void import('./capture')
       .then((m) => m.runCapture(camera, om, navigation))
-      .catch(() => getAnnouncer().announce(t('feature.loadFailed')))
+      .catch(() => announceLoadFailure('capture'))
       .finally(() => {
         busy = false;
       });

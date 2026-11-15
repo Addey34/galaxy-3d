@@ -207,6 +207,8 @@ export const fr: Record<MessageKey, string> = {
   'capture.failed': 'Échec de la capture',
   'feature.loadFailed':
     'Cette fonction n’a pas pu être chargée. Vérifiez votre connexion et réessayez.',
+  'feature.loadFailedAgain':
+    'Cette fonction n’a toujours pas pu être chargée. Rechargez la page, puis réessayez.',
   'webxr.btn.enter.title': 'Entrer en VR',
   'webxr.btn.enter.aria': 'Entrer en réalité virtuelle',
   'webxr.btn.exit.title': 'Quitter la VR',

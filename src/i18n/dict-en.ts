@@ -233,6 +233,8 @@ export const en = {
   'capture.failed': 'Capture failed',
   'feature.loadFailed':
     'This feature could not be loaded. Check your connection and try again.',
+  'feature.loadFailedAgain':
+    'This feature still could not be loaded. Reload the page, then try again.',
   'webxr.btn.enter.title': 'Enter VR',
   'webxr.btn.enter.aria': 'Enter virtual reality',
   'webxr.btn.exit.title': 'Exit VR',

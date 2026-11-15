@@ -5,9 +5,8 @@
  * panneau : le clic qui l'ouvre lance le chargement, sans second clic. Un échec est DIT et le
  * prochain clic réessaie ; une fois chargé, l'écouteur est retiré (aucune initialisation double).
  */
-import { t } from '@/i18n';
 import type { HorizonsEphemerisService } from '@/core/HorizonsEphemerisService';
-import { getAnnouncer } from './announcer';
+import { announceLoadFailure } from './loadFailure';
 
 export function setupOfflineDataOnDemand(
   service: HorizonsEphemerisService
@@ -24,7 +23,7 @@ export function setupOfflineDataOnDemand(
         trigger.removeEventListener('click', load);
       })
       .catch(() => {
-        getAnnouncer().announce(t('feature.loadFailed'));
+        announceLoadFailure('offlineData');
       })
       .finally(() => {
         loading = false;

@@ -215,6 +215,8 @@ export const ptBR: Record<MessageKey, string> = {
   'capture.failed': 'Não foi possível capturar',
   'feature.loadFailed':
     'Não foi possível carregar este recurso. Verifique sua conexão e tente novamente.',
+  'feature.loadFailedAgain':
+    'Este recurso ainda não pôde ser carregado. Recarregue a página e tente novamente.',
   'webxr.btn.enter.title': 'Entrar em RV',
   'webxr.btn.enter.aria': 'Entrar em realidade virtual',
   'webxr.btn.exit.title': 'Sair da RV',
