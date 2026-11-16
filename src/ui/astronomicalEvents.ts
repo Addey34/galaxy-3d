@@ -103,6 +103,8 @@ function eventTooltip(event: AstronomicalEvent): string {
 
 export interface AstronomicalEventsPanel {
   refresh(): void;
+  /** Ouvre le panneau (comme un clic sur le déclencheur fermé) : le lanceur l'appelle une fois chargé. */
+  open(): void;
   dispose(): void;
 }
 
@@ -241,11 +243,17 @@ export function setupAstronomicalEvents(
       toggle?.focus();
     }
   });
-  onLocaleChange(render);
-  render();
+  // Le panneau est recalculé à chaque OUVERTURE (`setOpen`, à la date de simulation d'alors) : un
+  // panneau fermé n'a rien à recalculer au changement de langue, et il n'y a pas de rendu initial
+  // (GAL-PERF-001B-01 : 8 événements sur 730 jours coûtaient ~28 ms à froid, mesurés, pour un
+  // panneau masqué).
+  onLocaleChange(() => {
+    if (!panel.hidden) render();
+  });
 
   return {
     refresh: render,
+    open: () => setOpen(true),
     dispose: () => {
       panel.remove();
     },

@@ -409,6 +409,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'astronomicalEvents',
+    reason:
+      "le panneau des événements astronomiques (2026-11-16, GAL-PERF-001B-01) : construction du panneau et calcul des huit prochains événements, importé par `ui/astronomicalEventsLauncher` au premier clic sur `#events-trigger`. Les calculs (`core/astronomicalEvents`) restent dans le démarrage : les visites et les pages d'éclipse les utilisent.",
+  },
+  {
     chunk: 'capture',
     reason:
       "la capture d'image (2026-11-15, GAL-PERF-001A) : cartouche, crédit et téléchargement PNG, importée par `ui/captureButton` au premier clic sur « Capturer cette vue ». Le lanceur reste au démarrage, le clic est consommé par lui, un échec de chargement est annoncé.",
