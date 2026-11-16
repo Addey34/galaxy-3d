@@ -161,6 +161,37 @@ async function settleAnimations(page: Page): Promise<void> {
   });
 }
 
+/**
+ * LES FEUILLES DE STYLE SONT APPLIQUÉES AVANT TOUTE MESURE DE MISE EN PAGE (GAL-CI-STABILITY-001E).
+ * `domcontentloaded` n'attend pas les `<link rel="stylesheet">` : une mesure de boîtes (axe, débordement,
+ * écart entre liens de langue) pouvait lire une page SANS ses styles, où les liens sont collés
+ * (vu une fois à deux workers, `/fr/activities/eclipse` imprimée). On attend donc que chaque feuille
+ * déclarée soit chargée (`link.sheet` posé), état qui n'est PAS ce que les assertions vérifient. Une
+ * feuille absente ou en échec ne se masque pas : `sheet` reste nul, l'attente échoue en nommant la
+ * feuille, et une page sans aucune feuille échoue aussi.
+ */
+async function waitForStylesheets(page: Page, path: string): Promise<void> {
+  const pending = () =>
+    page.evaluate(() => {
+      const links = [
+        ...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+      ];
+      return {
+        count: links.length,
+        missing: links.filter((l) => l.sheet === null).map((l) => l.href),
+      };
+    });
+  await expect
+    .poll(async () => (await pending()).missing, {
+      message: `${path} : feuilles de style non chargées`,
+    })
+    .toEqual([]);
+  expect(
+    (await pending()).count,
+    `${path} : aucune feuille de style`
+  ).toBeGreaterThan(0);
+}
+
 /** Ce que mesure chaque page : la bonne page, axe propre, et aucun débordement horizontal. */
 async function checkDocument(page: Page, path: string): Promise<void> {
   const response = await page.goto(`/${path}/`, {
@@ -178,6 +209,7 @@ async function checkDocument(page: Page, path: string): Promise<void> {
   expect(heading, `${path} : aucun <h1> dans la réponse servie`).not.toBeNull();
   expect(heading![1]!.replace(/<[^>]+>/g, '').trim()).toBe(builtHeading(path));
 
+  await waitForStylesheets(page, path);
   await settleAnimations(page);
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -318,6 +350,7 @@ test.describe('pages générées, à 390 px', () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/fr/missions/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.doc-lang')).toHaveCount(3);
+    await waitForStylesheets(page, 'fr/missions (1280 px)');
     await expectSeparatedLanguages(page, 'fr/missions (1280 px)');
   });
 
