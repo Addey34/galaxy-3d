@@ -149,3 +149,13 @@ test('les permaliens interactifs d’un corps avec paramètres retombent toujour
   ])
     expect(denied(path), path).toBe(false);
 });
+
+test('le morceau différé du panneau des événements est précaché (ouverture hors ligne)', () => {
+  // GAL-PERF-001B-01 : sorti du démarrage, le panneau doit rester disponible hors ligne ; Workbox
+  // précache tout `assets/*.js`, et ce test le prouve sur le manifeste réel plutôt que de le supposer.
+  const chunks = readdirSync(join(DIST, 'assets')).filter((f) =>
+    /^astronomicalEvents-.*\.js$/.test(f)
+  );
+  expect(chunks, 'un seul morceau du panneau dans le build').toHaveLength(1);
+  expect(precached).toContain(`assets/${chunks[0]}`);
+});

@@ -53,7 +53,7 @@ import { setupExploScaleBadge } from './ui/exploScaleBadge';
 import { setupPermalinks } from './ui/permalink';
 import { parsePermalink, requestedSceneDate } from './core/permalink';
 import { LANDING_PAGE_BODIES } from './config/navigable';
-import { setupAstronomicalEvents } from './ui/astronomicalEvents';
+import { setupAstronomicalEventsOnDemand } from './ui/astronomicalEventsLauncher';
 import type { OpticalZoomControl } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
@@ -840,7 +840,7 @@ function wireChrome(): {
       field: smallBodyFilters.states().filter((c) => !c.on),
     }));
     setupCaptureButton(cameraSystem, orbitalMechanics, planetNav);
-    setupAstronomicalEvents(orbitalMechanics, {
+    setupAstronomicalEventsOnDemand(orbitalMechanics, {
       onDateChange: () => syncPermalink(),
       coordinator: overlayCoordinator,
       navigation: planetNav,
