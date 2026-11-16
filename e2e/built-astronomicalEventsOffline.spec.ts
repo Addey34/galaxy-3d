@@ -31,6 +31,11 @@ test('le panneau des événements s’ouvre hors ligne, depuis le précache', as
   test.setTimeout(150_000);
   expect(CHUNK, 'morceau du panneau dans le build').toBeDefined();
   await blockExternalNetwork(page);
+  // Les requêtes de la PAGE pour le morceau (le précache du service worker, lui, n'en est pas une).
+  const requested: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes(CHUNK!)) requested.push(request.url());
+  });
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
     localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
@@ -54,6 +59,9 @@ test('le panneau des événements s’ouvre hors ligne, depuis le précache', as
       { timeout: 60_000, message: 'morceau précaché' }
     )
     .toBe(true);
+  // Au démarrage ordinaire, la page n'a PAS demandé le morceau et le panneau n'existe pas.
+  expect(requested, 'requêtes de la page pour le morceau').toEqual([]);
+  await expect(page.locator('#astronomical-events')).toHaveCount(0);
   await context.setOffline(true);
   await page.locator('#events-trigger').click();
   await expect(page.locator('#astronomical-events')).toBeVisible({

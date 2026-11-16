@@ -1,46 +1,23 @@
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
 
 /**
- * GAL-PERF-001B-01 : le panneau des événements astronomiques est un morceau chargé AU PREMIER CLIC
- * (`ui/astronomicalEventsLauncher`), sur le BUILD de production (`/assets/astronomicalEvents-<empreinte>.js`).
- * Les scénarios fixent ce que le chargement différé ne doit pas casser : pas de chargement au
- * démarrage, une ouverture au premier clic, une seule charge et une seule instance, une intention
- * d'ouvrir qui EXPIRE si le visiteur a fait autre chose (autre surface, Échap, focus ailleurs), un
- * échec annoncé puis réessayé. L'import est retenu par une porte, jamais par un délai deviné.
- *
- * Les service workers sont bloqués : ils précachent tous les morceaux et masqueraient le chargement à
- * la demande (le précache et l'ouverture hors ligne ont leurs propres contrôles, voir
- * `built-pwaPrecache.spec.ts`).
+ * GAL-PERF-001B-01 : le panneau des événements astronomiques est un module chargé AU PREMIER CLIC
+ * (`ui/astronomicalEventsLauncher`). Le serveur de développement le sert sous `/src/ui/astronomicalEvents.ts`
+ * (le morceau de production, son précache et l'ouverture hors ligne sont contrôlés sur le build par
+ * `built-pwaPrecache.spec.ts` et `built-astronomicalEventsOffline.spec.ts`). Les scénarios fixent ce
+ * que le chargement différé ne doit pas casser : pas de chargement au démarrage, une ouverture au
+ * premier clic, une seule charge et une seule instance, une intention d'ouvrir qui EXPIRE si le
+ * visiteur a fait autre chose (autre surface, Échap, focus ailleurs), un échec annoncé puis réessayé.
+ * L'import est retenu par une porte, jamais par un délai deviné. Ils sont ici, et non dans
+ * `test:pages`, parce que chacun démarre l'application entière : ce job a 15 minutes en tout.
  */
-test.use({ serviceWorkers: 'block' });
-
-const CHUNK = /\/assets\/astronomicalEvents-[^/]*\.js(\?.*)?$/;
+const CHUNK = /\/src\/ui\/astronomicalEvents\.ts(\?.*)?$/;
 const PANEL = '#astronomical-events';
 const TRIGGER = '#events-trigger';
 
 async function boot(page: Page): Promise<{ requests: string[] }> {
   await blockExternalNetwork(page);
-  // Une build dotée de `VITE_ASSET_ORIGIN` demande les éphémérides à `galaxy-data`, coupé par
-  // `blockExternalNetwork` : on les sert depuis le build (comme `built-lazyLaunchers.spec.ts`).
-  const origin = test.info().project.use.baseURL;
-  await page.route(
-    '**galaxy-data.adrianguichard.dev/assets/ephemerides/**',
-    async (route) => {
-      const path = new URL(route.request().url()).pathname;
-      const response = await route.fetch({ url: new URL(path, origin).href });
-      await route.fulfill({
-        response,
-        headers: {
-          ...response.headers(),
-          'access-control-allow-origin': '*',
-          'access-control-expose-headers': '*',
-        },
-      });
-    }
-  );
   const requests: string[] = [];
   page.on('request', (request) => {
     if (CHUNK.test(request.url())) requests.push(request.url());
@@ -51,7 +28,7 @@ async function boot(page: Page): Promise<{ requests: string[] }> {
     localStorage.setItem('ssv-locale', 'en');
   });
   await page.goto('/earth/');
-  await expect(page.locator('#loader')).toBeHidden({ timeout: 90_000 });
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
   return { requests };
 }
 
@@ -229,11 +206,4 @@ test('choisir un événement ferme le panneau instancié au premier clic', async
   await row.click();
   await expect(page.locator(PANEL)).toBeHidden();
   await expect(page.locator(TRIGGER)).toHaveAttribute('aria-expanded', 'false');
-});
-
-test('le morceau du panneau est dans le build, une fois', () => {
-  const assets = readdirSync(join(import.meta.dirname, '..', 'dist', 'assets'));
-  expect(
-    assets.filter((f) => /^astronomicalEvents-.*\.js$/.test(f))
-  ).toHaveLength(1);
 });
