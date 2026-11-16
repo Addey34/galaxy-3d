@@ -145,8 +145,16 @@ jobs:
       # empecher. Elle transforme seulement une question qu'il fallait penser a se poser en
       # une reponse qui s'affiche toute seule. Le 2026-09-11, faute de cette ligne, l'etat de
       # la production a ete affirme faux deux fois de suite.
+      #
+      # `timeout-minutes: 4` borne cette seule etape (le job garde ses 15 minutes). Le pire cumul
+      # du script est de 185 s (6 tentatives x 15 s + 5 pauses x 10 s + 3 controles x 15 s,
+      # `scripts/deployed-bundle-limits.mjs`), lu par `src/config/checkDeployedBundle.test.ts`.
+      # Le 2026-11-16 le processus n'est pas sorti apres ses quatre « OK » et a consomme les 6
+      # minutes restantes du job avant d'etre annule : une coupure doit maintenant tomber sur CETTE
+      # etape, qui reste bloquante pour le statut du job.
       - name: Verify production serves this build
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        timeout-minutes: 4
         run: node scripts/check-deployed-bundle.mjs
 
   secret-scan:
