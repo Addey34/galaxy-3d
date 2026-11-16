@@ -23,7 +23,19 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: '**/built-*.spec.ts',
   fullyParallel: false,
-  workers: 1,
+  /**
+   * DEUX WORKERS (GAL-CI-STABILITY-001E). `fullyParallel: false` garde chaque fichier joué en série
+   * par un seul worker, et chaque test garde son contexte de navigateur (aucun stockage ni service
+   * worker partagé) : seuls des FICHIERS différents se recouvrent. Les six fichiers ne partagent
+   * que le serveur `vite preview`, en lecture seule ; aucun n'écrit sur le disque.
+   *
+   * Mesuré en local (134 tests, sans reprise, build de `main`) : à 4 cœurs, 1 worker 197 à 203 s
+   * contre 2 workers 131 s, deux fois (-35 %) ; à 2 cœurs 199 s contre 153 s ; mémoire maximale 4,2
+   * Go contre 3,2. Les durées par test montent de 24 % (jusqu'à 60 % pour `built-pages`) : un test
+   * à seuil serré pourrait s'en ressentir sur un runner lent. Trois workers ne gagnent que 5 % de
+   * plus pour 5,6 Go : non retenus.
+   */
+  workers: 2,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   timeout: 90_000,
