@@ -98,6 +98,14 @@ rien empêcher — mais il transforme une question qu'il fallait penser à se po
 qui s'affiche. « CI verte » ne dit rien de ce qui est en ligne, et lire la pastille globale d'un
 run au lieu du job qui déploie a produit deux affirmations fausses sur l'état de la production.
 
+Le script est BORNÉ : chaque requête expire (15 s par défaut, `FETCH_TIMEOUT_MS`, bornes validées
+dans `scripts/deployed-bundle-limits.mjs`, code 2 si un réglage est invalide), son corps n'est jamais
+laissé ouvert, et l'étape CI porte son propre `timeout-minutes: 4` pour un pire cumul de 185 s. Le
+2026-11-16 le processus n'était pas sorti après ses quatre « OK » (corps de la vignette ni lu ni
+annulé, aucun délai) et avait consommé les six minutes restantes du job. Il sort de lui-même, jamais
+par `process.exit()` (libuv plante sous Windows). `src/config/checkDeployedBundle.test.ts` le lance
+contre un serveur local (corps inachevé, serveur muet, lecture bloquée, ancien bundle, cache long).
+
 ## Pipeline de contenu et d'assets
 
 Le catalogue est organisé en trois niveaux : données (position, époque, référentiel, rayon,
