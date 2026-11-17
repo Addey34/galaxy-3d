@@ -64,7 +64,12 @@ export class EarthEventsOverlay {
   }
 
   mount(parent: HTMLElement = document.body): void {
-    parent.append(this.canvas);
+    // Monté APRÈS le démarrage (module différé), mais à la place qu'il avait avant : les canvas
+    // d'instruments partagent `z-index: 21` et c'est l'ordre du document qui les départage. Les
+    // sondes se peignent par-dessus les événements terrestres, comme avant le chargement différé.
+    const spacecraft = parent.querySelector(':scope > #spacecraft-overlay');
+    if (spacecraft) parent.insertBefore(this.canvas, spacecraft);
+    else parent.append(this.canvas);
     this._resize();
     window.addEventListener('resize', this._resize, { passive: true });
   }

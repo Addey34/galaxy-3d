@@ -409,6 +409,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'earthEventsModule',
+    reason:
+      "les événements terrestres (2026-11-17, GAL-PERF-001B-02) : couches USGS et NASA EONET, canvas d'instrument, panneau et réglage des étiquettes, importés par `ui/earthEventsLauncher` au premier survol, focus ou clic sur `#earth-events-trigger`. Le survol ne charge que le fichier : rien n'est monté, aucune requête scientifique ne part avant qu'une couche soit cochée.",
+  },
+  {
     chunk: 'astronomicalEvents',
     reason:
       "le panneau des événements astronomiques (2026-11-16, GAL-PERF-001B-01) : construction du panneau et calcul des huit prochains événements, importé par `ui/astronomicalEventsLauncher` au premier clic sur `#events-trigger`. Les calculs (`core/astronomicalEvents`) restent dans le démarrage : les visites et les pages d'éclipse les utilisent.",

@@ -159,3 +159,17 @@ test('le morceau différé du panneau des événements est précaché (ouverture
   expect(chunks, 'un seul morceau du panneau dans le build').toHaveLength(1);
   expect(precached).toContain(`assets/${chunks[0]}`);
 });
+
+test('le morceau différé des événements terrestres est précaché (ouverture hors ligne)', () => {
+  // GAL-PERF-001B-02 : sorti du démarrage, le module des événements terrestres doit rester
+  // disponible hors ligne ; Workbox précache tout `assets/*.js`, et ce test le prouve sur le
+  // manifeste réel plutôt que de le supposer.
+  const chunks = readdirSync(join(DIST, 'assets')).filter((f) =>
+    /^earthEventsModule-.*\.js$/.test(f)
+  );
+  expect(
+    chunks,
+    'un seul morceau des événements terrestres dans le build'
+  ).toHaveLength(1);
+  expect(precached).toContain(`assets/${chunks[0]}`);
+});

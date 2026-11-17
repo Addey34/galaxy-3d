@@ -37,12 +37,19 @@ import { syncSurfaceFocus } from './surfaceFocus';
 /** Nombre d'événements détaillés sous l'interrupteur. */
 const LISTED_EVENTS = 5;
 
+/** Ce que le montage rend : ouvrir le panneau (premier clic du lanceur) et tout défaire. */
+export interface EarthEventsPanel {
+  open(): void;
+  /** Retire écouteurs, abonnements et socles datés : un montage raté ne laisse rien derrière. */
+  dispose(): void;
+}
+
 export function setupEarthEvents(
   api: PublicAPI,
   layers: readonly EarthEventLayer[],
   overlay: EarthEventsOverlay,
   coordinator?: OverlayCoordinator
-): void {
+): EarthEventsPanel {
   const panel = document.getElementById('earth-events');
   const triggerBtn = document.querySelector<HTMLButtonElement>(
     '#earth-events-trigger'
@@ -229,25 +236,6 @@ export function setupEarthEvents(
     }
   }
 
-  build();
-  onLocaleChange(build);
-
-  // La catégorie temporelle et l'écart à la scène dépendent de la DATE de la scène : un lot
-  // inchangé change d'étiquette dès qu'on voyage dans le temps.
-  let lastRender = 0;
-  let lastDateKey = '';
-  api.animationSystem.onFrame(() => {
-    const at = performance.now();
-    if (at - lastRender < 500) return;
-    lastRender = at;
-    const key = `${formatDate(
-      api.orbitalMechanics.simulationDate.getTime()
-    )}|${getLocale()}`;
-    if (key === lastDateKey) return;
-    lastDateKey = key;
-    syncAll();
-  });
-
   let open = false;
   const setOpen = (next: boolean): void => {
     open = next;
@@ -256,17 +244,76 @@ export function setupEarthEvents(
     triggerBtn?.setAttribute('aria-expanded', String(open));
     syncSurfaceFocus(open, panel, triggerBtn);
   };
-  coordinator?.register('earth-events', () => setOpen(false));
-  triggerBtn?.addEventListener('click', () => setOpen(!open));
-  panel
-    ?.querySelector<HTMLButtonElement>('.surface-close')
-    ?.addEventListener('click', () => setOpen(false));
-  panel?.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setOpen(false);
-      triggerBtn?.focus();
+
+  // ATOMIQUE : tout ce qui est inscrit ci-dessous (abonnements, écouteurs) est défait par `rollBack`
+  // si une étape lève, car la fonction ne rendrait alors aucun `dispose` : un montage raté ne laisse
+  // ni écouteur sur le déclencheur, ni callback de rendu, ni rangée dans le panneau. Le retour
+  // arrière ne passe PAS par `setOpen` (ni focus, ni coordinateur) : il remet seulement l'attribut.
+  const undo: Array<() => void> = [];
+  const rollBack = (): void => {
+    for (const step of undo.splice(0).reverse()) {
+      try {
+        step();
+      } catch {
+        // Un défaire qui échoue ne doit pas masquer l'erreur d'origine.
+      }
     }
-  });
-  setOpen(false);
+    for (const layer of layers) stop(layer.id);
+    bodyEl?.replaceChildren();
+    if (panel) panel.hidden = true;
+    triggerBtn?.setAttribute('aria-expanded', 'false');
+  };
+
+  try {
+    build();
+    undo.push(onLocaleChange(build));
+
+    // La catégorie temporelle et l'écart à la scène dépendent de la DATE de la scène : un lot
+    // inchangé change d'étiquette dès qu'on voyage dans le temps.
+    let lastRender = 0;
+    let lastDateKey = '';
+    undo.push(
+      api.animationSystem.onFrame(() => {
+        const at = performance.now();
+        if (at - lastRender < 500) return;
+        lastRender = at;
+        const key = `${formatDate(
+          api.orbitalMechanics.simulationDate.getTime()
+        )}|${getLocale()}`;
+        if (key === lastDateKey) return;
+        lastDateKey = key;
+        syncAll();
+      })
+    );
+
+    const unregister = coordinator?.register('earth-events', () =>
+      setOpen(false)
+    );
+    if (unregister) undo.push(unregister);
+    const onTrigger = (): void => setOpen(!open);
+    const onClose = (): void => setOpen(false);
+    const closeBtn = panel?.querySelector<HTMLButtonElement>('.surface-close');
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpen(false);
+        triggerBtn?.focus();
+      }
+    };
+    triggerBtn?.addEventListener('click', onTrigger);
+    undo.push(() => triggerBtn?.removeEventListener('click', onTrigger));
+    closeBtn?.addEventListener('click', onClose);
+    undo.push(() => closeBtn?.removeEventListener('click', onClose));
+    panel?.addEventListener('keydown', onKey);
+    undo.push(() => panel?.removeEventListener('keydown', onKey));
+    setOpen(false);
+  } catch (error) {
+    rollBack();
+    throw error;
+  }
+
+  return {
+    open: () => setOpen(true),
+    dispose: rollBack,
+  };
 }

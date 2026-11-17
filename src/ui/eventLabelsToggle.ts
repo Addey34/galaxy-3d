@@ -25,7 +25,9 @@ function writeStored(enabled: boolean): void {
   }
 }
 
-export function setupEventLabelsToggle(overlay: EarthEventsOverlay): void {
+export function setupEventLabelsToggle(
+  overlay: EarthEventsOverlay
+): () => void {
   const wrapper = document.createElement('label');
   wrapper.id = 'event-labels-toggle-wrapper';
   wrapper.className = 'settings-switch';
@@ -53,9 +55,15 @@ export function setupEventLabelsToggle(overlay: EarthEventsOverlay): void {
   overlay.setLabelsActive(initial);
   refresh();
 
-  checkbox.addEventListener('change', () => {
+  const onChange = (): void => {
     overlay.setLabelsActive(checkbox.checked);
     writeStored(checkbox.checked);
-  });
-  onLocaleChange(refresh);
+  };
+  checkbox.addEventListener('change', onChange);
+  const offLocale = onLocaleChange(refresh);
+  return () => {
+    offLocale();
+    checkbox.removeEventListener('change', onChange);
+    wrapper.remove();
+  };
 }
