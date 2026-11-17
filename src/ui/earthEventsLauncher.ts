@@ -124,7 +124,16 @@ export function setupEarthEventsOnDemand(
           trigger.removeEventListener('click', onClick);
           trigger.removeEventListener('pointerenter', warm);
           trigger.removeEventListener('focus', warm);
-          if (open) mounted.open();
+          if (open) {
+            try {
+              mounted.open();
+            } catch {
+              // Le montage a réussi et les écouteurs du lanceur sont retirés : la bascule du
+              // module prend le relais. `setOpen` a ramené panneau, coordinateur, scrim et ARIA à
+              // l'état fermé ; le clic suivant rouvre. Dit, jamais un rejet non géré.
+              announceLoadFailure('earthEventsOpen');
+            }
+          }
         },
         () => {
           release();

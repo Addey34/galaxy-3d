@@ -404,6 +404,7 @@ const INJECTIONS = [
     'le dernier réglage du déclencheur (écouteurs et abonnements déjà posés)',
     'late',
   ],
+  ['le réglage des étiquettes, déjà ajouté au panneau (AUD-531-01)', 'toggle'],
 ] as const;
 
 for (const [label, kind] of INJECTIONS) {
@@ -435,9 +436,32 @@ for (const [label, kind] of INJECTIONS) {
           this: Element,
           ...nodes: (Node | string)[]
         ) {
-          if (this.classList.contains('ee-body') && once())
+          if (this.classList.contains('ee-body') && once()) {
+            (window as unknown as { __dead: Element | null }).__dead =
+              document.getElementById('event-labels-toggle');
             throw new Error('échec simulé');
+          }
           return original.apply(this, nodes);
+        };
+      } else if (where === 'toggle') {
+        // `refresh()` du réglage, APRÈS `host.append(wrapper)` : rien n'a encore été rendu à
+        // l'appelant pour le défaire (AUD-531-01).
+        const original = Element.prototype.setAttribute;
+        Element.prototype.setAttribute = function (
+          this: Element,
+          name: string,
+          value: string
+        ) {
+          if (
+            this.id === 'event-labels-toggle' &&
+            name === 'aria-label' &&
+            once()
+          ) {
+            // Le réglage MORT : une référence pour voir si un abonnement lui survit.
+            (window as unknown as { __dead: Element }).__dead = this;
+            throw new Error('échec simulé');
+          }
+          return original.call(this, name, value);
         };
       } else {
         const original = Element.prototype.setAttribute;
@@ -450,8 +474,11 @@ for (const [label, kind] of INJECTIONS) {
             this.id === 'earth-events-trigger' &&
             name === 'aria-expanded' &&
             once()
-          )
+          ) {
+            (window as unknown as { __dead: Element | null }).__dead =
+              document.getElementById('event-labels-toggle');
             throw new Error('échec simulé');
+          }
           return original.call(this, name, value);
         };
       }
@@ -482,6 +509,19 @@ for (const [label, kind] of INJECTIONS) {
     await page.locator('#lang-switch .lang-btn[data-locale="fr"]').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
     await expect(page.locator(ROWS)).toHaveCount(0);
+    if (kind !== 'context') {
+      // Un abonnement de langue survivant au retour arrière réécrirait le libellé du réglage mort
+      // (créé et retiré pendant l'échec) dans la langue courante, ici le français.
+      expect(
+        await page.evaluate(
+          () =>
+            (
+              window as unknown as { __dead: Element | null }
+            ).__dead?.getAttribute('aria-label') ?? null
+        ),
+        'libellé du réglage retiré, après un changement de langue'
+      ).not.toBe(fr['settings.eventLabels']);
+    }
 
     // Le module est déjà importé : la reprise ne le redemande pas, et monte UNE instance saine.
     await page.keyboard.press('Escape');
@@ -502,6 +542,109 @@ for (const [label, kind] of INJECTIONS) {
     await expect(page.locator(PANEL)).toBeVisible();
     await page.locator(TRIGGER).click();
     await expect(page.locator(PANEL)).toBeHidden();
+  });
+}
+
+/**
+ * AUD-531-02 : le montage a RÉUSSI, c'est l'OUVERTURE qui lève (l'attribut ARIA du déclencheur ou la
+ * prise de focus du panneau), une fois, après que le lanceur a retiré ses écouteurs. Panneau,
+ * coordinateur (donc scrim) et ARIA reviennent à fermé, l'échec est dit, aucune erreur de page ni
+ * rejet non géré, et la bascule du module permet de rouvrir sans rien dupliquer.
+ */
+const OPEN_FAILURES = [
+  ['l’attribut ARIA du déclencheur', 'aria'],
+  ['la prise de focus du panneau', 'focus'],
+] as const;
+
+for (const [label, kind] of OPEN_FAILURES) {
+  test(`une exception pendant l’ouverture (${label}) laisse tout fermé et cohérent, puis le clic suivant ouvre`, async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript(CENSUS);
+    const seen = await boot(page);
+    await page.evaluate((where) => {
+      let armed = true;
+      const once = () => {
+        const fire = armed;
+        armed = false;
+        return fire;
+      };
+      if (where === 'aria') {
+        const original = Element.prototype.setAttribute;
+        Element.prototype.setAttribute = function (
+          this: Element,
+          name: string,
+          value: string
+        ) {
+          if (
+            this.id === 'earth-events-trigger' &&
+            name === 'aria-expanded' &&
+            value === 'true' &&
+            once()
+          )
+            throw new Error('échec simulé');
+          return original.call(this, name, value);
+        };
+      } else {
+        const original = HTMLElement.prototype.focus;
+        HTMLElement.prototype.focus = function (
+          this: HTMLElement,
+          options?: FocusOptions
+        ) {
+          if (this.closest('#earth-events') && once())
+            throw new Error('échec simulé');
+          return original.call(this, options);
+        };
+      }
+    }, kind);
+
+    await page.locator(TRIGGER).click();
+    await expect(page.locator('[role="status"].sr-only').first()).toContainText(
+      'could not be loaded',
+      { timeout: 20_000 }
+    );
+    // Le montage a réussi : une seule instance, et tout est FERMÉ de façon cohérente.
+    await expect(canvases(page)).toHaveCount(1);
+    await expect(page.locator(TOGGLE)).toHaveCount(1);
+    await expect(page.locator(ROWS)).toHaveCount(2);
+    await expect(page.locator(PANEL)).toBeHidden();
+    await expect(page.locator(TRIGGER)).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    await expect(page.locator('#surface-scrim')).toHaveJSProperty(
+      'hidden',
+      true
+    );
+    await expect(page.locator(TRIGGER)).not.toHaveAttribute('aria-busy', /.*/);
+    // Les écouteurs du lanceur sont partis, ceux du module sont en place, sans doublon.
+    expect(await census(page), 'écouteurs après l’échec').toEqual([
+      'close:click',
+      'earth-events-trigger:click',
+      'earth-events:keydown',
+    ]);
+    expect(errors, 'erreurs de page et rejets non gérés').toEqual([]);
+
+    // Reprise : le clic suivant ouvre, une fois, avec des états cohérents.
+    await page.locator(TRIGGER).click();
+    await expect(page.locator(PANEL)).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator(TRIGGER)).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    await expect(page.locator('#surface-scrim')).toHaveJSProperty(
+      'hidden',
+      false
+    );
+    await expect(page.locator(`${PANEL} .surface-close`)).toBeFocused();
+    await expect(canvases(page)).toHaveCount(1);
+    await expect(page.locator(TOGGLE)).toHaveCount(1);
+    await page.locator(TRIGGER).click();
+    await expect(page.locator(PANEL)).toBeHidden();
+    expect(seen.module).toHaveLength(1);
+    expect(errors).toEqual([]);
   });
 }
 

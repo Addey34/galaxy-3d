@@ -239,10 +239,25 @@ export function setupEarthEvents(
   let open = false;
   const setOpen = (next: boolean): void => {
     open = next;
-    if (open) coordinator?.requestOpen('earth-events');
-    if (panel) panel.hidden = !open;
-    triggerBtn?.setAttribute('aria-expanded', String(open));
-    syncSurfaceFocus(open, panel, triggerBtn);
+    try {
+      if (open) coordinator?.requestOpen('earth-events');
+      if (panel) panel.hidden = !open;
+      triggerBtn?.setAttribute('aria-expanded', String(open));
+      syncSurfaceFocus(open, panel, triggerBtn);
+    } catch (error) {
+      // Une ouverture qui lève (AUD-531-02) ne doit laisser ni panneau à moitié ouvert, ni état
+      // `open` faux (le clic suivant fermerait ce qui n'est pas ouvert), ni scrim allumé pour une
+      // surface qui n'existe pas : tout est ramené à FERMÉ, puis l'erreur remonte à l'appelant.
+      open = false;
+      try {
+        if (panel) panel.hidden = true;
+        triggerBtn?.setAttribute('aria-expanded', 'false');
+        coordinator?.closeAll();
+      } catch {
+        // Le retour à fermé ne doit pas masquer l'erreur d'origine.
+      }
+      throw error;
+    }
   };
 
   // ATOMIQUE : tout ce qui est inscrit ci-dessous (abonnements, écouteurs) est défait par `rollBack`

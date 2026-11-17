@@ -43,27 +43,43 @@ export function setupEventLabelsToggle(
   wrapper.append(checkbox, text);
   const host =
     document.getElementById('earth-events-section-display') ?? document.body;
-  host.append(wrapper);
 
-  const refresh = (): void => {
-    text.textContent = t('settings.eventLabels');
-    checkbox.setAttribute('aria-label', t('settings.eventLabels'));
-  };
+  // ATOMIQUE (AUD-531-01) : la fonction ne rend son `dispose` qu'à la fin ; une exception après
+  // `host.append` (dans `refresh`, par exemple) laisserait sinon un réglage résiduel que le
+  // montage suivant doublerait. `undo` défait, dans l'ordre inverse, ce qui a été posé.
+  const undo: Array<() => void> = [];
+  try {
+    host.append(wrapper);
+    undo.push(() => wrapper.remove());
 
-  const initial = readStored();
-  checkbox.checked = initial;
-  overlay.setLabelsActive(initial);
-  refresh();
+    const refresh = (): void => {
+      text.textContent = t('settings.eventLabels');
+      checkbox.setAttribute('aria-label', t('settings.eventLabels'));
+    };
 
-  const onChange = (): void => {
-    overlay.setLabelsActive(checkbox.checked);
-    writeStored(checkbox.checked);
-  };
-  checkbox.addEventListener('change', onChange);
-  const offLocale = onLocaleChange(refresh);
+    const initial = readStored();
+    checkbox.checked = initial;
+    overlay.setLabelsActive(initial);
+    refresh();
+
+    const onChange = (): void => {
+      overlay.setLabelsActive(checkbox.checked);
+      writeStored(checkbox.checked);
+    };
+    checkbox.addEventListener('change', onChange);
+    undo.push(() => checkbox.removeEventListener('change', onChange));
+    undo.push(onLocaleChange(refresh));
+  } catch (error) {
+    for (const step of undo.splice(0).reverse()) {
+      try {
+        step();
+      } catch {
+        // Un défaire qui échoue ne doit pas masquer l'erreur d'origine.
+      }
+    }
+    throw error;
+  }
   return () => {
-    offLocale();
-    checkbox.removeEventListener('change', onChange);
-    wrapper.remove();
+    for (const step of undo.splice(0).reverse()) step();
   };
 }
