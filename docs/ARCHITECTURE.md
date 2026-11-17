@@ -7076,6 +7076,25 @@ fenêtre, paramètres de requête, forme de la géométrie, taxonomie des catég
 qu'un intervalle puisse rester ouvert. Copernicus/STAC et le trafic aérien sont hors de ce lot
 (authentification openEO d'un côté, accord écrit exigé de l'autre).
 
+**Un module chargé à la demande, pas au démarrage (GAL-PERF-001B-02).** Au démarrage, seul le
+lanceur `ui/earthEventsLauncher.ts` existe : il écoute `#earth-events-trigger` et appelle
+l'overlay à chaque image par une référence tardive (sans module monté, c'est un retour immédiat,
+aucun canvas ni calcul). Le module `ui/earthEventsModule.ts` (les deux couches de
+`core/earthEventLayers.ts`, le canvas `earthEventsOverlay`, le panneau `earthEvents` et le réglage
+`eventLabelsToggle`) vient au premier survol, focus ou clic. Le survol et le focus n'importent que
+le fichier : rien n'est monté, et aucune requête USGS ou EONET ne part avant qu'une case de couche
+soit cochée ; éteindre puis rallumer une couche redemande ses données, volontairement. Le premier
+clic ouvre sans second clic, sauf si le visiteur a fait autre chose pendant l'import (autre
+surface, début d'une visite, Échap, focus déplacé) : l'intention expire, le module se monte quand
+même et le clic suivant ouvre. Deux échecs distincts sont annoncés puis réessayables : l'import
+(oublié, redemandé) et le montage, qui est atomique (canvas, réglage, écouteurs et abonnements
+sont défaits si une étape lève, et les écouteurs du lanceur ne sont retirés qu'après un montage
+réussi). Le canvas est inséré avant celui des sondes, car les canvas d'instruments partagent le
+même `z-index` et c'est l'ordre du document qui les départage. Le morceau est précaché par le
+service worker : le panneau s'ouvre hors ligne, mais les données des deux services, elles, ne se
+chargent pas sans réseau. Les scénarios vivent dans `e2e/earthEventsLauncher.spec.ts` (serveur de
+développement) et `e2e/built-earthEventsOffline.spec.ts` (build réel, précache, reprise).
+
 **Le marqueur tombe sur sa VRAIE longitude, et c'est le point technique du lot.** Un épicentre
 est posé par `CelestialObject.surfacePointToWorld`, qui compose la translation du corps, le
 quaternion du vrai pôle IAU et la rotation propre du `_meshGroup` — celle que

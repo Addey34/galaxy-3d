@@ -54,22 +54,19 @@ import { setupPermalinks } from './ui/permalink';
 import { parsePermalink, requestedSceneDate } from './core/permalink';
 import { LANDING_PAGE_BODIES } from './config/navigable';
 import { setupAstronomicalEventsOnDemand } from './ui/astronomicalEventsLauncher';
+import { setupEarthEventsOnDemand } from './ui/earthEventsLauncher';
 import type { OpticalZoomControl } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { InterstellarOverlay } from './ui/interstellarOverlay';
 import { setupSmallBodyFilters } from './ui/smallBodyFilters';
-import { EarthEventsOverlay } from './ui/earthEventsOverlay';
 import { GazetteerOverlay } from './ui/gazetteerOverlay';
 import { setupGazetteerToggle } from './ui/gazetteerToggle';
-import { setupEventLabelsToggle } from './ui/eventLabelsToggle';
 import { setupSkyLayerToggles } from './ui/skyLayerToggles';
 import { setupSatelliteToggle } from './ui/satelliteToggle';
 import { setupKeepAppearanceToggle } from './ui/keepAppearanceToggle';
 import gazetteerIndex from './config/gazetteerIndex.json';
 import { EARTH_NAMES_BODY } from './core/earthNames';
-import { setupEarthEvents } from './ui/earthEvents';
-import { earthquakeLayer, naturalEventLayer } from './core/earthEventLayers';
 import { SpacecraftOverlay } from './ui/spacecraftOverlay';
 import { createNavigableAnchors } from './ui/navigableAnchors';
 import { spacecraftPlacer } from './core/instrumentPlacement';
@@ -485,13 +482,11 @@ function wireChrome(): {
       smallBodyFilters.setDataset(dataset.retrieved, dataset.bodies.length);
     });
 
-    // Événements terrestres (séismes USGS, événements rapportés NASA EONET) — couche
-    // instrument 2D posée sur la surface RENDUE de la Terre, donc derrière sa phase de
-    // rotation. Les deux couches sont éteintes au départ et ne demandent RIEN tant qu'on ne
-    // les allume pas : le socle daté n'est créé qu'à l'activation (cf. `ui/earthEvents.ts`).
-    const earthEventLayers = [earthquakeLayer(), naturalEventLayer()];
-    const earthEventsOverlay = new EarthEventsOverlay(earthEventLayers);
-    earthEventsOverlay.mount();
+    // Événements terrestres (séismes USGS, événements rapportés NASA EONET) : LANCEUR seul au
+    // démarrage (GAL-PERF-001B-02). Le module (couches, canvas 2D posé sur la surface RENDUE de la
+    // Terre, panneau, étiquettes) vient au premier survol, focus ou clic sur le déclencheur ; les
+    // couches restent éteintes et ne demandent RIEN avant qu'on les allume (cf. `ui/earthEvents.ts`).
+    const earthEvents = setupEarthEventsOnDemand(api, overlayCoordinator);
 
     /**
      * Les corps qui portent des formations nommées, et leur rayon publié.
@@ -515,7 +510,6 @@ function wireChrome(): {
     );
     gazetteerOverlay.mount();
     setupGazetteerToggle(gazetteerOverlay);
-    setupEventLabelsToggle(earthEventsOverlay);
     setupSkyLayerToggles(sceneSystem.starfield, {
       camera: cameraSystem.camera,
       canvas: cameraSystem.renderer.domElement,
@@ -534,12 +528,6 @@ function wireChrome(): {
         })
       : null;
     setupKeepAppearanceToggle();
-    setupEarthEvents(
-      api,
-      earthEventLayers,
-      earthEventsOverlay,
-      overlayCoordinator
-    );
 
     // Couche instrument 2D des sondes spatiales — positions réelles Horizons (mêmes binaires
     // que planètes/lunes), jamais avant leur lancement (getHeliocentricAU renvoie null hors
@@ -729,7 +717,7 @@ function wireChrome(): {
       // APRÈS les couches globales : leurs libellés sont prioritaires dans la place commune,
       // et les événements terrestres ne se peignent de toute façon qu'une fois la Terre assez
       // grande à l'écran (zoom sémantique, cf. `EarthEventLayer.minEarthRadiusPx`).
-      earthEventsOverlay.update(
+      earthEvents.update(
         cameraSystem.camera,
         sceneSystem.getBody('earth') ?? null,
         labelSpace
