@@ -4,6 +4,7 @@
  */
 import { isDataTexture } from '@/core/textureColorSpace';
 import * as THREE from 'three';
+import { neutralAlphaMap } from './neutralAlphaMap';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 
 type Layers = Map<string, THREE.Mesh>;
@@ -98,6 +99,19 @@ function applySurfaceTexture(
       break;
   }
   mat.needsUpdate = true;
+}
+
+/**
+ * Pose l'observation satellite sur le matériau des nuages. L'alpha vient de l'extraction par le
+ * shader : l'`alphaMap` de la couche statique est neutralisée (blanche, 1 × 1) et NON retirée, pour
+ * que `USE_ALPHAMAP` reste défini et que le programme ne change pas (cf. `neutralAlphaMap.ts`).
+ */
+export function applyRealCloudsMap(
+  mat: THREE.MeshStandardMaterial,
+  texture: THREE.Texture
+): void {
+  mat.map = texture;
+  mat.alphaMap = neutralAlphaMap();
 }
 
 function applyCloudsTexture(layers: Layers, texture: THREE.Texture): void {

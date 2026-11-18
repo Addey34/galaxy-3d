@@ -24,7 +24,10 @@ import {
   layerFigure,
 } from '@/components/celestial/celestialLayers';
 import { figureRadius, type Figure } from '@/core/ellipsoid';
-import { applyTexture } from '@/components/celestial/celestialTextures';
+import {
+  applyRealCloudsMap,
+  applyTexture,
+} from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { fitScale, meshVolume, volumeEquivalentRadius } from '@/core/modelFit';
 import { ATLAS_SWATCH_UV, drapeEquirectangular } from '@/core/modelUv';
@@ -436,10 +439,9 @@ export default class CelestialObject {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
     texture.colorSpace = THREE.SRGBColorSpace;
-    mat.map = texture;
-    // L'alpha vient de l'extraction shader (diffuseColor.a), pas d'une alphaMap :
-    // on retire toute alphaMap héritée de la couche statique.
-    mat.alphaMap = null;
+    // L'alpha vient de l'extraction shader (diffuseColor.a) ; l'alphaMap héritée de la couche
+    // statique est neutralisée, non retirée (cf. `applyRealCloudsMap`).
+    applyRealCloudsMap(mat, texture);
     if (options.opacity !== undefined) mat.opacity = options.opacity;
     mat.needsUpdate = true;
 
