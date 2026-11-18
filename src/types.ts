@@ -1,4 +1,5 @@
 import type { SkyScatteringModelId } from '@/core/atmosphereScattering';
+import type { AerialCompileContext } from '@/components/celestial/aerialPrecompile';
 import type { ModelQuality } from '@/core/modelLod';
 /**
  * Interfaces TypeScript partagées par toute l'application : configuration des corps
@@ -496,7 +497,9 @@ export interface IUpdatable {
     sunWorldPosition: THREE.Vector3 | null,
     visible: boolean,
     cameraPosition?: THREE.Vector3,
-    moonWorldPosition?: THREE.Vector3 | null
+    moonWorldPosition?: THREE.Vector3 | null,
+    /** Contexte de rendu, pour précompiler sans bloquer (`aerialPrecompile.ts`). Absent : pas de précompilation. */
+    compileContext?: AerialCompileContext
   ): void;
   updateLODTextures?(
     camera: THREE.Camera,

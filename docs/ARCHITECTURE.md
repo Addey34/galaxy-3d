@@ -3052,6 +3052,19 @@ diffusion multiple, est ajoutée ci-dessous, et le voile sur les nuages après e
   n'est pas voilé, et c'est une raison : il écrit des couleurs d'affichage, et le voile est une
   radiance linéaire, que la courbe de tons n'y traiterait pas.
 
+**Précompilation de la perspective aérienne (GAL-RENDER-001C).** Poser la perspective sur le sol et les
+nuages fait changer leur clé de programme : à la première approche en Explo, deux à trois programmes
+de plus s'éditent sur le fil principal. `components/celestial/aerialPrecompile.ts` les compile avant
+`attachSky`, par `compileAsync`, sur des COPIES de matériaux (sans sérialiser `userData`) rangées dans
+une scène à part ; les lumières sont celles de la vraie scène et la cible de rendu est celle du
+compositeur, parce que la correction des tons et l'espace couleur de la clé en dépendent. Les copies
+tiennent le programme dans le cache du moteur : `CelestialObject` les libère après trois images
+visibles avec la perspective posée, à l'échec ou à la libération du corps. Sans `compileAsync`, en
+session XR, sans contexte de rendu ou si la compilation échoue (délai borné), le ciel est posé comme
+avant. La couche nuages garde une `alphaMap` blanche 1 × 1 partagée (`neutralAlphaMap.ts`) au lieu de
+la retirer, pour que la variante statique et la variante observée soient le même programme. Les
+mesures et leurs limites sont dans le rapport du lot, pas ici.
+
 ### ETOPO 15″ sur les grands reliefs : des crêtes nettes là où elles se voient (lot 48, pas 8)
 
 Relevée vers l'horizon (pas 5), la descente montrait à 3 km du Mont-Blanc des crêtes rondes et
