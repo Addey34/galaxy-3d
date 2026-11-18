@@ -105,6 +105,16 @@ export function setupMeteoModelLayer(
   let lastGrid: MeteoLayerDiagnostics['grid'];
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
   let stopData: (() => void) | null = null;
+  /** Heure (clé `meteoHourKey`) que décrit `currentTexture` : elle ne se montre que si elle est celle de la scène. */
+  let textureHourKey: string | null = null;
+  /**
+   * Une couche masquée ne demande plus rien à Open-Meteo (quota par IP, time-travel rapide),
+   * SAUF si elle alimente une autre couche : `background`, ou un secours (`applyFallback`) qui
+   * continue de combler les trous de l'observation même masquée.
+   */
+  const keepsLoadingWhenHidden = Boolean(
+    config.background || config.applyFallback
+  );
 
   const applyIfVisible = (): void => {
     if (!currentTexture) return;
@@ -154,6 +164,7 @@ export function setupMeteoModelLayer(
           }
         } else {
           outOfRange = false;
+          textureHourKey = data.realDate.slice(0, 13);
           const encoded = config.encodeGrid(data.grid);
           const nextTexture = createMeteoDataTexture(
             encoded.data,
@@ -188,12 +199,24 @@ export function setupMeteoModelLayer(
         startData();
         // Tant qu'aucune donnée modèle n'est disponible, garder le mesh caché
         // pour ne pas révéler par erreur le matériau de la couche d'observation.
-        if (currentTexture) applyIfVisible();
+        // La texture gardée d'une activation précédente décrit peut-être une AUTRE heure que
+        // la scène : elle reste masquée jusqu'à l'arrivée de la donnée de la bonne heure.
+        if (
+          currentTexture &&
+          textureHourKey === meteoHourKey(api.orbitalMechanics.simulationDate)
+        )
+          applyIfVisible();
         return;
       }
 
       earth.restoreLayerMaterial(config.targetLayer);
       earth.setLayerVisible(config.targetLayer, false);
+      if (!keepsLoadingWhenHidden && stopData) {
+        stopData();
+        stopData = null;
+        phase = 'idle';
+        loadState.push('idle');
+      }
     },
     diagnostics: () => {
       const render = earth.getLayerDiagnostics(config.targetLayer);
