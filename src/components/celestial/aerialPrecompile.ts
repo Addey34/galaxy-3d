@@ -4,7 +4,7 @@
  * À la première approche de la Terre en Explo, `skyLayer.attachSky` pose la perspective aérienne
  * sur le sol et les nuages : deux programmes de plus (deux faces pour les nuages), ~450 ms
  * d'édition de liens SUR LE FIL PRINCIPAL (mesuré, GAL-RENDER-001B). Ici on les compile avant, avec
- * `compileAsync` (`KHR_parallel_shader_compile`, hors du fil quand le pilote le permet), puis on
+ * `renderer.compile` (liens parallèles quand `KHR_parallel_shader_compile` existe) et une attente d'état bornée, puis on
  * laisse les vrais matériaux retrouver ces programmes dans le cache du moteur.
  *
  * PROPRIÉTÉ ET DURÉE DE VIE. Une précompilation possède, et elle seule : les COPIES de matériaux
@@ -52,10 +52,11 @@ export interface AerialPrecompile {
 /** Au-delà, on ne bloque plus la pose du ciel sur la compilation (contexte perdu, pilote muet). */
 export const PRECOMPILE_TIMEOUT_MS = 5000;
 
-/** `compileAsync` existe-t-il, et peut-on s'y fier ici (pas de session XR : autre cible, autre clé) ? */
+/** `compile` existe-t-il, et peut-on s'y fier ici (pas de session XR : autre cible, autre clé) ? */
 export function canPrecompile(context: AerialCompileContext): boolean {
   return (
-    typeof context.renderer.compileAsync === 'function' &&
+    typeof context.renderer.compile === 'function' &&
+    !!context.renderer.properties &&
     !context.renderer.xr?.isPresenting
   );
 }
@@ -142,19 +143,19 @@ export function precompileAerial(
     }
     const { renderer } = context;
     const previous = renderer.getRenderTarget();
-    let compiled: Promise<unknown>;
     try {
       // `compile` lit la cible courante pour fixer les tons et l'espace couleur du programme.
       renderer.setRenderTarget(context.renderTarget);
-      compiled = renderer.compileAsync(
-        probeScene,
-        context.camera,
-        context.scene
-      );
+      renderer.compile(probeScene, context.camera, context.scene);
     } finally {
       renderer.setRenderTarget(previous);
     }
-    work = timeBounded(compiled, PRECOMPILE_TIMEOUT_MS);
+    work = whenReady(
+      renderer,
+      () => probes,
+      () => released,
+      PRECOMPILE_TIMEOUT_MS
+    );
   } catch {
     release();
     return handle;
@@ -167,18 +168,46 @@ export function precompileAerial(
   });
 }
 
-function timeBounded(work: Promise<unknown>, ms: number): Promise<boolean> {
+const POLL_MS = 10;
+
+interface ProgramProperties {
+  currentProgram?: { isReady(): boolean };
+}
+
+/**
+ * Attend que les programmes des copies soient prêts, SANS `compileAsync`. Celui de Three.js r176
+ * interroge `properties.get(material).currentProgram.isReady()` toutes les 10 ms SANS borne et sans
+ * garde : libérer une copie pendant cette attente (repli après délai, libération des copies) efface
+ * ses propriétés et le rappel lève une exception asynchrone non rattrapable, tandis que la
+ * promesse ne se résout jamais. `compile` fait le même travail synchrone (c'est lui qui lance
+ * l'édition des liens, en parallèle quand le pilote le permet) ; on n'interroge donc que l'état,
+ * nous-mêmes : l'attente s'arrête à la libération, au délai ou à l'échec, et libérer les copies
+ * à tout moment est sûr.
+ */
+function whenReady(
+  renderer: THREE.WebGLRenderer,
+  probes: () => readonly THREE.Material[],
+  isReleased: () => boolean,
+  timeoutMs: number
+): Promise<boolean> {
   return new Promise<boolean>((resolve) => {
-    const timer = setTimeout(() => resolve(false), ms);
-    work.then(
-      () => {
-        clearTimeout(timer);
-        resolve(true);
-      },
-      () => {
-        clearTimeout(timer);
-        resolve(false);
+    const deadline = Date.now() + timeoutMs;
+    const tick = (): void => {
+      if (isReleased()) return resolve(false);
+      try {
+        const pending = probes().some((material) => {
+          const program = (
+            renderer.properties.get(material) as ProgramProperties | undefined
+          )?.currentProgram;
+          return !program || !program.isReady();
+        });
+        if (!pending) return resolve(true);
+      } catch {
+        return resolve(false);
       }
-    );
+      if (Date.now() >= deadline) return resolve(false);
+      setTimeout(tick, POLL_MS);
+    };
+    tick();
   });
 }

@@ -1432,17 +1432,40 @@ export default class CelestialObject {
   ): Promise<void> {
     let precompile: AerialPrecompile | null = null;
     try {
+      // La précompilation est FACULTATIVE : son morceau qui ne se charge pas ne doit jamais
+      // empêcher la pose du ciel (le rendu de référence compile à la première image, comme avant).
+      // L'échec est mémorisé : pas de nouvel import à chaque approche.
+      const aerialImport =
+        compileContext && !this._aerialUnavailable
+          ? import('./aerialPrecompile').catch((error: unknown) => {
+              this._aerialUnavailable = true;
+              Logger.warn(error);
+              return null;
+            })
+          : Promise.resolve(null);
       const [sky, aerial] = await Promise.all([
         import('./skyLayer'),
-        compileContext ? import('./aerialPrecompile') : null,
+        aerialImport,
       ]);
       if (this._disposed) return this._abandonSky();
-      if (aerial && compileContext && aerial.canPrecompile(compileContext)) {
-        precompile = aerial.precompileAerial(atmosphere, model, compileContext);
-        await precompile.ready;
-        // Le corps a pu être libéré, ou le mode changé, pendant la compilation.
+      if (aerial && compileContext) {
+        try {
+          if (aerial.canPrecompile(compileContext)) {
+            precompile = aerial.precompileAerial(
+              atmosphere,
+              model,
+              compileContext
+            );
+            await precompile.ready;
+          }
+        } catch (error: unknown) {
+          precompile?.release();
+          precompile = null;
+          Logger.warn(error);
+        }
+        // Le corps a pu être libéré pendant la compilation.
         if (this._disposed) {
-          precompile.release();
+          precompile?.release();
           return this._abandonSky();
         }
       }
@@ -1456,6 +1479,9 @@ export default class CelestialObject {
       Logger.warn(error);
     }
   }
+
+  /** Le morceau de précompilation n'a pas pu être importé : on n'essaie plus, le ciel se pose seul. */
+  private _aerialUnavailable = false;
 
   private _abandonSky(): void {
     this._sky = 0;

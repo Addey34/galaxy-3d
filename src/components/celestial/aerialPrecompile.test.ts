@@ -40,8 +40,17 @@ function body() {
 
 type Call = { target: unknown; scene: THREE.Scene; lights: THREE.Scene };
 
-function fakeContext(overrides: Record<string, unknown> = {}) {
+/**
+ * Un moteur factice qui imite ce que Three.js r176 fait de `compile` : un programme par materiau
+ * de la scene d'essai, dont l'etat vit dans `properties` et est EFFACE a la liberation du materiau
+ * (evenement `dispose`), comme `onMaterialDispose` le fait.
+ */
+function fakeContext(
+  options: { ready?: boolean; overrides?: Record<string, unknown> } = {}
+) {
   const calls: Call[] = [];
+  const state = { ready: options.ready ?? true };
+  const programs = new WeakMap<object, { currentProgram: unknown }>();
   let current: unknown = 'ancienne-cible';
   const renderer = {
     getRenderTarget: () => current,
@@ -49,11 +58,22 @@ function fakeContext(overrides: Record<string, unknown> = {}) {
       current = t;
     },
     xr: { isPresenting: false },
-    compileAsync: (scene: THREE.Scene, _c: unknown, lights: THREE.Scene) => {
-      calls.push({ target: current, scene, lights });
-      return Promise.resolve(scene);
+    properties: {
+      get: (m: object) => programs.get(m) ?? {},
     },
-    ...overrides,
+    compile: (scene: THREE.Scene, _c: unknown, lights: THREE.Scene) => {
+      calls.push({ target: current, scene, lights });
+      const materials = new Set<THREE.Material>();
+      scene.traverse((o) => {
+        if (!(o instanceof THREE.Mesh)) return;
+        const m = o.material as THREE.Material;
+        materials.add(m);
+        programs.set(m, { currentProgram: { isReady: () => state.ready } });
+        m.addEventListener('dispose', () => programs.delete(m));
+      });
+      return materials;
+    },
+    ...options.overrides,
   };
   const context: AerialCompileContext = {
     renderer: renderer as unknown as THREE.WebGLRenderer,
@@ -61,7 +81,7 @@ function fakeContext(overrides: Record<string, unknown> = {}) {
     camera: new THREE.PerspectiveCamera(),
     renderTarget: new THREE.WebGLRenderTarget(1, 1),
   };
-  return { context, calls };
+  return { context, calls, state, renderer };
 }
 
 const MODEL = 'bruneton-2017' as const;
@@ -155,20 +175,12 @@ describe('precompileAerial : duree de vie des materiaux temporaires', () => {
 });
 
 describe('precompileAerial : replis', () => {
-  it('compileAsync qui echoue : ready vaut false, sans rejet', async () => {
+  it('compile qui leve de facon synchrone : false, etat du moteur restaure', async () => {
     const { context } = fakeContext({
-      compileAsync: () => Promise.reject(new Error('contexte perdu')),
-    });
-    const p = precompileAerial(body().atmosphere, MODEL, context);
-    await expect(p.ready).resolves.toBe(false);
-    p.release();
-    expect(p.held).toBe(0);
-  });
-
-  it('compileAsync qui leve de facon synchrone : false, etat du moteur restaure', async () => {
-    const { context } = fakeContext({
-      compileAsync: () => {
-        throw new Error('boum');
+      overrides: {
+        compile: () => {
+          throw new Error('boum');
+        },
       },
     });
     const p = precompileAerial(body().atmosphere, MODEL, context);
@@ -177,19 +189,58 @@ describe('precompileAerial : replis', () => {
     expect(p.held).toBe(0);
   });
 
-  it('une compilation qui ne finit jamais est abandonnee apres le delai borne', async () => {
+  it('programmes jamais prets : abandon apres le delai borne, sans attente residuelle', async () => {
     vi.useFakeTimers();
-    const { context } = fakeContext({
-      compileAsync: () => new Promise(() => {}),
-    });
+    const { context } = fakeContext({ ready: false });
     const p = precompileAerial(body().atmosphere, MODEL, context);
     let result: boolean | undefined;
     void p.ready.then((v) => (result = v));
-    await vi.advanceTimersByTimeAsync(PRECOMPILE_TIMEOUT_MS - 1);
+    await vi.advanceTimersByTimeAsync(PRECOMPILE_TIMEOUT_MS - 50);
     expect(result).toBeUndefined();
-    await vi.advanceTimersByTimeAsync(2);
+    await vi.advanceTimersByTimeAsync(100);
     expect(result).toBe(false);
+    // L'attente est ARRETEE : plus aucun minuteur, meme si les copies sont encore tenues.
+    expect(vi.getTimerCount()).toBe(0);
+    expect(p.held).toBeGreaterThan(0);
     p.release();
+  });
+
+  it('GAL-RENDER-001C : liberer les copies PENDANT l attente ne leve rien et arrete l attente', async () => {
+    vi.useFakeTimers();
+    const { context } = fakeContext({ ready: false });
+    const p = precompileAerial(body().atmosphere, MODEL, context);
+    let result: boolean | undefined;
+    void p.ready.then((v) => (result = v));
+    await vi.advanceTimersByTimeAsync(100);
+    p.release(); // les proprietes des copies sont effacees, comme onMaterialDispose
+    // Aucune exception asynchrone, y compris apres le delai que l'attente aurait eu.
+    await expect(
+      vi.advanceTimersByTimeAsync(PRECOMPILE_TIMEOUT_MS * 2)
+    ).resolves.not.toThrow();
+    expect(result).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('temoin du defaut : la boucle de compileAsync r176 leve apres la liberation d une copie', () => {
+    vi.useFakeTimers();
+    // Copie litterale de la boucle d'attente de Three.js r176 (WebGLRenderer.compileAsync) : elle
+    // lit `properties.get(material).currentProgram.isReady()` sans garde, toutes les 10 ms.
+    const material = new THREE.MeshBasicMaterial();
+    const properties = new Map<
+      object,
+      { currentProgram?: { isReady(): boolean } }
+    >();
+    properties.set(material, { currentProgram: { isReady: () => false } });
+    // onMaterialDispose efface les proprietes du materiau.
+    material.addEventListener('dispose', () => properties.delete(material));
+    const poll = () => {
+      const program = (properties.get(material) ?? {}).currentProgram;
+      program!.isReady();
+      setTimeout(poll, 10);
+    };
+    poll();
+    material.dispose();
+    expect(() => vi.advanceTimersByTime(20)).toThrow(TypeError);
   });
 
   it('sans sol ni nuages a copier : aucun appel', async () => {
@@ -205,13 +256,20 @@ describe('precompileAerial : replis', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('canPrecompile : refuse sans compileAsync et en session XR', () => {
+  it('canPrecompile : refuse sans compile, sans properties et en session XR', () => {
     expect(canPrecompile(fakeContext().context)).toBe(true);
     expect(
-      canPrecompile(fakeContext({ compileAsync: undefined }).context)
+      canPrecompile(fakeContext({ overrides: { compile: undefined } }).context)
     ).toBe(false);
     expect(
-      canPrecompile(fakeContext({ xr: { isPresenting: true } }).context)
+      canPrecompile(
+        fakeContext({ overrides: { properties: undefined } }).context
+      )
+    ).toBe(false);
+    expect(
+      canPrecompile(
+        fakeContext({ overrides: { xr: { isPresenting: true } } }).context
+      )
     ).toBe(false);
   });
 });

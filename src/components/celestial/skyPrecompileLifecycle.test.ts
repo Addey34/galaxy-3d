@@ -32,24 +32,48 @@ function earth() {
   return body;
 }
 
+/**
+ * Un contexte de rendu factice : `compile` lance le comportement donne (une promesse qui dit quand
+ * les programmes sont prets, ou qui echoue), et l'etat de chaque programme est lu par la
+ * precompilation dans `properties`, comme avec Three.js.
+ */
 function context(
-  compileAsync: (...a: never[]) => Promise<unknown>
-): AerialCompileContext & { compileAsync: typeof compileAsync } {
+  behavior: (...a: never[]) => Promise<unknown>
+): AerialCompileContext {
   let target: unknown = null;
+  let ready = false;
+  let failed = false;
   const renderer = {
     getRenderTarget: () => target,
     setRenderTarget: (t: unknown) => {
       target = t;
     },
     xr: { isPresenting: false },
-    compileAsync,
+    properties: {
+      get: () => ({
+        currentProgram: {
+          isReady: () => {
+            if (failed) throw new Error('programme perdu');
+            return ready;
+          },
+        },
+      }),
+    },
+    compile: () => {
+      ready = false;
+      failed = false;
+      behavior().then(
+        () => (ready = true),
+        () => (failed = true)
+      );
+      return new Set();
+    },
   };
   return {
     renderer: renderer as unknown as THREE.WebGLRenderer,
     scene: new THREE.Scene(),
     camera: new THREE.PerspectiveCamera(),
     renderTarget: null,
-    compileAsync,
   };
 }
 
@@ -118,7 +142,7 @@ describe('ciel + precompilation : une operation, un repli, pas de fuite', () => 
     expect(state(b)._aerialPrecompile).toBeNull();
   });
 
-  it('compileAsync qui echoue : le ciel est pose quand meme (rendu de reference), sans nouvelle tentative', async () => {
+  it('compilation qui echoue : le ciel est pose quand meme (rendu de reference), sans nouvelle tentative', async () => {
     const compileAsync = vi.fn(() => Promise.reject(new Error('perdu')));
     const ctx = context(compileAsync);
     const b = earth();
