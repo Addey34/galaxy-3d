@@ -36,6 +36,8 @@ import {
   GEOMETRY_SEGMENTS_HI,
   createSphereGeometry,
   createColoredOverlayMaterial,
+  MODEL_OVERLAY_FADES_WITH_MAGNIFICATION,
+  MODEL_OVERLAY_IS_COLOR_PALETTE,
   getCloudShadowUniforms,
   getEclipseShadowUniforms,
   getMoonlightUniforms,
@@ -832,7 +834,8 @@ export default class CelestialObject {
       // Absente = couche d'instrument, rendue telle quelle.
       mat = createColoredOverlayMaterial(
         options.opacity ?? 0.85,
-        LAYER_TERMINATOR_WRAP[layerKey]
+        LAYER_TERMINATOR_WRAP[layerKey],
+        MODEL_OVERLAY_FADES_WITH_MAGNIFICATION[layerKey] ?? true
       );
       this._dataOverlayMats.set(layerKey, mat);
     }
@@ -844,8 +847,19 @@ export default class CelestialObject {
       }
       mesh.material = mat;
     }
-    // Notre RGBA est déjà en couleurs d'affichage (palette) — pas de conversion sRGB.
-    texture.colorSpace = THREE.NoColorSpace;
+    // Notre RGBA est en couleurs d'AFFICHAGE (palette sRGB, celle de la légende) : la texture
+    // doit être déclarée sRGB pour être décodée en linéaire à l'échantillonnage, puis ré-encodée
+    // à la sortie. En NoColorSpace, les octets étaient lus comme du linéaire et encodés une
+    // seconde fois : toutes les teintes sortaient pâlies, donc différentes de la légende.
+    //
+    // JAMAIS sur une donnée numérique : la texture des nuages modèle (couverture en gris) est
+    // PARTAGÉE avec le secours du shader des nuages NASA (`setRealCloudsModelFallbackTexture`,
+    // NoColorSpace), qui lit son canal vert comme un facteur. `applyIfVisible` appelle le secours
+    // puis cet overlay sur le MÊME objet : le dernier écrit gagnerait.
+    texture.colorSpace =
+      (MODEL_OVERLAY_IS_COLOR_PALETTE[layerKey] ?? true)
+        ? THREE.SRGBColorSpace
+        : THREE.NoColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
     if (options.opacity !== undefined) mat.opacity = options.opacity;

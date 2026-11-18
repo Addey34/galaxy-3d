@@ -29,8 +29,8 @@ export function setupPressureModelLayer(
     targetLayer: 'thermal',
     legendGradient: {
       css: paletteToCss(PRESSURE_PALETTE),
-      loText: () => pressureBound(PRESSURE_DOMAIN.min, intlLocale()),
-      hiText: () => pressureBound(PRESSURE_DOMAIN.max, intlLocale()),
+      loText: () => pressureBound(PRESSURE_DOMAIN.min, intlLocale(), 'low'),
+      hiText: () => pressureBound(PRESSURE_DOMAIN.max, intlLocale(), 'high'),
     },
     encodeGrid: (grid) =>
       scalarGridToRGBA(grid, PRESSURE_PALETTE, {

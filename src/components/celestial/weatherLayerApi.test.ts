@@ -4,7 +4,10 @@ import CelestialObject from './CelestialObject';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { getOverlaySunUniform } from '@/config/layerConfig';
+import {
+  getOverlaySunUniform,
+  hasMagnificationFade,
+} from '@/config/layerConfig';
 
 /**
  * CONTRAT DES COUCHES DE DONNÉES DE `CelestialObject`, vu par `src/ui/*Layer.ts`.
@@ -174,6 +177,36 @@ describe('couches de données — contrat vu par src/ui', () => {
       const sun = new THREE.Vector3(7, 0, 0);
       earth.update(0.016, sun, true);
       expect(getOverlaySunUniform(clouds)!.value.x).toBe(7);
+    });
+
+    it('déclare sRGB la palette déjà colorée, sinon elle est encodée deux fois', () => {
+      // Mesuré (GAL-VISUAL-002) : 20 °C (235,193,77) sortait (211,203,160), pâle. Les octets de
+      // palette sont des couleurs d'affichage, comme la légende.
+      const map = tex();
+      earth.setDataOverlay('thermal', map);
+      expect(map.colorSpace).toBe(THREE.SRGBColorSpace);
+    });
+
+    it('garde la couverture nuageuse NUMÉRIQUE hors de l’espace sRGB, secours compris', () => {
+      // `cloudModelLayer` passe la MÊME texture au secours du shader NASA (qui lit le canal vert
+      // comme un facteur) et à l'overlay. Le décodage sRGB le déformerait (g^2,2).
+      const cover = tex();
+      earth.setRealCloudsModelFallbackTexture(cover);
+      earth.setDataOverlay('clouds', cover);
+      expect(cover.colorSpace).toBe(THREE.NoColorSpace);
+      // Désactivation puis réactivation : même ordre d'appels que `applyIfVisible`.
+      earth.restoreLayerMaterial('clouds');
+      earth.setRealCloudsModelFallbackTexture(cover);
+      earth.setDataOverlay('clouds', cover);
+      expect(cover.colorSpace).toBe(THREE.NoColorSpace);
+    });
+
+    it('ne laisse la pluie modèle ni muette de près ni sans terminateur', () => {
+      earth.setDataOverlay('precip', tex());
+      const rain = internals(earth).layers.get('precip')!
+        .material as THREE.Material;
+      expect(hasMagnificationFade(rain)).toBe(false);
+      expect(getOverlaySunUniform(rain)).toBeDefined();
     });
 
     it('laisse une couche d’instrument telle quelle', () => {

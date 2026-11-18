@@ -49,11 +49,20 @@ export function temperatureBound(celsius: number, locale?: string): string {
   return `${sign}${format(Math.abs(rounded), 0, locale)}${NBSP}${temp.unit}`;
 }
 
-/** Une borne de pression au niveau de la mer (hPa, ou inHg à deux décimales). */
-export function pressureBound(hpa: number, locale?: string): string {
+/**
+ * Une borne de pression au niveau de la mer (hPa, ou inHg à deux décimales). `saturates` dit de
+ * quel côté la palette sature : « ≤ 980 hPa » (tout ce qui est plus bas garde la première
+ * couleur) ou « 1 045+ hPa » (la dernière), comme le « + » des bornes hautes de pluie et de vent.
+ */
+export function pressureBound(
+  hpa: number,
+  locale?: string,
+  saturates?: 'low' | 'high'
+): string {
   const pressure = convertPressureHpa(hpa);
   const decimals = getUnitSystem() === 'imperial' ? 2 : 0;
-  return `${format(pressure.value, decimals, locale, true)}${NBSP}${pressure.unit}`;
+  const body = `${format(pressure.value, decimals, locale, true)}${saturates === 'high' ? '+' : ''}${NBSP}${pressure.unit}`;
+  return saturates === 'low' ? `≤${NBSP}${body}` : body;
 }
 
 /**
