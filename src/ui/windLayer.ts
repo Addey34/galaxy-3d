@@ -81,6 +81,8 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   // date de la scène (avant le premier chargement, ou hors de la plage du modèle) : les
   // particules sont alors masquées (`syncPoints`).
   let grid: WindGrid | null = null;
+  /** Heure (clé `meteoHourKey`) que décrit `grid`. */
+  let gridHourKey: string | null = null;
   let gridDiagnostics: MeteoLayerDiagnostics['grid'];
   let lastSource: MeteoLayerDiagnostics['source'];
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
@@ -121,6 +123,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
         grid =
           speed && direction ? windGridFromScalars(speed, direction) : null;
         gridDiagnostics = speed ? describeMeteoGrid(speed) : undefined;
+        gridHourKey = grid ? data.realDate.slice(0, 13) : null;
         syncPoints();
         phase = 'ready';
         const source = meteoSourceCandidate({ id: 'wind' }, data);
@@ -158,8 +161,18 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     setVisible: (visible) => {
       wanted = visible;
       if (visible) {
+        // La grille d'une activation précédente décrit peut-être une AUTRE heure que la scène :
+        // les particules restent masquées jusqu'à l'arrivée de la donnée de la bonne heure.
+        if (gridHourKey !== meteoHourKey(api.orbitalMechanics.simulationDate))
+          grid = null;
         startData();
         void ensureParticles();
+      } else if (stopData) {
+        // Masquée, elle ne demande plus rien à Open-Meteo.
+        stopData();
+        stopData = null;
+        phase = 'idle';
+        loadState.push('idle');
       }
       syncPoints();
     },
