@@ -27,6 +27,7 @@ import { ATTACHED_SKIES } from '@/components/celestial/skyApproach';
 import { SQRT_K } from '@/core/ScaleService';
 import { adaptiveExposureFor, stepAdaptation } from '@/core/adaptiveExposure';
 import { publishedAlbedo } from '@/config/displayAlbedo';
+import type { AerialCompileContext } from '@/components/celestial/aerialPrecompile';
 import type { CameraSystem } from './CameraSystem';
 import type { CelestialBodies } from './SceneSystem';
 
@@ -433,9 +434,33 @@ export class AnimationSystem {
         sunWorldPosition,
         visible,
         this._cameraPos,
-        moonWorldPosition
+        moonWorldPosition,
+        this._aerialCompileContext()
       );
     }
+  }
+
+  private _compileContext: AerialCompileContext | null = null;
+
+  /**
+   * Ce que la précompilation de la perspective aérienne doit connaître du rendu RÉEL : le moteur,
+   * la scène, la caméra et la cible du compositeur (elle entre dans la clé de programme). En
+   * session XR : rendu direct vers une autre cible, donc aucune précompilation (le rendu de
+   * référence s'applique, il compile à la première image comme avant).
+   */
+  private _aerialCompileContext(): AerialCompileContext | undefined {
+    if (this.renderer.xr.isPresenting) return undefined;
+    const composer = (): EffectComposer | null => this.composer;
+    this._compileContext ??= {
+      renderer: this.renderer,
+      scene: this.scene,
+      camera: this.camera,
+      // Lu à l'usage : c'est la cible où `composer.render()` dessine la scène (RenderPass).
+      get renderTarget() {
+        return composer()?.readBuffer ?? null;
+      },
+    };
+    return this._compileContext;
   }
 
   private _updateLOD(): void {

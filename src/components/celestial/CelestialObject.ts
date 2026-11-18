@@ -24,7 +24,10 @@ import {
   layerFigure,
 } from '@/components/celestial/celestialLayers';
 import { figureRadius, type Figure } from '@/core/ellipsoid';
-import { applyTexture } from '@/components/celestial/celestialTextures';
+import {
+  applyRealCloudsMap,
+  applyTexture,
+} from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { fitScale, meshVolume, volumeEquivalentRadius } from '@/core/modelFit';
 import { ATLAS_SWATCH_UV, drapeEquirectangular } from '@/core/modelUv';
@@ -79,7 +82,17 @@ import { whenIdle } from '@/utils/idleCallback';
 import { displayGain } from '@/config/displayAlbedo';
 import { installOceanMatch } from '@/config/layerConfig';
 import type { OceanMatch } from '@/core/oceanMatch';
+import type {
+  AerialCompileContext,
+  AerialPrecompile,
+} from '@/components/celestial/aerialPrecompile';
+import type { SkyScatteringModelId } from '@/core/atmosphereScattering';
 
+/**
+ * Images visibles rendues avec la perspective aérienne avant de libérer les copies de
+ * précompilation : les vrais matériaux ont alors pris leurs programmes (compteur d'usage du moteur).
+ */
+const PRECOMPILE_RELEASE_FRAMES = 3;
 const CLOUDS_ROTATION_FACTOR = 0.1;
 // Opacité de l'ombre portée des nuages sur la surface (0 = aucune, 1 = noir).
 const CLOUD_SHADOW_STRENGTH = 0.35;
@@ -436,10 +449,9 @@ export default class CelestialObject {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
     texture.colorSpace = THREE.SRGBColorSpace;
-    mat.map = texture;
-    // L'alpha vient de l'extraction shader (diffuseColor.a), pas d'une alphaMap :
-    // on retire toute alphaMap héritée de la couche statique.
-    mat.alphaMap = null;
+    // L'alpha vient de l'extraction shader (diffuseColor.a) ; l'alphaMap héritée de la couche
+    // statique est neutralisée, non retirée (cf. `applyRealCloudsMap`).
+    applyRealCloudsMap(mat, texture);
     if (options.opacity !== undefined) mat.opacity = options.opacity;
     mat.needsUpdate = true;
 
@@ -1052,7 +1064,8 @@ export default class CelestialObject {
     sunWorldPosition: THREE.Vector3 | null,
     visible: boolean,
     _cameraPosition?: THREE.Vector3,
-    moonWorldPosition?: THREE.Vector3 | null
+    moonWorldPosition?: THREE.Vector3 | null,
+    compileContext?: AerialCompileContext
   ): void {
     // AVANT le test de visibilité, délibérément. La rotation propre est une INTÉGRALE : sauter
     // une frame ne la retarde pas d'une frame, il la décale DÉFINITIVEMENT — rien ne la
@@ -1065,7 +1078,8 @@ export default class CelestialObject {
     // légitimement derrière le test de visibilité.
     this._advanceSpin(delta);
     if (sunWorldPosition) this.sunWorld.copy(sunWorldPosition);
-    if (_cameraPosition) this._maybeLoadSky(_cameraPosition);
+    if (_cameraPosition) this._maybeLoadSky(_cameraPosition, compileContext);
+    this._tickPrecompileRelease(visible);
     if (!visible) return;
 
     const lights = this.layers.get('lights');
@@ -1373,7 +1387,10 @@ export default class CelestialObject {
    * plus sous frein × 6, assez pour faire rougir `e2e/places.spec.ts` trois fois sur un EPYC 7763.
    * Un échec se rejoue à l'approche suivante.
    */
-  private _maybeLoadSky(cameraWorld: THREE.Vector3): void {
+  private _maybeLoadSky(
+    cameraWorld: THREE.Vector3,
+    compileContext?: AerialCompileContext
+  ): void {
     const model = this.config.skyScattering;
     const radiusKm = this.config.realData?.radiusKm;
     const atmosphere = this.layers.get('atmosphere');
@@ -1393,16 +1410,89 @@ export default class CelestialObject {
     )
       return;
     this._sky = 1;
-    void import('./skyLayer').then(
-      (sky) => {
-        sky.attachSky(this, model, radiusKm, atmosphere);
-        this._sky = 2;
-      },
-      (error: unknown) => {
-        this._sky = 0;
-        Logger.warn(error);
+    void this._loadSky(model, radiusKm, atmosphere, compileContext);
+  }
+
+  /** La précompilation de la perspective aérienne en attente de libération (au plus UNE par corps). */
+  private _aerialPrecompile: AerialPrecompile | null = null;
+  /** Images visibles rendues depuis la pose du ciel : les copies sont libérées à la 3e. */
+  private _framesSinceSky = 0;
+
+  /**
+   * Charge le ciel, et compile avant (hors du fil principal) les programmes qu'il va poser, si le
+   * contexte de rendu le permet. `_sky` reste à 1 pendant TOUTE l'opération : une seule à la fois,
+   * et un échec, quel qu'il soit, le remet à 0 pour rejouer à l'approche suivante, sans jamais
+   * retenter à chaque image (le seuil d'approche n'est testé qu'avec `_sky === 0`).
+   */
+  private async _loadSky(
+    model: SkyScatteringModelId,
+    radiusKm: number,
+    atmosphere: THREE.Mesh,
+    compileContext?: AerialCompileContext
+  ): Promise<void> {
+    let precompile: AerialPrecompile | null = null;
+    try {
+      // La précompilation est FACULTATIVE : son morceau qui ne se charge pas ne doit jamais
+      // empêcher la pose du ciel (le rendu de référence compile à la première image, comme avant).
+      // L'échec est mémorisé : pas de nouvel import à chaque approche.
+      const aerialImport =
+        compileContext && !this._aerialUnavailable
+          ? import('./aerialPrecompile').catch((error: unknown) => {
+              this._aerialUnavailable = true;
+              Logger.warn(error);
+              return null;
+            })
+          : Promise.resolve(null);
+      const [sky, aerial] = await Promise.all([
+        import('./skyLayer'),
+        aerialImport,
+      ]);
+      if (this._disposed) return this._abandonSky();
+      if (aerial && compileContext) {
+        try {
+          if (aerial.canPrecompile(compileContext)) {
+            precompile = aerial.precompileAerial(
+              atmosphere,
+              model,
+              compileContext
+            );
+            await precompile.ready;
+          }
+        } catch (error: unknown) {
+          precompile?.release();
+          precompile = null;
+          Logger.warn(error);
+        }
+        // Le corps a pu être libéré pendant la compilation.
+        if (this._disposed) {
+          precompile?.release();
+          return this._abandonSky();
+        }
       }
-    );
+      sky.attachSky(this, model, radiusKm, atmosphere);
+      this._sky = 2;
+      this._aerialPrecompile = precompile;
+      this._framesSinceSky = 0;
+    } catch (error: unknown) {
+      precompile?.release();
+      this._sky = 0;
+      Logger.warn(error);
+    }
+  }
+
+  /** Le morceau de précompilation n'a pas pu être importé : on n'essaie plus, le ciel se pose seul. */
+  private _aerialUnavailable = false;
+
+  private _abandonSky(): void {
+    this._sky = 0;
+  }
+
+  /** Libère les copies de précompilation quand les vrais matériaux ont rendu quelques images. */
+  private _tickPrecompileRelease(visible: boolean): void {
+    if (!this._aerialPrecompile || !visible) return;
+    if (++this._framesSinceSky < PRECOMPILE_RELEASE_FRAMES) return;
+    this._aerialPrecompile.release();
+    this._aerialPrecompile = null;
   }
 
   /** Rayon RENDU courant (le morph Éduc↔Explo le fait varier). */
@@ -1822,6 +1912,8 @@ export default class CelestialObject {
   dispose(): void {
     if (this._disposed) return;
     this._disposed = true;
+    this._aerialPrecompile?.release();
+    this._aerialPrecompile = null;
     this.animationSystem.removeUpdatable(this);
     this.layers.forEach((mesh) => {
       mesh.geometry?.dispose();

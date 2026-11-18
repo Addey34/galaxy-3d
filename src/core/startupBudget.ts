@@ -659,6 +659,16 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le ciel calculé (lot 48, pas 6 : shader de diffusion simple, coefficients du modèle de Bruneton, miroir JS des étoiles) n'est chargé qu'à moins de 20 rayons d'un corps qui déclare un modèle (`components/celestial/skyApproach.ts`) ; de loin, le halo de Fresnel suffit. Au démarrage il dépassait le plafond de 7 332 octets (mesuré le 2026-10-13).",
   },
   {
+    chunk: 'aerialPrecompile',
+    reason:
+      "la précompilation de la perspective aérienne (GAL-RENDER-001C) : copies de matériaux compilées par `compileAsync` AVANT que `skyLayer` ne pose le ciel, pour que l'édition de liens ne bloque pas le fil principal à la première approche. Chargée avec `skyLayer`, donc à moins de 20 rayons d'un corps qui déclare un modèle, en Explo seulement ; jamais au démarrage.",
+  },
+  {
+    chunk: 'aerialPerspective',
+    reason:
+      "l'injection GLSL de la perspective aérienne (`aerialPerspective.ts`), partagée par `skyLayer` et `aerialPrecompile`, deux morceaux hors démarrage : Rollup en fait un morceau commun. Même condition de chargement que `skyLayer`.",
+  },
+  {
     chunk: 'PlanetarySurfaceEngine',
     reason:
       "l'imagerie de surface n'est demandée qu'à l'approche d'un corps qui déclare un jeu de tuiles, jamais au démarrage ni au-dessus de 6 rayons apparents (lot 9, phase 9C).",
