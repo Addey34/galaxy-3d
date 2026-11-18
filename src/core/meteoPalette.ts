@@ -118,25 +118,44 @@ function clamp01(x: number): number {
  */
 export function samplePalette(
   palette: Palette,
-  t: number
+  t: number,
+  out?: [number, number, number]
 ): [number, number, number] {
   const { stops } = palette;
   const u = clamp01(t);
-  if (u <= stops[0].t) return stops[0].rgb;
-  if (u >= stops[stops.length - 1].t) return stops[stops.length - 1].rgb;
+  // Avec `out`, le résultat y est ÉCRIT (jamais le tableau d'un arrêt, que l'appelant pourrait
+  // modifier) ; sans `out`, comportement d'origine. Aucune fermeture : cette fonction est appelée
+  // par chaque particule de vent à chaque image.
+  const first = stops[0];
+  const last = stops[stops.length - 1];
+  if (u <= first.t) return out ? writeRgb(out, first.rgb) : first.rgb;
+  if (u >= last.t) return out ? writeRgb(out, last.rgb) : last.rgb;
   for (let i = 0; i < stops.length - 1; i++) {
     const a = stops[i];
     const b = stops[i + 1];
     if (u >= a.t && u <= b.t) {
       const f = (u - a.t) / (b.t - a.t || 1);
-      return [
-        Math.round(a.rgb[0] + (b.rgb[0] - a.rgb[0]) * f),
-        Math.round(a.rgb[1] + (b.rgb[1] - a.rgb[1]) * f),
-        Math.round(a.rgb[2] + (b.rgb[2] - a.rgb[2]) * f),
-      ];
+      const r = Math.round(a.rgb[0] + (b.rgb[0] - a.rgb[0]) * f);
+      const g = Math.round(a.rgb[1] + (b.rgb[1] - a.rgb[1]) * f);
+      const bl = Math.round(a.rgb[2] + (b.rgb[2] - a.rgb[2]) * f);
+      if (!out) return [r, g, bl];
+      out[0] = r;
+      out[1] = g;
+      out[2] = bl;
+      return out;
     }
   }
-  return stops[stops.length - 1].rgb;
+  return out ? writeRgb(out, last.rgb) : last.rgb;
+}
+
+function writeRgb(
+  out: [number, number, number],
+  rgb: [number, number, number]
+): [number, number, number] {
+  out[0] = rgb[0];
+  out[1] = rgb[1];
+  out[2] = rgb[2];
+  return out;
 }
 
 import type { ScalarGrid } from './meteoGrid';

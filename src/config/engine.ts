@@ -671,8 +671,11 @@ export const WIND_SETTINGS = {
   // Sous cette vitesse (km/h), une particule s'estompe : elle ne bougerait presque pas, et une
   // particule pleine immobile fait un amas qui scintille. Il n'y a plus de dérive AJOUTÉE.
   calmKmh: 6,
-  // Durée de vie moyenne d'une particule (s) avant ré-ensemencement (traînées).
+  // Durée de vie moyenne d'une particule (s) avant ré-ensemencement.
   lifeSeconds: 4,
+  // Longueur d'une traînée, en secondes de déplacement : `speedScale · trailSeconds · vitesse`
+  // degrés (1,6° à 40 km/h), nulle au calme. 0 = points seuls.
+  trailSeconds: 2,
   // Opacité globale : filet lumineux DISCRET qui s'ajoute à la surface (additif).
   opacity: 0.35,
   // Taille de base d'un point (unités monde ; rayon Terre ≈ 1). Petit = flux fin.

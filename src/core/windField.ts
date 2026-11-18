@@ -68,6 +68,8 @@ export function windGridFromScalars(
   return { step, latMin, lonMin, nLat, nLon, u, v };
 }
 
+const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
+
 function wrapLon(lon: number): number {
   const l = (((lon + 180) % 360) + 360) % 360;
   return l - 180;
@@ -75,12 +77,15 @@ function wrapLon(lon: number): number {
 
 /**
  * Échantillonne le champ (interpolation bilinéaire) à une position quelconque. Longitude
- * enroulée sur ±180 ; latitude clampée aux bornes de la grille. Renvoie u/v en km/h.
+ * enroulée sur ±180 ; latitude clampée aux bornes de la grille. Renvoie u/v en km/h, dans `out`
+ * s'il est fourni (la boucle des particules l'appelle des milliers de fois par image : un objet
+ * neuf à chaque appel faisait l'essentiel de ses allocations).
  */
 export function sampleWind(
   grid: WindGrid,
   lat: number,
-  lon: number
+  lon: number,
+  out: { u: number; v: number } = { u: 0, v: 0 }
 ): { u: number; v: number } {
   const { step, latMin, lonMin, nLat, nLon, u, v } = grid;
   const clampedLat = Math.max(
@@ -97,13 +102,22 @@ export function sampleWind(
   const tr = fLat - r0;
   const tc = fLon - c0;
 
-  const idx = (r: number, c: number) => r * nLon + (((c % nLon) + nLon) % nLon);
-  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  // Quatre indices de cellule, calculés une fois. Ni fermeture ni objet : cette fonction est
+  // appelée par chaque particule de vent à chaque image (deux fermetures par appel faisaient
+  // l'essentiel des allocations de la couche).
+  const cw0 = ((c0 % nLon) + nLon) % nLon;
+  const cw1 = ((c1 % nLon) + nLon) % nLon;
+  const i00 = r0 * nLon + cw0;
+  const i01 = r0 * nLon + cw1;
+  const i10 = r1 * nLon + cw0;
+  const i11 = r1 * nLon + cw1;
 
-  const u0 = lerp(u[idx(r0, c0)], u[idx(r0, c1)], tc);
-  const u1 = lerp(u[idx(r1, c0)], u[idx(r1, c1)], tc);
-  const v0 = lerp(v[idx(r0, c0)], v[idx(r0, c1)], tc);
-  const v1 = lerp(v[idx(r1, c0)], v[idx(r1, c1)], tc);
+  const u0 = lerp(u[i00], u[i01], tc);
+  const u1 = lerp(u[i10], u[i11], tc);
+  const v0 = lerp(v[i00], v[i01], tc);
+  const v1 = lerp(v[i10], v[i11], tc);
 
-  return { u: lerp(u0, u1, tr), v: lerp(v0, v1, tr) };
+  out.u = lerp(u0, u1, tr);
+  out.v = lerp(v0, v1, tr);
+  return out;
 }

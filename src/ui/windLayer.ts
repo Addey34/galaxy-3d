@@ -69,6 +69,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
           size: settings.size,
           maxLat: settings.particleMaxLat,
           calmKmh: settings.calmKmh,
+          trailSeconds: settings.trailSeconds,
         });
         particles.points.visible = false;
         earth.attachSpinningChild(particles.points);
