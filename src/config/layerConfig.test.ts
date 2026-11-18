@@ -12,6 +12,8 @@ import {
   LAYER_TERMINATOR_WRAP,
   createThermalMaterial,
   hasMagnificationFade,
+  getLayerTwilightWrap,
+  MODEL_OVERLAY_FADES_WITH_MAGNIFICATION,
   getThermalUniforms,
   THERMAL_DEFAULT_OPACITY,
 } from './layerConfig';
@@ -733,6 +735,21 @@ describe('magnification fade of the appearance layers', () => {
       expect(shader.fragmentShader).toContain('varying vec3 vMagView;');
       material.dispose();
     }
+  });
+
+  it('keeps the terminator but not the fade on the model rain field', () => {
+    // GAL-VISUAL-002 : grille de 4 degrés, le fondu l'effaçait dès que le globe dépassait ~170 px.
+    expect(MODEL_OVERLAY_FADES_WITH_MAGNIFICATION['precip']).toBe(false);
+    expect(MODEL_OVERLAY_FADES_WITH_MAGNIFICATION['clouds']).toBe(true);
+    const rain = createColoredOverlayMaterial(
+      0.85,
+      LAYER_TERMINATOR_WRAP['precip'],
+      MODEL_OVERLAY_FADES_WITH_MAGNIFICATION['precip']
+    );
+    expect(hasMagnificationFade(rain)).toBe(false);
+    // Le terminateur, lui, reste (pluie = apparence physique).
+    expect(getLayerTwilightWrap(rain)).toBe(LAYER_TERMINATOR_WRAP['precip']);
+    rain.dispose();
   });
 
   it('leaves instrument overlays alone: their grid is information', () => {

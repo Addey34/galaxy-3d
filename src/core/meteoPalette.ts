@@ -68,7 +68,7 @@ export const PRESSURE_PALETTE: Palette = {
     { t: 0.0, rgb: [82, 32, 160] }, // dépression forte
     { t: 0.2, rgb: [45, 93, 190] }, // dépression
     { t: 0.4, rgb: [84, 181, 218] }, // pression basse
-    { t: 0.5, rgb: [238, 245, 235] }, // proche de la normale
+    { t: 0.5, rgb: [208, 226, 200] }, // proche de la normale (gris vert clair, pas blanc)
     { t: 0.65, rgb: [142, 204, 105] }, // pression élevée
     { t: 0.82, rgb: [245, 178, 55] }, // anticyclone
     { t: 1.0, rgb: [204, 57, 38] }, // anticyclone fort
@@ -76,7 +76,7 @@ export const PRESSURE_PALETTE: Palette = {
 };
 
 /** Domaine hPa usuel pour la pression synoptique au niveau de la mer. */
-export const PRESSURE_DOMAIN = { min: 960, max: 1060 };
+export const PRESSURE_DOMAIN = { min: 980, max: 1045 };
 
 /** Palette HUMIDITÉ relative à 2 m (%) : sec et ocre → humide et bleu profond. */
 export const HUMIDITY_PALETTE: Palette = {

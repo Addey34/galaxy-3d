@@ -64,10 +64,25 @@ describe('weather palettes', () => {
         }
       }
     }
-    expect(PRESSURE_DOMAIN).toEqual({ min: 960, max: 1060 });
+    expect(PRESSURE_DOMAIN).toEqual({ min: 980, max: 1045 });
     expect(HUMIDITY_DOMAIN).toEqual({ min: 0, max: 100 });
   });
 });
+describe('pressure palette readability (GAL-VISUAL-002)', () => {
+  it('keeps the normal pressure off pure white so coasts stay readable under it', () => {
+    // Un neutre blanc (238,245,235) délavait le globe entier : la pression moyenne couvre
+    // l'essentiel de la planète et masquait les continents sous une teinte quasi blanche.
+    const normal =
+      (1013 - PRESSURE_DOMAIN.min) /
+      (PRESSURE_DOMAIN.max - PRESSURE_DOMAIN.min);
+    const [r, g, b] = samplePalette(PRESSURE_PALETTE, normal);
+    expect(Math.min(r, g, b)).toBeLessThan(215);
+    // Le domaine resserré met la pression moyenne près du neutre de la palette.
+    expect(normal).toBeGreaterThan(0.4);
+    expect(normal).toBeLessThan(0.6);
+  });
+});
+
 describe('scalarGridToRGBA', () => {
   it('mappe les valeurs sur la palette et inverse le Nord en haut', () => {
     // 2 rangées : rangée 0 = SUD (val 0 → noir), rangée 1 = NORD (val max → couleur).

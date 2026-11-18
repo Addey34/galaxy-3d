@@ -187,6 +187,34 @@ export const LAYER_TERMINATOR_WRAP: Record<string, number | undefined> = {
   precip: TERMINATOR_WRAP_STORM,
 };
 
+/**
+ * Couches dont l'overlay MODÈLE est un CHAMP de données colorié (légende en mm/h) et non une image :
+ * il garde son terminateur mais ne s'efface pas au grossissement (2026-11-18, GAL-VISUAL-002).
+ *
+ * La pluie modèle est une grille de 90 x 46 (4 degrés par texel, ~26 px d'écran par texel dès que
+ * le globe fait 750 px) : le fondu du lot 48 (nul au-delà de 6 px par texel) l'effaçait dès que la
+ * Terre dépassait ~170 px, donc la couche cochée ne montrait rien à toute distance utile
+ * (qualifié avec des bandes à 0/1/5/10/20 mm/h : visibles seulement avec le réglage « garder la
+ * pluie », plancher 0,4). Ce fondu vise une IMAGE dont le grain devient une grille ; ici la grille
+ * est l'information, lissée par le filtre linéaire, comme les champs température/pression.
+ * Les nuages modèle gardent le fondu (ils prétendent être une image).
+ */
+export const MODEL_OVERLAY_FADES_WITH_MAGNIFICATION: Record<string, boolean> = {
+  clouds: true,
+  precip: false,
+};
+
+/**
+ * Overlays modèle dont la texture porte une DONNÉE NUMÉRIQUE et non des couleurs d'affichage. La
+ * couverture nuageuse est encodée en gris (`cloudCoverToRGBA`) et la MÊME texture alimente le
+ * secours du shader des nuages NASA, qui lit son canal vert comme un facteur : la décoder en
+ * sRGB le déformerait (g^2,2). Elle reste `NoColorSpace`. Toute autre couche modèle (température,
+ * pression, humidité, pluie) écrit une palette en couleurs d'affichage, déclarée sRGB.
+ */
+export const MODEL_OVERLAY_IS_COLOR_PALETTE: Record<string, boolean> = {
+  clouds: false,
+};
+
 // 64 segments pour les planètes : bon compromis silhouette/perf (≈ 8 k triangles).
 // 128 pour les anneaux de Saturne : la géométrie RingGeometry est plate, mais ses
 // subdivisions radiales déterminent la précision des UVs corrigés (_correctRingUVs).
@@ -928,7 +956,8 @@ export function getOverlaySunUniform(
  */
 export function createColoredOverlayMaterial(
   opacity = 0.85,
-  terminatorWrap?: number
+  terminatorWrap?: number,
+  fadesWithMagnification = true
 ): THREE.MeshBasicMaterial {
   const material = new THREE.MeshBasicMaterial({
     transparent: true,
@@ -982,8 +1011,11 @@ export function createColoredOverlayMaterial(
         }`
       );
   });
-  installMagnificationFade(material);
-  material.customProgramCacheKey = () => 'overlay-terminator-v4-magnification';
+  if (fadesWithMagnification) installMagnificationFade(material);
+  material.customProgramCacheKey = () =>
+    fadesWithMagnification
+      ? 'overlay-terminator-v4-magnification'
+      : 'overlay-terminator-v4-field';
   return material;
 }
 const PRECIP_UNIFORM_KEY = '__precipUniforms';

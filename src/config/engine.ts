@@ -540,19 +540,19 @@ export const THERMAL_MODEL_SETTINGS = {
   enabled: true,
   variable: 'temperature_2m',
   // Assez opaque pour lire la palette, assez bas pour laisser transparaître le relief sous la teinte.
-  opacity: 0.72,
+  opacity: 0.5,
 };
 export const PRESSURE_MODEL_SETTINGS = {
   ...METEO_MODEL_GRID_SETTINGS,
   enabled: true,
   variable: 'pressure_msl',
-  opacity: 0.55,
+  opacity: 0.5,
 };
 export const HUMIDITY_MODEL_SETTINGS = {
   ...METEO_MODEL_GRID_SETTINGS,
   enabled: true,
   variable: 'relative_humidity_2m',
-  opacity: 0.6,
+  opacity: 0.5,
 };
 export const PRECIP_MODEL_SETTINGS = {
   ...METEO_MODEL_GRID_SETTINGS,
