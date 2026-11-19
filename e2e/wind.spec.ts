@@ -142,3 +142,67 @@ test('wind layer reads the Galaxy data service first, and says so', async ({
   ).toEqual([]);
   expect(pageErrors).toEqual([]);
 });
+
+/**
+ * GAL-METEO-DATA-001 : la disponibilité du vent se juge sur le champ COMPOSÉ (u, v).
+ *   - un vrai calme (vitesses nulles, direction absente partout) est un champ DISPONIBLE ;
+ *   - deux grilles partiellement valides à disponibilités disjointes composent un champ
+ *     entièrement inconnu : la couche passe en erreur, elle ne se présente pas comme prête.
+ */
+for (const scenario of [
+  {
+    name: 'a real calm (zero speeds, direction absent) is ready',
+    state: 'ready',
+    cell: (i: number, hours: number) => ({
+      wind_speed_10m: Array(hours).fill(0),
+      wind_direction_10m: Array(hours).fill(null),
+    }),
+  },
+  {
+    name: 'disjoint partial grids compose an unusable field: error, not ready',
+    state: 'error',
+    cell: (i: number, hours: number) => ({
+      wind_speed_10m: Array(hours).fill(i % 2 === 0 ? 10 : null),
+      wind_direction_10m: Array(hours).fill(i % 2 === 0 ? null : 270),
+    }),
+  },
+]) {
+  test(`wind layer: ${scenario.name}`, async ({ page }) => {
+    await page.route('**/sbdb_query.api*', (route) => route.abort());
+    await mockOpenMeteo(page);
+    // Enregistré APRÈS le mock : Playwright consulte les routes de la dernière à la première.
+    await page.route('**/api.open-meteo.com/**', async (route) => {
+      const body = route.request().postDataJSON() as {
+        latitude?: number[];
+        past_days?: number;
+        forecast_days?: number;
+      };
+      const hours = ((body.past_days ?? 0) + (body.forecast_days ?? 1)) * 24;
+      const points = (body.latitude ?? []).map((_, i) => ({
+        hourly: scenario.cell(i, hours),
+      }));
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(points),
+      });
+    });
+    await page.addInitScript(() => {
+      localStorage.setItem('ssv-guided-tour-v1', '1');
+      localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
+      localStorage.setItem('ssv-locale', 'en');
+    });
+    await page.goto('/?debug-meteo');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+    await page.locator('#weather-trigger').click();
+    await page
+      .locator('#weather-layers .wl-item')
+      .filter({ hasText: 'Wind (model)' })
+      .locator('input')
+      .check();
+    await expect(page.locator('#meteo-debug')).toContainText(
+      `wind [vector] ${scenario.state} ON`,
+      { timeout: 30_000 }
+    );
+  });
+}

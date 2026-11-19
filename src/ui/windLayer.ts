@@ -22,6 +22,8 @@ import { fetchMeteoGrids } from '@/core/meteoClient';
 import { LAYER_RADIUS_SCALE } from '@/config/layerConfig';
 import {
   WIND_VARIABLES,
+  assertUsableWind,
+  countValidWind,
   windGridFromScalars,
   type WindGrid,
 } from '@/core/windField';
@@ -102,16 +104,28 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
       name: 'WindLayer',
       enabled: true,
       keyForDate: meteoHourKey,
-      fetchForKey: (key, signal) =>
-        fetchMeteoGrids(new Date(`${key}:00:00Z`), {
+      fetchForKey: async (key, signal) => {
+        const data = await fetchMeteoGrids(new Date(`${key}:00:00Z`), {
           variables: WIND_VARIABLES,
+          // La direction peut manquer partout si toutes les vitesses sont nulles (un vrai calme) :
+          // c'est le champ COMPOSÉ qui juge de la disponibilité, pas chaque grille.
+          optionalVariables: [WIND_VARIABLES[1]],
           forecastGrid: { step: settings.gridStep, maxLat: settings.maxLat },
           archiveGrid: {
             step: settings.archiveGridStep,
             maxLat: settings.maxLat,
           },
           signal,
-        }),
+        });
+        const speed = data.grids?.[WIND_VARIABLES[0]];
+        const direction = data.grids?.[WIND_VARIABLES[1]];
+        const wind =
+          speed && direction ? windGridFromScalars(speed, direction) : null;
+        // Aucune cellule disponible : échec explicite (état d'erreur de la couche), jamais un
+        // champ présenté comme prêt.
+        if (wind) assertUsableWind(wind);
+        return { ...data, wind };
+      },
       onStateChange: (next) => {
         phase = next;
         loadState.push(next);
@@ -120,10 +134,11 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
         // Hors de la plage du modèle (avant 1940, au-delà de l'horizon de prévision) : AUCUNE
         // grille. Garder la précédente ferait souffler, pour cette date, le vent d'une autre.
         const speed = data.grids?.[WIND_VARIABLES[0]];
-        const direction = data.grids?.[WIND_VARIABLES[1]];
-        grid =
-          speed && direction ? windGridFromScalars(speed, direction) : null;
-        gridDiagnostics = speed ? describeMeteoGrid(speed) : undefined;
+        grid = data.wind;
+        gridDiagnostics =
+          speed && grid
+            ? describeMeteoGrid({ ...speed, validCount: countValidWind(grid) })
+            : undefined;
         gridHourKey = grid ? data.realDate.slice(0, 13) : null;
         syncPoints();
         phase = 'ready';

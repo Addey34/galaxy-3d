@@ -75,6 +75,11 @@ export interface MeteoGridShape {
   nLon: number;
   /** Les valeurs de la grille, pour compter les cellules valides (absent : toutes comptées). */
   values?: ArrayLike<number>;
+  /**
+   * Cellules réellement disponibles quand elles ne se lisent pas dans `values` : le vent est
+   * composé de deux grilles, et ce qui compte est le nombre de cellules où u ET v sont finis.
+   */
+  validCount?: number;
 }
 
 export function describeMeteoGrid(grid: MeteoGridShape): MeteoGridDiagnostics {
@@ -85,9 +90,9 @@ export function describeMeteoGrid(grid: MeteoGridShape): MeteoGridDiagnostics {
     nLat: grid.nLat,
     nLon: grid.nLon,
     sampleCount: grid.nLat * grid.nLon,
-    validCount: grid.values
-      ? countFiniteCells(grid.values)
-      : grid.nLat * grid.nLon,
+    validCount:
+      grid.validCount ??
+      (grid.values ? countFiniteCells(grid.values) : grid.nLat * grid.nLon),
     longitudeSpan: grid.nLon * grid.step,
   };
 }

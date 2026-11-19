@@ -5,6 +5,7 @@ import {
   fetchMeteoGrids,
 } from './meteoClient';
 import { meteoHourIndex } from './meteoGrid';
+import { countValidWind, windGridFromScalars } from './windField';
 import { meteoHourKey } from './meteoTimeTravel';
 
 const now = new Date('2026-08-14T12:00:00Z');
@@ -292,6 +293,65 @@ describe('fetchMeteoGrid', () => {
     await fetchMeteoGrid(new Date('2026-08-14T12:00:00Z'), options);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('fetchMeteoGrids : direction du vent absente (GAL-METEO-DATA-001)', () => {
+  const calmBody = (direction: unknown): string =>
+    JSON.stringify(
+      Array.from({ length: 12 }, () => ({
+        hourly: {
+          wind_speed_10m: Array(24 * 6).fill(0),
+          wind_direction_10m: Array(24 * 6).fill(direction),
+        },
+      }))
+    );
+  const run = (optionalVariables?: readonly string[]) =>
+    fetchMeteoGrids(new Date('2026-08-14T12:00:00Z'), {
+      variables: ['wind_speed_10m', 'wind_direction_10m'],
+      forecastGrid: grid,
+      archiveGrid: grid,
+      now,
+      skipGalaxyData: true,
+      ...(optionalVariables ? { optionalVariables } : {}),
+    });
+
+  it('vitesses toutes nulles, direction nulle partout : acceptée si la direction est facultative, et le champ composé est un vrai calme', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(calmBody(null), { status: 200 }))
+    );
+    const result = await run(['wind_direction_10m']);
+    const speed = result.grids!['wind_speed_10m']!;
+    const direction = result.grids!['wind_direction_10m']!;
+    expect([...speed.values].every((v) => v === 0)).toBe(true); // zéros préservés
+    expect([...direction.values].every(Number.isNaN)).toBe(true);
+    const wind = windGridFromScalars(speed, direction);
+    expect(countValidWind(wind)).toBe(12);
+  });
+
+  it('sans déclaration « facultative », une direction entièrement absente reste refusée', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(calmBody(null), { status: 200 }))
+    );
+    await expect(run()).rejects.toThrow(/entièrement invalide/);
+  });
+
+  it('la vitesse n’est JAMAIS facultative : des vitesses absentes échouent même si la direction l’est', async () => {
+    const body = JSON.stringify(
+      Array.from({ length: 12 }, () => ({
+        hourly: {
+          wind_speed_10m: [],
+          wind_direction_10m: Array(24 * 6).fill(90),
+        },
+      }))
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(body, { status: 200 }))
+    );
+    await expect(run(['wind_direction_10m'])).rejects.toThrow(/wind_speed_10m/);
   });
 });
 

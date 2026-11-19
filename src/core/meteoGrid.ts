@@ -249,7 +249,14 @@ export function parseScalarGrid(
   response: unknown,
   variable: string,
   options: MeteoGridOptions = {},
-  hourIndex = 0
+  hourIndex = 0,
+  /**
+   * Autorise une grille entièrement absente (toutes les cellules NaN). Réservé à une variable
+   * COMPAGNE dont l'absence peut être légitime : la direction du vent quand toutes les vitesses
+   * sont nulles. Le consommateur décide alors de la disponibilité de ce qu'il compose (voir
+   * `windGridFromScalars` et `assertUsableWind`). Défaut : une grille vide est refusée.
+   */
+  allowEmpty = false
 ): ScalarGrid {
   const step = options.step ?? DEFAULT_STEP;
   const maxLat = options.maxLat ?? 90;
@@ -310,7 +317,7 @@ export function parseScalarGrid(
     nLon,
     values,
   };
-  assertUsableGrid(grid, variable);
+  if (!allowEmpty) assertUsableGrid(grid, variable);
   return grid;
 }
 

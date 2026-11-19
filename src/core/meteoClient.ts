@@ -36,6 +36,12 @@ export interface MeteoGridFetchOptions {
   network?: MeteoNetworkOptions;
   /** Open-Meteo seulement, sans le service de données : les tests de ce chemin. */
   skipGalaxyData?: boolean;
+  /**
+   * Variables COMPAGNES dont une grille entièrement absente est acceptée (NaN partout), au lieu
+   * d'échouer : la direction du vent, absente à bon droit quand toutes les vitesses sont nulles.
+   * Le consommateur juge de la disponibilité de ce qu'il en compose.
+   */
+  optionalVariables?: readonly string[];
 }
 
 interface MeteoNetworkOptions {
@@ -302,7 +308,13 @@ export async function fetchMeteoGrids(
   const grids = Object.fromEntries(
     options.variables.map((variable) => [
       variable,
-      parseScalarGrid(responses, variable, gridOptions, hour),
+      parseScalarGrid(
+        responses,
+        variable,
+        gridOptions,
+        hour,
+        options.optionalVariables?.includes(variable) ?? false
+      ),
     ])
   );
   return { grids, plan, realDate };

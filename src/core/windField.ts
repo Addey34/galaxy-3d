@@ -81,6 +81,24 @@ export function windGridFromScalars(
   return { step, latMin, lonMin, nLat, nLon, u, v };
 }
 
+/** Cellules où u ET v sont finis : la disponibilité RÉELLE du vent composé. */
+export function countValidWind(grid: WindGrid): number {
+  let count = 0;
+  for (let i = 0; i < grid.u.length; i++)
+    if (Number.isFinite(grid.u[i]!) && Number.isFinite(grid.v[i]!)) count++;
+  return count;
+}
+
+/**
+ * Refuse un champ de vent sans aucune cellule disponible. Deux grilles scalaires partiellement
+ * valides, mais à disponibilités disjointes (vitesse là où la direction manque et inversement),
+ * composent un champ entièrement inconnu : il ne doit pas être présenté comme disponible.
+ */
+export function assertUsableWind(grid: WindGrid): void {
+  if (countValidWind(grid) === 0)
+    throw new Error('champ de vent entièrement indisponible');
+}
+
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
 function wrapLon(lon: number): number {

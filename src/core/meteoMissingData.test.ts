@@ -26,7 +26,13 @@ import {
   PRECIP_PALETTE,
   TEMPERATURE_PALETTE,
 } from './meteoPalette';
-import { sampleWind, windGridFromScalars, type WindGrid } from './windField';
+import {
+  assertUsableWind,
+  countValidWind,
+  sampleWind,
+  windGridFromScalars,
+  type WindGrid,
+} from './windField';
 
 const COARSE = { step: 90, maxLat: 90 }; // 3 rangées × 4 colonnes = 12 points
 const FINE = { step: 4, maxLat: 90 }; // 4 186 points en 5 lots
@@ -474,6 +480,64 @@ describe('vent : u/v inconnus plutôt qu’inventés', () => {
     const out = { u: 1, v: 1 };
     expect(sampleWind(g, 0, 0, out)).toBe(out);
     expect(out.u).toBeNaN();
+  });
+});
+
+describe('disponibilité du vent COMPOSÉ (u et v), pas des seules vitesses', () => {
+  const composed = (speed: number[], dir: number[]) =>
+    windGridFromScalars(scalar(speed), scalar(dir));
+  const N = Number.NaN;
+
+  it('champ partiel : seules les cellules où u ET v sont finis comptent', () => {
+    // vitesse manquante en 0, direction manquante en 1 (vitesse non nulle) : 2 cellules inconnues.
+    const w = composed(
+      [N, 10, ...Array(10).fill(10)],
+      [270, N, ...Array(10).fill(270)]
+    );
+    expect(countValidWind(w)).toBe(10);
+    expect(() => assertUsableWind(w)).not.toThrow();
+  });
+
+  it('disponibilités DISJOINTES : deux grilles partielles, champ composé entièrement inconnu', () => {
+    // Vitesse valide sur les cellules paires, direction valide sur les impaires.
+    const speed = Array.from({ length: 12 }, (_, i) => (i % 2 === 0 ? 10 : N));
+    const dir = Array.from({ length: 12 }, (_, i) => (i % 2 === 0 ? N : 270));
+    expect(countFiniteCells(Float32Array.from(speed))).toBe(6);
+    expect(countFiniteCells(Float32Array.from(dir))).toBe(6);
+    const w = composed(speed, dir);
+    expect(countValidWind(w)).toBe(0); // chaque grille est utilisable, pas leur composition
+    expect(() => assertUsableWind(w)).toThrow(/entièrement indisponible/);
+  });
+
+  it('vrai calme : vitesses toutes nulles et direction entièrement absente = champ DISPONIBLE', () => {
+    const w = composed(Array(12).fill(0), Array(12).fill(N));
+    expect(countValidWind(w)).toBe(12);
+    expect(() => assertUsableWind(w)).not.toThrow();
+    expect([...w.u].every((x) => x === 0)).toBe(true);
+    expect([...w.v].every((x) => x === 0)).toBe(true);
+  });
+
+  it('vitesses non nulles et direction entièrement absente = vent inconnu partout', () => {
+    const w = composed(Array(12).fill(5), Array(12).fill(N));
+    expect(countValidWind(w)).toBe(0);
+    expect(() => assertUsableWind(w)).toThrow();
+  });
+
+  it('calme local : un 0 sans direction reste un calme au milieu d’un champ partiel', () => {
+    const w = composed(
+      [0, 5, ...Array(10).fill(5)],
+      [N, N, ...Array(10).fill(90)]
+    );
+    expect(w.u[0]).toBe(0);
+    expect(w.v[0]).toBe(0);
+    expect(w.u[1]).toBeNaN(); // vitesse non nulle sans direction
+  });
+
+  it('describeMeteoGrid : validCount explicite prime sur celui des vitesses', () => {
+    const speed = scalar(Array(12).fill(10));
+    expect(describeMeteoGrid(speed).validCount).toBe(12);
+    expect(describeMeteoGrid({ ...speed, validCount: 4 }).validCount).toBe(4);
+    expect(describeMeteoGrid({ ...speed, validCount: 0 }).validCount).toBe(0);
   });
 });
 
