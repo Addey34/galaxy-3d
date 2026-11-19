@@ -421,3 +421,46 @@ describe('CameraSystem.realignAfterPositionJump (ligne 45.9)', () => {
     expect(phaseDeg(cameraSystem, body.group)).toBeLessThan(60);
   });
 });
+
+describe('CameraSystem.viewFromBody : la référence peut être une sonde (GAL-TOUR-004)', () => {
+  /**
+   * Une sonde n'est pas dans `celestialBodies` mais dans les cibles externes. La visite de la
+   * rencontre de Pluton demande « Pluton vu depuis New Horizons » : sans cette résolution, la
+   * pose ne faisait rien, en silence, et la caméra restait où le vol l'avait laissée.
+   */
+  const setup = () => {
+    const cameraSystem = new CameraSystem();
+    cameraSystem.camera = new THREE.PerspectiveCamera();
+    cameraSystem.camera.position.set(0, 0, 5);
+    cameraSystem.controls = {
+      target: new THREE.Vector3(),
+      enabled: true,
+      minPolarAngle: 0,
+      maxPolarAngle: Math.PI,
+      minDistance: 0,
+      maxDistance: 1e9,
+      getDistance: () => 3,
+      update: () => {},
+    } as unknown as CameraSystem['controls'];
+    Reflect.set(cameraSystem, 'celestialBodies', { pluto: bodyAt(0) });
+    const probe = new THREE.Group();
+    probe.position.set(10, 0, 0);
+    probe.userData['radius'] = 0.5;
+    cameraSystem.registerTargets({ 'new-horizons': { group: probe } });
+    return cameraSystem;
+  };
+
+  it('pose la caméra du côté de la sonde, à la distance courante', () => {
+    const cameraSystem = setup();
+    cameraSystem.viewFromBody('new-horizons');
+    const position = cameraSystem.camera.position;
+    expect(position.length()).toBeCloseTo(3, 6);
+    expect(position.x / position.length()).toBeCloseTo(1, 6);
+  });
+
+  it('ne fait rien pour une référence inconnue', () => {
+    const cameraSystem = setup();
+    cameraSystem.viewFromBody('inconnue');
+    expect(cameraSystem.camera.position.toArray()).toEqual([0, 0, 5]);
+  });
+});
