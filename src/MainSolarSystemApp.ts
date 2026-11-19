@@ -276,6 +276,7 @@ function wireChrome(): {
     void debugProbes?.then((m) => {
       m.setupSolarDebug(api);
       m.setupGeoDebug(api);
+      m.setupLightProbe(api);
       m.setupEarthDebug(api);
       m.setupTerminatorProbe(api);
       m.setupSurfaceProbe(api);

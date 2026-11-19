@@ -9,6 +9,7 @@
  */
 export { setupSolarDebug } from './solarDebug';
 export { setupGeoDebug } from './geoDebug';
+export { setupLightProbe } from './lightProbe';
 export { setupEarthDebug } from './earthDebug';
 export { setupTerminatorProbe } from './terminatorProbe';
 export { setupSurfaceProbe } from './surfaceProbe';
