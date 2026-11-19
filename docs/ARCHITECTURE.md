@@ -5460,8 +5460,10 @@ Les six pièces, dans l'ordre où une fiche les traverse :
 |---|---|
 | `src/registry/tours/*.json` | la visite : un titre, une suite d'étapes |
 | `src/registry/schema/tour.ts` | le schéma Zod, SEULE déclaration de la forme ; `tour.schema.json` en est généré par `pnpm schema:generate` et comparé octet pour octet |
-| `src/registry/tours/index.ts` | l'entrée/sortie : le glob, l'ordre, la conversion pure |
-| `src/config/tourScripts.ts` | la façade d'exécution, et la résolution d'un événement |
+| `src/registry/tours/index.ts` | l'ordre (`TOUR_ORDER`) et la conversion pure d'une fiche en script ; AUCUN glob |
+| `src/registry/tours/lazy.ts` | le chargeur différé : un `import()` par fiche, seul chemin de l'application vers le contenu d'une visite |
+| `src/registry/tours/all.ts`, `src/config/tourScripts.ts` | la lecture EXHAUSTIVE (glob), build et tests seulement : jamais importée par le démarrage |
+| `src/config/tourEvents.ts` | la résolution d'un événement (`resolveEventDate`) |
 | `src/core/tourEngine.ts` | le séquenceur PUR qui exécute les étapes |
 | `src/ui/tourPlayer.ts` | la carte, le sélecteur, le focus, la localisation |
 
@@ -5659,6 +5661,10 @@ par une fiche depuis dix dates de référence étalées sur une décennie, pour 
 théorique.
 
 ### Le texte d'une visite suit la voie des quatre langues
+
+> **SUPERSEDED le 2026-11-19 (GAL-TOUR-SCALE-001)** pour ce qui suit : les visites n'empruntent plus
+> les cartes de langue du catalogue. Voir § « Les visites à la demande » plus bas ; le paragraphe
+> ci-dessous décrit l'état du lot 21.
 
 Les légendes et les titres sont des blocs localisés à QUATRE langues obligatoires, comme partout
 dans le registre depuis le lot 20. Ils passent donc par la même dérivation : le navigateur ne reçoit
@@ -6695,6 +6701,57 @@ s'ouvre dans une rencontre du plan ET dans le fichier livré ; les deux témoins
 sonde s'arrête avant le niveau de 1 bar ; liens retour exacts), `e2e/built-pages.spec.ts` (l'index
 et la page de Cassini, quatre langues). `pnpm contacts:generate --check` sort en code 1 sur une
 dérive ; à rejouer après tout `pnpm ephemeris:flybys --write`.
+
+## Les visites à la demande (GAL-TOUR-SCALE-001, 2026-11-19)
+
+Une visite coûtait environ 3 ko à CHAQUE visiteur (son anglais dans `SolarSystemApp`, ses
+traductions dans trois cartes de langue), ouverte ou non. Le coût croissait avec le catalogue. Il
+est désormais borné : le démarrage ne porte qu'un catalogue léger, le contenu d'une visite arrive
+quand on la choisit.
+
+- **Une fiche reste une fiche** : `src/registry/tours/<id>.json` plus une ligne dans `order.json`,
+  schéma et validations inchangés. Ajouter une visite ne touche aucun `.ts`.
+- **Le catalogue léger** (`virtual:tour-catalogue`, greffon de `vite.config.ts`, pur dans
+  `registry/tours/catalogue.ts`) est DÉRIVÉ des fiches et de `order.json` : identifiant et titre
+  dans les quatre langues, rien d'autre. Il vit dans le morceau `tourPlayer`. Un ordre qui oublie,
+  répète ou invente une fiche fait échouer le build.
+- **Un morceau par visite** (`assets/tour-<id>-<hash>.js`), chargé par `registry/tours/lazy.ts`
+  (`import()` par fiche ; un identifiant hors `order.json` rend `null` sans rien demander). Chaque
+  morceau porte les QUATRE langues de sa fiche : changer de langue pendant une visite ne télécharge
+  rien et ne peut pas rendre une légende périmée. Les visites sont donc exclues de la dérivation du
+  texte (`SELF_CONTAINED_REGISTRY_DIRS` dans `config/catalogueText.ts`), et `catalogueText.test.ts`
+  vérifie dans les deux sens qu'aucun texte de visite ne fuit dans les cartes.
+- **Option B écartée, mesurée** (structure anglaise + texte par langue) : à l'ouverture, 7,9 ko gzip
+  contre 12,3 ko pour les sept visites, soit environ 1 ko gzip de moins pour la plus lourde, au prix
+  d'un aller-retour réseau de plus par ouverture, de 21 morceaux de plus et d'une bascule de langue
+  asynchrone. Le gain ne paie pas la complexité.
+- **Le dernier geste gagne** (`core/intentLoader.ts`, pur) : une résolution tardive d'une demande
+  remplacée ou annulée (fermeture, autre choix, `dispose`) rend `stale` et ne démarre rien ; un
+  refus n'est pas mémorisé (le clic suivant réessaie) et est annoncé (`feature.loadFailed`).
+  **Fermer le sélecteur retire sa demande** : le bouton, la croix, Échap et toute autre surface
+  masquent le sélecteur ou le popover d'aide, et `ui/tourPlayer` observe ce FAIT (`MutationObserver`
+  sur l'attribut `hidden`, sans minuterie) plutôt que chaque chemin ; une demande issue du
+  sélecteur est alors annulée et le sélecteur libéré (`aria-busy`, boutons). Un lien direct
+  `?tour=` n'a pas été demandé par un clic : la fermeture de l'aide ne l'annule pas. Tenu par
+  `e2e/built-tourOnDemand.spec.ts` (fiche retenue côté réseau, trois chemins de fermeture, échec
+  tardif, lien direct).
+- **Budget** : `tour-` est une famille de morceaux hors démarrage (`NON_BOOT_CHUNK_FAMILIES`) ; le
+  profil `tour-link` compte le lecteur ET la plus lourde fiche. `check-startup-budget.mjs` exige
+  qu'il existe un morceau `tour-<id>` par entrée de `order.json`, ni plus ni moins, et qu'aucun ne
+  soit dans la clôture du démarrage ; `registry/tours/startupGraph.test.ts` le tient depuis la
+  source. Plafond inchangé (1 306 000 o).
+- **Hors ligne** : Workbox précache tous les `*.js` du build, donc chaque `tour-<id>` y entre sans
+  réglage ; `e2e/built-tourOnDemand.spec.ts` le vérifie dans `dist/sw.js` et ouvre une visite
+  réseau coupé. Précacher n'est pas exécuter : le précache télécharge les sept fiches (≈ 29 ko) à
+  l'installation, le démarrage n'en exécute aucune.
+- **Trois choses à ne pas confondre** : (1) ce que le DÉMARRAGE de l'application exécute et
+  télécharge (le catalogue léger, dans `tourPlayer`, aucune fiche) ; (2) ce qui est chargé et
+  exécuté À LA DEMANDE (une fiche `tour-<id>`, au choix de la visite ou par `?tour=`) ; (3) ce que
+  le précache du service worker TÉLÉCHARGE sans l'exécuter (toutes les fiches, à l'installation).
+- **Dette conditionnelle, non résolue** : le catalogue léger coûte ≈ 258 o par visite (mesuré,
+  10,6 → 36,4 ko pour +100) et reste dans le morceau `tourPlayer` ; le profil `tour-link` dépasserait
+  le plafond vers 60 visites. À traiter avant ce volume (titres chargés avec le sélecteur, hors
+  `?tour=`), pas avant : le plafond n'est pas relevé.
 
 ## Les activités pour la classe (`/activities/`, lot 58, 2026-10-19)
 

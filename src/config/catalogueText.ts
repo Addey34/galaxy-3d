@@ -14,7 +14,6 @@ import { CELESTIAL_CONFIG } from './bodies';
 import { NAVIGABLE_BODIES, NAVIGABLE_TARGETS } from './navigable';
 import { FACT_SOURCE_PROVIDERS } from '@/registry/providers';
 import { SMALL_BODY_ELEMENTS } from './smallBodies';
-import { TOUR_SCRIPTS } from './tourScripts';
 import { PRESETS } from '@/registry/presets';
 import {
   DERIVED_TEXT_LOCALES,
@@ -37,9 +36,17 @@ export const TEXT_ROOTS: readonly unknown[] = [
   NAVIGABLE_TARGETS,
   FACT_SOURCE_PROVIDERS,
   SMALL_BODY_ELEMENTS,
-  TOUR_SCRIPTS,
   PRESETS,
 ];
+
+/**
+ * Les dossiers du registre dont le texte voyage AILLEURS que dans la carte du catalogue
+ * (GAL-TOUR-SCALE-001). Une visite porte ses quatre langues dans sa propre fiche, téléchargée à
+ * l'ouverture de cette visite seulement : la reposer depuis la carte du catalogue l'aurait fait
+ * payer à tout visiteur de langue non anglaise, ouverte ou non. `catalogueText.test.ts` tient la
+ * frontière dans les deux sens.
+ */
+export const SELF_CONTAINED_REGISTRY_DIRS: readonly string[] = ['tours'];
 
 /**
  * Un `import()` littéral par langue : Vite n'analyse pas un spécificateur calculé, et

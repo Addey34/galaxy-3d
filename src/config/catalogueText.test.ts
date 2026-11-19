@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { TEXT_ROOTS } from './catalogueText';
+import { SELF_CONTAINED_REGISTRY_DIRS, TEXT_ROOTS } from './catalogueText';
 import { BUILD_ONLY_DIRS } from '@/buildOnly';
 import { FACT_SOURCE_PROVIDERS } from '@/registry/providers';
 import {
@@ -172,13 +172,22 @@ function englishOf(dir: string): Set<string> {
 }
 
 describe('le texte du registre livré', () => {
-  const dirs = registryDirs();
+  const allDirs = registryDirs();
+  // Les dossiers dont le texte voyage dans leur propre morceau (visites, GAL-TOUR-SCALE-001) ne
+  // sont ni dans la carte du catalogue ni dans les racines : ils ont leur propre describe plus bas.
+  const dirs = allDirs.filter(
+    (dir) => !SELF_CONTAINED_REGISTRY_DIRS.includes(dir)
+  );
 
   it('découvre bien les dossiers de fiches', () => {
     // Borne : une découverte vide rendrait tout le reste vert sans rien prouver.
-    expect(dirs).toContain('entities');
-    expect(dirs).toContain('tours');
-    expect(dirs.length).toBeGreaterThanOrEqual(5);
+    expect(allDirs).toContain('entities');
+    expect(allDirs).toContain('tours');
+    expect(allDirs.length).toBeGreaterThanOrEqual(5);
+    for (const dir of SELF_CONTAINED_REGISTRY_DIRS)
+      expect(allDirs, `dossier autonome « ${dir} » absent du disque`).toContain(
+        dir
+      );
   });
 
   it('déclare une carte par langue dérivée', () => {
@@ -318,5 +327,58 @@ describe('le texte du registre livré', () => {
     // vrai texte non traduit. Le contrôle est donc sur la façade, pas sur les fiches.
     expect(englishStrings(FACT_SOURCE_PROVIDERS).size).toBe(0);
     expect(Object.keys(BUILD_ONLY)).toEqual(['providers']);
+  });
+});
+
+/**
+ * LES DOSSIERS AUTONOMES (GAL-TOUR-SCALE-001) : une visite porte ses quatre langues dans sa propre
+ * fiche, téléchargée à l'ouverture de CETTE visite. Si la carte du catalogue portait aussi son
+ * texte, un visiteur non anglophone le paierait deux fois, ouverte ou non, et chaque visite de plus
+ * regonflerait trois morceaux de langue. La garde tient la frontière dans les deux sens.
+ */
+describe('les dossiers du registre au texte autonome', () => {
+  /** Les textes anglais que la carte du catalogue doit porter pour d'AUTRES dossiers. */
+  const shippedElsewhere = (): Set<string> => {
+    const found = new Set<string>();
+    for (const dir of registryDirs())
+      if (!SELF_CONTAINED_REGISTRY_DIRS.includes(dir))
+        for (const text of splitOf(dir).boot) found.add(text);
+    return found;
+  };
+
+  for (const locale of DERIVED_TEXT_LOCALES)
+    it(`la carte ${locale} ne porte aucun texte propre à une visite`, async () => {
+      const map = (await MAPS[locale]()).default;
+      const elsewhere = shippedElsewhere();
+      const own: string[] = [];
+      for (const dir of SELF_CONTAINED_REGISTRY_DIRS)
+        for (const english of englishOf(dir))
+          if (!elsewhere.has(english)) own.push(english);
+      // Borne : une visite sans texte propre rendrait ce contrôle vide.
+      expect(own.length).toBeGreaterThan(30);
+      const leaked = own.filter(
+        (english) => map[textKey(english)] !== undefined
+      );
+      expect(leaked.slice(0, 3)).toEqual([]);
+    });
+
+  it('chaque bloc localisé d’une visite porte déjà les quatre langues dans sa fiche', () => {
+    let blocks = 0;
+    const visit = (value: unknown): void => {
+      if (Array.isArray(value)) return value.forEach(visit);
+      if (value === null || typeof value !== 'object') return;
+      const record = value as Record<string, unknown>;
+      if (typeof record.en === 'string') {
+        blocks += 1;
+        for (const locale of DERIVED_TEXT_LOCALES)
+          expect(typeof record[locale], `${locale} : ${record.en}`).toBe(
+            'string'
+          );
+      }
+      Object.values(record).forEach(visit);
+    };
+    for (const dir of SELF_CONTAINED_REGISTRY_DIRS)
+      fichesOf(dir).forEach(visit);
+    expect(blocks).toBeGreaterThan(30);
   });
 });

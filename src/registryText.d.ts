@@ -48,3 +48,11 @@ declare module 'virtual:registry-text/card-facts' {
   >;
   export default provenance;
 }
+
+// Le catalogue léger des visites (GAL-TOUR-SCALE-001) : identifiant et titre, dans l'ordre de
+// `order.json`, dérivé des fiches par le greffon ; lu par le lecteur de visites seulement.
+declare module 'virtual:tour-catalogue' {
+  import type { TourCatalogueEntry } from '@/registry/tours/catalogue';
+  const catalogue: readonly TourCatalogueEntry[];
+  export default catalogue;
+}

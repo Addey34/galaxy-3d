@@ -6,6 +6,7 @@ import {
   MODEL_FLOOR_QUALITY,
   NON_BOOT_CHUNKS,
   CONDITIONAL_START_PROFILES,
+  NON_BOOT_CHUNK_FAMILIES,
   TEXTURE_FLOOR_TIER,
   bootTierForFarLayer,
   classifyStartupUrl,
@@ -212,6 +213,21 @@ describe('la partition des morceaux JavaScript', () => {
     expect(new Set(out).size).toBe(out.length);
   });
 
+  it('les familles ne recouvrent aucun morceau nommé, et chacune a une raison', () => {
+    const named = [...BOOT_DYNAMIC_CHUNKS, ...NON_BOOT_CHUNKS].map(
+      (entry) => entry.chunk
+    );
+    for (const family of NON_BOOT_CHUNK_FAMILIES) {
+      expect(family.prefix).toMatch(/^[a-z]+-$/);
+      expect(family.reason.length).toBeGreaterThan(20);
+      expect(named.filter((name) => name.startsWith(family.prefix))).toEqual(
+        []
+      );
+    }
+    const prefixes = NON_BOOT_CHUNK_FAMILIES.map((family) => family.prefix);
+    expect(new Set(prefixes).size).toBe(prefixes.length);
+  });
+
   it('donne une raison à chaque morceau, et jamais un nom haché', () => {
     for (const entry of [...BOOT_DYNAMIC_CHUNKS, ...NON_BOOT_CHUNKS]) {
       expect(entry.chunk).not.toMatch(/\.js$|-[A-Za-z0-9_-]{8}$/);
@@ -228,6 +244,16 @@ describe('les démarrages conditionnels', () => {
       expect(new Set(profile.chunks).size).toBe(profile.chunks.length);
       for (const chunk of profile.chunks) expect(out).toContain(chunk);
     }
+  });
+
+  it('ne citent que des familles déclarées, et `?tour=` compte la fiche demandée', () => {
+    const prefixes = NON_BOOT_CHUNK_FAMILIES.map((family) => family.prefix);
+    for (const profile of CONDITIONAL_START_PROFILES)
+      for (const family of profile.families ?? [])
+        expect(prefixes).toContain(family);
+    const link = CONDITIONAL_START_PROFILES.find((p) => p.id === 'tour-link');
+    expect(link?.chunks).toContain('tourPlayer');
+    expect(link?.families).toEqual(['tour-']);
   });
 
   it('nomment les trois déclencheurs et leur cumul', () => {
