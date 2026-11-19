@@ -339,8 +339,8 @@ export class OrbitalMechanics {
         for (const listener of this._positionsJumpedListeners) listener();
     }
 
-    // HORS du throttle, et après lui : la phase de rotation terrestre est la seule grandeur
-    // qui doit être exacte À CHAQUE frame. Le throttle ci-dessus ne concerne que les positions
+    // HORS du throttle, et après lui : la phase de rotation de la Terre, de la Lune et de Mars
+    // (`DATED_ROTATION_BODIES`) est ce qui doit être exact À CHAQUE frame. Le throttle ci-dessus ne concerne que les positions
     // orbitales, dont l'imprécision tolérée est bornée à 0,5° d'orbite ; une erreur de phase,
     // elle, se cumulerait sans borne (cf. syncEarthSurfaceRotation).
     this.syncEarthSurfaceRotation(date);

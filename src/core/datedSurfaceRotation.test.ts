@@ -229,3 +229,109 @@ describe('OrbitalMechanics.syncDatedSurfaceRotations', () => {
     expect(Math.asin(sin) / D).toBeCloseTo(10.7, 0);
   });
 });
+
+describe('phase datée de Mars et sauts temporels (intégration)', () => {
+  const ephemeris = new EphemerisService();
+
+  function harness(): {
+    mechanics: OrbitalMechanics;
+    bodies: Record<'moon' | 'mars', FakeSurfaceBody>;
+  } {
+    const mechanics = Object.create(
+      OrbitalMechanics.prototype
+    ) as OrbitalMechanics;
+    const bodies = { moon: new FakeSurfaceBody(), mars: new FakeSurfaceBody() };
+    Object.defineProperty(mechanics, 'config', { value: CELESTIAL_CONFIG });
+    Object.defineProperty(mechanics, 'ephemeris', { value: ephemeris });
+    Object.defineProperty(mechanics, 'bodies', { value: bodies });
+    return { mechanics, bodies };
+  }
+
+  /** Positionne les corps, applique l'axe puis la phase datée, comme une image de rendu. */
+  function renderAt(h: ReturnType<typeof harness>, date: Date): void {
+    h.bodies.moon.group.position.copy(
+      ephemeris.getHeliocentricAU(Body.Moon, date)
+    );
+    h.bodies.mars.group.position.copy(
+      ephemeris.getHeliocentricAU(Body.Mars, date)
+    );
+    h.mechanics.syncAxesFromEphemeris(date);
+    h.mechanics.syncDatedSurfaceRotations(date);
+  }
+
+  /** Point subsolaire RENDU de Mars et celui de la référence IAU indépendante. */
+  function marsSubsolar(h: ReturnType<typeof harness>, date: Date) {
+    const toSun = h.bodies.mars.group.position.clone().negate().normalize();
+    const rendered = h.bodies.mars.geographicOf(toSun);
+    const t = MakeTime(date);
+    const s = GeoVector(Body.Sun, t, false);
+    const m = GeoVector(Body.Mars, t, false);
+    const ref = toBodyFixed(
+      Body.Mars,
+      date,
+      unit({ x: s.x - m.x, y: s.y - m.y, z: s.z - m.z })
+    );
+    return { rendered, refLon: lonDeg(ref), refLat: Math.asin(ref.z) / D };
+  }
+
+  const DATES = [
+    '2000-01-01T12:00:00Z',
+    '2018-07-31T00:00:00Z',
+    '2026-06-01T00:00:00Z',
+    '2026-11-19T18:00:00Z',
+  ].map((iso) => new Date(iso));
+
+  it.each(DATES.map((d) => [d.toISOString(), d] as const))(
+    'le point subsolaire rendu de Mars est celui du modèle IAU, %s',
+    (_iso, date) => {
+      const h = harness();
+      renderAt(h, date);
+      const { rendered, refLon, refLat } = marsSubsolar(h, date);
+      expect(wrap180(rendered.longitudeDeg - refLon)).toBeCloseTo(0, 1);
+      expect(rendered.latitudeDeg).toBeCloseTo(refLat, 1);
+    }
+  );
+
+  it('suit un saut de date, puis un retour en arrière, sans mémoire de la phase précédente', () => {
+    const h = harness();
+    const seen: number[] = [];
+    // Vers l'avant, vers l'arrière (temps inversé), retour au point de départ.
+    for (const date of [DATES[0], DATES[3], DATES[1], DATES[0]]) {
+      renderAt(h, date);
+      const { rendered, refLon } = marsSubsolar(h, date);
+      expect(wrap180(rendered.longitudeDeg - refLon)).toBeCloseTo(0, 1);
+      seen.push(rendered.longitudeDeg);
+    }
+    // Même date, même rendu : la phase n'est pas un cumul.
+    expect(seen[3]).toBeCloseTo(seen[0], 9);
+  });
+
+  it('ignore une phase quelconque héritée (pause, images sautées, intégration)', () => {
+    const fresh = harness();
+    renderAt(fresh, DATES[2]);
+    const dirty = harness();
+    dirty.bodies.mars.setSurfaceRotation(2.3);
+    dirty.bodies.moon.setSurfaceRotation(-4.1);
+    renderAt(dirty, DATES[2]);
+    const a = marsSubsolar(fresh, DATES[2]).rendered;
+    const b = marsSubsolar(dirty, DATES[2]).rendered;
+    expect(b.longitudeDeg).toBeCloseTo(a.longitudeDeg, 9);
+    // Rappeler la synchronisation à la même date est idempotent (une image sans temps écoulé).
+    dirty.mechanics.syncDatedSurfaceRotations(DATES[2]);
+    expect(marsSubsolar(dirty, DATES[2]).rendered.longitudeDeg).toBeCloseTo(
+      a.longitudeDeg,
+      9
+    );
+  });
+
+  it('pose la Lune et Mars indépendamment dans la même passe', () => {
+    const h = harness();
+    renderAt(h, DATES[2]);
+    const moonBefore = h.bodies.moon.geographicOf(new THREE.Vector3(1, 0, 0));
+    h.bodies.mars.setSurfaceRotation(1);
+    h.mechanics.syncDatedSurfaceRotations(DATES[2]);
+    expect(h.bodies.moon.geographicOf(new THREE.Vector3(1, 0, 0))).toEqual(
+      moonBefore
+    );
+  });
+});
