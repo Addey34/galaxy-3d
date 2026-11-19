@@ -7817,3 +7817,16 @@ un disque de 170 pixels.
 - **Gardes** : `core/textureLod.test.ts`, dont deux sur la table (un palier ne manque pas de
   texels à son bord proche, et n'est pas chargé pour un disque que le palier plus grossier couvre
   avec quatre fois de marge ; falsifiées avec l'ancienne table).
+
+## La phase de rotation des corps à modèle IAU (GAL-IMMERSION-001)
+
+La rotation propre d'un corps est posée par `CelestialObject.setSurfaceRotation`. Deux voies seulement :
+
+- **Terre** : le temps sidéral (`OrbitalMechanics.syncEarthSurfaceRotation`).
+- **Corps de `config/datedRotation.ts`** (Lune, Mars) : le méridien origine du modèle IAU, calculé par `EphemerisService.getPrimeMeridianDirection` (`RotationAxis` d'astronomy-engine : α0, δ0, W, libration lunaire comprise) puis `core/bodyRotation.primeMeridianEquatorial`, à chaque image (`OrbitalMechanics.syncDatedSurfaceRotations`).
+
+Tout autre corps n'intègre que `rotationSpeed · Δt` : bon rythme, phase arbitraire, donc longitudes de lieux non fiables. Ouvrir un corps = l'ajouter à la liste après un témoin de longitude de sa carte (`textureOrientation.test.ts`). Un corps en rotation rétrograde (main gauche autour du pôle IAU) est refusé par `getPrimeMeridianDirection`.
+
+Conventions : date UTC passée à astronomy-engine avec la convention d'échelle de temps de `core/timeScale` ; longitude Est positive, 0 au centre de la carte ; repère de la scène = écliptique J2000 (`frames.ts`) ; le point subsolaire se mesure en repère local du maillage de surface (`worldPointToGeographic`).
+
+Mesure : `node scripts/measure-surface-light.mjs --origin <url>` (hors `verify`) compare la sonde `?debug-light` (`ui/lightProbe.ts`, scène réelle) à une référence indépendante (rotations IAU `Rz·Rx·Rz`, ou `Horizon` pour la Terre). Mesuré le 2026-11-19 (PC, rendu GPU) : avant correction, Lune et Mars avaient un point subsolaire faux de 15,4° (Apollo 11), 63,6°, 107,6°… selon la date ; après, 0,00° en Exploration. En mode Éducatif la distance Soleil compressée fait diverger la direction du Soleil de ≤ 2,6° (Lune) et la face tournée vers la Terre de ≤ 4,2° (Mars) : contrat du mode, non corrigé. La régression est `src/core/datedSurfaceRotation.test.ts` (falsifiée : liste vide, 6 tests rouges).
