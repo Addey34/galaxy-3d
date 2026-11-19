@@ -217,20 +217,20 @@ test.describe('à la demande, sans service worker', () => {
         'aria-busy',
         'false'
       );
+      // Le téléchargement réussit bel et bien ; il ne démarre rien. Attente sur l'ÉVÉNEMENT réseau
+      // (pas sur `performance.getEntriesByType`, dont le tampon de 250 entrées se remplit sur le
+      // runner de CI), posée AVANT la libération pour ne pas la manquer.
+      const arrived = page.waitForEvent('requestfinished', {
+        predicate: (request) => chunkRoute('seasons').test(request.url()),
+      });
       release();
-      // Le téléchargement réussit bel et bien ; il ne démarre rien. Attente sur un FAIT : le
-      // module est arrivé (la fiche, une fois résolue, serait affichée dans la seconde).
-      await expect
-        .poll(() =>
-          page.evaluate(() =>
-            performance
-              .getEntriesByType('resource')
-              .some((e) => /\/assets\/tour-seasons-/.test(e.name))
-          )
-        )
-        .toBe(true);
+      await arrived;
+      // Deux images : la résolution de `import()` et un éventuel démarrage tardif ont eu lieu.
       await page.evaluate(
-        () => new Promise((r) => requestAnimationFrame(() => r(null)))
+        () =>
+          new Promise((r) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => r(null)))
+          )
       );
       await expect(page.locator('.stour-card')).toBeHidden();
       await page.unroute(chunkRoute('seasons'));
@@ -268,9 +268,16 @@ test.describe('à la demande, sans service worker', () => {
     await item.click();
     await expect.poll(() => held).toBe(1);
     await page.keyboard.press('Escape');
+    const failed = page.waitForEvent('requestfailed', {
+      predicate: (request) => chunkRoute('seasons').test(request.url()),
+    });
     release();
+    await failed;
     await page.evaluate(
-      () => new Promise((r) => setTimeout(() => r(null), 500))
+      () =>
+        new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => r(null)))
+        )
     );
     await expect(
       page.locator('[role="status"].sr-only').first()
