@@ -437,6 +437,9 @@ export const fr: Record<MessageKey, string> = {
   // ── Couches météo ──
   'weather.title': 'Couches météo',
   'weather.trigger.aria': 'Couches météo',
+  'weather.inspect.toggle': 'Inspecter un point',
+  'weather.inspect.hint':
+    'Lire la météo des couches actives en un point du globe.',
   'weather.dialog.aria': 'Couches météo',
   'weather.clouds': 'Nuages (NASA)',
   'weather.cloudsModel': 'Nuages (modèle)',

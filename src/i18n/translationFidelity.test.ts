@@ -78,6 +78,20 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'credits.satellites':
     '« Satellites » s’écrit pareil en anglais et en français',
   'weather.humidityModel.lo': 'nombre + unité SI',
+  // Inspecteur météo : abréviations et noms qui s'écrivent pareil dans la langue.
+  'inspect.lat': '« Latitude » s’écrit pareil en anglais et en français',
+  'inspect.lon': '« Longitude » s’écrit pareil en anglais et en portugais',
+  'inspect.meta.source': '« Source » s’écrit pareil en anglais et en français',
+  'inspect.meta.nature': '« Nature » s’écrit pareil en anglais et en français',
+  'inspect.dir.N':
+    'point cardinal « N » : même lettre en anglais, français, espagnol et portugais',
+  'inspect.dir.NE':
+    'point cardinal « NE » : même sigle dans les quatre langues',
+  'inspect.dir.E':
+    'point cardinal « E » : même lettre en anglais, français et espagnol',
+  'inspect.dir.SE':
+    'point cardinal « SE » : même sigle dans les quatre langues',
+  'inspect.dir.S': 'point cardinal « S » : même lettre dans les quatre langues',
   'weather.humidityModel.hi': 'nombre + unité SI',
   // Noms de villes : le nom français, espagnol ou portugais est celui de l'anglais.
   'bi.cities.name.lyon-bdtopo':
