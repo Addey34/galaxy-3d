@@ -1,0 +1,76 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "mars-valles-olympus",
+  "title": {
+    "en": "Mars: Valles Marineris and Olympus Mons",
+    "fr": "Mars : Valles Marineris et Olympus Mons",
+    "es": "Marte: Valles Marineris y Olympus Mons",
+    "pt-BR": "Marte: Valles Marineris e Olympus Mons"
+  },
+  "steps": [
+    {
+      "kind": "flyTo",
+      "body": "mars"
+    },
+    {
+      "kind": "setTimeScale",
+      "scale": 1
+    },
+    {
+      "kind": "diveTo",
+      "place": "Valles Marineris",
+      "frameKm": 1600
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Valles Marineris, named for the Mariner 9 team and described by the IAU as a system of canyons. It is listed at 3,761 km, a size on the map and not a depth. The surface is the Viking mosaic, images taken between 1976 and 1980; its colour is processed, not what an eye would see.",
+        "fr": "Valles Marineris, nommé d’après l’équipe de Mariner 9 et décrit par l’UAI comme un système de canyons. Il est listé à 3 761 km, une taille sur la carte et non une profondeur. La surface est la mosaïque Viking, des images prises entre 1976 et 1980 ; sa couleur est traitée, ce n’est pas ce que verrait l’œil.",
+        "es": "Valles Marineris, nombrado en honor al equipo de Mariner 9 y descrito por la UAI como un sistema de cañones. Figura con 3 761 km, un tamaño sobre el mapa y no una profundidad. La superficie es el mosaico de Viking, imágenes tomadas entre 1976 y 1980; su color está procesado, no es lo que vería el ojo.",
+        "pt-BR": "Valles Marineris, nomeado em homenagem à equipe da Mariner 9 e descrito pela UAI como um sistema de cânions. Consta com 3 761 km, um tamanho no mapa e não uma profundidade. A superfície é o mosaico Viking, imagens feitas entre 1976 e 1980; sua cor é processada, não é o que o olho veria."
+      }
+    },
+    {
+      "kind": "diveTo",
+      "place": "Melas Chasma",
+      "frameKm": 350
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Melas Chasma. In the IAU nomenclature a chasma is a deep, elongated, steep-sided depression; this one is listed at 563.5 km, a size on the map and not a depth. Around it the app draws finer relief, measured by the MOLA laser altimeter between 1997 and 2001.",
+        "fr": "Melas Chasma. Dans la nomenclature de l’UAI, une chasma est une dépression profonde, allongée, aux flancs abrupts ; celle-ci est listée à 563,5 km, une taille sur la carte et non une profondeur. Autour d’elle, l’application dessine un relief plus fin, mesuré par l’altimètre laser MOLA entre 1997 et 2001.",
+        "es": "Melas Chasma. En la nomenclatura de la UAI, una chasma es una depresión profunda, alargada y de laderas escarpadas; esta figura con 563,5 km, un tamaño sobre el mapa y no una profundidad. A su alrededor la aplicación dibuja un relieve más fino, medido por el altímetro láser MOLA entre 1997 y 2001.",
+        "pt-BR": "Melas Chasma. Na nomenclatura da UAI, uma chasma é uma depressão profunda, alongada e de encostas íngremes; esta consta com 563,5 km, um tamanho no mapa e não uma profundidade. Ao redor dela o aplicativo desenha um relevo mais fino, medido pelo altímetro a laser MOLA entre 1997 e 2001."
+      }
+    },
+    {
+      "kind": "diveTo",
+      "place": "Olympus Rupes",
+      "frameKm": 800
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Olympus Rupes. In the IAU nomenclature a rupes is a scarp, a cliff. This one is listed at 1,914.8 km, a size on the map and not a height. Next, closer to Olympus Mons: pale cliff-like lines run along its edge.",
+        "fr": "Olympus Rupes. Dans la nomenclature de l’UAI, une rupes est un escarpement. Celui-ci est listé à 1 914,8 km, une taille sur la carte et non une hauteur. Ensuite, plus près d’Olympus Mons : des lignes claires, semblables à des falaises, courent le long de son bord.",
+        "es": "Olympus Rupes. En la nomenclatura de la UAI, una rupes es un escarpe. Este figura con 1 914,8 km, un tamaño sobre el mapa y no una altura. A continuación, más cerca de Olympus Mons: unas líneas claras, parecidas a acantilados, recorren su borde.",
+        "pt-BR": "Olympus Rupes. Na nomenclatura da UAI, uma rupes é um escarpamento. Este consta com 1 914,8 km, um tamanho no mapa e não uma altura. A seguir, mais perto de Olympus Mons: linhas claras, semelhantes a penhascos, correm ao longo de sua borda."
+      }
+    },
+    {
+      "kind": "diveTo",
+      "place": "Olympus Mons",
+      "frameKm": 300
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Olympus Mons, a mountain in the IAU nomenclature, listed with a diameter of 610.1 km. That is a size on the map, not a height. Here the app draws relief measured by the MOLA laser altimeter around the mountain. The name Olympus Rupes on the screen marks the centre point the gazetteer gives that scarp, not the cliff itself.",
+        "fr": "Olympus Mons, une montagne dans la nomenclature de l’UAI, listée avec un diamètre de 610,1 km. C’est une taille sur la carte, pas une hauteur. Ici l’application dessine le relief mesuré par l’altimètre laser MOLA autour de la montagne. Le nom Olympus Rupes à l’écran marque le point central que le répertoire donne à cet escarpement, pas la falaise elle-même.",
+        "es": "Olympus Mons, una montaña en la nomenclatura de la UAI, catalogada con un diámetro de 610,1 km. Es un tamaño sobre el mapa, no una altura. Aquí la aplicación dibuja el relieve medido por el altímetro láser MOLA alrededor de la montaña. El nombre Olympus Rupes en pantalla marca el punto central que el catálogo asigna a ese escarpe, no el acantilado en sí.",
+        "pt-BR": "Olympus Mons, uma montanha na nomenclatura da UAI, catalogada com um diâmetro de 610,1 km. É um tamanho no mapa, não uma altura. Aqui o aplicativo desenha o relevo medido pelo altímetro a laser MOLA ao redor da montanha. O nome Olympus Rupes na tela marca o ponto central que o catálogo dá a esse escarpamento, não o penhasco em si."
+      }
+    }
+  ]
+}
