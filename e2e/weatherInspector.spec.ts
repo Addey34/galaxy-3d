@@ -423,31 +423,135 @@ test('opening and closing repeatedly leaves one card, one marker and no DOM chur
   expect(mock.requests()).toBe(requests);
 });
 
+/**
+ * Le morceau de l'inspecteur est servi sous la main du test : `hold` retient sa réponse jusqu'à
+ * `release()`, `refuse` la fait échouer une fois. La résolution devient déterministe, sans attente
+ * chronométrée.
+ */
+async function controlChunk(page: Page) {
+  const asked: string[] = [];
+  let gate: Promise<void> | null = null;
+  let open: (() => void) | null = null;
+  let refusals = 0;
+  await page.route(/weatherInspector/, async (route) => {
+    asked.push(route.request().url());
+    if (gate) await gate;
+    if (refusals > 0) {
+      refusals--;
+      await route.abort('failed');
+      return;
+    }
+    await route.continue();
+  });
+  return {
+    asked: () => asked.length,
+    hold() {
+      gate = new Promise<void>((resolve) => (open = resolve));
+    },
+    release() {
+      open?.();
+      gate = null;
+    },
+    refuse(count = 1) {
+      refusals = count;
+    },
+  };
+}
+
 test('the inspector chunk is not requested before activation, and repeated clicks before it resolves end on the last intent', async ({
   page,
 }) => {
-  const asked: string[] = [];
-  page.on('request', (request) => {
-    if (/weatherInspector/.test(request.url())) asked.push(request.url());
-  });
+  const chunk = await controlChunk(page);
   await boot(page);
   await openPanel(page);
   await layerOn(page, 'Air temperature (model)');
-  expect(asked).toEqual([]);
+  expect(chunk.asked()).toBe(0);
 
-  // Deux clics avant la résolution de l'import : l'intention finale est « éteint ».
+  // Deux clics pendant que la réponse du module est retenue : l'intention finale est « éteint ».
+  chunk.hold();
   const toggle = page.locator('#weather-inspect-toggle');
   await toggle.dblclick();
-  await expect.poll(() => asked.length).toBeGreaterThan(0);
-  await page.waitForTimeout(1500);
+  await expect.poll(() => chunk.asked()).toBeGreaterThan(0);
+  chunk.release();
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await page.waitForTimeout(500);
   await expect(card(page)).toBeHidden();
 
-  // Trois clics : allumé. Le morceau n'est demandé qu'une fois (déjà en cache de module).
-  const before = asked.length;
-  await toggle.click({ clickCount: 1 });
-  await toggle.dblclick();
+  // Un clic seul, le module déjà chargé : allumé, et le morceau n'est pas redemandé.
+  const before = chunk.asked();
+  await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(card(page)).toBeVisible();
-  expect(asked.length).toBe(before);
+  expect(chunk.asked()).toBe(before);
+});
+
+test('a refused module is announced without an unhandled rejection, then a click retries', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  const chunk = await controlChunk(page);
+  await boot(page);
+  await openPanel(page);
+  await layerOn(page, 'Air temperature (model)');
+  const toggle = page.locator('#weather-inspect-toggle');
+
+  chunk.refuse(1);
+  await toggle.click();
+  await expect.poll(() => chunk.asked()).toBeGreaterThan(0);
+  // Le mécanisme commun dit l'échec (région d'annonce unique), l'intention retombe.
+  await expect(page.locator('body > p[role="status"]')).toContainText(
+    /could not be loaded/,
+    { timeout: 10_000 }
+  );
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(card(page)).toBeHidden();
+  expect(errors).toEqual([]);
+
+  // Le clic suivant réessaie : le module est servi cette fois.
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(card(page)).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('a module that resolves after the body changed does not arm the inspector elsewhere', async ({
+  page,
+}) => {
+  const chunk = await controlChunk(page);
+  await boot(page);
+  await openPanel(page);
+  await layerOn(page, 'Air temperature (model)');
+  const toggle = page.locator('#weather-inspect-toggle');
+
+  chunk.hold();
+  await toggle.click();
+  await expect.poll(() => chunk.asked()).toBeGreaterThan(0);
+  await page
+    .locator('#orbit-mars')
+    .evaluate((el) => (el as HTMLElement).click());
+  await expect(page.locator('#orbit-mars')).toHaveClass(/is-active/);
+  // La carte n'a pas le droit de s'ouvrir, même un instant : on observe son attribut `hidden`.
+  await page.evaluate(() => {
+    (window as unknown as { __wiOpened: boolean }).__wiOpened = false;
+    new MutationObserver(() => {
+      const c = document.getElementById('weather-inspector');
+      if (c && !c.hidden)
+        (window as unknown as { __wiOpened: boolean }).__wiOpened = true;
+    }).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['hidden'],
+    });
+  });
+  chunk.release();
+  await page.waitForTimeout(1500);
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __wiOpened: boolean }).__wiOpened
+    )
+  ).toBe(false);
+  await expect(card(page)).toBeHidden();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
 });

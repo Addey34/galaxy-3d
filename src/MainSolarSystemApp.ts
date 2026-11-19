@@ -20,6 +20,7 @@ import { loadDeferredMessages } from './i18n/deferredMessages';
 import { bodyDisplayName } from './i18n/bodyText';
 import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
+import { announceLoadFailure } from './ui/loadFailure';
 import { setupFullscreen } from './ui/fullscreen';
 import {
   setupSceneMotionState,
@@ -629,7 +630,15 @@ function wireChrome(): {
         inspectWanted = loaded.isArmed();
       };
       if (inspector) apply(inspector);
-      else void loadInspector().then(apply);
+      else
+        void loadInspector().then(apply, (error: unknown) => {
+          // Import refusé (réseau, morceau absent) : l'intention retombe, le visiteur est prévenu
+          // par le mécanisme commun, et le prochain clic réessaie (`inspectorLoading` est vidé).
+          // WebKit garde l'échec en mémoire : le second message le dit (`ui/loadFailure`).
+          inspectWanted = false;
+          Logger.warn(`[Météo] inspecteur indisponible : ${String(error)}`);
+          announceLoadFailure('weather-inspector');
+        });
     });
     setupBodyPicker(
       sceneSystem.scene,

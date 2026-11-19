@@ -9,10 +9,10 @@
  * indépendante de celle qui est RENDUE : le point choisi tomberait à côté des continents sans que
  * rien ne se voie sur une capture isolée.
  *
- * Le rayon est coupé avec une SPHÈRE, pas avec les meshes : les couches (nuages, atmosphère) ont un
- * rayon supérieur, et un mesh de nuages touché décalerait le point par parallaxe. Le rayon de la
- * sphère est relu au point touché (`surfacePointToWorld`), donc l'aplatissement de l'ellipsoïde est
- * pris en compte en deux passes.
+ * Le rayon est coupé avec l'ELLIPSOÏDE de la surface, pas avec les meshes : les couches (nuages,
+ * atmosphère) ont un rayon supérieur, et un mesh de nuages touché décalerait le point par parallaxe.
+ * Les demi-axes se lisent par `surfacePointToWorld` (équateur à 0° et 90°, pôle), donc
+ * l'aplatissement du corps est pris en compte exactement, sans itération.
  */
 import * as THREE from 'three';
 
@@ -62,26 +62,59 @@ export function bodyCenter(body: SurfaceBody): THREE.Vector3 {
 }
 
 /**
- * Latitude / longitude du point de la surface visé par un rayon, ou `null` s'il la manque.
- * `direction` doit être unitaire.
+ * Premier point où le rayon entre dans l'ELLIPSOÏDE du corps (demi-axes portés par les trois
+ * rayons mesurés : équateur à 0° et à 90° de longitude, pôle nord), ou `null`. Exact, en une
+ * résolution : on passe dans le repère des axes où l'ellipsoïde devient la sphère unité, on coupe
+ * cette sphère, et le paramètre du rayon est le même dans les deux repères.
+ */
+export function rayEllipsoidHit(
+  origin: THREE.Vector3,
+  direction: THREE.Vector3,
+  center: THREE.Vector3,
+  axisX: THREE.Vector3,
+  axisY: THREE.Vector3,
+  axisZ: THREE.Vector3
+): THREE.Vector3 | null {
+  const axes = [axisX, axisY, axisZ];
+  const lengths = axes.map((axis) => axis.length());
+  if (lengths.some((length) => !(length > 0))) return null;
+  const oc = origin.clone().sub(center);
+  const o = axes.map((axis, k) => oc.dot(axis) / (lengths[k]! * lengths[k]!));
+  const d = axes.map(
+    (axis, k) => direction.dot(axis) / (lengths[k]! * lengths[k]!)
+  );
+  const a = d[0]! ** 2 + d[1]! ** 2 + d[2]! ** 2;
+  const b = o[0]! * d[0]! + o[1]! * d[1]! + o[2]! * d[2]!;
+  const c = o[0]! ** 2 + o[1]! ** 2 + o[2]! ** 2 - 1;
+  const discriminant = b * b - a * c;
+  if (!(a > 0) || discriminant < 0) return null;
+  const distance = (-b - Math.sqrt(discriminant)) / a;
+  if (distance < 0) return null;
+  return origin.clone().addScaledVector(direction, distance);
+}
+
+/**
+ * Latitude / longitude du point de la surface visé par un rayon, ou `null` s'il manque
+ * l'ellipsoïde (un rayon qui frôle la sphère équatoriale sans toucher la surface aplatie ne
+ * choisit rien). `direction` doit être unitaire.
  */
 export function pickGeographic(
   origin: THREE.Vector3,
   direction: THREE.Vector3,
   body: SurfaceBody
 ): GeographicPoint | null {
-  const center = bodyCenter(body);
-  // Passe 1 : rayon équatorial. Passe 2 : rayon relu à la latitude touchée (aplatissement).
-  let radius = body.surfacePointToWorld(0, 0).distanceTo(center);
-  let hit = raySphereHit(origin, direction, center, radius);
-  if (!hit) return null;
-  const first = body.worldPointToGeographic(hit);
-  radius = body
-    .surfacePointToWorld(first.latitudeDeg, first.longitudeDeg)
-    .distanceTo(center);
-  hit = raySphereHit(origin, direction, center, radius);
-  if (!hit) return first;
-  return body.worldPointToGeographic(hit);
+  const north = body.surfacePointToWorld(90, 0);
+  const south = body.surfacePointToWorld(-90, 0);
+  const center = north.clone().add(south).multiplyScalar(0.5);
+  const hit = rayEllipsoidHit(
+    origin,
+    direction,
+    center,
+    body.surfacePointToWorld(0, 0).sub(center),
+    body.surfacePointToWorld(0, 90).sub(center),
+    north.sub(center)
+  );
+  return hit ? body.worldPointToGeographic(hit) : null;
 }
 
 /**

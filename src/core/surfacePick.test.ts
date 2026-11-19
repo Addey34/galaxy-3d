@@ -272,3 +272,191 @@ describe('isFacingCamera : occlusion derrière le globe', () => {
     expect(isFacingCamera(after, center, camera)).toBe(false);
   });
 });
+
+/**
+ * AUD-02 : la Terre n'est pas une sphère. Un corps ellipsoïdal (même modèle que
+ * `figureRadius` : x = a, z = b, y = pôle c) dont le rayon dépend de la direction, avec la vraie
+ * Terre (1/298) ET un aplatissement exagéré (1/10) pour que l'écart se voie à l'échelle du test.
+ */
+function makeEllipsoidBody(options: {
+  position: THREE.Vector3;
+  tilt: THREE.Quaternion;
+  phase: number;
+  a: number;
+  b: number;
+  c: number;
+}): SurfaceBody {
+  const group = new THREE.Group();
+  group.position.copy(options.position);
+  const tilt = new THREE.Group();
+  tilt.quaternion.copy(options.tilt);
+  const mesh = new THREE.Group();
+  mesh.rotation.y = options.phase;
+  group.add(tilt);
+  tilt.add(mesh);
+  group.updateMatrixWorld(true);
+  const { a, b, c } = options;
+  return {
+    surfacePointToWorld(lat, lon, out = new THREE.Vector3()) {
+      geographicToLocalDirection(lat, lon, out);
+      const r =
+        1 / Math.sqrt((out.x / a) ** 2 + (out.z / b) ** 2 + (out.y / c) ** 2);
+      return mesh.localToWorld(out.multiplyScalar(r));
+    },
+    worldPointToGeographic(point) {
+      return localDirectionToGeographic(mesh.worldToLocal(point.clone()));
+    },
+  };
+}
+
+describe('pickGeographic : corps ellipsoïdal (AUD-02)', () => {
+  const figures = [
+    { name: 'Terre 1/298', a: 35, b: 35, c: 35 * (1 - 1 / 298) },
+    { name: 'aplatissement 1/10', a: 35, b: 35, c: 31.5 },
+    { name: 'triaxial', a: 35, b: 33, c: 30 },
+  ];
+  const poses = [
+    { position: new THREE.Vector3(), tilt: new THREE.Quaternion(), phase: 0 },
+    {
+      position: new THREE.Vector3(1234, -56, 789),
+      tilt: tiltOf(23.44),
+      phase: 1.234,
+    },
+    { position: new THREE.Vector3(-300, 40, 5), tilt: tiltOf(-80), phase: 5.5 },
+  ];
+  const places: Array<[number, number]> = [
+    [48.8566, 2.3522],
+    [-33.8688, 151.2093],
+    [-0.18, -78.4678],
+    [21.3069, -157.8583],
+    [64.1466, -21.9426],
+    [89.5, 10],
+    [-89.5, -170],
+    [10, 179.9],
+    [10, -179.9],
+  ];
+
+  for (const fig of figures)
+    describe(fig.name, () => {
+      it('impacts valides : le rayon pointé sur (lat, lon) y retombe', () => {
+        for (const pose of poses) {
+          const body = makeEllipsoidBody({ ...pose, ...fig });
+          const center = bodyCenter(body);
+          for (const [lat, lon] of places) {
+            const target = body.surfacePointToWorld(lat, lon);
+            const normal = target.clone().sub(center);
+            // Une caméra du côté du point (loin) : le point est face à elle.
+            const camera = target
+              .clone()
+              .add(normal.normalize().multiplyScalar(400));
+            const { origin, direction } = rayTo(camera, target);
+            const hit = pickGeographic(origin, direction, body);
+            expect(hit, `${lat},${lon}`).not.toBeNull();
+            expect(
+              angularDistanceDeg(hit!, { latitudeDeg: lat, longitudeDeg: lon })
+            ).toBeLessThan(1e-3);
+          }
+        }
+      });
+
+      it('un rayon qui touche la sphère équatoriale mais manque l’ellipsoïde ne choisit rien', () => {
+        // Hors rotation : rayon horizontal (axe x) à la hauteur h le long de l’axe polaire,
+        // entre le demi-axe polaire c et le demi-axe équatorial a.
+        const body = makeEllipsoidBody({
+          position: new THREE.Vector3(),
+          tilt: new THREE.Quaternion(),
+          phase: 0,
+          ...fig,
+        });
+        const h = (fig.c + fig.a) / 2;
+        if (h > fig.c && h < fig.a) {
+          const hit = pickGeographic(
+            new THREE.Vector3(-1000, h, 0),
+            new THREE.Vector3(1, 0, 0),
+            body
+          );
+          expect(hit).toBeNull();
+        }
+        // Et un rayon légèrement plus bas touche bien.
+        const inside = pickGeographic(
+          new THREE.Vector3(-1000, fig.c * 0.9, 0),
+          new THREE.Vector3(1, 0, 0),
+          body
+        );
+        expect(inside).not.toBeNull();
+      });
+
+      it('près du limbe : le point lu est exactement sur la surface, et vu de face', () => {
+        const body = makeEllipsoidBody({ ...poses[1]!, ...fig });
+        const center = bodyCenter(body);
+        const camera = center.clone().add(new THREE.Vector3(60, 15, 190));
+        let checked = 0;
+        for (let lat = -80; lat <= 80; lat += 4)
+          for (let lon = -180; lon < 180; lon += 6) {
+            const target = body.surfacePointToWorld(lat, lon);
+            const normal = target.clone().sub(center).normalize();
+            const cosine = normal.dot(camera.clone().sub(target).normalize());
+            if (cosine <= 0.004 || cosine > 0.08) continue; // la bande du limbe
+            const { origin, direction } = rayTo(camera, target);
+            const hit = pickGeographic(origin, direction, body);
+            // Près du limbe un autre point de la surface peut être touché le premier : alors il est
+            // lui aussi vu de face, et le rayon passe par lui.
+            if (!hit) continue;
+            const back = body.surfacePointToWorld(
+              hit.latitudeDeg,
+              hit.longitudeDeg
+            );
+            const toBack = back.clone().sub(origin).normalize();
+            expect(toBack.angleTo(direction)).toBeLessThan(1e-5);
+            expect(isFacingCamera(back, center, camera)).toBe(true);
+            checked++;
+          }
+        expect(checked).toBeGreaterThan(10);
+      });
+
+      it('occultation : viser la face cachée lit le point de la face avant', () => {
+        const body = makeEllipsoidBody({ ...poses[1]!, ...fig });
+        const center = bodyCenter(body);
+        const camera = center.clone().add(new THREE.Vector3(0, 0, 300));
+        const far = body.surfacePointToWorld(10, 0);
+        const side = far.clone().sub(center);
+        // Un point de l'hémisphère opposé à la caméra.
+        const hidden = center.clone().sub(side.normalize().multiplyScalar(20));
+        const target = body.surfacePointToWorld(
+          body.worldPointToGeographic(hidden).latitudeDeg,
+          body.worldPointToGeographic(hidden).longitudeDeg
+        );
+        expect(isFacingCamera(target, center, camera)).toBe(
+          target.clone().sub(center).dot(camera.clone().sub(target)) > 0
+        );
+        const { origin, direction } = rayTo(camera, target);
+        const hit = pickGeographic(origin, direction, body)!;
+        const point = body.surfacePointToWorld(
+          hit.latitudeDeg,
+          hit.longitudeDeg
+        );
+        expect(isFacingCamera(point, center, camera)).toBe(true);
+      });
+    });
+
+  it('coïncide avec la sphère quand les trois demi-axes sont égaux', () => {
+    const sphere = makeBody({
+      position: new THREE.Vector3(5, 6, 7),
+      tilt: tiltOf(23.44),
+      phase: 2,
+    });
+    const same = makeEllipsoidBody({
+      position: new THREE.Vector3(5, 6, 7),
+      tilt: tiltOf(23.44),
+      phase: 2,
+      a: RADIUS,
+      b: RADIUS,
+      c: RADIUS,
+    });
+    const origin = new THREE.Vector3(5, 6, 400);
+    const direction = new THREE.Vector3(0.03, -0.02, -1).normalize();
+    const p1 = pickGeographic(origin, direction, sphere)!;
+    const p2 = pickGeographic(origin, direction, same)!;
+    expect(angularDistanceDeg(p1, p2)).toBeLessThan(1e-9);
+  });
+});
