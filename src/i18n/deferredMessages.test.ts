@@ -28,7 +28,7 @@ const DEFERRED_READERS: Record<string, string> = {
   'ui/paletteSearch.ts': 'paletteSearch',
   'ui/exoplanetCard.ts': 'exoplanetCard',
   'ui/deepSkyCard.ts': 'deepSkyCard',
-  'ui/formationMarker.ts': 'lookAtFormation',
+  'ui/formationMarker.ts': 'formationMarker',
   'components/surface/compareCurtain.ts': 'compareCurtain',
   'ui/weatherInspector.ts': 'weatherInspector',
   'core/inspectDisplay.ts': 'weatherInspector',

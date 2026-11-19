@@ -58,6 +58,9 @@ function localizedText(text: LocalizedText): string {
   return text[getLocale()] ?? text.en;
 }
 
+/** Même seuil que le repli de la fiche (`ui/bodyInfo`). */
+const NARROW_QUERY = '(max-width: 640px)';
+
 export function setupTourPlayer(
   camera: CameraSystem,
   om: OrbitalMechanics,
@@ -406,7 +409,14 @@ export function setupTourPlayer(
     showOverlay();
 
     const host: TourRuntimeHost = {
-      flyTo: (body) => navigation.selectBody(body),
+      flyTo: (body) => {
+        navigation.selectBody(body);
+        // Sur téléphone la fiche que la sélection ouvre réduit la scène à une bande sous la carte
+        // de visite (mesuré le 2026-11-19, 390 px : fiche y 52 à 224). La visite l'a ouverte
+        // elle-même : la replier rend l'état d'avant ; le corps reste sélectionné et le
+        // bouton ⓘ la rouvre. Hors téléphone, la fiche reste (la place ne manque pas).
+        if (window.matchMedia(NARROW_QUERY).matches) overlays.closeAll();
+      },
       isFlying: () => camera.isFlying,
       viewFrom: (body) => camera.viewFromBody(body),
       viewBeside: (body) => camera.viewBesideBody(body),

@@ -60,6 +60,9 @@ export interface CameraTarget {
  */
 const CO_ROTATION_RADII = 1.1;
 
+/** Durée (s) du retour du relevé vers l'horizon après une plongée, au premier geste. */
+const TILT_RELEASE_S = 0.6;
+
 // Bornes de durée du vol caméra (ms). La durée réelle est proportionnelle à la distance
 // parcourue, resserrée entre ces bornes : un court saut reste vif, un long voyage posé.
 // Le plafond conserve l'ancien ressenti du vol long (1,2 s) désormais réservé aux grands trajets.
@@ -98,6 +101,14 @@ export class CameraSystem {
   } | null = null;
   /** Keeps the selected label while a mode morph temporarily freezes camera tracking. */
   private trackingPaused = false;
+  /**
+   * Part (0 à 1) du relevé vers l'horizon qui s'applique (`_tiltTowardsHorizon`). 1 en navigation
+   * libre ; une plongée sur un lieu la met à 0 pour que le lieu visé reste AU CENTRE de l'image
+   * (mesuré : à 150 km d'altitude le relevé le rejetait sous le bord de l'écran). Elle remonte
+   * en ~0,6 s au premier geste de l'utilisateur, jamais d'un coup.
+   */
+  private _tiltShare = 1;
+  private _tiltHeld = false;
   private _opticalFov = CAMERA_SETTINGS.opticalMaxFov;
   private _scaleMode: 'educ' | 'explo' = 'educ';
   /** Rayon à ne pas traverser pour le zoom par altitude ; 0 sans corps suivi. */
@@ -141,6 +152,10 @@ export class CameraSystem {
     this.controls.rotateSpeed = CAMERA_CONTROLS_SETTINGS.rotateSpeed;
     this.controls.zoomSpeed = CAMERA_CONTROLS_SETTINGS.zoomSpeed;
     this.controls.target.set(0, 0, 0);
+    // Un geste de l'utilisateur rend le relevé vers l'horizon (cf. `holdLevelView`).
+    this.controls.addEventListener('start', () => {
+      this._tiltHeld = false;
+    });
     this._zoomByAltitude();
   }
 
@@ -240,6 +255,8 @@ export class CameraSystem {
       this._scaleMode === 'explo' ? this._opticalFov : CAMERA_SETTINGS.focusFov
     );
     this.trackingPaused = false;
+    this._tiltHeld = false;
+    this._tiltShare = 1;
     body.updateWorldMatrix(true, false);
     body.getWorldPosition(this.targetWorldPosition);
     this._recordSunSide();
@@ -481,6 +498,16 @@ export class CameraSystem {
   }
 
   /** Appelé chaque frame : maintient la caméra collée au corps suivi pendant qu'il orbite. */
+  /**
+   * Garde la visée sur le centre du corps (pas de relevé vers l'horizon) : le lieu d'une plongée
+   * reste au centre de l'image. Levée par le premier geste sur la caméra, ou par un autre corps ;
+   * l'inclinaison revient alors progressivement.
+   */
+  holdLevelView(): void {
+    this._tiltHeld = true;
+    this._tiltShare = 0;
+  }
+
   update(_delta: number): void {
     if (!this.controls) return;
     // Session XR active : renderer.xr pilote seul la pose caméra depuis le casque. Continuer
@@ -510,6 +537,8 @@ export class CameraSystem {
       this.refreshApproachBounds();
     }
 
+    if (!this._tiltHeld && this._tiltShare < 1)
+      this._tiltShare = Math.min(1, this._tiltShare + _delta / TILT_RELEASE_S);
     this._updateClipPlanes();
     this.controls.update();
     this._tiltTowardsHorizon();
@@ -568,7 +597,7 @@ export class CameraSystem {
       (this.currentTarget?.group.userData['radius'] as number | undefined) ??
       0;
     const tilt = horizonTiltRad(distance, ground, this.camera.fov);
-    if (tilt > 0) this.camera.rotateX(tilt);
+    if (tilt > 0) this.camera.rotateX(tilt * this._tiltShare);
   }
 
   /**

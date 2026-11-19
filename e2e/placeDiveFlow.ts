@@ -20,7 +20,7 @@ async function approachUntilNamed(page: Page): Promise<void> {
 export async function diveByTapping(
   page: Page,
   tap: (x: number, y: number) => Promise<void>
-): Promise<void> {
+): Promise<string> {
   await page.goto(`/?body=moon&date=${MOON_SCENE_DATE}`);
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
   await waitForCalmMainThread(page);
@@ -48,4 +48,5 @@ export async function diveByTapping(
   await expect(page.locator('[role="status"].sr-only').first()).toContainText(
     `Diving to ${name}`
   );
+  return name!;
 }
