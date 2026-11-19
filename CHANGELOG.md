@@ -35,6 +35,7 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 - **Les visites guidées ne pèsent plus sur le démarrage.** Le contenu d'une visite n'est téléchargé
   qu'au moment où on la choisit (y compris par `?tour=`), et fonctionne ensuite hors ligne. Le
   démarrage perd 18 ko de JavaScript, et ajouter une visite ne l'alourdit plus.
+  Fermer le sélecteur avant l'arrivée d'une visite l'annule : elle ne démarre plus après coup.
 - **Le démarrage est plus léger qu'avec deux langues.** Un visiteur ne télécharge que la langue
   qu'il lit : 1 193 725 octets de JavaScript pour un anglophone, contre 1 225 609 auparavant, alors
   que deux langues se sont ajoutées. Le texte du catalogue, jusqu'ici embarqué dans toutes ses

@@ -6728,6 +6728,13 @@ quand on la choisit.
 - **Le dernier geste gagne** (`core/intentLoader.ts`, pur) : une résolution tardive d'une demande
   remplacée ou annulée (fermeture, autre choix, `dispose`) rend `stale` et ne démarre rien ; un
   refus n'est pas mémorisé (le clic suivant réessaie) et est annoncé (`feature.loadFailed`).
+  **Fermer le sélecteur retire sa demande** : le bouton, la croix, Échap et toute autre surface
+  masquent le sélecteur ou le popover d'aide, et `ui/tourPlayer` observe ce FAIT (`MutationObserver`
+  sur l'attribut `hidden`, sans minuterie) plutôt que chaque chemin ; une demande issue du
+  sélecteur est alors annulée et le sélecteur libéré (`aria-busy`, boutons). Un lien direct
+  `?tour=` n'a pas été demandé par un clic : la fermeture de l'aide ne l'annule pas. Tenu par
+  `e2e/built-tourOnDemand.spec.ts` (fiche retenue côté réseau, trois chemins de fermeture, échec
+  tardif, lien direct).
 - **Budget** : `tour-` est une famille de morceaux hors démarrage (`NON_BOOT_CHUNK_FAMILIES`) ; le
   profil `tour-link` compte le lecteur ET la plus lourde fiche. `check-startup-budget.mjs` exige
   qu'il existe un morceau `tour-<id>` par entrée de `order.json`, ni plus ni moins, et qu'aucun ne
@@ -6737,6 +6744,14 @@ quand on la choisit.
   réglage ; `e2e/built-tourOnDemand.spec.ts` le vérifie dans `dist/sw.js` et ouvre une visite
   réseau coupé. Précacher n'est pas exécuter : le précache télécharge les sept fiches (≈ 29 ko) à
   l'installation, le démarrage n'en exécute aucune.
+- **Trois choses à ne pas confondre** : (1) ce que le DÉMARRAGE de l'application exécute et
+  télécharge (le catalogue léger, dans `tourPlayer`, aucune fiche) ; (2) ce qui est chargé et
+  exécuté À LA DEMANDE (une fiche `tour-<id>`, au choix de la visite ou par `?tour=`) ; (3) ce que
+  le précache du service worker TÉLÉCHARGE sans l'exécuter (toutes les fiches, à l'installation).
+- **Dette conditionnelle, non résolue** : le catalogue léger coûte ≈ 258 o par visite (mesuré,
+  10,6 → 36,4 ko pour +100) et reste dans le morceau `tourPlayer` ; le profil `tour-link` dépasserait
+  le plafond vers 60 visites. À traiter avant ce volume (titres chargés avec le sélecteur, hors
+  `?tour=`), pas avant : le plafond n'est pas relevé.
 
 ## Les activités pour la classe (`/activities/`, lot 58, 2026-10-19)
 

@@ -312,6 +312,22 @@ export function setupTourPlayer(
   const closePicker = (): void => {
     picker.hidden = true;
   };
+  // Le sélecteur disparaît par le bouton, la croix, Échap ou une autre surface (`help.ts` masque
+  // alors le popover entier) : on observe le FAIT « plus visible » plutôt que chaque chemin.
+  const pickerWatch =
+    typeof MutationObserver === 'undefined'
+      ? null
+      : new MutationObserver(() => {
+          if (picker.hidden || helpPopover.hidden) abandonPickerRequest();
+        });
+  pickerWatch?.observe(picker, {
+    attributes: true,
+    attributeFilter: ['hidden'],
+  });
+  pickerWatch?.observe(helpPopover, {
+    attributes: true,
+    attributeFilter: ['hidden'],
+  });
 
   const finish = (): void => {
     active = false;
@@ -337,12 +353,22 @@ export function setupTourPlayer(
     for (const { btn } of pickerButtons) btn.disabled = loading;
   };
 
-  const start = async (id: string): Promise<boolean> => {
+  /**
+   * La demande en vol vient-elle du SÉLECTEUR ? Seule celle-là se retire quand le visiteur ferme
+   * le sélecteur : un lien direct (`?tour=`) n'a jamais été demandé par un clic dans l'aide, la
+   * fermeture du popover ne doit pas l'annuler.
+   */
+  let pendingFromPicker = false;
+
+  const request = async (id: string, fromPicker: boolean): Promise<boolean> => {
     // Une visite en cours possède l'écran (carte modale) : un second clic n'a rien à démarrer.
     if (active) return false;
+    pendingFromPicker = fromPicker;
     setLoading(true);
     const result = await loader.request(id);
+    // Remplacée ou annulée : la demande qui a la main (ou l'annulation) règle l'état du sélecteur.
     if (result.status === 'stale') return false;
+    pendingFromPicker = false;
     setLoading(false);
     if (result.status === 'failed') {
       announceLoadFailure('tour-content');
@@ -351,6 +377,15 @@ export function setupTourPlayer(
     if (result.status === 'unknown') return false;
     begin(result.value);
     return true;
+  };
+  const start = (id: string): Promise<boolean> => request(id, false);
+
+  /** Le visiteur a fermé le sélecteur : sa demande en vol ne démarrera rien, la réouverture est libre. */
+  const abandonPickerRequest = (): void => {
+    if (!pendingFromPicker) return;
+    pendingFromPicker = false;
+    loader.cancel();
+    setLoading(false);
   };
 
   const begin = (script: TourScript): void => {
@@ -435,7 +470,7 @@ export function setupTourPlayer(
     picker.hidden = !picker.hidden;
   });
   for (const { entry, btn } of pickerButtons) {
-    btn.addEventListener('click', () => void start(entry.id));
+    btn.addEventListener('click', () => void request(entry.id, true));
   }
   pauseButton.addEventListener('click', () => {
     if (!active) return;
@@ -464,6 +499,7 @@ export function setupTourPlayer(
     start,
     dispose: () => {
       // Une fiche encore en vol ne démarrera rien une fois l'interface retirée.
+      pickerWatch?.disconnect();
       loader.cancel();
       close();
       releaseClearance();
