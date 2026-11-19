@@ -28,6 +28,7 @@ import {
   type WindGrid,
 } from '@/core/windField';
 import { paletteToCss, WIND_DOMAIN, WIND_PALETTE } from '@/core/meteoPalette';
+import { holdField, readWind, type HeldField } from '@/core/meteoInspect';
 import type { WindParticles } from '@/components/celestial/WindParticles';
 import { createDatedDataLayer } from './datedDataLayer';
 import {
@@ -84,8 +85,9 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   // date de la scène (avant le premier chargement, ou hors de la plage du modèle) : les
   // particules sont alors masquées (`syncPoints`).
   let grid: WindGrid | null = null;
-  /** Heure (clé `meteoHourKey`) que décrit `grid`. */
-  let gridHourKey: string | null = null;
+  /** La grille de vent gardée pour l'inspection, avec la clé de la scène qu'elle décrit. */
+  let held: HeldField<WindGrid> | null = null;
+  let outOfRange = false;
   let gridDiagnostics: MeteoLayerDiagnostics['grid'];
   let lastSource: MeteoLayerDiagnostics['source'];
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
@@ -124,7 +126,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
         // Aucune cellule disponible : échec explicite (état d'erreur de la couche), jamais un
         // champ présenté comme prêt.
         if (wind) assertUsableWind(wind);
-        return { ...data, wind };
+        return { ...data, wind, requestedKey: key };
       },
       onStateChange: (next) => {
         phase = next;
@@ -135,11 +137,13 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
         // grille. Garder la précédente ferait souffler, pour cette date, le vent d'une autre.
         const speed = data.grids?.[WIND_VARIABLES[0]];
         grid = data.wind;
+        // Hors plage du modèle : aucune grille, donc rien à inspecter (jamais l'ancienne).
+        outOfRange = !data.grids;
+        held = data.wind ? holdField(data.wind, data.requestedKey, data) : null;
         gridDiagnostics =
           speed && grid
             ? describeMeteoGrid({ ...speed, validCount: countValidWind(grid) })
             : undefined;
-        gridHourKey = grid ? data.realDate.slice(0, 13) : null;
         syncPoints();
         phase = 'ready';
         const source = meteoSourceCandidate({ id: 'wind' }, data);
@@ -164,6 +168,19 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     labelKey: 'weather.wind',
     onLoadStateChange: loadState.subscribe,
     onResolved: relay.subscribe,
+    // Lecture seule de la grille de vent déjà chargée : jamais une requête, jamais une activation.
+    inspect: (lat: number, lon: number) =>
+      readWind(
+        held,
+        {
+          sceneDate: api.orbitalMechanics.simulationDate,
+          active: wanted,
+          phase,
+          emptyReason: outOfRange ? 'outOfRange' : 'notLoaded',
+        },
+        lat,
+        lon
+      ),
     // Éteinte au démarrage : le vent est un INSTRUMENT, pas l'apparence de la Terre.
     initial: false,
     noteKey: 'weather.wind.note',
@@ -179,8 +196,14 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
       if (visible) {
         // La grille d'une activation précédente décrit peut-être une AUTRE heure que la scène :
         // les particules restent masquées jusqu'à l'arrivée de la donnée de la bonne heure.
-        if (gridHourKey !== meteoHourKey(api.orbitalMechanics.simulationDate))
-          grid = null;
+        // Une seule référence : la grille gardée pour l'inspection (`held`) décide aussi du rendu,
+        // donc les deux restent d'accord, y compris au retour à une heure déjà chargée.
+        grid =
+          held &&
+          held.requestedKey ===
+            meteoHourKey(api.orbitalMechanics.simulationDate)
+            ? held.grid
+            : null;
         startData();
         void ensureParticles();
       } else if (stopData) {
@@ -207,6 +230,8 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
       stopData = null;
       unsubscribe();
       disposed = true;
+      held = null;
+      grid = null;
       particles?.points.removeFromParent();
       particles?.dispose();
     },

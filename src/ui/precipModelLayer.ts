@@ -27,6 +27,7 @@ export function setupPrecipModelLayer(
     archiveGrid: { step: settings.archiveGridStep, maxLat: settings.maxLat },
     opacity: settings.opacity,
     targetLayer: 'precip',
+    inspect: { variable: 'precipitation', unit: 'mm/h' },
     encodeGrid: (grid) =>
       scalarGridToRGBA(grid, PRECIP_PALETTE, {
         min: PRECIP_DOMAIN.min,

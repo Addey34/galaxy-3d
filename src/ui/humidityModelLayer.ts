@@ -25,6 +25,7 @@ export function setupHumidityModelLayer(
     archiveGrid: { step: settings.archiveGridStep, maxLat: settings.maxLat },
     opacity: settings.opacity,
     targetLayer: 'thermal',
+    inspect: { variable: 'humidity', unit: '%' },
     legendGradient: {
       css: paletteToCss(HUMIDITY_PALETTE),
       loKey: 'weather.humidityModel.lo',

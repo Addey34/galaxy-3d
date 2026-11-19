@@ -27,6 +27,7 @@ export function setupPressureModelLayer(
     archiveGrid: { step: settings.archiveGridStep, maxLat: settings.maxLat },
     opacity: settings.opacity,
     targetLayer: 'thermal',
+    inspect: { variable: 'pressure', unit: 'hPa' },
     legendGradient: {
       css: paletteToCss(PRESSURE_PALETTE),
       loText: () => pressureBound(PRESSURE_DOMAIN.min, intlLocale(), 'low'),

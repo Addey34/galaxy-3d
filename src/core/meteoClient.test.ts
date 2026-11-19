@@ -394,3 +394,89 @@ describe('fetchMeteoGrids (le vent, 2026-10-12)', () => {
     expect(direction).toBe(1000 + speed!);
   });
 });
+
+describe('heure échantillonnée et `realDate` (chemin Open-Meteo, GAL-METEO-INSPECT-002)', () => {
+  // Comme l'API : la série démarre à minuit UTC de (aujourd'hui − past_days) ; chaque case porte
+  // ici l'HEURE ABSOLUE (en heures depuis 1970) qu'elle représente. Lire la bonne case, c'est
+  // lire la valeur de l'heure demandée, pas celle d'une heure voisine.
+  const slotHours = (body: { past_days?: number; forecast_days?: number }) => {
+    const midnight = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() - (body.past_days ?? 0)
+    );
+    const count = ((body.past_days ?? 0) + (body.forecast_days ?? 1)) * 24;
+    return Array.from(
+      { length: count },
+      (_, i) => (midnight + i * 3_600_000) / 3_600_000
+    );
+  };
+
+  it('prévision : la case lue est exactement celle de l’heure de la scène, et `realDate` la nomme', async () => {
+    for (const iso of [
+      '2026-08-14T00:00:00Z',
+      '2026-08-14T12:00:00Z',
+      '2026-08-14T23:00:00Z',
+      '2026-08-13T05:00:00Z',
+      '2026-08-17T18:00:00Z',
+    ]) {
+      clearMeteoClientCache();
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (_url: string, init: RequestInit) => {
+          const body = JSON.parse(String(init.body));
+          const series = slotHours(body);
+          return new Response(
+            JSON.stringify(
+              body.latitude.map(() => ({ hourly: { cloud_cover: series } }))
+            ),
+            { status: 200 }
+          );
+        })
+      );
+      const simDate = new Date(iso);
+      const result = await fetchMeteoGrid(simDate, {
+        variable: 'cloud_cover',
+        forecastGrid: grid,
+        archiveGrid: grid,
+        now,
+        skipGalaxyData: true,
+      });
+      expect(result.plan.source).toBe('forecast');
+      expect(result.realDate).toBe(simDate.toISOString());
+      expect(result.grid!.values[0]).toBe(simDate.getTime() / 3_600_000);
+    }
+  });
+
+  it('archive : la case lue est l’heure UTC du jour demandé', async () => {
+    clearMeteoClientCache();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        const body = JSON.parse(String(init.body));
+        const day = Date.parse(body.start_date[0] + 'T00:00:00Z');
+        const series = Array.from(
+          { length: 24 },
+          (_, h) => day / 3_600_000 + h
+        );
+        return new Response(
+          JSON.stringify(
+            body.latitude.map(() => ({ hourly: { cloud_cover: series } }))
+          ),
+          { status: 200 }
+        );
+      })
+    );
+    const simDate = new Date('2020-06-01T17:00:00Z');
+    const result = await fetchMeteoGrid(simDate, {
+      variable: 'cloud_cover',
+      forecastGrid: grid,
+      archiveGrid: grid,
+      now,
+      skipGalaxyData: true,
+    });
+    expect(result.plan.source).toBe('archive');
+    expect(result.realDate).toBe(simDate.toISOString());
+    expect(result.grid!.values[0]).toBe(simDate.getTime() / 3_600_000);
+  });
+});

@@ -11,6 +11,7 @@ import Logger from '@/utils/Logger';
 import type CelestialObject from '@/components/celestial/CelestialObject';
 import type { SourceCandidate } from '@/core/layerSource';
 import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
+import type { FieldReading } from '@/core/meteoInspect';
 import type { PublicAPI } from '@/SolarSystemApp';
 
 /** Nom catalogue du corps Terre (source unique, ex-duplication dans 5 fichiers). */
@@ -99,6 +100,30 @@ export interface WeatherLayerHandle {
   onResolved?: (cb: (candidate: SourceCandidate) => void) => void;
   /** Snapshot de diagnostic activable par ?debug-meteo, sans effet sur le rendu normal. */
   diagnostics?: () => MeteoLayerDiagnostics;
+  /**
+   * INSPECTION d'un point (GAL-METEO-INSPECT-002) : la valeur de la grille DÉJÀ chargée à
+   * (lat, lon), avec sa provenance. Lecture seule : elle ne charge rien, n'active jamais une
+   * couche masquée (`inactive`) et ne rend aucune valeur d'une autre heure que la scène (`stale`).
+   * Absente pour les couches qui n'ont pas de grille échantillonnable (satellite, GIBS).
+   */
+  inspect?: (lat: number, lon: number) => FieldReading;
+}
+
+/**
+ * Lit un point dans TOUTES les couches qui savent s'inspecter, une lecture par couche, dans
+ * l'ordre des couches. Aucune requête, aucune activation : chaque lecture dit elle-même si elle
+ * est `inactive`, `stale`, `noData`… (voir `core/meteoInspect.ts`).
+ */
+export function inspectWeatherPoint(
+  layers: readonly WeatherLayerHandle[],
+  lat: number,
+  lon: number
+): Array<{ layerId: string; reading: FieldReading }> {
+  const out: Array<{ layerId: string; reading: FieldReading }> = [];
+  for (const layer of layers)
+    if (layer.inspect)
+      out.push({ layerId: layer.id, reading: layer.inspect(lat, lon) });
+  return out;
 }
 
 /**
