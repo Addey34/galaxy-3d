@@ -31,10 +31,10 @@
     {
       "kind": "caption",
       "text": {
-        "en": "14 July 2015, 10:48 UTC, one hour before New Horizons passes closest to Pluto. The camera looks at Pluto from the direction of the probe, at about 51,000 km: a small disc, with its large moon Charon near it. These views are reconstructions computed from the NASA/JPL Horizons trajectory, not photographs taken at that instant.",
-        "fr": "14 juillet 2015, 10 h 48 UTC, une heure avant le passage de New Horizons au plus près de Pluton. La caméra regarde Pluton depuis la direction de la sonde, à environ 51 000 km : un petit disque, avec sa grande lune Charon à côté. Ces vues sont des reconstitutions calculées d’après la trajectoire NASA/JPL Horizons, pas des photographies prises à cet instant.",
-        "es": "14 de julio de 2015, 10:48 UTC, una hora antes de que New Horizons pase lo más cerca de Plutón. La cámara mira a Plutón desde la dirección de la sonda, a unos 51 000 km: un pequeño disco, con su gran luna Caronte cerca. Estas vistas son reconstrucciones calculadas a partir de la trayectoria de NASA/JPL Horizons, no fotografías tomadas en ese instante.",
-        "pt-BR": "14 de julho de 2015, 10:48 UTC, uma hora antes de a New Horizons passar o mais perto de Plutão. A câmera olha para Plutão a partir da direção da sonda, a cerca de 51 000 km: um pequeno disco, com sua grande lua Caronte por perto. Essas vistas são reconstruções calculadas a partir da trajetória do NASA/JPL Horizons, não fotografias tiradas nesse instante."
+        "en": "14 July 2015, 10:48 UTC, one hour before New Horizons passes closest to Pluto. The camera looks at Pluto from the direction of the probe, at about 51,000 km: a small disc, with its large moon Charon near it. These views are approximate reconstructions at real scale, computed from the NASA/JPL Horizons trajectory, not photographs taken at that instant. The clock keeps running in real time while you read, so each view drifts slightly from the date shown at the start of the step.",
+        "fr": "14 juillet 2015, 10 h 48 UTC, une heure avant le passage de New Horizons au plus près de Pluton. La caméra regarde Pluton depuis la direction de la sonde, à environ 51 000 km : un petit disque, avec sa grande lune Charon à côté. Ces vues sont des reconstitutions approximatives à l’échelle réelle, calculées d’après la trajectoire NASA/JPL Horizons, pas des photographies prises à cet instant. L’horloge continue à temps réel pendant votre lecture : chaque vue s’écarte donc légèrement de la date affichée au début de l’étape.",
+        "es": "14 de julio de 2015, 10:48 UTC, una hora antes de que New Horizons pase lo más cerca de Plutón. La cámara mira a Plutón desde la dirección de la sonda, a unos 51 000 km: un pequeño disco, con su gran luna Caronte cerca. Estas vistas son reconstrucciones aproximadas a escala real, calculadas a partir de la trayectoria de NASA/JPL Horizons, no fotografías tomadas en ese instante. El reloj sigue avanzando en tiempo real mientras lees, así que cada vista se aleja ligeramente de la fecha mostrada al inicio del paso.",
+        "pt-BR": "14 de julho de 2015, 10:48 UTC, uma hora antes de a New Horizons passar o mais perto de Plutão. A câmera olha para Plutão a partir da direção da sonda, a cerca de 51 000 km: um pequeno disco, com sua grande lua Caronte por perto. Essas vistas são reconstruções aproximadas em escala real, calculadas a partir da trajetória do NASA/JPL Horizons, não fotografias tiradas nesse instante. O relógio continua em tempo real enquanto você lê, então cada vista se afasta levemente da data mostrada no início da etapa."
       }
     },
     {
@@ -52,10 +52,10 @@
     {
       "kind": "caption",
       "text": {
-        "en": "11:48:29 UTC, closest approach: the probe passes 13,676 km from the centre of Pluto, about 12,500 km above its surface (radius 1,188 km), at 13.78 km/s relative to Pluto. The camera is placed at that distance, so sizes and distances are the real ones.",
-        "fr": "11 h 48 min 29 s UTC, plus grande proximité : la sonde passe à 13 676 km du centre de Pluton, soit environ 12 500 km au-dessus de sa surface (rayon de 1 188 km), à 13,78 km/s par rapport à Pluton. La caméra est placée à cette distance : tailles et distances sont les vraies.",
-        "es": "11:48:29 UTC, máxima aproximación: la sonda pasa a 13 676 km del centro de Plutón, a unos 12 500 km sobre su superficie (radio de 1 188 km), a 13,78 km/s respecto a Plutón. La cámara está situada a esa distancia, así que los tamaños y las distancias son los reales.",
-        "pt-BR": "11:48:29 UTC, maior aproximação: a sonda passa a 13 676 km do centro de Plutão, cerca de 12 500 km acima de sua superfície (raio de 1 188 km), a 13,78 km/s em relação a Plutão. A câmera é colocada a essa distância, então os tamanhos e as distâncias são os reais."
+        "en": "11:48:29 UTC, closest approach: the probe passes 13,676 km from the centre of Pluto, about 12,500 km above its surface (radius 1,188 km), at 13.78 km/s relative to Pluto. The camera is placed at about that distance, so the framing is an approximation at real scale; the figures above are those of the closest-approach instant.",
+        "fr": "11 h 48 min 29 s UTC, plus grande proximité : la sonde passe à 13 676 km du centre de Pluton, soit environ 12 500 km au-dessus de sa surface (rayon de 1 188 km), à 13,78 km/s par rapport à Pluton. La caméra est placée à peu près à cette distance : le cadrage est une approximation à l’échelle réelle ; les chiffres ci-dessus sont ceux de l’instant du plus près.",
+        "es": "11:48:29 UTC, máxima aproximación: la sonda pasa a 13 676 km del centro de Plutón, a unos 12 500 km sobre su superficie (radio de 1 188 km), a 13,78 km/s respecto a Plutón. La cámara está situada aproximadamente a esa distancia, así que el encuadre es una aproximación a escala real; las cifras anteriores son las del instante de máxima aproximación.",
+        "pt-BR": "11:48:29 UTC, maior aproximação: a sonda passa a 13 676 km do centro de Plutão, cerca de 12 500 km acima de sua superfície (raio de 1 188 km), a 13,78 km/s em relação a Plutão. A câmera é colocada aproximadamente a essa distância, então o enquadramento é uma aproximação em escala real; os números acima são os do instante de maior aproximação."
       }
     },
     {
@@ -97,10 +97,10 @@
     {
       "kind": "caption",
       "text": {
-        "en": "12:08 UTC, twenty minutes after closest approach: the probe is leaving and looks back, at about 21,000 km from Pluto. Pluto is now a thin crescent: the Sun is almost behind it, so its night side faces us.",
-        "fr": "12 h 08 UTC, vingt minutes après le plus près : la sonde s’éloigne et regarde en arrière, à environ 21 000 km de Pluton. Pluton n’est plus qu’un fin croissant : le Soleil est presque derrière elle, sa face nuit est tournée vers nous.",
-        "es": "12:08 UTC, veinte minutos después del máximo acercamiento: la sonda se aleja y mira hacia atrás, a unos 21 000 km de Plutón. Plutón es ahora una fina media luna: el Sol está casi detrás de él y su cara nocturna se vuelve hacia nosotros.",
-        "pt-BR": "12:08 UTC, vinte minutos após a maior aproximação: a sonda se afasta e olha para trás, a cerca de 21 000 km de Plutão. Plutão agora é um fino crescente: o Sol está quase atrás dele e seu lado noturno está voltado para nós."
+        "en": "12:08 UTC, twenty minutes after closest approach: the probe is moving away. The virtual camera looks at Pluto from the direction of the receding probe, at about 21,000 km. Pluto is now a thin crescent: the Sun is almost behind it, so its night side faces the camera.",
+        "fr": "12 h 08 UTC, vingt minutes après le plus près : la sonde s’éloigne. La caméra virtuelle regarde Pluton depuis la direction de la sonde qui s’éloigne, à environ 21 000 km. Pluton n’est plus qu’un fin croissant : le Soleil est presque derrière elle, sa face nuit est tournée vers la caméra.",
+        "es": "12:08 UTC, veinte minutos después del máximo acercamiento: la sonda se aleja. La cámara virtual mira a Plutón desde la dirección de la sonda que se aleja, a unos 21 000 km. Plutón es ahora una fina media luna: el Sol está casi detrás de él y su cara nocturna se vuelve hacia la cámara.",
+        "pt-BR": "12:08 UTC, vinte minutos após a maior aproximação: a sonda se afasta. A câmera virtual olha para Plutão a partir da direção da sonda que se afasta, a cerca de 21 000 km. Plutão agora é um fino crescente: o Sol está quase atrás dele e seu lado noturno está voltado para a câmera."
       }
     }
   ]

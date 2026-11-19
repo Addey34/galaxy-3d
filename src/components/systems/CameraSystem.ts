@@ -1005,8 +1005,10 @@ export class CameraSystem {
    * Replace la caméra, sans l'animer, du côté de `referenceBody` : la cible reste la même, on
    * la regarde depuis là. Sert aux éclipses de Lune, dont la seule face colorée est celle
    * tournée vers la Terre (cf. core/viewAngles.ts). Le corps de référence peut être une sonde
-   * (GAL-TOUR-004) : la scène est alors vue depuis la position calculée de la sonde. Sans effet
-   * si la référence est inconnue ou confondue avec la cible.
+   * (GAL-TOUR-004) : la méthode reprend la DIRECTION de la référence vue de la cible, pas
+   * nécessairement sa position exacte (la distance est celle demandée) ni l'attitude de la sonde
+   * ou l'axe de ses instruments. Sans effet si la référence est inconnue ou confondue avec la
+   * cible.
    */
   viewFromBody(referenceBody: string): void {
     const reference = this._target(referenceBody)?.group;

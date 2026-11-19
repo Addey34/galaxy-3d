@@ -463,4 +463,17 @@ describe('CameraSystem.viewFromBody : la référence peut être une sonde (GAL-T
     cameraSystem.viewFromBody('inconnue');
     expect(cameraSystem.camera.position.toArray()).toEqual([0, 0, 5]);
   });
+
+  it('viewBesideBody accepte aussi une sonde : la caméra passe à angle droit de sa direction', () => {
+    const cameraSystem = setup();
+    cameraSystem.viewBesideBody('new-horizons');
+    const position = cameraSystem.camera.position;
+    expect(position.length()).toBeCloseTo(3, 6);
+    // De profil : la caméra n'est plus du côté de la sonde (x) et a bougé de sa pose d'origine.
+    expect(Math.abs(position.x / position.length())).toBeLessThan(0.5);
+    expect(position.toArray()).not.toEqual([0, 0, 5]);
+    cameraSystem.camera.position.set(0, 0, 5);
+    cameraSystem.viewBesideBody('inconnue');
+    expect(cameraSystem.camera.position.toArray()).toEqual([0, 0, 5]);
+  });
 });
