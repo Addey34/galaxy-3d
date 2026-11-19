@@ -4019,3 +4019,294 @@ body.is-capturing #loader {
   box-sizing: border-box;
   width: 100%;
 }
+
+/* ─── Inspecteur météo (ui/weatherInspector.ts, chargé au premier clic sur son bouton) ─── */
+.wi-launch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: 0 0.45rem var(--sp-2);
+}
+.wi-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  align-self: flex-start;
+  min-height: 2rem;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md, 0.5rem);
+  background: var(--control-bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+.wi-toggle:hover {
+  background: var(--control-bg-hover, var(--control-bg));
+}
+.wi-toggle[aria-pressed='true'] {
+  border-color: rgba(var(--accent), 0.7);
+  background: rgba(var(--accent), 0.16);
+  color: rgb(var(--accent));
+}
+.wi-launch .wl-note {
+  margin: 0;
+}
+body.wi-armed canvas {
+  cursor: crosshair;
+}
+/* En mode inspection, l'étiquette Explo de la Terre ne vole pas le clic posé sur le disque : son
+   bouton, au centre du globe, sélectionnerait la Terre (déjà suivie) au lieu de lire le point.
+   Les autres étiquettes restent cliquables : choisir un autre corps ferme l'inspecteur. */
+body.wi-armed #explo-labels .explo-label[data-body-name='earth'],
+body.wi-armed #explo-labels .explo-label[data-body-name='earth'] * {
+  pointer-events: none;
+}
+
+/* La carte : ancrée en bas à gauche sur ordinateur, en feuille sous le panneau sur téléphone. */
+.surface--inspector {
+  top: auto;
+  right: auto;
+  left: var(--edge-x);
+  bottom: calc(var(--edge-b) + 4.75rem);
+  width: min(22rem, calc(100vw - 2 * var(--edge)));
+  max-height: min(68vh, 36rem);
+  overflow: hidden;
+}
+.wi-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 0;
+  padding-top: var(--sp-2);
+  overflow-x: hidden;
+}
+.wi-coords {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-2);
+}
+.wi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.wi-field input {
+  min-width: 0;
+  min-height: 2rem;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
+.wi-button {
+  min-width: 0;
+  min-height: 2rem;
+  line-height: 1.2;
+  white-space: normal;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+.wi-button--primary {
+  border-color: rgba(var(--accent), 0.6);
+  background: rgba(var(--accent), 0.18);
+}
+.wi-problem {
+  margin: 0;
+  font-size: 0.74rem;
+  color: #ffb4a8;
+}
+.wi-hint,
+.wi-note {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+.wi-note {
+  font-size: 0.68rem;
+}
+.wi-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wi-row {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md, 0.5rem);
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.wi-row[data-status='pending'],
+.wi-row[data-status='unavailable'] {
+  background: transparent;
+}
+.wi-row[data-status='error'] {
+  border-color: rgba(255, 140, 120, 0.5);
+}
+.wi-icon {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0.15rem;
+  color: rgb(var(--accent));
+}
+.wi-row[data-status='pending'] .wi-icon,
+.wi-row[data-status='unavailable'] .wi-icon {
+  color: var(--ink-faint);
+}
+.wi-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.wi-label {
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.wi-value {
+  font-size: 1.35rem;
+  line-height: 1.15;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.wi-detail,
+.wi-message {
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--ink-dim);
+}
+.wi-message {
+  color: var(--ink);
+}
+.wi-row[data-status='pending'] .wi-message {
+  animation: wi-pulse 1.4s ease-in-out infinite;
+}
+@keyframes wi-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+.wi-meta {
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+}
+.wi-meta summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.wi-meta-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.15rem var(--sp-2);
+  margin: 0.3rem 0 0;
+}
+.wi-meta-list dt {
+  color: var(--ink-faint);
+}
+.wi-meta-list dd {
+  margin: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* Le repère du point : un anneau et un point, attaché à la longitude / latitude, posé par
+   transformation (jamais d'objet de la scène). `pointer-events: none` : il ne vole aucun geste. */
+.wi-marker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 22;
+  width: 1.1rem;
+  height: 1.1rem;
+  /* Centré sur le point : la transformation de l'image porte les coordonnées exactes. */
+  margin: -0.55rem 0 0 -0.55rem;
+  pointer-events: none;
+}
+.wi-marker::before,
+.wi-marker::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+.wi-marker::before {
+  inset: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 0 10px rgba(var(--accent), 0.8);
+  animation: wi-ring 2.4s ease-out infinite;
+}
+.wi-marker::after {
+  width: 0.32rem;
+  height: 0.32rem;
+  left: calc(50% - 0.16rem);
+  top: calc(50% - 0.16rem);
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+@keyframes wi-ring {
+  0% {
+    transform: scale(0.7);
+    opacity: 1;
+  }
+  70%,
+  100% {
+    transform: scale(1.25);
+    opacity: 0.75;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wi-marker::before,
+  .wi-row[data-status='pending'] .wi-message {
+    animation: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Sur téléphone la carte est une feuille en bas, au-dessus des commandes de temps. */
+  .surface--inspector {
+    left: var(--edge-x) !important;
+    right: var(--edge-x) !important;
+    bottom: calc(var(--edge-b) + 5.25rem) !important;
+    top: auto !important;
+    width: auto !important;
+    max-height: min(46vh, 22rem) !important;
+  }
+}

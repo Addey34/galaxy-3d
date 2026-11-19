@@ -460,6 +460,9 @@ export const en = {
   // ── Couches météo ──
   'weather.title': 'Weather layers',
   'weather.trigger.aria': 'Weather layers',
+  'weather.inspect.toggle': 'Inspect a point',
+  'weather.inspect.hint':
+    'Read the weather of the layers that are on, at a point of the globe.',
   'weather.dialog.aria': 'Weather layers',
   'weather.clouds': 'Clouds (NASA)',
   'weather.cloudsModel': 'Clouds (model)',

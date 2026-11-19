@@ -233,6 +233,60 @@ export const cardEn = {
   'bi.cities.name.nairobi-overture': 'Nairobi',
   'bi.places.note':
     'Footprints read in NASA’s Orbital Data Explorer (PDS Geosciences Node), products created up to {date}. A product whose footprint also covers the antipode of the formation, such as a global map, is not counted.',
+  'inspect.title': 'Weather at a point',
+  'inspect.hint.pick':
+    'Click or tap the globe, or enter coordinates, to read the layers that are on.',
+  'inspect.hint.noLayers':
+    'No inspectable layer is on. Turn on a model layer (temperature, pressure, humidity, rain, clouds or wind) in the weather panel. The inspector never turns one on for you.',
+  'inspect.hint.images':
+    'Satellite and NASA GIBS layers are images: they are not read here.',
+  'inspect.lat': 'Latitude',
+  'inspect.lon': 'Longitude',
+  'inspect.go': 'Read this point',
+  'inspect.center': 'Use the center of the view',
+  'inspect.offGlobe': 'The center of the view is not on the globe.',
+  'inspect.badCoords':
+    'Enter a latitude from −90 to 90 and a longitude from −180 to 180.',
+  'inspect.details': 'Source and date',
+  'inspect.caveat':
+    'Values are interpolated from a model grid. They are not a measurement at this exact spot.',
+  'inspect.selected': 'Point selected: {lat}, {lon}.',
+  'inspect.var.temperature': 'Temperature (2 m)',
+  'inspect.var.pressure': 'Sea-level pressure',
+  'inspect.var.humidity': 'Relative humidity',
+  'inspect.var.precipitation': 'Precipitation',
+  'inspect.var.cloudCover': 'Cloud cover (model)',
+  'inspect.var.wind': 'Wind (10 m)',
+  'inspect.msg.missing': 'No value in the model at this point.',
+  'inspect.msg.outOfCoverage': 'Outside the coverage of the grid.',
+  'inspect.msg.stale':
+    'Out of date: the loaded grid is for another time, so no value is shown.',
+  'inspect.msg.staleError':
+    'The update failed. The loaded grid is for another time, so no value is shown.',
+  'inspect.msg.updating': 'Updating for the new date…',
+  'inspect.msg.outOfRange': 'This date is outside the range of the model.',
+  'inspect.msg.error': 'The data could not be loaded.',
+  'inspect.msg.loading': 'Loading…',
+  'inspect.wind.calm': 'Calm: no meaningful direction',
+  'inspect.wind.from': 'Coming from: {dir} · {deg}°',
+  'inspect.dir.N': 'N',
+  'inspect.dir.NE': 'NE',
+  'inspect.dir.E': 'E',
+  'inspect.dir.SE': 'SE',
+  'inspect.dir.S': 'S',
+  'inspect.dir.SW': 'SW',
+  'inspect.dir.W': 'W',
+  'inspect.dir.NW': 'NW',
+  'inspect.precip.rate': 'Instantaneous rate (GFS)',
+  'inspect.precip.accumulation': 'Accumulated over the previous hour',
+  'inspect.precip.none': 'No precipitation',
+  'inspect.meta.source': 'Source',
+  'inspect.meta.nature': 'Nature',
+  'inspect.meta.effective': 'Valid for',
+  'inspect.meta.requested': 'Requested hour',
+  'inspect.meta.offset': '{h} h from the requested hour',
+  'inspect.meta.grid': 'Grid',
+  'inspect.meta.gridValue': '{step}° grid, interpolated',
 };
 
 export type CardMessageKey = keyof typeof cardEn;

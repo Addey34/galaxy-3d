@@ -1375,6 +1375,40 @@
         </button>
       </header>
       <div class="surface-body">
+        <!-- Inspecteur météo (ui/weatherInspector.ts, chargé au premier clic) : lit les couches
+             actives en un point choisi sur le globe, sans jamais en activer une. -->
+        <div class="wi-launch">
+          <button
+            id="weather-inspect-toggle"
+            class="wi-toggle"
+            type="button"
+            aria-pressed="false"
+           
+          >
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <circle
+                cx="8"
+                cy="8"
+                r="4.2"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.3"
+              />
+              <path
+                d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.3"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span data-i18n="weather.inspect.toggle">Inspect a point</span>
+          </button>
+          <p class="wl-note" data-i18n="weather.inspect.hint">
+            Read the weather of the layers that are on, at a point of the
+            globe.
+          </p>
+        </div>
         <div class="wl-body">
           <!-- populated by ui/weatherLayers.ts -->
         </div>

@@ -30,6 +30,8 @@ const DEFERRED_READERS: Record<string, string> = {
   'ui/deepSkyCard.ts': 'deepSkyCard',
   'ui/formationMarker.ts': 'lookAtFormation',
   'components/surface/compareCurtain.ts': 'compareCurtain',
+  'ui/weatherInspector.ts': 'weatherInspector',
+  'core/inspectDisplay.ts': 'weatherInspector',
 };
 
 const SRC = join(__dirname, '..');

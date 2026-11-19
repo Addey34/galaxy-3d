@@ -92,6 +92,7 @@ import { setupThermalModelLayer } from './ui/thermalModelLayer';
 import { setupPressureModelLayer } from './ui/pressureModelLayer';
 import { setupHumidityModelLayer } from './ui/humidityModelLayer';
 import { setupWeatherLayers } from './ui/weatherLayers';
+import type { WeatherInspector } from './ui/weatherInspector';
 import type { WeatherLayerHandle } from './ui/earthLayer';
 import {
   setupOverlayCoordinator,
@@ -580,6 +581,56 @@ function wireChrome(): {
       body === EARTH_NAMES_BODY ? earthRadiusKm : gazetteerRadii.get(body)
     );
     registerPlaceDive(placeDive.diveUntilReached);
+    // Inspecteur météo (GAL-METEO-INSPECT-003) : un morceau chargé au premier clic sur le bouton du
+    // panneau météo. Il ne lit que les grilles déjà chargées par les couches actives.
+    const inspectToggle = document.getElementById('weather-inspect-toggle');
+    // L'intention de l'utilisateur, pas l'état : tant que le morceau se charge, des clics répétés
+    // ne font que la basculer, et l'import appliquera la dernière.
+    let inspectWanted = false;
+    let inspector: WeatherInspector | null = null;
+    let inspectorLoading: Promise<WeatherInspector> | null = null;
+    const loadInspector = (): Promise<WeatherInspector> =>
+      (inspectorLoading ??= import('./ui/weatherInspector')
+        .then((m) =>
+          m.setupWeatherInspector({
+            api,
+            layers: weatherLayers,
+            panel: weatherPanel,
+            camera: cameraSystem.camera,
+            canvas: cameraSystem.renderer.domElement,
+            getSelectedBody: () => planetNav.getSelectedBody(),
+          })
+        )
+        .then((loaded) => {
+          loaded.onArmedChange((on) => {
+            inspectToggle?.setAttribute('aria-pressed', String(on));
+            inspectWanted = on;
+            // Sur téléphone, le panneau météo recouvre le globe : on le replie pour pouvoir viser
+            // (les couches restent actives ; l'icône du panneau le rouvre).
+            if (on && window.matchMedia('(max-width: 768px)').matches)
+              document
+                .querySelector<HTMLButtonElement>(
+                  '#weather-layers .surface-close'
+                )
+                ?.click();
+          });
+          inspector = loaded;
+          return loaded;
+        })
+        .catch((error) => {
+          inspectorLoading = null;
+          throw error;
+        }));
+    inspectToggle?.addEventListener('click', () => {
+      inspectWanted = !inspectWanted;
+      const apply = (loaded: WeatherInspector): void => {
+        loaded.setArmed(inspectWanted);
+        // Refusé (autre corps que la Terre) : l'intention suit l'état réel.
+        inspectWanted = loaded.isArmed();
+      };
+      if (inspector) apply(inspector);
+      else void loadInspector().then(apply);
+    });
     setupBodyPicker(
       sceneSystem.scene,
       cameraSystem.camera,
@@ -591,6 +642,8 @@ function wireChrome(): {
         (x, y) => interstellarOverlay.markerAt(x, y),
       ],
       (x, y) => {
+        // Le mode d'inspection prend le clic qui touche la Terre ; sinon le lieu nommé, puis le corps.
+        if (inspector?.claim(x, y)) return true;
         const place = gazetteerOverlay.placeAt(x, y);
         return place ? placeDive.dive(place) : false;
       }

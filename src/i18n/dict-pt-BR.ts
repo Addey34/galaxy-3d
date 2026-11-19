@@ -444,6 +444,9 @@ export const ptBR: Record<MessageKey, string> = {
   // ── Couches météo ──
   'weather.title': 'Camadas meteorológicas',
   'weather.trigger.aria': 'Camadas meteorológicas',
+  'weather.inspect.toggle': 'Inspecionar um ponto',
+  'weather.inspect.hint':
+    'Ler o tempo das camadas ativas em um ponto do globo.',
   'weather.dialog.aria': 'Camadas meteorológicas',
   'weather.clouds': 'Nuvens (NASA)',
   'weather.cloudsModel': 'Nuvens (modelo)',

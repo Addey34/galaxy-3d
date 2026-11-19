@@ -499,6 +499,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "la fiche d'un objet du ciel profond et sa recherche (2026-11-03) : importées par `ui/skyLayerToggles` à la première activation de la case « Objets du ciel profond », éteinte au démarrage. Elle porte ses phrases dans `dict-card-*` et attend `loadDeferredMessages()`.",
   },
   {
+    chunk: 'weatherInspector',
+    reason:
+      "l'inspecteur météo d'un point du globe (GAL-METEO-INSPECT-003) : importé par `MainSolarSystemApp` au premier clic sur « Inspecter un point » du panneau météo, jamais au démarrage. Il porte ses phrases dans `dict-card-*` et attend `loadDeferredMessages()` ; `core/surfacePick` et `core/inspectDisplay` n'y sont tirés que par lui.",
+  },
+  {
     chunk: 'exoplanetCard',
     reason:
       "la fiche d'un système d'exoplanètes et sa recherche (2026-11-03) : importées par `ui/skyLayerToggles` à la première activation de la couche « Étoiles à exoplanètes », éteinte au démarrage. Elle porte ses phrases dans `dict-card-*` et attend `loadDeferredMessages()`.",
