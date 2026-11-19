@@ -20,6 +20,7 @@ export function setupCloudModelLayer(
     archiveGrid: { step: settings.archiveGridStep, maxLat: settings.maxLat },
     opacity: settings.opacity,
     targetLayer: 'clouds',
+    inspect: { variable: 'cloudCover', unit: '%' },
     initial: settings.initial,
     // Activation MANUELLE (pas de chargement au boot) : le modèle comble les trous de fauchée
     // VIIRS (bande polaire Sud) via setRealCloudsModelFallback quand on active « Nuages (modèle) »

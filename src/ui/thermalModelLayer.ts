@@ -27,6 +27,7 @@ export function setupThermalModelLayer(
     archiveGrid: { step: settings.archiveGridStep, maxLat: settings.maxLat },
     opacity: settings.opacity,
     targetLayer: 'thermal',
+    inspect: { variable: 'temperature', unit: '°C' },
     legendGradient: {
       css: paletteToCss(TEMPERATURE_PALETTE),
       loText: () => temperatureBound(TEMPERATURE_DOMAIN.min, intlLocale()),

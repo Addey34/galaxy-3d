@@ -13,6 +13,13 @@ import { fetchMeteoGrid, type MeteoGridData } from '@/core/meteoClient';
 import { meteoHourKey } from '@/core/meteoTimeTravel';
 import type { ScalarGrid, MeteoGridOptions } from '@/core/meteoGrid';
 import {
+  holdField,
+  readScalar,
+  type EmptyReason,
+  type HeldField,
+  type InspectVariable,
+} from '@/core/meteoInspect';
+import {
   describeMeteoGrid,
   type MeteoLayerDiagnostics,
 } from '@/core/meteoDiagnostics';
@@ -53,6 +60,16 @@ export interface MeteoModelLayerConfig {
   ) => void;
 
   encodeGrid: (grid: ScalarGrid) => MeteoTextureData;
+  /**
+   * Ce que la couche répond à l'inspection d'un point (GAL-METEO-INSPECT-002). Absent : la couche
+   * ne s'inspecte pas. La grille courante est gardée PAR RÉFÉRENCE (jamais copiée) et libérée
+   * hors plage et à la destruction.
+   */
+  inspect?: {
+    variable: Exclude<InspectVariable, 'wind'>;
+    /** Unité de la valeur ; la précipitation prend la sienne de la nature du produit. */
+    unit: string;
+  };
   sourceIdPrefix?: string;
   sourceLabel?: (data: MeteoGridData) => string;
 }
@@ -105,6 +122,11 @@ export function setupMeteoModelLayer(
   let lastGrid: MeteoLayerDiagnostics['grid'];
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
   let stopData: (() => void) | null = null;
+  /**
+   * La grille courante, gardée pour l'inspection (référence, pas une copie) et la clé horaire de
+   * la scène pour laquelle elle a été chargée. `null` hors plage du modèle et après `dispose`.
+   */
+  let held: HeldField<ScalarGrid> | null = null;
   /** Heure (clé `meteoHourKey`) que décrit `currentTexture` : elle ne se montre que si elle est celle de la scène. */
   let textureHourKey: string | null = null;
   /**
@@ -131,58 +153,67 @@ export function setupMeteoModelLayer(
   const startData = (): void => {
     if (stopData) return;
 
-    stopData = createDatedDataLayer<MeteoGridData>(api, {
-      name: config.id + 'Layer',
-      enabled: true,
-      keyForDate: meteoHourKey,
-      fetchForKey: async (key, signal) => {
-        const simDate = new Date(key + ':00:00Z');
-        return fetchMeteoGrid(simDate, {
-          variable: config.variable,
-          forecastGrid: config.forecastGrid,
-          archiveGrid: config.archiveGrid,
-          signal,
-        });
-      },
-      onStateChange: (next) => {
-        phase = next;
-        loadState.push(next);
-      },
-      apply: (data) => {
-        if (!data.grid) {
-          // Hors de la plage du modèle (avant 1940, au-delà de l'horizon de prévision) : la
-          // grille précédente décrit un AUTRE instant. La garder à l'écran sous l'étiquette de
-          // cette date serait afficher une donnée qui n'existe pas.
-          // La texture n'est pas libérée : elle peut rester branchée comme secours d'une
-          // observation (`applyFallback`). Limite connue : ce secours décrit alors la dernière
-          // heure chargée, pas forcément le jour de la tuile satellite qu'il complète.
-          outOfRange = true;
-          lastGrid = undefined;
-          if (visible) {
-            earth.restoreLayerMaterial(config.targetLayer);
-            earth.setLayerVisible(config.targetLayer, false);
+    stopData = createDatedDataLayer<MeteoGridData & { requestedKey: string }>(
+      api,
+      {
+        name: config.id + 'Layer',
+        enabled: true,
+        keyForDate: meteoHourKey,
+        fetchForKey: async (key, signal) => {
+          const simDate = new Date(key + ':00:00Z');
+          const data = await fetchMeteoGrid(simDate, {
+            variable: config.variable,
+            forecastGrid: config.forecastGrid,
+            archiveGrid: config.archiveGrid,
+            signal,
+          });
+          // La clé DEMANDÉE accompagne la donnée : `realDate` peut décrire un autre instant (pas de
+          // 3 h de GFS), et seule la clé dit pour quelle heure de la scène la grille a été chargée.
+          return { ...data, requestedKey: key };
+        },
+        onStateChange: (next) => {
+          phase = next;
+          loadState.push(next);
+        },
+        apply: (data) => {
+          if (!data.grid) {
+            // Hors de la plage du modèle (avant 1940, au-delà de l'horizon de prévision) : la
+            // grille précédente décrit un AUTRE instant. La garder à l'écran sous l'étiquette de
+            // cette date serait afficher une donnée qui n'existe pas.
+            // La texture n'est pas libérée : elle peut rester branchée comme secours d'une
+            // observation (`applyFallback`). Limite connue : ce secours décrit alors la dernière
+            // heure chargée, pas forcément le jour de la tuile satellite qu'il complète.
+            outOfRange = true;
+            lastGrid = undefined;
+            // Plus aucune grille pour cette date : l'inspection ne doit pas lire l'ancienne.
+            held = null;
+            if (visible) {
+              earth.restoreLayerMaterial(config.targetLayer);
+              earth.setLayerVisible(config.targetLayer, false);
+            }
+          } else {
+            outOfRange = false;
+            held = holdField(data.grid, data.requestedKey, data);
+            textureHourKey = data.realDate.slice(0, 13);
+            const encoded = config.encodeGrid(data.grid);
+            const nextTexture = createMeteoDataTexture(
+              encoded.data,
+              encoded.width,
+              encoded.height
+            );
+            currentTexture?.dispose();
+            currentTexture = nextTexture;
+            lastGrid = describeMeteoGrid(data.grid);
+            phase = 'ready';
+            applyIfVisible();
           }
-        } else {
-          outOfRange = false;
-          textureHourKey = data.realDate.slice(0, 13);
-          const encoded = config.encodeGrid(data.grid);
-          const nextTexture = createMeteoDataTexture(
-            encoded.data,
-            encoded.width,
-            encoded.height
-          );
-          currentTexture?.dispose();
-          currentTexture = nextTexture;
-          lastGrid = describeMeteoGrid(data.grid);
-          phase = 'ready';
-          applyIfVisible();
-        }
-        const source = meteoSourceCandidate(config, data);
-        lastSource = source;
-        relay.push(source);
-      },
-      checkIntervalMs: 1000,
-    });
+          const source = meteoSourceCandidate(config, data);
+          lastSource = source;
+          relay.push(source);
+        },
+        checkIntervalMs: 1000,
+      }
+    );
   };
 
   if (visible || config.background) startData();
@@ -234,9 +265,30 @@ export function setupMeteoModelLayer(
     },
     onResolved: relay.subscribe,
     onLoadStateChange: loadState.subscribe,
+    ...(config.inspect
+      ? {
+          inspect: (lat: number, lon: number) =>
+            readScalar(
+              config.inspect!.variable,
+              config.inspect!.unit,
+              held,
+              {
+                sceneDate: api.orbitalMechanics.simulationDate,
+                active: visible,
+                phase,
+                emptyReason: (outOfRange
+                  ? 'outOfRange'
+                  : 'notLoaded') satisfies EmptyReason,
+              },
+              lat,
+              lon
+            ),
+        }
+      : {}),
     dispose: () => {
       stopData?.();
       stopData = null;
+      held = null;
       currentTexture?.dispose();
       currentTexture = null;
     },
