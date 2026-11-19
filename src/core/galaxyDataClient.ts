@@ -15,7 +15,7 @@ import {
   stampToMs,
   type GalaxyDataManifest,
 } from './galaxyData';
-import type { ScalarGrid } from './meteoGrid';
+import { assertUsableGrid, type ScalarGrid } from './meteoGrid';
 import { planMeteoRequest, type MeteoTimePlan } from './meteoTimeTravel';
 import type { DatedProduct } from './temporal';
 import { PROVIDER_NAMES } from './providerNames';
@@ -101,7 +101,11 @@ async function loadFields(
 export async function fromGalaxyData(
   simDate: Date,
   variables: readonly string[],
-  options: { now?: Date; signal?: AbortSignal },
+  options: {
+    now?: Date;
+    signal?: AbortSignal;
+    optionalVariables?: readonly string[];
+  },
   epoch = 0
 ): Promise<{
   grids: Record<string, ScalarGrid>;
@@ -132,6 +136,7 @@ export async function fromGalaxyData(
           decoded,
           servedMs,
           now,
+          options.optionalVariables ?? [],
           {
             kind: 'reanalysis',
             validTime: { from: servedMs, to: servedMs },
@@ -176,6 +181,7 @@ export async function fromGalaxyData(
       decoded,
       servedMs,
       now,
+      options.optionalVariables ?? [],
       product,
       PROVIDER_NAMES.gfs
     );
@@ -190,6 +196,7 @@ function served(
   decoded: Map<string, ReturnType<typeof decodeGxf>>,
   servedMs: number,
   now: Date,
+  optional: readonly string[],
   product: DatedProduct,
   provider: string
 ): {
@@ -199,10 +206,15 @@ function served(
   provider: string;
 } {
   const grids = Object.fromEntries(
-    variables.map((v) => [
-      v,
-      composeVariable(v, decoded.get(GALAXY_DATA_VARIABLES[v]!.field)!),
-    ])
+    variables.map((v) => {
+      const grid = composeVariable(
+        v,
+        decoded.get(GALAXY_DATA_VARIABLES[v]!.field)!
+      );
+      // Une grille sans cellule finie lève : l'appelant (try/catch) retombe sur Open-Meteo.
+      if (!optional.includes(v)) assertUsableGrid(grid, v);
+      return [v, grid];
+    })
   );
   const plan = planMeteoRequest(new Date(servedMs), { now });
   return {

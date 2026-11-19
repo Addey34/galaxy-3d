@@ -316,6 +316,30 @@ export class WindParticles {
     for (let i = 0; i < n; i++) {
       const { u, v } = sampleWind(grid, this.lat[i], this.lon[i], this._uv);
       const speed = Math.hypot(u, v);
+      // Vent INCONNU ici (NaN : donnée absente) : la particule ne bouge pas, ne se dessine pas et
+      // ne laisse aucune traînée ; aucune valeur invalide n'entre dans ses buffers. Elle vieillit
+      // et se ré-ensemence normalement. Une position déjà invalide est ré-ensemencée.
+      if (!Number.isFinite(speed)) {
+        if (!Number.isFinite(this.lat[i]) || !Number.isFinite(this.lon[i])) {
+          this._seed(i);
+          continue;
+        }
+        this.age[i] += dt;
+        if (this.age[i] >= this.life[i]) {
+          this._seed(i);
+          continue;
+        }
+        this.alphas[i] = 0;
+        this._writeTrail(i, 0, 0);
+        this._writeTrailColor(
+          i,
+          this.colors[i * 3]!,
+          this.colors[i * 3 + 1]!,
+          this.colors[i * 3 + 2]!,
+          0
+        );
+        continue;
+      }
       // u = est (→ lon+), v = nord (→ lat+). Le déplacement en longitude s'élargit près
       // des pôles (méridiens resserrés) → on divise par cos(lat) (borné).
       const cosLat = Math.max(0.2, Math.cos(this.lat[i] * DEG2RAD));

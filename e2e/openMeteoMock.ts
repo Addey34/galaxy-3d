@@ -15,12 +15,18 @@ import type { Page } from '@playwright/test';
 export async function mockOpenMeteo(page: Page, value = 70): Promise<void> {
   const respond = async (
     route: Parameters<Parameters<Page['route']>[1]>[0],
-    hours: number
+    fixedHours?: number
   ): Promise<void> => {
     const body = route.request().postDataJSON() as {
       latitude?: number[];
       hourly?: string[];
+      past_days?: number;
+      forecast_days?: number;
     };
+    // Comme l'API : la série couvre TOUTE la fenêtre demandée (passé + prévision). Une série plus
+    // courte que l'heure lue rendrait une donnée ABSENTE (NaN), plus un zéro silencieux.
+    const hours =
+      fixedHours ?? ((body.past_days ?? 0) + (body.forecast_days ?? 1)) * 24;
     // TOUTES les variables demandées : le vent en demande deux dans la même requête.
     const variables = body.hourly?.length ? body.hourly : ['cloud_cover'];
     const points = (body.latitude ?? []).map(() => ({
@@ -43,7 +49,7 @@ export async function mockOpenMeteo(page: Page, value = 70): Promise<void> {
   await page.route('**/galaxy-data.adrianguichard.dev/**', (route) =>
     route.abort()
   );
-  await page.route('**/api.open-meteo.com/**', (route) => respond(route, 48));
+  await page.route('**/api.open-meteo.com/**', (route) => respond(route));
   await page.route('**/archive-api.open-meteo.com/**', (route) =>
     respond(route, 24)
   );
