@@ -194,7 +194,7 @@ export function setupMeteoModelLayer(
           } else {
             outOfRange = false;
             held = holdField(data.grid, data.requestedKey, data);
-            textureHourKey = data.realDate.slice(0, 13);
+            textureHourKey = data.requestedKey;
             const encoded = config.encodeGrid(data.grid);
             const nextTexture = createMeteoDataTexture(
               encoded.data,

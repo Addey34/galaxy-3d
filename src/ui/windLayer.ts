@@ -85,8 +85,6 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   // date de la scène (avant le premier chargement, ou hors de la plage du modèle) : les
   // particules sont alors masquées (`syncPoints`).
   let grid: WindGrid | null = null;
-  /** Heure (clé `meteoHourKey`) que décrit `grid`. */
-  let gridHourKey: string | null = null;
   /** La grille de vent gardée pour l'inspection, avec la clé de la scène qu'elle décrit. */
   let held: HeldField<WindGrid> | null = null;
   let outOfRange = false;
@@ -146,7 +144,6 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
           speed && grid
             ? describeMeteoGrid({ ...speed, validCount: countValidWind(grid) })
             : undefined;
-        gridHourKey = grid ? data.realDate.slice(0, 13) : null;
         syncPoints();
         phase = 'ready';
         const source = meteoSourceCandidate({ id: 'wind' }, data);
@@ -199,8 +196,14 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
       if (visible) {
         // La grille d'une activation précédente décrit peut-être une AUTRE heure que la scène :
         // les particules restent masquées jusqu'à l'arrivée de la donnée de la bonne heure.
-        if (gridHourKey !== meteoHourKey(api.orbitalMechanics.simulationDate))
-          grid = null;
+        // Une seule référence : la grille gardée pour l'inspection (`held`) décide aussi du rendu,
+        // donc les deux restent d'accord, y compris au retour à une heure déjà chargée.
+        grid =
+          held &&
+          held.requestedKey ===
+            meteoHourKey(api.orbitalMechanics.simulationDate)
+            ? held.grid
+            : null;
         startData();
         void ensureParticles();
       } else if (stopData) {

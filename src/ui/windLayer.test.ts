@@ -407,3 +407,70 @@ describe('setupWindLayer : inspection d’un point (GAL-METEO-INSPECT-002)', () 
     expect(r).toMatchObject({ speedKmh: null, directionDeg: null });
   });
 });
+
+describe('cohérence rendu/inspection avec une date effective GFS décalée (GAL-METEO-INSPECT-002)', () => {
+  const HOUR = 3_600_000;
+  const filled = (v: number): ScalarGrid => ({
+    ...grid(),
+    values: new Float32Array(12).fill(v),
+  });
+  const gfsWind = async (d: Date) => ({
+    grids: { wind_speed_10m: filled(10), wind_direction_10m: filled(270) },
+    provider: 'NOAA GFS',
+    plan: { source: 'forecast', outOfRange: false, product: null },
+    realDate: new Date(d.getTime() + 3 * HOUR).toISOString(),
+  });
+
+  beforeEach(() => {
+    clock = 10_000;
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    particles.last = null;
+    fetchMeteoGrids.mockReset();
+    fetchMeteoGrids.mockImplementation(gfsWind);
+  });
+
+  it('même heure demandée : particules aussitôt visibles et lecture disponible', async () => {
+    const t = makeApi(new Date('2026-11-18T10:00:00Z'));
+    const layer = setupWindLayer(t.api)!;
+    layer.setVisible(true);
+    await flush();
+    layer.setVisible(false);
+    fetchMeteoGrids.mockImplementationOnce(() => new Promise(() => {}));
+    layer.setVisible(true);
+    expect(shown()).toBe(true);
+    expect(layer.inspect!(0, 0)).toMatchObject({ availability: 'available' });
+  });
+
+  it('heure effective : particules masquées et lecture `stale`, jamais l’ancienne grille', async () => {
+    const t = makeApi(new Date('2026-11-18T10:00:00Z'));
+    const layer = setupWindLayer(t.api)!;
+    layer.setVisible(true);
+    await flush();
+    layer.setVisible(false);
+    t.setDate(new Date('2026-11-18T13:00:00Z'));
+    fetchMeteoGrids.mockImplementationOnce(() => new Promise(() => {}));
+    layer.setVisible(true);
+    expect(shown()).toBe(false);
+    expect(layer.inspect!(0, 0)).toMatchObject({
+      availability: 'stale',
+      speedKmh: null,
+    });
+  });
+
+  it('retour à l’heure demandée initialement après une réactivation intermédiaire', async () => {
+    const t = makeApi(new Date('2026-11-18T10:00:00Z'));
+    const layer = setupWindLayer(t.api)!;
+    layer.setVisible(true);
+    await flush();
+    layer.setVisible(false);
+    t.setDate(new Date('2026-11-18T13:00:00Z'));
+    fetchMeteoGrids.mockImplementationOnce(() => new Promise(() => {}));
+    layer.setVisible(true);
+    layer.setVisible(false);
+    t.setDate(new Date('2026-11-18T10:00:00Z'));
+    fetchMeteoGrids.mockImplementationOnce(() => new Promise(() => {}));
+    layer.setVisible(true);
+    expect(shown()).toBe(true);
+    expect(layer.inspect!(0, 0).availability).toBe('available');
+  });
+});

@@ -486,3 +486,94 @@ describe('setupMeteoModelLayer : inspection d’un point (GAL-METEO-INSPECT-002)
     expect((layer.inspect!(0, -90) as ScalarReading).value).toBe(3);
   });
 });
+
+describe('cohérence rendu/inspection avec une date effective GFS décalée (GAL-METEO-INSPECT-002)', () => {
+  const HOUR = 3_600_000;
+  const g: ScalarGrid = {
+    step: 90,
+    latMin: -90,
+    lonMin: -180,
+    nLat: 3,
+    nLon: 4,
+    values: Float32Array.from([5, 5, 5, 5, 10, 20, 30, 40, 7, 7, 7, 7]),
+  };
+  const gfs = async (d: Date) => ({
+    grid: g,
+    provider: 'NOAA GFS',
+    plan: {
+      source: 'forecast',
+      outOfRange: false,
+      product: {
+        kind: 'forecastModel' as const,
+        validTime: { from: d.getTime(), to: d.getTime() },
+        offsetToleranceMs: HOUR,
+      },
+    },
+    realDate: new Date(d.getTime() + 3 * HOUR).toISOString(),
+  });
+  const inspecting = { inspect: { variable: 'temperature', unit: '°C' } };
+
+  beforeEach(() => {
+    clock = 10_000;
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    fetchMeteoGrid.mockReset();
+    fetchMeteoGrid.mockImplementation(gfs);
+  });
+
+  it('même heure demandée : le rendu réutilise la texture et la lecture reste disponible', async () => {
+    const t = makeApi(new Date('2026-11-18T10:00:00Z'));
+    const earth = makeEarth();
+    const layer = make(t.api, earth, inspecting);
+    layer.setVisible(true);
+    await flush();
+    layer.setVisible(false);
+    earth.setLayerVisible.mockClear();
+    fetchMeteoGrid.mockImplementationOnce(() => new Promise(() => {}));
+    layer.setVisible(true);
+    expect(earth.setLayerVisible).toHaveBeenCalledWith('thermal', true);
+    expect(layer.inspect!(0, -90)).toMatchObject({
+      availability: 'available',
+      value: 20,
+    });
+  });
+
+  it('heure effective (différente de la demandée) : ni rendu ni lecture de l’ancienne donnée', async () => {
+    const t = makeApi(new Date('2026-11-18T10:00:00Z'));
+    const earth = makeEarth();
+    const layer = make(t.api, earth, inspecting);
+    layer.setVisible(true);
+    await flush();
+    layer.setVisible(false);
+    t.setDate(new Date('2026-11-18T13:00:00Z')); // = realDate de la grille gardée
+    earth.setLayerVisible.mockClear();
+    fetchMeteoGrid.mockImplementationOnce(() => new Promise(() => {}));
+    layer.setVisible(true);
+    expect(earth.setLayerVisible).not.toHaveBeenCalledWith('thermal', true);
+    expect(layer.inspect!(0, -90)).toMatchObject({
+      availability: 'stale',
+      value: null,
+    });
+  });
+
+  it('retour à l’heure demandée initialement : la donnée redevient réutilisable des deux côtés', async () => {
+    const t = makeApi(new Date('2026-11-18T10:00:00Z'));
+    const earth = makeEarth();
+    const layer = make(t.api, earth, inspecting);
+    layer.setVisible(true);
+    await flush();
+    layer.setVisible(false);
+    t.setDate(new Date('2026-11-18T13:00:00Z'));
+    fetchMeteoGrid.mockImplementationOnce(() => new Promise(() => {}));
+    layer.setVisible(true); // réactivation intermédiaire, réponse différée
+    layer.setVisible(false);
+    t.setDate(new Date('2026-11-18T10:00:00Z'));
+    earth.setLayerVisible.mockClear();
+    fetchMeteoGrid.mockImplementationOnce(() => new Promise(() => {}));
+    layer.setVisible(true);
+    expect(earth.setLayerVisible).toHaveBeenCalledWith('thermal', true);
+    expect(layer.inspect!(0, -90)).toMatchObject({
+      availability: 'available',
+      value: 20,
+    });
+  });
+});
