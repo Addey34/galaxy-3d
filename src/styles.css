@@ -4299,6 +4299,68 @@ body.wi-armed #explo-labels .explo-label[data-body-name='earth'] * {
   }
 }
 
+/* Résumé compact et bascule compact/développé : réservés au téléphone (voir plus bas). */
+.wi-summary,
+.wi-expand {
+  display: none;
+}
+.wi-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.wi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wi-chip .wi-icon {
+  width: 1rem;
+  height: 1rem;
+}
+.wi-chip[data-status='pending'],
+.wi-chip[data-status='unavailable'],
+.wi-chip[data-status='error'] {
+  opacity: 0.6;
+  font-weight: 400;
+}
+.wi-about {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+}
+.wi-chevron {
+  transition: transform 0.18s ease;
+}
+.surface--inspector:not(.is-compact) .wi-chevron {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wi-chevron {
+    transition: none;
+  }
+}
+
 @media (max-width: 768px) {
   /* Sur téléphone la carte est une feuille en bas, au-dessus des commandes de temps. */
   .surface--inspector {
@@ -4308,5 +4370,39 @@ body.wi-armed #explo-labels .explo-label[data-body-name='earth'] * {
     top: auto !important;
     width: auto !important;
     max-height: min(46vh, 22rem) !important;
+  }
+  /* État compact : le globe reste visible et sélectionnable. Seuls le résumé, l'indication et les
+     messages restent ; le formulaire, les lignes détaillées et les notes passent derrière la bascule. */
+  .wi-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .wi-expand {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+  }
+  .surface--inspector .bi-close {
+    width: 2rem;
+    height: 2rem;
+  }
+  .surface--inspector.is-compact {
+    max-height: none !important;
+  }
+  /* Développé : les lignes disent déjà tout, le résumé ferait doublon. */
+  .surface--inspector:not(.is-compact) .wi-summary {
+    display: none;
+  }
+  .surface--inspector.is-compact .wi-coords,
+  .surface--inspector.is-compact .wi-rows,
+  .surface--inspector.is-compact .wi-note {
+    display: none;
+  }
+  .surface--inspector.is-compact .wi-hint {
+    margin: 0;
+  }
+  .surface--inspector.is-compact .bi-header {
+    padding-bottom: 0;
   }
 }

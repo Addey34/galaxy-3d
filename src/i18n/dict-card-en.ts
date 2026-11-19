@@ -248,6 +248,10 @@ export const cardEn = {
   'inspect.badCoords':
     'Enter a latitude from −90 to 90 and a longitude from −180 to 180.',
   'inspect.details': 'Source and date',
+  'inspect.expand': 'Show the full card',
+  'inspect.collapse': 'Show less',
+  'inspect.about': 'About these values',
+  'inspect.summary': 'Readings at this point',
   'inspect.caveat':
     'Values are interpolated from a model grid. They are not a measurement at this exact spot.',
   'inspect.selected': 'Point selected: {lat}, {lon}.',

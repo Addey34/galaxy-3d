@@ -119,6 +119,8 @@ export async function setupWeatherInspector(
   await loadDeferredMessages();
 
   let armed = false;
+  const phoneQuery = window.matchMedia('(max-width: 768px)');
+  let compact = phoneQuery.matches;
   let point: { latitudeDeg: number; longitudeDeg: number } | null = null;
   let signature = '';
   let lastPoll = 0;
@@ -144,9 +146,16 @@ export async function setupWeatherInspector(
   closeButton.type = 'button';
   closeButton.innerHTML =
     '<svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
-  header.append(heading, closeButton);
+  // Téléphone : l'état compact laisse le globe visible, l'état développé donne la carte entière.
+  const expandButton = el('button', 'bi-close wi-expand');
+  expandButton.type = 'button';
+  expandButton.setAttribute('aria-controls', 'weather-inspector-body');
+  expandButton.innerHTML =
+    '<svg class="wi-chevron" viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  header.append(heading, expandButton, closeButton);
 
   const body = el('div', 'surface-body wi-body');
+  body.id = 'weather-inspector-body';
   // Une zone qui défile doit s'atteindre au clavier, et se nommer.
   body.tabIndex = 0;
   body.setAttribute('role', 'group');
@@ -189,7 +198,15 @@ export async function setupWeatherInspector(
   const noLayers = el('p', 'wi-hint wi-hint--layers');
   const images = el('p', 'wi-note');
   const caveat = el('p', 'wi-note wi-caveat');
-  body.append(form, problem, hint, list, noLayers, images, caveat);
+  const summaryBar = el('div', 'wi-summary');
+  const chips = el('ul', 'wi-chips');
+  const aboutButton = el('button', 'wi-about');
+  aboutButton.type = 'button';
+  aboutButton.innerHTML =
+    '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 7.2v4M8 4.9v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  summaryBar.append(chips, aboutButton);
+  caveat.tabIndex = -1;
+  body.append(summaryBar, form, problem, hint, list, noLayers, images, caveat);
   card.append(header, body);
   document.body.append(card);
 
@@ -288,6 +305,14 @@ export async function setupWeatherInspector(
     goButton.textContent = t('inspect.go');
     centerButton.textContent = t('inspect.center');
     closeButton.setAttribute('aria-label', t('surface.close'));
+    expandButton.setAttribute(
+      'aria-label',
+      t(compact ? 'inspect.expand' : 'inspect.collapse')
+    );
+    expandButton.setAttribute('aria-expanded', String(!compact));
+    card.classList.toggle('is-compact', compact);
+    aboutButton.setAttribute('aria-label', t('inspect.about'));
+    chips.setAttribute('aria-label', t('inspect.summary'));
     caveat.textContent = t('inspect.caveat');
     images.textContent = t('inspect.hint.images');
   }
@@ -324,6 +349,24 @@ export async function setupWeatherInspector(
       list.append(li); // l'ordre des couches du panneau (append déplace sans recréer)
     }
     list.hidden = models.length === 0;
+    chips.replaceChildren(
+      ...models.map((model) => {
+        const chip = el('li', 'wi-chip');
+        chip.dataset['status'] = model.status;
+        chip.setAttribute(
+          'aria-label',
+          `${model.label}: ${model.value ?? model.message ?? ''}`
+        );
+        const icon = el('span', 'wi-icon');
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = `<svg viewBox="0 0 16 16" width="16" height="16">${ICONS[model.variable] ?? ''}</svg>`;
+        const text = el('span', 'wi-chip-value');
+        text.textContent = model.value ?? '\u2013';
+        chip.append(icon, text);
+        return chip;
+      })
+    );
+    aboutButton.hidden = models.length === 0;
     // Les trois états d'une carte : rien de choisi, choisi sans couche active, lectures.
     hint.textContent = t('inspect.hint.pick');
     hint.hidden = !!point;
@@ -472,6 +515,7 @@ export async function setupWeatherInspector(
         document.activeElement !== document.body
           ? document.activeElement
           : null;
+      compact = phoneQuery.matches;
       card.hidden = false;
       render();
       syncSurfaceFocus(true, card, opener);
@@ -488,6 +532,18 @@ export async function setupWeatherInspector(
     for (const listener of armedListeners) listener(armed);
   }
 
+  function setCompact(next: boolean, focusCaveat = false): void {
+    if (compact === next && !focusCaveat) return;
+    compact = next;
+    renderStatic();
+    if (focusCaveat && !compact) {
+      caveat.hidden = false;
+      caveat.scrollIntoView({ block: 'nearest' });
+      caveat.focus({ preventScroll: true });
+    }
+  }
+  expandButton.addEventListener('click', () => setCompact(!compact));
+  aboutButton.addEventListener('click', () => setCompact(false, true));
   closeButton.addEventListener('click', () => setArmed(false));
   card.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {

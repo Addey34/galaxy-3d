@@ -31,7 +31,7 @@ async function rectOf(page: Page, selector: string): Promise<Rect | null> {
 }
 
 for (const locale of LOCALES) {
-  test(`${locale}: l'inspecteur tient dans l'écran, au doigt`, async ({
+  test(`${locale}: l'inspecteur compact laisse le globe, le développé donne tout, au doigt`, async ({
     page,
   }, info) => {
     await page.route('**/sbdb_query.api*', (route) => route.abort());
@@ -50,45 +50,108 @@ for (const locale of LOCALES) {
     for (const id of ['wind', 'precip-model', 'clouds-model', 'thermal-model'])
       await page.locator(`#weather-layers input[data-layer="${id}"]`).check();
     await page.locator('#weather-inspect-toggle').tap();
-    // Le panneau se replie pour laisser viser, les couches restent actives.
     await expect(page.locator('#weather-layers')).toBeHidden();
     const card = page.locator('#weather-inspector');
     await expect(card).toBeVisible();
-
-    // Un tap sur le globe (au centre de la vue) choisit un point et pose le repère.
-    const canvas = (await page.locator('canvas').first().boundingBox())!;
-    await page.touchscreen.tap(
-      canvas.x + canvas.width / 2,
-      canvas.y + canvas.height / 2
-    );
-    await expect(card.locator('#weather-inspector-point')).toBeVisible();
-    await expect(page.locator('.wi-marker')).toBeVisible();
-    await expect(
-      card.locator('.wi-row[data-variable="temperature"] .wi-value')
-    ).toBeVisible({ timeout: 40_000 });
-    await expect(
-      card.locator('.wi-row[data-variable="wind"] .wi-value')
-    ).toBeVisible();
-    await page.waitForTimeout(600);
-
+    const expand = card.locator('.wi-expand');
+    const subtitle = card.locator('#weather-inspector-point');
+    const chips = card.locator('.wi-chip');
     const view = page.viewportSize()!;
-    const box = (await rectOf(page, '#weather-inspector'))!;
+
+    // ---- compact : démarre ainsi, tient dans un bandeau bas, le globe reste libre.
+    await expect(card).toHaveClass(/is-compact/);
+    await expect(expand).toHaveAttribute('aria-expanded', 'false');
+    const canvas = (await page.locator('canvas').first().boundingBox())!;
+    const cx = canvas.x + canvas.width / 2;
+    const cy = canvas.y + canvas.height / 2;
+    await page.touchscreen.tap(cx, cy);
+    await expect(subtitle).toBeVisible();
+    await expect(page.locator('.wi-marker')).toBeVisible();
+    await expect(chips).toHaveCount(4, { timeout: 40_000 });
+    await expect(chips.first()).toContainText(/\d/);
+    const first = await subtitle.textContent();
+
+    // Un second point au doigt : le repère suit, la carte reste compacte.
+    await page.touchscreen.tap(cx + 30, cy - 20);
+    await expect(subtitle).not.toHaveText(first!);
+    await expect(card).toHaveClass(/is-compact/);
+    await page.waitForTimeout(500);
+
+    const compactBox = (await card.boundingBox())!;
+    expect(compactBox.height).toBeLessThan(view.height * 0.3);
+    const markerBox = (await page.locator('.wi-marker').boundingBox())!;
+    expect(markerBox.y + markerBox.height).toBeLessThan(compactBox.y);
+    const timeBox = await rectOf(page, '#time-panel');
+    if (timeBox)
+      expect(
+        overlaps(compactBox, timeBox),
+        'la carte compacte recouvre la barre de temps'
+      ).toBe(false);
+    // Le formulaire et les lignes détaillées sont derrière la bascule.
+    await expect(card.locator('.wi-coords')).toBeHidden();
+    await expect(card.locator('.wi-rows')).toBeHidden();
+
+    if (SHOTS && (locale === 'en' || locale === 'fr')) {
+      mkdirSync(SHOTS, { recursive: true });
+      await page.screenshot({
+        path: join(SHOTS, `aud3-${info.project.name}-${locale}-1-compact.png`),
+      });
+    }
+
+    // ---- changement de date : les pastilles passent en attente, puis reviennent.
+    if (locale === 'en') {
+      mock.hold();
+      await page.locator('#date-input').evaluate((el) => {
+        (el as HTMLInputElement).value = '2026-11-25';
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      await expect(chips.first()).toHaveAttribute(
+        'data-status',
+        /pending|unavailable/,
+        { timeout: 20_000 }
+      );
+      await expect(subtitle).toBeVisible();
+      if (SHOTS)
+        await page.screenshot({
+          path: join(
+            SHOTS,
+            `aud3-${info.project.name}-${locale}-2-compact-stale.png`
+          ),
+        });
+      mock.release();
+      await expect(chips.first()).toHaveAttribute('data-status', 'value', {
+        timeout: 40_000,
+      });
+    }
+
+    // ---- développé : même point, mêmes valeurs, formulaire, notes ; rien ne déborde.
+    const pointBefore = await subtitle.textContent();
+    await expand.tap();
+    await expect(card).not.toHaveClass(/is-compact/);
+    await expect(expand).toHaveAttribute('aria-expanded', 'true');
+    await expect(subtitle).toHaveText(pointBefore!);
+    await expect(card.locator('.wi-coords')).toBeVisible();
+    for (const variable of [
+      'temperature',
+      'precipitation',
+      'cloudCover',
+      'wind',
+    ])
+      await expect(
+        card.locator(`.wi-row[data-variable="${variable}"] .wi-value`)
+      ).toBeVisible();
+    await page.waitForTimeout(600);
+    const box = (await card.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(view.width + 0.5);
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height).toBeLessThanOrEqual(view.height + 0.5);
-
-    // Ni le panneau météo ni la barre de temps ne sont recouverts.
-    for (const other of ['#weather-layers', '#time-panel']) {
-      const rect = await rectOf(page, other);
-      if (rect)
-        expect(
-          overlaps(box, rect),
-          `la carte recouvre ${other} : ${JSON.stringify({ box, rect })}`
-        ).toBe(false);
-    }
-
-    // Aucun élément de la carte ne dépasse horizontalement (mesuré élément par élément).
+    const timeBox2 = await rectOf(page, '#time-panel');
+    if (timeBox2)
+      expect(
+        overlaps(box, timeBox2),
+        'la carte développée recouvre la barre de temps'
+      ).toBe(false);
     const wide = await card.evaluate((root) =>
       Array.from(root.querySelectorAll<HTMLElement>('*'))
         .filter((e) => !e.classList.contains('sr-only'))
@@ -96,43 +159,33 @@ for (const locale of LOCALES) {
         .map((e) => `${e.tagName}.${e.className}`)
     );
     expect(wide).toEqual([]);
-    const overflow = await page.evaluate(
-      () =>
-        document.documentElement.scrollWidth -
-        document.documentElement.clientWidth
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
-
-    if (SHOTS && (locale === 'en' || locale === 'fr')) {
-      mkdirSync(SHOTS, { recursive: true });
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth
+      )
+    ).toBeLessThanOrEqual(0);
+    if (SHOTS && (locale === 'en' || locale === 'fr'))
       await page.screenshot({
-        path: join(SHOTS, `${info.project.name}-${locale}-1-values.png`),
+        path: join(SHOTS, `aud3-${info.project.name}-${locale}-3-expanded.png`),
       });
-    }
 
-    // Une couche qui change de date : la valeur disparaît le temps du chargement.
-    if (locale === 'en') {
-      mock.hold();
-      await page.locator('#date-input').evaluate((el) => {
-        (el as HTMLInputElement).value = '2026-11-25';
-        el.dispatchEvent(new Event('change', { bubbles: true }));
+    // ---- retour au compact : le point et les valeurs sont conservés.
+    await expand.tap();
+    await expect(card).toHaveClass(/is-compact/);
+    await expect(subtitle).toHaveText(pointBefore!);
+    await expect(chips).toHaveCount(4);
+
+    // ---- l'avertissement : un bouton du bandeau compact l'ouvre et le met au focus.
+    await card.locator('.wi-about').tap();
+    await expect(card).not.toHaveClass(/is-compact/);
+    await expect(card.locator('.wi-caveat')).toBeVisible();
+    await expect(card.locator('.wi-caveat')).toBeFocused();
+    if (SHOTS && locale === 'en')
+      await page.screenshot({
+        path: join(SHOTS, `aud3-${info.project.name}-${locale}-4-caveat.png`),
       });
-      const temperature = card.locator('.wi-row[data-variable="temperature"]');
-      await expect(temperature.locator('.wi-message')).toContainText(
-        /Updating|Out of date/,
-        { timeout: 20_000 }
-      );
-      await expect(temperature.locator('.wi-value')).toBeHidden();
-      if (SHOTS) {
-        await page.screenshot({
-          path: join(SHOTS, `${info.project.name}-${locale}-2-stale.png`),
-        });
-      }
-      mock.release();
-      await expect(temperature.locator('.wi-value')).toBeVisible({
-        timeout: 40_000,
-      });
-    }
 
     // La croix ferme : carte masquée, repère masqué.
     await card.locator('.surface-close').tap();

@@ -227,6 +227,10 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'inspect.badCoords':
     'Digite uma latitude de −90 a 90 e uma longitude de −180 a 180.',
   'inspect.details': 'Fonte e data',
+  'inspect.expand': 'Mostrar o cartão completo',
+  'inspect.collapse': 'Mostrar menos',
+  'inspect.about': 'Sobre estes valores',
+  'inspect.summary': 'Leituras neste ponto',
   'inspect.caveat':
     'Os valores são interpolados de uma grade de modelo. Não são uma medição neste ponto exato.',
   'inspect.selected': 'Ponto escolhido: {lat}, {lon}.',
