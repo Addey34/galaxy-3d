@@ -36,7 +36,6 @@ import {
   setupTourPlayerOnDemand,
   type GuidedTourLauncher,
 } from './ui/tourLaunchers';
-import { TOUR_SCRIPTS } from './config/tourScripts';
 import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
@@ -900,7 +899,6 @@ function wireChrome(): {
       cameraSystem,
       orbitalMechanics,
       planetNav,
-      TOUR_SCRIPTS,
       permalink,
       modeSwitcher,
       surfacePanel,

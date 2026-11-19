@@ -61,7 +61,11 @@ export function setupGuidedTourOnDemand(): GuidedTourLauncher {
 }
 
 export interface TourPlayerLauncher {
-  /** Lance une visite par son identifiant ; `false` si aucune ne le porte ou si le chargement échoue. */
+  /**
+   * Lance une visite par son identifiant ; `false` si aucune ne le porte ou si un chargement
+   * échoue. Deux téléchargements : le lecteur (au premier clic sur l'aide, ou ici) puis la fiche de
+   * LA visite demandée, qui n'est jamais téléchargée avant d'être choisie (GAL-TOUR-SCALE-001).
+   */
   start(id: string): Promise<boolean>;
 }
 

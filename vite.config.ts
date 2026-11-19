@@ -8,6 +8,7 @@ import {
   NAVIGATE_FALLBACK_DENYLIST,
 } from './src/seo/pwaRouting';
 import { stripGlslComments as stripGlslSource } from './src/build/glslComments';
+import { buildTourCatalogue } from './src/registry/tours/catalogue';
 import { clientFactSnapshot as reduceFactSnapshot } from './src/build/clientFactSnapshot';
 import type {
   BuildingManifestSummary,
@@ -156,6 +157,8 @@ function stripRegistryNotes() {
  * production, reçoit la version allégée : la voie exercée par les tests e2e est bien celle qui est
  * livrée.
  */
+const TOUR_CATALOGUE_ID = 'virtual:tour-catalogue';
+
 function deriveRegistryText() {
   const PREFIX = 'virtual:registry-text/catalogue-';
   /**
@@ -172,7 +175,10 @@ function deriveRegistryText() {
   const isRegistryJson = (id: string): boolean =>
     /[\\/]src[\\/]registry[\\/].+\.json$/.test(id) &&
     !/order\.json$/.test(id) &&
-    !/[\\/]schema[\\/]/.test(id);
+    !/[\\/]schema[\\/]/.test(id) &&
+    // GAL-TOUR-SCALE-001 : une visite voyage dans SON morceau avec ses quatre langues, jamais
+    // réduite à l'anglais ni reposée depuis la carte du catalogue.
+    !/[\\/]registry[\\/]tours[\\/]/.test(id);
   const defersText = (id: string): boolean => {
     const dir = /[\\/]registry[\\/]([^\\/]+)[\\/]/.exec(id)?.[1];
     return dir !== undefined && DEFERRING_DIRS.includes(dir);
@@ -189,7 +195,6 @@ function deriveRegistryText() {
       'spacecraft',
       'interstellar',
       'providers',
-      'tours',
       'presets',
     ]) {
       if (only && !only.includes(dir)) continue;
@@ -208,11 +213,28 @@ function deriveRegistryText() {
     name: 'derive-registry-text',
     enforce: 'pre' as const,
     resolveId(id: string): string | null {
-      return id.startsWith(PREFIX) || id.startsWith(CARD_PREFIX)
+      return id.startsWith(PREFIX) ||
+        id.startsWith(CARD_PREFIX) ||
+        id === TOUR_CATALOGUE_ID
         ? `\0${id}`
         : null;
     },
     async load(id: string): Promise<string | null> {
+      // Le catalogue léger des visites (GAL-TOUR-SCALE-001) : identifiant et titre dans les quatre
+      // langues, dans l'ordre de `order.json`, dérivés des fiches. Le sélecteur le lit sans
+      // qu'aucune visite ne soit ouverte ; `buildTourCatalogue` refuse un ordre qui ne recouvre
+      // pas exactement les fiches, donc un build ne livre jamais un sélecteur incohérent.
+      if (id === `\0${TOUR_CATALOGUE_ID}`) {
+        const { readdirSync, readFileSync } = await import('fs');
+        const dir = resolve(__dirname, 'src/registry/tours');
+        const records = readdirSync(dir)
+          .filter((name) => name.endsWith('.json') && name !== 'order.json')
+          .map((name) => JSON.parse(readFileSync(resolve(dir, name), 'utf-8')));
+        const order = JSON.parse(
+          readFileSync(resolve(dir, 'order.json'), 'utf-8')
+        ).order as string[];
+        return `export default ${JSON.stringify(buildTourCatalogue(records, order))};`;
+      }
       // La provenance des faits (lot 52) : par corps, chaque fait privé de sa valeur, sous la
       // forme même que le navigateur reçoit pour le reste de la fiche (raisons en empreintes).
       if (id === `\0${CARD_PREFIX}facts`) {
@@ -1828,6 +1850,15 @@ export default defineConfig({
         SolarSystemApp: resolve(__dirname, 'index.html'),
       },
       output: {
+        // Une fiche de visite est un morceau à la demande (GAL-TOUR-SCALE-001) : son nom commence
+        // par `tour-`, ce qui permet à `core/startupBudget.ts` de classer la FAMILLE entière sans
+        // liste recopiée. Tout autre morceau garde le nom par défaut de Vite.
+        chunkFileNames: (chunk: { facadeModuleId: string | null }) =>
+          /[\\/]src[\\/]registry[\\/]tours[\\/][^\\/]+\.json$/.test(
+            chunk.facadeModuleId ?? ''
+          )
+            ? 'assets/tour-[name]-[hash].js'
+            : 'assets/[name]-[hash].js',
         // Sépare les grosses libs tierces du code applicatif : elles changent
         // rarement (meilleur cache navigateur) et allègent le chunk principal
         // sous le seuil d'avertissement de Vite.

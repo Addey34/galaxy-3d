@@ -52,6 +52,7 @@ const {
   exclusiveGroupCost,
   NON_BOOT_CHUNKS,
   CONDITIONAL_START_PROFILES,
+  NON_BOOT_CHUNK_FAMILIES,
   JAVASCRIPT_STARTUP_BUDGET_BYTES,
   judgeFamilies,
 } = await loader.ssrLoadModule('/src/core/startupBudget.ts');
@@ -219,12 +220,45 @@ const bootFiles = [
 // pire qu'aucun budget. Tout morceau doit donc etre dans la cloture statique, declare dynamique
 // au demarrage, ou declare hors demarrage — et un morceau neuf oblige a trancher.
 const declaredOut = new Set(NON_BOOT_CHUNKS.map((entry) => entry.chunk));
+// Les FAMILLES (GAL-TOUR-SCALE-001) : des morceaux-données reconnus par le préfixe de leur nom.
+const familyOf = (file) =>
+  NON_BOOT_CHUNK_FAMILIES.find((family) =>
+    chunkName(file).startsWith(family.prefix)
+  );
 const unclassified = allChunks.filter(
   (file) =>
     !bootFiles.includes(file) &&
     !exclusiveFiles.includes(file) &&
-    !declaredOut.has(chunkName(file))
+    !declaredOut.has(chunkName(file)) &&
+    !familyOf(file)
 );
+// Une famille dont un membre est dans la clôture statique n'est plus « hors démarrage » : c'est
+// exactement la dérive que ce lot supprime, elle doit casser le budget et non se faire oublier.
+const familyInBoot = bootFiles.filter((file) => familyOf(file));
+if (familyInBoot.length > 0) {
+  console.error(
+    `ces morceaux de famille hors démarrage sont dans le démarrage : ${familyInBoot.join(', ')}.`
+  );
+  process.exit(1);
+}
+// Les visites : exactement un morceau `tour-<id>` par fiche déclarée dans `order.json`.
+{
+  const order = JSON.parse(
+    readFileSync(join(ROOT, 'src', 'registry', 'tours', 'order.json'), 'utf-8')
+  ).order;
+  const members = allChunks
+    .filter((file) => chunkName(file).startsWith('tour-'))
+    .map((file) => chunkName(file).slice('tour-'.length))
+    .sort();
+  const expected = [...order].sort();
+  if (JSON.stringify(members) !== JSON.stringify(expected)) {
+    console.error(
+      `les morceaux de visites ne correspondent pas à order.json.\n` +
+        `  morceaux : ${members.join(', ') || '(aucun)'}\n  order.json : ${expected.join(', ')}`
+    );
+    process.exit(1);
+  }
+}
 if (unclassified.length > 0) {
   console.error(
     `ces morceaux ne sont classes nulle part : ${unclassified.join(', ')}.
@@ -401,7 +435,23 @@ for (const profile of CONDITIONAL_START_PROFILES) {
     }
     return file;
   });
-  const total = bootBytes + files.reduce((sum, file) => sum + sizeOf(file), 0);
+  // Une famille : le membre le plus LOURD (l'identifiant demandé n'est pas connu du budget).
+  const familyBytes = (profile.families ?? []).reduce((sum, prefix) => {
+    const sizes = allChunks
+      .filter((file) => chunkName(file).startsWith(prefix))
+      .map(sizeOf);
+    if (sizes.length === 0) {
+      console.error(
+        `le profil « ${profile.id} » cite la famille « ${prefix} », qui n'a aucun membre dans dist/assets.`
+      );
+      process.exit(1);
+    }
+    return sum + Math.max(...sizes);
+  }, 0);
+  const total =
+    bootBytes +
+    files.reduce((sum, file) => sum + sizeOf(file), 0) +
+    familyBytes;
   const left = JAVASCRIPT_STARTUP_BUDGET_BYTES - total;
   if (left < 0) profileOver = true;
   console.log(

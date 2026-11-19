@@ -441,7 +441,7 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
     chunk: 'tourPlayer',
     reason:
-      "les visites scénarisées (2026-11-15, GAL-PERF-001A) : lecteur, moteur et résolution de date, importés par `ui/tourLaunchers` à la première ouverture de l'aide, ou tout de suite pour `?tour=`.",
+      "les visites scénarisées (2026-11-15, GAL-PERF-001A) : lecteur, moteur et résolution de date, importés par `ui/tourLaunchers` à la première ouverture de l'aide, ou tout de suite pour `?tour=`. Depuis GAL-TOUR-SCALE-001 il porte aussi le catalogue léger (identifiant et titre en quatre langues) que le sélecteur affiche avant toute ouverture.",
   },
   {
     chunk: 'meteorLayer',
@@ -768,7 +768,35 @@ export interface ConditionalStartProfile {
   readonly label: string;
   /** Morceaux `NON_BOOT_CHUNKS` que CE démarrage charge en plus, noms sans empreinte. */
   readonly chunks: readonly string[];
+  /**
+   * Préfixes de FAMILLES (`NON_BOOT_CHUNK_FAMILIES`) dont CE démarrage charge UN membre. Le budget
+   * ne sait pas lequel (l'identifiant vient de l'adresse) : il compte le plus lourd, ce qui est le
+   * seul plafond honnête.
+   */
+  readonly families?: readonly string[];
 }
+
+/**
+ * Une FAMILLE de morceaux hors démarrage, reconnue par le préfixe de son nom (GAL-TOUR-SCALE-001).
+ *
+ * `NON_BOOT_CHUNKS` nomme chaque morceau, ce qui ne tient pas quand les morceaux sont des DONNÉES
+ * qui se multiplient : une visite de plus est une fiche et une ligne dans `order.json`, jamais une
+ * ligne de TypeScript. La famille classe tous ses membres d'un coup, et le script de budget
+ * vérifie qu'il en existe exactement un par fiche déclarée (aucun manquant, aucun orphelin).
+ */
+export interface NonBootChunkFamily {
+  /** Préfixe du nom SANS empreinte : `tour-` couvre `tour-seasons-AbCd1234.js`. */
+  readonly prefix: string;
+  readonly reason: string;
+}
+
+export const NON_BOOT_CHUNK_FAMILIES: readonly NonBootChunkFamily[] = [
+  {
+    prefix: 'tour-',
+    reason:
+      "les fiches de visites (GAL-TOUR-SCALE-001) : une fiche par visite, quatre langues comprises, téléchargée par `registry/tours/lazy` à l'ouverture de CETTE visite et d'aucune autre. Nommées `tour-<id>` par `chunkFileNames` de `vite.config.ts` ; ajouter une visite est une fiche et une ligne dans `order.json`, donc rien à déclarer ici.",
+  },
+];
 
 export const CONDITIONAL_START_PROFILES: readonly ConditionalStartProfile[] = [
   {
@@ -779,8 +807,9 @@ export const CONDITIONAL_START_PROFILES: readonly ConditionalStartProfile[] = [
   {
     id: 'tour-link',
     label:
-      'ouverture directe par `?tour=` : le lecteur de visites démarre la visite',
+      'ouverture directe par `?tour=` : le lecteur de visites démarre la visite, et la fiche de la visite demandée (la plus lourde de la famille) est téléchargée',
     chunks: ['tourPlayer'],
+    families: ['tour-'],
   },
   {
     id: 'immersive-vr',

@@ -25,7 +25,11 @@ import {
   type TourSignal,
   type TourStep,
 } from '@/core/tourEngine';
-import { resolveEventDate } from '@/config/tourScripts';
+import { resolveEventDate } from '@/config/tourEvents';
+import tourCatalogue from 'virtual:tour-catalogue';
+import { loadTourScript } from '@/registry/tours/lazy';
+import { createIntentLoader } from '@/core/intentLoader';
+import { announceLoadFailure } from './loadFailure';
 import { trapFocus } from './surfaceFocus';
 import type { SurfaceChoiceId } from './surfaceChoices';
 import type { SurfacePanelHandle } from './surfacePanel';
@@ -34,8 +38,13 @@ import type { OverlayCoordinator } from './overlayCoordinator';
 import type { PlaybackControls } from './playback';
 
 export interface TourPlayer {
-  /** Lance une visite par son identifiant ; `false` si aucune ne le porte (`?tour=`, lot 58). */
-  start(id: string): boolean;
+  /**
+   * Lance une visite par son identifiant ; `false` si aucune ne le porte (`?tour=`, lot 58), si son
+   * téléchargement échoue (dit au visiteur) ou si une autre intention l'a remplacée entre-temps.
+   * La fiche est téléchargée à la demande (GAL-TOUR-SCALE-001) : la promesse se résout quand la
+   * visite a démarré, jamais avant.
+   */
+  start(id: string): Promise<boolean>;
   dispose(): void;
 }
 
@@ -53,7 +62,6 @@ export function setupTourPlayer(
   camera: CameraSystem,
   om: OrbitalMechanics,
   navigation: PlanetNavigation,
-  scripts: TourScript[],
   permalink: TourPlayerPermalink,
   /**
    * Le sélecteur de mode, et NON `OrbitalMechanics` directement : lui seul met à jour les
@@ -81,7 +89,8 @@ export function setupTourPlayer(
   speed: Pick<PlaybackControls, 'borrowSpeed' | 'releaseSpeed'>
 ): TourPlayer {
   const helpPopover = document.getElementById('help-popover');
-  if (!helpPopover) return { start: () => false, dispose: () => {} };
+  if (!helpPopover)
+    return { start: () => Promise.resolve(false), dispose: () => {} };
 
   const startButton = document.createElement('button');
   startButton.type = 'button';
@@ -91,12 +100,14 @@ export function setupTourPlayer(
   const picker = document.createElement('div');
   picker.className = 'stour-picker';
   picker.hidden = true;
-  const pickerButtons = scripts.map((script) => {
+  // Le sélecteur lit le catalogue LÉGER (identifiant, titre dans les quatre langues), dérivé des
+  // fiches au build : aucune visite n'est téléchargée avant d'être choisie.
+  const pickerButtons = tourCatalogue.map((entry) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'stour-picker-item';
     picker.append(btn);
-    return { script, btn };
+    return { entry, btn };
   });
   helpPopover.append(picker);
 
@@ -202,8 +213,8 @@ export function setupTourPlayer(
     pauseButton.textContent = t(signal.paused ? 'tours.resume' : 'tours.pause');
     nextButton.textContent = t('tours.next');
     closeButton.textContent = t('tours.close');
-    for (const { script, btn } of pickerButtons) {
-      btn.textContent = localizedText(script.title);
+    for (const { entry, btn } of pickerButtons) {
+      btn.textContent = localizedText(entry.title);
     }
     renderOutline();
     if (active && currentScript && currentStep) render(stepIndex, currentStep);
@@ -315,9 +326,34 @@ export function setupTourPlayer(
     permalink.sync();
   };
 
-  const start = (id: string): boolean => {
-    const script = scripts.find((s) => s.id === id);
-    if (!script) return false;
+  /**
+   * Le téléchargement d'une fiche, avec la règle « le dernier geste gagne » (`core/intentLoader`) :
+   * une résolution tardive ne démarre jamais une visite que le visiteur a remplacée ou que la
+   * fermeture de l'interface a annulée. Un refus n'est pas mis en cache : le clic suivant réessaie.
+   */
+  const loader = createIntentLoader(loadTourScript);
+  const setLoading = (loading: boolean): void => {
+    picker.setAttribute('aria-busy', String(loading));
+    for (const { btn } of pickerButtons) btn.disabled = loading;
+  };
+
+  const start = async (id: string): Promise<boolean> => {
+    // Une visite en cours possède l'écran (carte modale) : un second clic n'a rien à démarrer.
+    if (active) return false;
+    setLoading(true);
+    const result = await loader.request(id);
+    if (result.status === 'stale') return false;
+    setLoading(false);
+    if (result.status === 'failed') {
+      announceLoadFailure('tour-content');
+      return false;
+    }
+    if (result.status === 'unknown') return false;
+    begin(result.value);
+    return true;
+  };
+
+  const begin = (script: TourScript): void => {
     closePicker();
 
     currentScript = script;
@@ -387,7 +423,6 @@ export function setupTourPlayer(
       },
       signal
     ).then(finish);
-    return true;
   };
 
   const close = (): void => {
@@ -399,8 +434,8 @@ export function setupTourPlayer(
   startButton.addEventListener('click', () => {
     picker.hidden = !picker.hidden;
   });
-  for (const { script, btn } of pickerButtons) {
-    btn.addEventListener('click', () => void start(script.id));
+  for (const { entry, btn } of pickerButtons) {
+    btn.addEventListener('click', () => void start(entry.id));
   }
   pauseButton.addEventListener('click', () => {
     if (!active) return;
@@ -428,6 +463,8 @@ export function setupTourPlayer(
   return {
     start,
     dispose: () => {
+      // Une fiche encore en vol ne démarrera rien une fois l'interface retirée.
+      loader.cancel();
       close();
       releaseClearance();
       startButton.remove();
