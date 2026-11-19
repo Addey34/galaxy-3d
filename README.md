@@ -33,10 +33,12 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
 - **Événements** : consulter les prochaines phases lunaires et éclipses.
 - **Zoom optique** : ajuster le champ de vision en Exploration sans modifier la physique.
 - **Visite guidée** : parcourir les commandes au clavier ou à la souris au premier démarrage.
-- **Visites scénarisées** : quatre leçons qui pilotent la caméra et le temps, avec leurs légendes
-  (naissance d'une éclipse, danse des Galiléennes, voyage aux confins, saisons de la Terre). Chacune
-  est un fichier de données : en ajouter une ne demande pas de programmer, et les dates qu'elles
-  visent sont calculées, donc elles ne vieillissent pas.
+- **Visites scénarisées** : des leçons qui pilotent la caméra et le temps, avec leurs légendes
+  (éclipse, Galiléennes, ceinture de Kuiper, saisons, delta du Nil, rencontre de New Horizons avec
+  Pluton, Valles Marineris et Olympus Mons ; la liste et l'ordre sont dans
+  `src/registry/tours/order.json`). Chacune est un fichier de données : en ajouter une ne demande
+  pas de programmer. Les dates à venir sont calculées, donc elles ne vieillissent pas ; une date
+  passée (la rencontre de Pluton, le 14 juillet 2015) est celle d'un événement daté.
 - **Noms de la surface** : à l'approche d'un corps, les formations que l'Union astronomique
   internationale a nommées apparaissent à leur place, avec leur type et leur diamètre. Rien n'est
   téléchargé tant qu'on n'approche pas.
