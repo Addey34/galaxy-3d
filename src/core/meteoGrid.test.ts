@@ -118,12 +118,19 @@ describe('parseScalarGrid', () => {
     expect(g.values[11]).toBe(110);
   });
 
-  it('met 0 pour les points manquants sans planter', () => {
-    const g = parseScalarGrid([{ hourly: {} }], 'cloud_cover', {
+  it('NE met PAS 0 pour un point manquant : une absence est NaN, sans planter', () => {
+    // Ancien contrat (`?? 0`) : un trou devenait 0 °C, 0 % ou 0 hPa, indiscernable d'une mesure,
+    // coloré comme tel et lu par le vent comme un calme. Une cellule absente reste NaN ; le reste
+    // de la grille (ici 11 points valides) est conservé à sa place.
+    const response = Array.from({ length: 12 }, (_, i) =>
+      i === 0 ? { hourly: {} } : { hourly: { cloud_cover: [i] } }
+    );
+    const g = parseScalarGrid(response, 'cloud_cover', {
       step: 90,
       maxLat: 90,
     });
-    expect(g.values[0]).toBe(0);
+    expect(g.values[0]).toBeNaN();
+    expect(g.values[1]).toBe(1);
   });
 });
 

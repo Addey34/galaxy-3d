@@ -24,6 +24,8 @@ import { clearMeteoClientCache, fetchMeteoGrids } from './meteoClient';
 const fixture = readFileSync(
   resolve(import.meta.dirname, 'galaxyData.fixture.bin')
 );
+/** Le code « valeur absente » du format GXF1 (voir `decodeGxf`). */
+const MISSING_RAW = -32768;
 const buffer = (): ArrayBuffer =>
   fixture.buffer.slice(
     fixture.byteOffset,
@@ -165,6 +167,67 @@ describe('fetchMeteoGrids passe par le service avant Open-Meteo', () => {
       now,
     });
     expect(result.plan.product?.kind).toBe('reanalysis');
+  });
+
+  it('un champ du service ENTIÈREMENT absent est refusé : repli sur Open-Meteo, pas une carte vide', async () => {
+    // Même fichier, mais chaque valeur codée « absente » : le décodeur rend des NaN partout.
+    const bytes = new Uint8Array(buffer());
+    const headerLength = new DataView(bytes.buffer).getUint32(4, true);
+    const view = new DataView(bytes.buffer);
+    for (let at = 8 + headerLength; at < bytes.length; at += 2)
+      view.setInt16(at, MISSING_RAW, true);
+    const points = Array.from({ length: 12 }, () => ({
+      hourly: { wind_speed_10m: Array(24 * 8).fill(20) },
+    }));
+    const fetchMock = vi.fn(async (url: string) =>
+      url === GALAXY_DATA_MANIFEST
+        ? new Response(JSON.stringify(manifest), { status: 200 })
+        : url.startsWith(GALAXY_DATA_ORIGIN)
+          ? new Response(bytes.buffer.slice(0), { status: 200 })
+          : new Response(JSON.stringify(points), { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const result = await fetchMeteoGrids(new Date('2026-10-12T05:00:00Z'), {
+      variables: ['wind_speed_10m'],
+      forecastGrid: grid,
+      archiveGrid: grid,
+      now,
+    });
+    expect(result.provider).toBeUndefined(); // pas NOAA GFS : sa grille était vide
+    expect(result.grids?.['wind_speed_10m']?.values[0]).toBe(20);
+  });
+
+  it('un champ vide du service n’efface pas une ANNULATION : pas de repli sur Open-Meteo', async () => {
+    const bytes = new Uint8Array(buffer());
+    const view = new DataView(bytes.buffer);
+    const headerLength = view.getUint32(4, true);
+    for (let at = 8 + headerLength; at < bytes.length; at += 2)
+      view.setInt16(at, MISSING_RAW, true);
+    const controller = new AbortController();
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        calls.push(url);
+        if (url === GALAXY_DATA_MANIFEST)
+          return new Response(JSON.stringify(manifest), { status: 200 });
+        if (url.startsWith(GALAXY_DATA_ORIGIN)) {
+          controller.abort(); // le consommateur annule pendant que le champ arrive
+          return new Response(bytes.buffer.slice(0), { status: 200 });
+        }
+        throw new Error(`requête inattendue : ${url}`);
+      })
+    );
+    await expect(
+      fetchMeteoGrids(new Date('2026-10-12T05:00:00Z'), {
+        variables: ['wind_speed_10m'],
+        forecastGrid: grid,
+        archiveGrid: grid,
+        now,
+        signal: controller.signal,
+      })
+    ).rejects.toThrow();
+    expect(calls.some((url) => url.includes('open-meteo'))).toBe(false);
   });
 
   it('retombe sur Open-Meteo quand le service ne répond pas', async () => {

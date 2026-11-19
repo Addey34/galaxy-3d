@@ -15,7 +15,7 @@ import {
   stampToMs,
   type GalaxyDataManifest,
 } from './galaxyData';
-import type { ScalarGrid } from './meteoGrid';
+import { assertUsableGrid, type ScalarGrid } from './meteoGrid';
 import { planMeteoRequest, type MeteoTimePlan } from './meteoTimeTravel';
 import type { DatedProduct } from './temporal';
 import { PROVIDER_NAMES } from './providerNames';
@@ -199,10 +199,15 @@ function served(
   provider: string;
 } {
   const grids = Object.fromEntries(
-    variables.map((v) => [
-      v,
-      composeVariable(v, decoded.get(GALAXY_DATA_VARIABLES[v]!.field)!),
-    ])
+    variables.map((v) => {
+      const grid = composeVariable(
+        v,
+        decoded.get(GALAXY_DATA_VARIABLES[v]!.field)!
+      );
+      // Une grille sans cellule finie lève : l'appelant (try/catch) retombe sur Open-Meteo.
+      assertUsableGrid(grid, v);
+      return [v, grid];
+    })
   );
   const plan = planMeteoRequest(new Date(servedMs), { now });
   return {

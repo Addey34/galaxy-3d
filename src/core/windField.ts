@@ -60,9 +60,22 @@ export function windGridFromScalars(
   const u = new Float32Array(n);
   const v = new Float32Array(n);
   for (let i = 0; i < n; i++) {
-    const uv = windToUV(speed.values[i]!, direction.values[i]!);
-    u[i] = uv.u;
-    v[i] = uv.v;
+    const s = speed.values[i]!;
+    const d = direction.values[i]!;
+    // Vitesse absente ou négative : vent INCONNU (NaN), pas un calme. Une vitesse nulle est un
+    // vrai calme même si la direction manque (elle n'a alors aucun sens) : u = v = 0. Une
+    // vitesse non nulle sans direction valide est inconnue.
+    if (!Number.isFinite(s) || s < 0 || (s !== 0 && !Number.isFinite(d))) {
+      u[i] = NaN;
+      v[i] = NaN;
+    } else if (s === 0) {
+      u[i] = 0;
+      v[i] = 0;
+    } else {
+      const uv = windToUV(s, d);
+      u[i] = uv.u;
+      v[i] = uv.v;
+    }
   }
   const { step, latMin, lonMin, nLat, nLon } = speed;
   return { step, latMin, lonMin, nLat, nLon, u, v };
@@ -80,6 +93,11 @@ function wrapLon(lon: number): number {
  * enroulée sur ±180 ; latitude clampée aux bornes de la grille. Renvoie u/v en km/h, dans `out`
  * s'il est fourni (la boucle des particules l'appelle des milliers de fois par image : un objet
  * neuf à chaque appel faisait l'essentiel de ses allocations).
+ *
+ * Valeurs ABSENTES : u et v valent NaN dès qu'une des cellules qui PÈSENT dans l'interpolation
+ * (poids > 0) est invalide. Une cellule invalide à poids nul (point sur un nœud ou une rangée)
+ * ne contamine pas. Aucune valeur n'est inventée ni reprise d'une voisine : l'appelant doit
+ * traiter un NaN comme « vent inconnu » (ne pas déplacer, ne pas dessiner).
  */
 export function sampleWind(
   grid: WindGrid,
@@ -96,11 +114,12 @@ export function sampleWind(
   const fLon = (wrapLon(lon) - lonMin) / step;
 
   const r0 = Math.floor(fLat);
-  const r1 = Math.min(r0 + 1, nLat - 1);
-  const c0 = Math.floor(fLon);
-  const c1 = (c0 + 1) % nLon; // wrap en longitude
   const tr = fLat - r0;
+  const r1 = tr === 0 ? r0 : Math.min(r0 + 1, nLat - 1);
+  const c0 = Math.floor(fLon);
   const tc = fLon - c0;
+  // Poids nul : on relit la même cellule, pour qu'un voisin invalide ne passe pas dans `lerp`.
+  const c1 = tc === 0 ? c0 : (c0 + 1) % nLon; // wrap en longitude
 
   // Quatre indices de cellule, calculés une fois. Ni fermeture ni objet : cette fonction est
   // appelée par chaque particule de vent à chaque image (deux fermetures par appel faisaient
@@ -117,7 +136,10 @@ export function sampleWind(
   const v0 = lerp(v[i00], v[i01], tc);
   const v1 = lerp(v[i10], v[i11], tc);
 
-  out.u = lerp(u0, u1, tr);
-  out.v = lerp(v0, v1, tr);
+  const ru = lerp(u0, u1, tr);
+  const rv = lerp(v0, v1, tr);
+  const ok = Number.isFinite(ru) && Number.isFinite(rv);
+  out.u = ok ? ru : NaN;
+  out.v = ok ? rv : NaN;
   return out;
 }

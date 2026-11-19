@@ -4,6 +4,7 @@ import {
   fetchMeteoGrid,
   fetchMeteoGrids,
 } from './meteoClient';
+import { meteoHourIndex } from './meteoGrid';
 import { meteoHourKey } from './meteoTimeTravel';
 
 const now = new Date('2026-08-14T12:00:00Z');
@@ -14,7 +15,9 @@ function responseFor(
 ): Array<{ hourly: Record<string, number[]> }> {
   return Array.from({ length: 12 }, (_, index) => ({
     hourly: {
-      [variable]: Array.from({ length: 24 }, (_, hour) => index + hour),
+      // Série aussi longue que la fenêtre demandée (passé + prévision) : une série trop courte
+      // rendrait une absence (NaN) à l'heure demandée, et c'est ce que ces tests doivent voir.
+      [variable]: Array.from({ length: 24 * 16 }, (_, hour) => index + hour),
     },
   }));
 }
@@ -51,7 +54,14 @@ describe('fetchMeteoGrid', () => {
     });
 
     expect(result.plan.source).toBe('forecast');
-    expect(result.grid?.values[0]).toBe(0);
+    // La cellule 0 vaut son indice + l'index horaire demandé : une valeur lue, pas un zéro.
+    expect(result.grid?.values[0]).toBe(
+      meteoHourIndex(
+        new Date('2026-08-14T12:00:00Z'),
+        now,
+        result.plan.pastDays ?? 0
+      )
+    );
     expect(fetchMock).toHaveBeenCalled();
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain(
       'api.open-meteo.com'
@@ -97,6 +107,47 @@ describe('fetchMeteoGrid', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('garde un trou en NaN à sa place, sans décaler les cellules suivantes', async () => {
+    const body = responseFor('cloud_cover');
+    body[3] = { hourly: {} }; // point sans donnée
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(body), { status: 200 }))
+    );
+    const result = await fetchMeteoGrid(new Date('2026-08-14T12:00:00Z'), {
+      variable: 'cloud_cover',
+      forecastGrid: grid,
+      archiveGrid: grid,
+      now,
+      skipGalaxyData: true,
+    });
+    const hour = result.grid!.values[0]!;
+    expect(result.grid?.values[3]).toBeNaN();
+    expect(result.grid?.values[2]).toBe(2 + hour);
+    expect(result.grid?.values[4]).toBe(4 + hour);
+  });
+
+  it('refuse une réponse tronquée au lieu de livrer une grille décalée', async () => {
+    const body = responseFor('cloud_cover').slice(0, 11);
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify(body), { status: 200 }))
+    );
+    await expect(
+      fetchMeteoGrid(new Date('2026-08-14T12:00:00Z'), {
+        variable: 'cloud_cover',
+        forecastGrid: grid,
+        archiveGrid: grid,
+        now,
+        skipGalaxyData: true,
+      })
+    ).rejects.toThrow(/désalignée/);
+  });
+
   it('réessaie après un 429 puis réussit sans changer la grille', async () => {
     const fetchMock = vi
       .fn()
@@ -119,7 +170,13 @@ describe('fetchMeteoGrid', () => {
       network: { baseDelayMs: 0, sleep: async () => undefined },
     });
 
-    expect(result.grid?.values[0]).toBe(0);
+    expect(result.grid?.values[0]).toBe(
+      meteoHourIndex(
+        new Date('2026-08-14T12:00:00Z'),
+        now,
+        result.plan.pastDays ?? 0
+      )
+    );
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 

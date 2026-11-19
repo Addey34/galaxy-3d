@@ -17,6 +17,7 @@ describe('describeMeteoGrid', () => {
       nLat: 46,
       nLon: 90,
       sampleCount: 4140,
+      validCount: 4140, // sans valeurs fournies, toutes les cellules sont comptées
       longitudeSpan: 360,
     });
   });

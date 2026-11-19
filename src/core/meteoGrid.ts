@@ -43,6 +43,22 @@ export interface ScalarGrid {
   values: Float32Array;
 }
 
+/**
+ * Une grille régulière doit tomber EXACTEMENT sur ses bornes : `2 · maxLat / step` et `360 / step`
+ * entiers. Sinon le nombre de rangées compté (arrondi) et celui que la requête génère divergent, la
+ * dernière rangée n'existe pas dans la réponse, et toute la grille se décale ou se remplit de
+ * valeurs inventées. Refus explicite plutôt qu'une grille géographiquement fausse.
+ */
+export function assertRegularStep(step: number, maxLat: number): void {
+  const rows = (2 * maxLat) / step;
+  const cols = 360 / step;
+  const whole = (x: number): boolean => Math.abs(x - Math.round(x)) < 1e-9;
+  if (!(step > 0) || !whole(rows) || !whole(cols))
+    throw new Error(
+      `pas de grille irrégulier : ${step}° ne tombe pas sur les bornes (±${maxLat}° et 360°)`
+    );
+}
+
 /** Génère lats/lons de la grille (lat croissante, lon croissante), même ordre que la requête. */
 export function meteoGridCoords(options: MeteoGridOptions = {}): {
   lats: number[];
@@ -50,6 +66,7 @@ export function meteoGridCoords(options: MeteoGridOptions = {}): {
 } {
   const step = options.step ?? DEFAULT_STEP;
   const maxLat = options.maxLat ?? 90;
+  assertRegularStep(step, maxLat);
   const lats: number[] = [];
   const lons: number[] = [];
   for (let la = -maxLat; la <= maxLat + 1e-9; la += step) {
@@ -68,6 +85,7 @@ export function meteoGridDims(options: MeteoGridOptions = {}): {
 } {
   const step = options.step ?? DEFAULT_STEP;
   const maxLat = options.maxLat ?? 90;
+  assertRegularStep(step, maxLat);
   return {
     nLat: Math.round((2 * maxLat) / step) + 1,
     nLon: Math.round(360 / step),
@@ -180,10 +198,52 @@ export function buildMeteoPayloads(
 }
 
 /**
+ * Une valeur de série Open-Meteo, ou NaN. Une absence (`null`, série trop courte, texte,
+ * Infinity) n'est PAS un zéro : 0 °C, 0 % d'humidité ou 0 hPa sont des mesures, pas des trous.
+ */
+function seriesValue(series: unknown, hourIndex: number): number {
+  if (!Array.isArray(series)) return NaN;
+  const raw: unknown = series[hourIndex];
+  return typeof raw === 'number' && Number.isFinite(raw) ? raw : NaN;
+}
+
+/** Nombre de feuilles (points) d'une réponse imbriquée : un objet seul compte pour un point. */
+function countLeaves(r: unknown): number {
+  return Array.isArray(r)
+    ? r.reduce<number>((n, x) => n + countLeaves(x), 0)
+    : 1;
+}
+
+/** Nombre de cellules à valeur FINIE (un NaN marque une donnée absente ou invalide). */
+export function countFiniteCells(values: ArrayLike<number>): number {
+  let count = 0;
+  for (let i = 0; i < values.length; i++)
+    if (Number.isFinite(values[i]!)) count++;
+  return count;
+}
+
+/**
+ * Refuse une grille dont AUCUNE cellule n'est finie : c'est une réponse inutilisable, pas un champ
+ * à zéro. L'échec est explicite (la couche passe en erreur) plutôt qu'une carte vide présentée
+ * comme une donnée. Une grille PARTIELLE est acceptée : ses trous restent des NaN.
+ */
+export function assertUsableGrid(grid: ScalarGrid, variable: string): void {
+  if (countFiniteCells(grid.values) === 0)
+    throw new Error(`grille météo entièrement invalide : ${variable}`);
+}
+
+/**
  * Construit une `ScalarGrid` depuis une ou plusieurs réponses Open-Meteo. Chaque réponse est un
  * tableau de points (ou un point unique) ; concaténées DANS L'ORDRE des lots, elles couvrent la
  * grille entière (même ordre que {@link meteoGridCoords}). Accepte donc soit une réponse unique
  * (mode GET hérité), soit un tableau de réponses chunkées (mode POST). `hourIndex` = heure.
+ *
+ * POLITIQUE DES ABSENCES : une valeur absente ou invalide devient NaN, jamais 0. Un point sans
+ * `hourly` (ou nul) OCCUPE SA CELLULE (NaN) au lieu d'être ignoré, car l'ignorer décalerait toutes
+ * les cellules suivantes vers une autre position géographique. Si le nombre de points reçus (au
+ * total, ou dans un lot de taille connue) ne correspond pas à la grille, l'association cellule →
+ * point ne peut plus être garantie : la fonction ÉCHOUE plutôt que de livrer une grille corrompue.
+ * Une grille sans aucune cellule finie échoue aussi ({@link assertUsableGrid}).
  */
 export function parseScalarGrid(
   response: unknown,
@@ -194,23 +254,64 @@ export function parseScalarGrid(
   const step = options.step ?? DEFAULT_STEP;
   const maxLat = options.maxLat ?? 90;
   const { nLat, nLon } = meteoGridDims({ step, maxLat });
-  const values = new Float32Array(nLat * nLon);
+  const expected = nLat * nLon;
 
-  // Aplati : une réponse chunkée est un tableau de tableaux (ou de points). On accepte aussi une
-  // réponse unique (point seul ou tableau de points) pour la rétro-compatibilité.
-  const points: unknown[] = [];
+  // Aplati : une réponse chunkée est un tableau de tableaux (ou de points). Toute feuille, objet
+  // valide ou non, est UN point et garde sa place.
+  const slots: unknown[] = [];
   const collect = (r: unknown): void => {
     if (Array.isArray(r)) r.forEach(collect);
-    else if (r && typeof r === 'object' && 'hourly' in r) points.push(r);
+    else slots.push(r);
   };
   collect(response);
 
-  for (let i = 0; i < points.length && i < nLat * nLon; i++) {
-    const p = points[i] as { hourly?: Record<string, number[] | undefined> };
-    const series = p?.hourly?.[variable];
-    values[i] = series?.[hourIndex] ?? 0;
+  // Réponse CHUNKÉE (un lot est un tableau) : exactement le nombre de lots demandés, chacun avec
+  // exactement ses points. Un lot trop court, ou un nombre de lots faux dont les tailles se
+  // compensent, laisserait le total juste tout en décalant les lots suivants vers d'autres
+  // positions : le total seul ne prouve rien. Une réponse plate (GET hérité) n'a pas de lots.
+  const chunks = chunkCoords({ step, maxLat });
+  if (
+    Array.isArray(response) &&
+    chunks.length > 1 &&
+    response.some(Array.isArray)
+  ) {
+    if (response.length !== chunks.length)
+      throw new Error(
+        `réponse météo désalignée : ${response.length} lots au lieu de ${chunks.length} (${variable})`
+      );
+    response.forEach((chunk, k) => {
+      const received = countLeaves(chunk);
+      const wanted = chunks[k]!.lats.length;
+      if (received !== wanted)
+        throw new Error(
+          `lot météo ${k + 1}/${chunks.length} incomplet : ${received} points au lieu de ${wanted} (${variable})`
+        );
+    });
   }
-  return { step, latMin: -maxLat, lonMin: -180, nLat, nLon, values };
+  if (slots.length !== expected)
+    throw new Error(
+      `réponse météo désalignée : ${slots.length} points au lieu de ${expected} (${variable})`
+    );
+
+  const values = new Float32Array(expected);
+  for (let i = 0; i < expected; i++) {
+    const p = slots[i];
+    const hourly =
+      p && typeof p === 'object' && 'hourly' in p
+        ? (p as { hourly?: Record<string, unknown> }).hourly
+        : undefined;
+    values[i] = seriesValue(hourly?.[variable], hourIndex);
+  }
+  const grid: ScalarGrid = {
+    step,
+    latMin: -maxLat,
+    lonMin: -180,
+    nLat,
+    nLon,
+    values,
+  };
+  assertUsableGrid(grid, variable);
+  return grid;
 }
 
 /**
@@ -248,7 +349,14 @@ export function cloudCoverToRGBA(
   for (let row = 0; row < nLat; row++) {
     const srcRow = nLat - 1 - row; // NORD (lat max) en haut de l'image
     for (let col = 0; col < nLon; col++) {
-      const cover = Math.max(0, Math.min(1, values[srcRow * nLon + col] / 100));
+      const raw = values[srcRow * nLon + col]!;
+      // Couverture ABSENTE (NaN) : une alphaMap ne sait dire que « nuage » ou « pas de nuage ».
+      // Elle écrit 0 (rien n'est ajouté, et le secours ne comble rien à cet endroit), sans que
+      // cela veuille dire « ciel dégagé » : la donnée manque, voir `assertUsableGrid`. L'absence
+      // est rendue visuellement transparente, sans prétendre à une couverture réellement nulle.
+      const cover = Number.isFinite(raw)
+        ? Math.max(0, Math.min(1, raw / 100))
+        : 0;
       const g = Math.round(Math.pow(cover, gamma) * 255);
       const o = (row * nLon + col) * 4;
       data[o] = g;
@@ -268,6 +376,11 @@ function wrapLon(lon: number): number {
 /**
  * Échantillonne le champ (interpolation bilinéaire) à une position quelconque. Longitude enroulée
  * sur ±180 ; latitude clampée aux bornes de la grille.
+ *
+ * Valeurs ABSENTES : le résultat est NaN dès qu'une des cellules qui PÈSENT dans l'interpolation
+ * (poids > 0) est invalide ; une cellule invalide à poids nul (point exactement sur un nœud ou sur
+ * une rangée) ne contamine pas. Aucune cellule n'est remplacée par une voisine : un NaN rendu veut
+ * dire « donnée indisponible ici », jamais zéro.
  */
 export function sampleScalar(
   grid: ScalarGrid,
@@ -283,16 +396,19 @@ export function sampleScalar(
   const fLon = (wrapLon(lon) - lonMin) / step;
 
   const r0 = Math.floor(fLat);
-  const r1 = Math.min(r0 + 1, nLat - 1);
-  const c0 = Math.floor(fLon);
   const tr = fLat - r0;
+  const r1 = tr === 0 ? r0 : Math.min(r0 + 1, nLat - 1);
+  const c0 = Math.floor(fLon);
   const tc = fLon - c0;
 
   const idx = (r: number, c: number): number =>
     r * nLon + (((c % nLon) + nLon) % nLon);
   const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
+  // Poids nul : on relit la même cellule, pour qu'un voisin invalide ne passe pas dans `lerp`.
+  const c1 = tc === 0 ? c0 : c0 + 1;
 
-  const top = lerp(values[idx(r0, c0)], values[idx(r0, c0 + 1)], tc);
-  const bot = lerp(values[idx(r1, c0)], values[idx(r1, c0 + 1)], tc);
-  return lerp(top, bot, tr);
+  const top = lerp(values[idx(r0, c0)]!, values[idx(r0, c1)]!, tc);
+  const bot = lerp(values[idx(r1, c0)]!, values[idx(r1, c1)]!, tc);
+  const result = lerp(top, bot, tr);
+  return Number.isFinite(result) ? result : NaN;
 }

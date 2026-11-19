@@ -5,6 +5,7 @@
  * pour distinguer une erreur de donnée, de grille, de texture, de matériau ou de visibilité.
  */
 import type { SourceCandidate } from './layerSource';
+import { countFiniteCells } from './meteoGrid';
 
 type MeteoLayerFamily = 'observed' | 'model' | 'vector' | 'realtime';
 export type MeteoLayerPhase = 'idle' | 'loading' | 'ready' | 'error';
@@ -16,6 +17,8 @@ export interface MeteoGridDiagnostics {
   nLat: number;
   nLon: number;
   sampleCount: number;
+  /** Cellules à valeur finie : `validCount < sampleCount` = grille partiellement indisponible. */
+  validCount: number;
   longitudeSpan: number;
 }
 
@@ -70,6 +73,8 @@ export interface MeteoGridShape {
   latMin: number;
   nLat: number;
   nLon: number;
+  /** Les valeurs de la grille, pour compter les cellules valides (absent : toutes comptées). */
+  values?: ArrayLike<number>;
 }
 
 export function describeMeteoGrid(grid: MeteoGridShape): MeteoGridDiagnostics {
@@ -80,6 +85,9 @@ export function describeMeteoGrid(grid: MeteoGridShape): MeteoGridDiagnostics {
     nLat: grid.nLat,
     nLon: grid.nLon,
     sampleCount: grid.nLat * grid.nLon,
+    validCount: grid.values
+      ? countFiniteCells(grid.values)
+      : grid.nLat * grid.nLon,
     longitudeSpan: grid.nLon * grid.step,
   };
 }

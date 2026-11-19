@@ -178,6 +178,28 @@ export interface ScalarRenderOptions {
   alphaRamp?: number;
 }
 
+/** Couleur de la plus proche cellule finie de la même rangée (longitude enroulée), sinon noir. */
+function nearestValidColor(
+  values: Float32Array,
+  palette: Palette,
+  row: number,
+  col: number,
+  nLon: number,
+  min: number,
+  span: number
+): [number, number, number] {
+  for (let d = 1; d < nLon; d++) {
+    for (const c of [col - d, col + d]) {
+      const v = values[row * nLon + (((c % nLon) + nLon) % nLon)]!;
+      if (Number.isFinite(v)) {
+        const [r, g, b] = samplePalette(palette, (v - min) / span);
+        return [r, g, b];
+      }
+    }
+  }
+  return [0, 0, 0];
+}
+
 /**
  * Encode une `ScalarGrid` en octets RGBA équirectangulaires colorés via une palette. Comme
  * {@link cloudCoverToRGBA}, la rangée 0 de la grille est le SUD → on écrit l'image NORD en haut
@@ -199,9 +221,28 @@ export function scalarGridToRGBA(
   for (let row = 0; row < nLat; row++) {
     const srcRow = nLat - 1 - row; // NORD (lat max) en haut de l'image
     for (let col = 0; col < nLon; col++) {
-      const v = values[srcRow * nLon + col];
-      const [r, g, b] = samplePalette(palette, (v - min) / span);
+      const v = values[srcRow * nLon + col]!;
       const o = (row * nLon + col) * 4;
+      // Valeur ABSENTE ou invalide : pixel TRANSPARENT, jamais une couleur de la palette. La
+      // couleur écrite est celle de la plus proche cellule valide de la rangée, pour que le
+      // filtrage linéaire n'étale pas du noir sur la lisière des trous ; l'alpha reste 0.
+      if (!Number.isFinite(v)) {
+        const [r, g, b] = nearestValidColor(
+          values,
+          palette,
+          srcRow,
+          col,
+          nLon,
+          min,
+          span
+        );
+        data[o] = r;
+        data[o + 1] = g;
+        data[o + 2] = b;
+        data[o + 3] = 0;
+        continue;
+      }
+      const [r, g, b] = samplePalette(palette, (v - min) / span);
       data[o] = r;
       data[o + 1] = g;
       data[o + 2] = b;

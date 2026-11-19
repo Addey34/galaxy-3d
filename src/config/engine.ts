@@ -506,7 +506,11 @@ export const REALTIME_CLOUDS_SETTINGS = {
 /** Grille commune des modèles Open-Meteo : forecast plus fin, archive ERA5 plus grossière. */
 const METEO_MODEL_GRID_SETTINGS = {
   gridStep: 4,
-  archiveGridStep: 8,
+  // Un pas DIVISEUR de 180° et de 360° : la grille tombe exactement sur les deux pôles. À 8°, la
+  // dernière rangée était à 86° (180 / 8 n'est pas entier) : `meteoGridDims` en comptait une de
+  // plus que `meteoGridCoords` n'en demandait, remplie de zéros par l'ancien `?? 0` à « 94° » ;
+  // `assertRegularStep` refuse maintenant ce cas.
+  archiveGridStep: 9,
   maxLat: 90,
 };
 
