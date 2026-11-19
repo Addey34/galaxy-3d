@@ -214,8 +214,8 @@ export default class CelestialObject {
   // doit rester alignée sur sa longitude. La Terre continue de tourner (_meshGroup).
   private _realCloudDrift = true;
   // Vrai dès que la phase de rotation du corps est imposée depuis la date plutôt qu'intégrée
-  // frame par frame (cf. setSurfaceRotation) — la Terre, seul corps ayant une longitude
-  // subsolaire vraie à respecter.
+  // frame par frame (cf. setSurfaceRotation) — la Terre (temps sidéral) et les corps de
+  // `config/datedRotation` (Lune, Mars : méridien origine IAU).
   private _surfaceRotationDriven = false;
   // Vrai dès qu'une couverture nuageuse réelle (GIBS) est appliquée : le LOD de
   // textures ne doit alors PLUS toucher la couche `clouds` (sinon il réécrit la
