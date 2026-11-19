@@ -1004,11 +1004,14 @@ export class CameraSystem {
   /**
    * Replace la caméra, sans l'animer, du côté de `referenceBody` : la cible reste la même, on
    * la regarde depuis là. Sert aux éclipses de Lune, dont la seule face colorée est celle
-   * tournée vers la Terre (cf. core/viewAngles.ts). Sans effet si le corps de référence est
-   * inconnu ou confondu avec la cible.
+   * tournée vers la Terre (cf. core/viewAngles.ts). Le corps de référence peut être une sonde
+   * (GAL-TOUR-004) : la méthode reprend la DIRECTION de la référence vue de la cible, pas
+   * nécessairement sa position exacte (la distance est celle demandée) ni l'attitude de la sonde
+   * ou l'axe de ses instruments. Sans effet si la référence est inconnue ou confondue avec la
+   * cible.
    */
   viewFromBody(referenceBody: string): void {
-    const reference = this.celestialBodies[referenceBody]?.group;
+    const reference = this._target(referenceBody)?.group;
     if (!reference || !this.controls) return;
     const direction = reference
       .getWorldPosition(new THREE.Vector3())
@@ -1034,7 +1037,7 @@ export class CameraSystem {
    * la cible.
    */
   viewBesideBody(referenceBody: string): void {
-    const reference = this.celestialBodies[referenceBody]?.group;
+    const reference = this._target(referenceBody)?.group;
     if (!reference || !this.controls) return;
     const side = profileDirection(
       reference.getWorldPosition(new THREE.Vector3()).sub(this.controls.target)
