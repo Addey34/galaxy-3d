@@ -54,7 +54,17 @@
       "tileSizePx": 256,
       "levels": [11, 12, 13],
       "dnPerUnit": 9500,
-      "jpegQuality": 90
+      "jpegQuality": 90,
+      "toneMatch": {
+        "reference": "LRO WAC v02 (Trek), niveau 8, lignes 126 et 127, colonne 289",
+        "method": "facteur = niveau moyen de la WAC / réflectance moyenne de la NAC sur 18 992 échantillons communs (la NAC réduite à 83 m)",
+        "wacMeanDn": 40.908,
+        "nacMeanReflectance": 0.0043052,
+        "samples": 18992,
+        "correlation": 0.214,
+        "note": "Appariement de continuité à la WAC (éclairage différent : NAC à 73 et 80 degrés d'incidence), pas un étalonnage radiométrique ; la corrélation faible ne le valide pas. Le même facteur place le 99,99e centile de la source à 255 (écrêtage mesuré au manifeste)."
+      },
+      "pending": true
     }
   }
 }

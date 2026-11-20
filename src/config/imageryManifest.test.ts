@@ -77,13 +77,27 @@ interface Manifest {
   totalBytes: number;
 }
 
-const readManifest = (id: string): Manifest =>
-  JSON.parse(
-    readFileSync(
-      resolve(ROOT, `public/assets/imagery/${id}/manifest.json`),
-      'utf8'
-    )
-  ) as Manifest;
+/**
+ * Un jeu `pending` est cuit et décrit mais PAS livré : sa fiche, son manifeste et l'inventaire de
+ * ses objets sont dans `scripts/pending-publication/<id>/`, hors de ce que l'application charge
+ * (`import.meta.glob('./tilesets/*.json')`) et hors de `public/`. L'activer est un déplacement de
+ * fichiers décrit par `PUBLICATION.md`, après le téléversement des tuiles.
+ */
+const PENDING_DIR = resolve(ROOT, 'scripts/pending-publication');
+const pendingIds = (): string[] =>
+  existsSync(PENDING_DIR)
+    ? readdirSync(PENDING_DIR).filter((d) =>
+        existsSync(resolve(PENDING_DIR, d, 'manifest.json'))
+      )
+    : [];
+
+const readManifest = (id: string): Manifest => {
+  const published = resolve(ROOT, `public/assets/imagery/${id}/manifest.json`);
+  const path = existsSync(published)
+    ? published
+    : resolve(PENDING_DIR, id, 'manifest.json');
+  return JSON.parse(readFileSync(path, 'utf8')) as Manifest;
+};
 
 /** Les fiches dont l'adresse est celle du service de données de Galaxy. */
 const OWN_TILESETS = TILESET_PRODUCTS.filter((t) =>
@@ -125,8 +139,17 @@ describe('mosaïques cuites : recette, manifeste, fiche', () => {
     const ids = readdirSync(dir).filter((d) =>
       existsSync(resolve(dir, d, 'manifest.json'))
     );
-    expect(ids.sort()).toEqual(Object.keys(RECIPE.targets).sort());
+    expect([...ids, ...pendingIds()].sort()).toEqual(
+      Object.keys(RECIPE.targets).sort()
+    );
     expect(OWN_TILESETS.map((t) => t.id).sort()).toEqual(ids.sort());
+    // Les cibles `pending` de la recette sont exactement les dossiers en attente.
+    expect(
+      Object.entries(RECIPE.targets)
+        .filter(([, t]) => (t as { pending?: true }).pending)
+        .map(([id]) => id)
+        .sort()
+    ).toEqual(pendingIds().sort());
   });
 
   it('compte exactement les tuiles de la pyramide 2 × 1, 256 px, niveaux 0 à maxLevel', () => {
@@ -175,7 +198,18 @@ describe('mosaïques cuites : recette, manifeste, fiche', () => {
 
   it('l’adresse de la fiche nomme le répertoire haché du manifeste, et rien d’autre', () => {
     expect(OWN_TILESETS.length).toBeGreaterThan(0);
-    for (const tileset of OWN_TILESETS) {
+    const pending = pendingIds().map((id) => {
+      const fiche = JSON.parse(
+        readFileSync(resolve(PENDING_DIR, id, 'fiche.json'), 'utf8')
+      ) as (typeof OWN_TILESETS)[number];
+      // Une fiche en attente n'est PAS chargée par l'application : aucune requête, aucune page.
+      expect(
+        TILESET_PRODUCTS.some((t) => t.id === fiche.id),
+        id
+      ).toBe(false);
+      return fiche;
+    });
+    for (const tileset of [...OWN_TILESETS, ...pending]) {
       const m = readManifest(tileset.id);
       const { service } = tileset;
       expect(service.template, tileset.id).toBe(

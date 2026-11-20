@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schema/product.schema.json",
+  "$schema": "../../../../src/registry/schema/product.schema.json",
   "id": "moon-lroc-nac-apollo11-5m",
   "type": "tileset",
   "body": "moon",
