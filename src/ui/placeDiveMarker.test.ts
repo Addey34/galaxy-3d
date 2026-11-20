@@ -85,7 +85,7 @@ async function build() {
     { getBody: () => object } as never,
     () => 1737
   );
-  return { dive, applied: () => applied, canvasHandlers };
+  return { dive, cameraSystem, applied: () => applied, canvasHandlers };
 }
 
 const flush = async (): Promise<void> => {
@@ -241,6 +241,57 @@ describe('plongée persistante : le repère et ses abandons', () => {
     canvasHandlers.get('pointerdown')?.forEach((fn) => fn());
     loads[0]!.resolve();
     await flush();
+    expect(shown).toBe(0);
+  });
+
+  const mars = {
+    body: 'mars',
+    name: 'Olympus Mons',
+    lat: 18.65,
+    lon: 226.2,
+    diameterKm: 600,
+  };
+
+  it('inter-cibles : la réponse tardive de A (Lune) ni ne pose ni n’abandonne B (Mars)', async () => {
+    const { dive, cameraSystem } = await build();
+    dive.dive(place);
+    await flush();
+    cameraSystem.currentTarget = {}; // changement de cible
+    dive.dive(mars);
+    await flush();
+    expect(loads).toHaveLength(2);
+    loads[0]!.resolve(); // A arrive tard : cible obsolète
+    await flush();
+    expect(shown).toBe(0);
+    loads[1]!.resolve();
+    await flush();
+    expect(shown).toBe(1); // B pose exactement un repère
+  });
+
+  it('inter-cibles : le rejet tardif de A ne touche pas B', async () => {
+    const { dive, cameraSystem } = await build();
+    dive.dive(place);
+    await flush();
+    cameraSystem.currentTarget = {};
+    dive.dive(mars);
+    await flush();
+    loads[0]!.reject();
+    await flush();
+    loads[1]!.resolve();
+    await flush();
+    expect(shown).toBe(1);
+  });
+
+  it('une tentative COURANTE dont la cible a changé est bien abandonnée (pas de pose, pas de relance)', async () => {
+    const { dive, cameraSystem } = await build();
+    dive.diveUntilReached(place);
+    await flush();
+    cameraSystem.currentTarget = {};
+    loads[0]!.resolve();
+    await flush();
+    expect(shown).toBe(0);
+    await tick(2_100);
+    expect(loads).toHaveLength(1); // la relance ne rouvre rien : l'abandon a eu lieu
     expect(shown).toBe(0);
   });
 });

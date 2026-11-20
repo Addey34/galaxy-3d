@@ -132,7 +132,9 @@ export function setupPlaceDive(
       ([marker]) => {
         // Une autre demande, un abandon ou un autre corps a pris la main pendant le chargement.
         if (cameraSystem.currentTarget !== target) {
-          markerIntent.abandon();
+          // Seule la tentative COURANTE peut abandonner : une réponse obsolète (autre cible, demande
+          // déjà remplacée) ne doit pas annuler l'intention qui l'a remplacée.
+          if (markerIntent.isCurrent(mine)) markerIntent.abandon();
           return;
         }
         if (!markerIntent.resolved(mine)) return;

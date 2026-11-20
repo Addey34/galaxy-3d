@@ -67,4 +67,14 @@ describe("l'intention du repère", () => {
     // Repère retiré (geste de caméra, autre cible) : la demande neuve repose.
     expect(intent.request(KEY, false, false)).not.toBeNull();
   });
+
+  it('isCurrent : vrai seulement pour la tentative en cours', () => {
+    const intent = createMarkerIntent();
+    const old = intent.request(KEY, false, false) as number;
+    const latest = intent.request('mars|Olympus Mons', false, false) as number;
+    expect(intent.isCurrent(old)).toBe(false);
+    expect(intent.isCurrent(latest)).toBe(true);
+    intent.abandon();
+    expect(intent.isCurrent(latest)).toBe(false);
+  });
 });

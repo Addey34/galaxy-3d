@@ -21,6 +21,8 @@ export interface MarkerIntent {
   request(key: string, replay: boolean, alreadyShown: boolean): number | null;
   /** Vrai si ce jeton est encore le courant : le repère peut alors être posé. */
   resolved(token: number): boolean;
+  /** Ce jeton est-il encore celui de la tentative en cours ? */
+  isCurrent(token: number): boolean;
   /** Un chargement refusé : ouvre la voie à une relance, seulement pour le jeton courant. */
   rejected(token: number): void;
   /** Échap, geste, changement de cible : plus rien ne se pose sans nouvelle demande. */
@@ -44,6 +46,7 @@ export function createMarkerIntent(): MarkerIntent {
       status = 'pending';
       return token;
     },
+    isCurrent: (candidate) => candidate === token && status === 'pending',
     resolved(candidate) {
       if (candidate !== token || status !== 'pending') return false;
       status = 'posed';
