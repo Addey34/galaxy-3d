@@ -1,0 +1,63 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "moon-tranquillity",
+  "title": {
+    "en": "Tranquility Base, on the Moon",
+    "fr": "La base de la Tranquillité, sur la Lune",
+    "es": "La Base de la Tranquilidad, en la Luna",
+    "pt-BR": "A Base da Tranquilidade, na Lua"
+  },
+  "steps": [
+    {
+      "kind": "setMode",
+      "mode": "explo"
+    },
+    {
+      "kind": "flyTo",
+      "body": "moon"
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "1969-07-20T20:17:40Z"
+      }
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "The Moon on 20 July 1969, 20:17 UT: the moment NASA gives for the landing of Apollo 11 (to within a second, depending on the reference). The tour switches to Exploration mode, at true scale, and sets the scene date to that instant, so the Moon’s position and the Sun’s direction are computed for it. The surface imagery, however, is modern: the Lunar Reconnaissance Orbiter took it in 2009–2011.",
+        "fr": "La Lune le 20 juillet 1969 à 20 h 17 TU : l’instant que la NASA donne pour l’alunissage d’Apollo 11 (à la seconde près, selon la référence). La visite passe en mode Exploration, à l’échelle réelle, et règle la date de la scène sur cet instant : la position de la Lune et la direction du Soleil sont donc calculées pour lui. L’imagerie de surface, elle, est moderne : la sonde Lunar Reconnaissance Orbiter l’a prise en 2009-2011.",
+        "es": "La Luna el 20 de julio de 1969 a las 20:17 TU: el instante que da la NASA para el alunizaje del Apolo 11 (con un segundo de margen, según la referencia). La visita pasa al modo Exploración, a escala real, y fija la fecha de la escena en ese instante, así que la posición de la Luna y la dirección del Sol se calculan para él. Las imágenes de la superficie, en cambio, son modernas: las tomó la sonda Lunar Reconnaissance Orbiter en 2009-2011.",
+        "pt-BR": "A Lua em 20 de julho de 1969, às 20h17 TU: o instante que a NASA dá para o pouso da Apollo 11 (com margem de um segundo, conforme a referência). A visita passa para o modo Exploração, em escala real, e ajusta a data da cena para esse instante, então a posição da Lua e a direção do Sol são calculadas para ele. As imagens da superfície, porém, são modernas: a sonda Lunar Reconnaissance Orbiter as obteve em 2009-2011."
+      }
+    },
+    {
+      "kind": "diveTo",
+      "place": "Mare Tranquillitatis",
+      "frameKm": 900
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Mare Tranquillitatis, the Sea of Tranquility, framed about 900 km wide. This lunar sea, a name approved by the IAU, is the region where Apollo 11 came down. Its centre is near 8.3° N, 30.8° E; the landing site lies in its south-west.",
+        "fr": "Mare Tranquillitatis, la mer de la Tranquillité, cadrée sur environ 900 km de large. Cette mer lunaire, un nom approuvé par l’UAI, est la région où Apollo 11 s’est posé. Son centre est près de 8,3° N, 30,8° E ; le site d’atterrissage se trouve dans son sud-ouest.",
+        "es": "Mare Tranquillitatis, el mar de la Tranquilidad, encuadrado en unos 900 km de ancho. Este mar lunar, un nombre aprobado por la UAI, es la región donde descendió el Apolo 11. Su centro está cerca de 8,3° N, 30,8° E; el lugar de alunizaje queda en su suroeste.",
+        "pt-BR": "Mare Tranquillitatis, o Mar da Tranquilidade, enquadrado em cerca de 900 km de largura. Esse mar lunar, um nome aprovado pela UAI, é a região onde a Apollo 11 pousou. Seu centro fica perto de 8,3° N, 30,8° L; o local de pouso está no seu sudoeste."
+      }
+    },
+    {
+      "kind": "diveTo",
+      "place": "Statio Tranquillitatis",
+      "frameKm": 150
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Statio Tranquillitatis, framed about 150 km wide. The IAU approved this name in 1970 for “Tranquility Base”, the Apollo 11 landing site, at 0.67° N, 23.47° E (the coordinates NASA also gives). The Sun is low over the site at this instant, so the light is dim. The imagery resolves features of a few hundred metres at this framing: the Eagle lunar module, the equipment, the footprints and the descent are not drawn. NASA’s own images and records document them.",
+        "fr": "Statio Tranquillitatis, cadrée sur environ 150 km de large. L’UAI a approuvé ce nom en 1970 pour « Tranquility Base », le site d’atterrissage d’Apollo 11, à 0,67° N, 23,47° E (les coordonnées que donne aussi la NASA). Le Soleil est bas sur le site à cet instant, d’où une lumière faible. À ce cadrage, l’imagerie distingue des détails de quelques centaines de mètres : le module lunaire Eagle, les équipements, les traces de pas et la descente ne sont pas dessinés. Les images et les archives de la NASA les documentent.",
+        "es": "Statio Tranquillitatis, encuadrada en unos 150 km de ancho. La UAI aprobó este nombre en 1970 para «Tranquility Base», el lugar de alunizaje del Apolo 11, a 0,67° N, 23,47° E (las coordenadas que también da la NASA). El Sol está bajo sobre el lugar en este instante, de ahí la luz tenue. Con este encuadre, las imágenes distinguen detalles de unos cientos de metros: el módulo lunar Eagle, los equipos, las huellas y el descenso no están dibujados. Las imágenes y los archivos de la NASA los documentan.",
+        "pt-BR": "Statio Tranquillitatis, enquadrada em cerca de 150 km de largura. A UAI aprovou este nome em 1970 para a “Tranquility Base”, o local de pouso da Apollo 11, a 0,67° N, 23,47° L (as coordenadas que a NASA também fornece). O Sol está baixo sobre o local neste instante, daí a luz fraca. Neste enquadramento, as imagens distinguem detalhes de algumas centenas de metros: o módulo lunar Eagle, os equipamentos, as pegadas e a descida não são desenhados. As imagens e os arquivos da NASA os documentam."
+      }
+    }
+  ]
+}
