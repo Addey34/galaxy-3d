@@ -5417,6 +5417,19 @@ de couverture), `e2e/regionalImagery.spec.ts` (sortie de la couverture de l'IGN 
 19,9 km de la sphère) la caméra à 7,5 km du sol se croyait à 27 km et ne subdivisait pas au-delà du
 niveau 11. L'altitude est celle du relief posé sous le point de CHAQUE nœud quand sa tuile de hauteurs
 est chargée, à défaut celle du sol sous la visée, à défaut aucune (`PlanetarySurfaceEngine.ground.test.ts`).
+**Une région PDS cuite par nous (GAL-IMMERSION-003B-PDS-001, prototype local, 2026-11-20).** La mosaïque
+contrôlée `NAC_ROI_APOLLO11LOA_E004N0235_5M` (PDS, version v1.3, 5 m/px, flottant 32 bits, 5 734 x 1 043,
+équirectangulaire planétocentrique sur sphère de 1 737,4 km) se cuit par `pnpm imagery:bake --only
+moon-lroc-nac-apollo11-5m` (mode `region` du même cuiseur, jamais une seconde chaîne) : la géométrie est lue
+à l'étiquette de l'IMG et confrontée à ses emprises (écart sous un pixel), la réflectance est convertie en
+8 bits à 9 500 niveaux par unité (moyenne appariée à la WAC v02 sur la même zone), et seules les tuiles de la
+grille de la base entièrement valides sont écrites (niveaux 11 à 13, 334 tuiles, 5,06 Mo) ; les autres
+répondent 404 et le moteur retombe sur la base. Les données PDS sont dans le domaine public (conditions de
+LROC lues le 2026-11-20) avec le crédit NASA/GSFC/Arizona State University. Aucun jeu de tuiles n'est publié
+par ce dépôt : le téléversement sur le service de données est une étape à autoriser. Le plancher d'approche
+s'ouvre jusqu'au premier niveau que la région sert sous la visée (une emprise plus étroite que les tuiles
+des niveaux qui suivent la base n'en sert aucune avant le niveau 11).
+
 **Aucune imagerie régionale de la Lune ni de Mars n'est livrée (2026-11-20).** Deux candidates ont été
 construites sur la chaîne ci-dessus (la NAC d'Apollo 11 et la CTX d'Olympus Mons, hébergées par
 NASA Trek) puis RETIRÉES du catalogue : aucune n'a de droits établis. Les conditions LROC déclarent

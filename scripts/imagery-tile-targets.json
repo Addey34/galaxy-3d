@@ -40,6 +40,21 @@
       "tileSizePx": 256,
       "maxLevel": 5,
       "jpegQuality": 85
+    },
+    "moon-lroc-nac-apollo11-5m": {
+      "body": "moon",
+      "region": true,
+      "source": {
+        "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/BDR/NAC_ROI/APOLLO11LOA/NAC_ROI_APOLLO11LOA_E004N0235_5M.IMG",
+        "bytes": 23930592,
+        "sha256": "67831d4320e2d1d534f467bda5c7a988731ed879467548e0d7239407b7b5a3bd",
+        "productId": "NAC_ROI_APOLLO11LOA_E004N0235_5M",
+        "productVersion": "v1.3"
+      },
+      "tileSizePx": 256,
+      "levels": [11, 12, 13],
+      "dnPerUnit": 9500,
+      "jpegQuality": 90
     }
   }
 }

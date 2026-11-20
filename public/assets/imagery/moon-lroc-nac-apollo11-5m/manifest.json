@@ -1,0 +1,67 @@
+{
+  "id": "moon-lroc-nac-apollo11-5m",
+  "body": "moon",
+  "source": {
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/BDR/NAC_ROI/APOLLO11LOA/NAC_ROI_APOLLO11LOA_E004N0235_5M.IMG",
+    "bytes": 23930592,
+    "sha256": "67831d4320e2d1d534f467bda5c7a988731ed879467548e0d7239407b7b5a3bd",
+    "width": 1043,
+    "height": 5734,
+    "channels": 1,
+    "format": "PDS3 PC_REAL 32 bits",
+    "productId": "NAC_ROI_APOLLO11LOA_E004N0235_5M",
+    "productVersion": "v1.3",
+    "productCreated": "2020-08-31T06:30:25",
+    "pixelsPerDegree": 6064.6700848299,
+    "standardParallel": 0.7,
+    "centerLongitude": 23,
+    "radiusKm": 1737.4,
+    "georeferenceDeviationDeg": {
+      "MAXIMUM_LATITUDE": -0.000015813071675085943,
+      "MINIMUM_LATITUDE": 0.00012793482324348349,
+      "WESTERNMOST_LONGITUDE": 0.000056467024542428135,
+      "EASTERNMOST_LONGITUDE": -0.0001473445369555293
+    }
+  },
+  "region": {
+    "bbox": [
+      23.433361766824664,
+      -0.030999213043799535,
+      23.605354279304922,
+      0.9144767847920869
+    ],
+    "levels": [
+      11,
+      12,
+      13
+    ],
+    "dnPerUnit": 9500,
+    "tilesPerLevel": {
+      "11": {
+        "written": 10,
+        "skipped": 26
+      },
+      "12": {
+        "written": 50,
+        "skipped": 60
+      },
+      "13": {
+        "written": 274,
+        "skipped": 122
+      }
+    }
+  },
+  "matrix": {
+    "columnsAtLevelZero": 2,
+    "rowsAtLevelZero": 1,
+    "tileSizePx": 256
+  },
+  "minLevel": 11,
+  "maxLevel": 13,
+  "format": "image/jpeg",
+  "jpegQuality": 90,
+  "path": "default/galaxy-eq2x1",
+  "hash": "2a218dbaa134",
+  "tileCount": 334,
+  "totalBytes": 5063008
+}

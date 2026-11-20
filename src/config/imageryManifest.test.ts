@@ -26,9 +26,13 @@ const RECIPE = JSON.parse(
     string,
     {
       body: string;
+      /** Une source PDS3 qui ne couvre qu'une emprise : tuiles aux seuls `levels`, là où tout est valide. */
+      region?: true;
+      levels?: number[];
       source: {
         url: string;
         bytes: number;
+        sha256?: string;
         width: number;
         height: number;
         channels: number;
@@ -51,7 +55,15 @@ interface Manifest {
     height: number;
     channels: number;
     centerLongitude: number;
+    pixelsPerDegree?: number;
+    productId?: string;
   };
+  region?: {
+    bbox: [number, number, number, number];
+    levels: number[];
+    tilesPerLevel: Record<string, { written: number; skipped: number }>;
+  };
+  minLevel?: number;
   matrix: {
     columnsAtLevelZero: number;
     rowsAtLevelZero: number;
@@ -89,14 +101,21 @@ describe('mosaïques cuites : recette, manifeste, fiche', () => {
       expect(manifest.body, id).toBe(target.body);
       expect(manifest.source.url, id).toBe(target.source.url);
       expect(manifest.source.bytes, id).toBe(target.source.bytes);
-      expect(manifest.source.width, id).toBe(target.source.width);
-      expect(manifest.source.height, id).toBe(target.source.height);
-      expect(manifest.source.channels, id).toBe(target.source.channels);
-      expect(manifest.source.centerLongitude, id).toBe(
-        target.centerLongitude ?? 0
-      );
+      if (target.region) {
+        // La géométrie d'une région vient de l'étiquette PDS3 : la recette ne porte que l'identité.
+        expect(manifest.source.sha256, id).toBe(target.source.sha256);
+        expect(manifest.region?.levels, id).toEqual(target.levels);
+        expect(manifest.maxLevel, id).toBe(Math.max(...target.levels!));
+      } else {
+        expect(manifest.source.width, id).toBe(target.source.width);
+        expect(manifest.source.height, id).toBe(target.source.height);
+        expect(manifest.source.channels, id).toBe(target.source.channels);
+        expect(manifest.source.centerLongitude, id).toBe(
+          target.centerLongitude ?? 0
+        );
+        expect(manifest.maxLevel, id).toBe(target.maxLevel);
+      }
       expect(manifest.matrix.tileSizePx, id).toBe(target.tileSizePx);
-      expect(manifest.maxLevel, id).toBe(target.maxLevel);
       expect(manifest.source.sha256, id).toMatch(/^[0-9a-f]{64}$/);
     }
   });
@@ -113,6 +132,16 @@ describe('mosaïques cuites : recette, manifeste, fiche', () => {
   it('compte exactement les tuiles de la pyramide 2 × 1, 256 px, niveaux 0 à maxLevel', () => {
     for (const id of Object.keys(RECIPE.targets)) {
       const m = readManifest(id);
+      if (m.region) {
+        // Une région n'écrit que les tuiles entièrement valides : le compte est celui du cuiseur.
+        const written = Object.values(m.region.tilesPerLevel).reduce(
+          (sum, level) => sum + level.written,
+          0
+        );
+        expect(m.tileCount, id).toBe(written);
+        expect(m.totalBytes, id).toBeGreaterThan(m.tileCount * 100);
+        continue;
+      }
       let expected = 0;
       for (let level = 0; level <= m.maxLevel; level++)
         expected += 2 ** (level + 1) * 2 ** level;
@@ -126,6 +155,17 @@ describe('mosaïques cuites : recette, manifeste, fiche', () => {
     // La borne est celle que la fiche annonce : sa finesse en pixels par degré.
     for (const id of Object.keys(RECIPE.targets)) {
       const m = readManifest(id);
+      if (m.region) {
+        // Finesse du niveau maximal, en pixels par degré, face à celle de la source.
+        const levelPpd =
+          (m.matrix.tileSizePx *
+            m.matrix.columnsAtLevelZero *
+            2 ** m.maxLevel) /
+          360;
+        expect(levelPpd, id).toBeGreaterThanOrEqual(m.source.pixelsPerDegree!);
+        expect(levelPpd, id).toBeLessThan(m.source.pixelsPerDegree! * 2);
+        continue;
+      }
       const pyramidWidth =
         m.matrix.tileSizePx * m.matrix.columnsAtLevelZero * 2 ** m.maxLevel;
       expect(pyramidWidth, id).toBeGreaterThanOrEqual(m.source.width);
@@ -148,7 +188,15 @@ describe('mosaïques cuites : recette, manifeste, fiche', () => {
       );
       expect(service.format, tileset.id).toBe(m.format);
       expect(service.maxLevel, tileset.id).toBe(m.maxLevel);
-      expect(service.minLevel, tileset.id).toBe(0);
+      if (m.region) {
+        // Une région est servie sur la grille de la base à partir du palier que celle-ci laisse.
+        expect(service.minLevel, tileset.id).toBeLessThanOrEqual(m.minLevel!);
+        const bbox = (tileset as { coverage?: { bbox: number[] } }).coverage
+          ?.bbox;
+        expect(bbox, tileset.id).toEqual(
+          m.region.bbox.map((v) => Math.round(v * 1e6) / 1e6)
+        );
+      } else expect(service.minLevel, tileset.id).toBe(0);
       expect(service.matrix, tileset.id).toEqual(m.matrix);
       expect(tileset.body, tileset.id).toBe(m.body);
       // Les tuiles sont DÉJÀ à l'orientation de l'application : un `centerLongitude` ici les
