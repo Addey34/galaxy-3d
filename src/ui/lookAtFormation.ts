@@ -61,6 +61,7 @@ export async function lookAtFormation(
       body,
       place: name,
       target,
+      onFrame: (cb) => api.animationSystem.onFrame(cb),
       point: (out) => {
         const live = api.sceneSystem.getBody(body);
         if (!live) return false;

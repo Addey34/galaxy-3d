@@ -257,6 +257,26 @@ test.describe('mobile scripted tour', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   /**
+   * LA FICHE DU CORPS NE COUVRE PAS LA SCÈNE D'UNE VISITE SUR TÉLÉPHONE (GAL-IMMERSION-002). La
+   * sélection du corps par la visite ouvrait la fiche (mesuré à 390 px : y 52 à 224), qui réduisait
+   * la scène à une bande sous la carte. La visite la replie : le corps reste sélectionné et le
+   * bouton ⓘ la rouvre.
+   */
+  test('folds the body card the tour opened, and keeps it one tap away', async ({
+    page,
+  }) => {
+    await openPicker(page);
+    await page.locator('.stour-picker-item').nth(0).click();
+    await expect(page.locator('.stour-card')).toBeVisible();
+    await expect(page.locator('#info-trigger')).toBeVisible({
+      timeout: 60_000,
+    });
+    await expect(page.locator('#body-info')).toBeHidden();
+    await page.locator('#info-trigger').click();
+    await expect(page.locator('#body-info')).toBeVisible();
+  });
+
+  /**
    * LE BANDEAU DE PROVENANCE NE PASSE PAS SOUS LA CARTE (2026-10-20). Vu sur le delta du Nil à
    * 390 px : la carte de la visite, au-dessus de lui dans la pile, cachait ses lignes de crédit,
    * que la licence de l'imagerie exige à l'écran. Pendant une visite il se place sous la barre du
