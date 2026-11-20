@@ -269,21 +269,53 @@ export class TileHttpError extends Error {
 /** Y a-t-il un pixel non opaque dans cette image ? Un trou de la mosaïque, jamais une surface. */
 export type TileHoleDetector = (bitmap: ImageBitmap) => boolean;
 
-/**
- * Détecteur par défaut : une copie de la tuile sur un canevas hors écran, dont le canal alpha est
- * lu en entier. Absent (`OffscreenCanvas` manquant) : aucun trou n'est signalé, ce qui retombe sur
- * le comportement d'avant (le 404 reste traité). Coût mesuré à la mise en service : voir
- * `docs/ARCHITECTURE.md`, § « Une imagerie régionale ne laisse pas de trou ».
- */
-const defaultHoleDetector: TileHoleDetector = (bitmap) => {
-  if (typeof OffscreenCanvas === 'undefined') return false;
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const context = canvas.getContext('2d', { willReadFrequently: true });
-  if (!context) return false;
-  context.drawImage(bitmap, 0, 0);
-  const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height);
+/** Un contexte 2D capable de relire les pixels d'une image : hors écran si possible, sinon un canevas du document. */
+type PixelReader = {
+  draw(bitmap: ImageBitmap): void;
+  alpha(width: number, height: number): Uint8ClampedArray;
+};
+
+function pixelReader(width: number, height: number): PixelReader | null {
+  let context:
+    OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null = null;
+  if (typeof OffscreenCanvas !== 'undefined') {
+    context = new OffscreenCanvas(width, height).getContext('2d', {
+      willReadFrequently: true,
+    });
+  } else if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    context = canvas.getContext('2d', { willReadFrequently: true });
+  }
+  if (!context) return null;
+  const ctx = context;
+  return {
+    draw: (bitmap) => ctx.drawImage(bitmap, 0, 0),
+    alpha: (w, h) => ctx.getImageData(0, 0, w, h).data,
+  };
+}
+
+/** Un pixel non opaque dans ces octets RGBA ? (testé sur de vrais octets, pas sur un double) */
+export function rgbaHasHoles(data: ArrayLike<number>): boolean {
   for (let i = 3; i < data.length; i += 4) if (data[i] !== 255) return true;
   return false;
+}
+
+/**
+ * Détecteur par défaut : une copie de la tuile sur un canevas, dont le canal alpha est lu en
+ * entier. Sans `OffscreenCanvas`, un canevas du document ; sans aucun contexte 2D ou si la lecture
+ * échoue, AUCUN trou n'est signalé (le 404 reste traité, la limite est écrite dans l'architecture).
+ */
+export const defaultHoleDetector: TileHoleDetector = (bitmap) => {
+  try {
+    const reader = pixelReader(bitmap.width, bitmap.height);
+    if (!reader) return false;
+    reader.draw(bitmap);
+    return rgbaHasHoles(reader.alpha(bitmap.width, bitmap.height));
+  } catch {
+    return false;
+  }
 };
 
 /** Un manque d'imagerie régionale : la tuile se montre avec l'image de la base. */
@@ -315,6 +347,9 @@ const defaultHeightFetcher: HeightFetcher = async (url, signal) => {
   return response.arrayBuffer();
 };
 
+/** Délai entre deux relèvements du plancher d'approche à la sortie d'une couverture régionale. */
+const FLOOR_DECAY_MS = 600;
+
 /** Carreaux en échec gardés en mémoire (le plus ancien est oublié au-delà) : borne la Map. */
 const MAX_TRACKED_FAILURES = 2048;
 
@@ -334,6 +369,19 @@ export class PlanetarySurfaceEngine {
    * le Mars d'Olympus Mons). Vidé avec les échecs, à chaque changement de corps ou de jeu.
    */
   private readonly _unserved = new Set<string>();
+  /**
+   * CE QUE CHAQUE CARREAU MONTRE VRAIMENT : la source régionale qui l'a servi (ou la base) et le
+   * niveau de la DONNÉE, qui n'est pas celui du carreau : un carreau de niveau 13 dont la région a
+   * répondu 404 montre un morceau de l'image du niveau 8 de la base (`baseCrop`). Le bandeau et le
+   * plancher d'approche lisent cela, jamais le niveau de la sélection (GAL-IMMERSION-003B).
+   */
+  private readonly _served = new WeakMap<
+    SurfaceTile,
+    { regional: RegionalBinding | null; dataLevel: number }
+  >();
+  /** Niveau de finesse que le plancher d'approche a déclaré au corps (jamais subi à la baisse d'un coup). */
+  private _floorLevel = 0;
+  private _floorDecayAtMs = 0;
   private _radiusKm = 0;
   /**
    * GÉNÉRATION des carreaux d'imagerie (lot 48). Elle change quand le jeu attaché change sur le
@@ -462,6 +510,7 @@ export class PlanetarySurfaceEngine {
   /** Branche l'imagerie régionale du corps attaché, ou la retire (`null`). */
   setRegional(regionals: readonly RegionalBinding[] | null): void {
     this._regionals = regionals ?? [];
+    this._floorLevel = 0;
   }
 
   /** Les sources régionales actives : aucune pendant une comparaison. */
@@ -568,6 +617,7 @@ export class PlanetarySurfaceEngine {
     this._queue.length = 0;
     this._failed.clear();
     this._unserved.clear();
+    this._floorLevel = 0;
     const current = this._prefix();
     const hasStale = [...this._tiles.keys()].some(
       (key) => !key.startsWith(current)
@@ -633,7 +683,12 @@ export class PlanetarySurfaceEngine {
     // demandée (run 38985771615) ; calculé pour la finesse MAXIMALE de l'IGN, il la laissait
     // descendre à 23 m du sol, où 64 carreaux n'atteignent que le niveau 12 sous elle : une
     // bouillie verte à l'écran.
-    let finest = tileset.maxLevel;
+    // Le niveau de DONNÉE réellement peint sous la caméra par une région : la sélection subdivise
+    // aussi quand la région répond 404, n'a pas répondu ou répond 503, et ce niveau-là ne prouve
+    // rien (GAL-IMMERSION-003B). Sans tuile régionale peinte, la base est à son niveau maximal.
+    const shown = this._shownUnder(centre, servedLevel);
+    const servedData = shown?.regional ? shown.dataLevel : tileset.maxLevel;
+    let target = tileset.maxLevel;
     for (const entry of this._activeRegionals()) {
       const regionalMax = regionalMaxLevel(
         tileset.matrix,
@@ -652,13 +707,28 @@ export class PlanetarySurfaceEngine {
           entry.source
         )
       ) {
-        finest = Math.min(
+        target = Math.min(
           regionalMax,
-          Math.max(tileset.maxLevel, servedLevel) + 1
+          Math.max(tileset.maxLevel, servedData) + 1
         );
         break;
       }
     }
+    // Le plancher ne se relâche QUE par du peint, et ne se referme jamais d'un coup : un niveau
+    // fin qui disparaît un instant (tuile voisine pas encore arrivée) le garde, et la sortie de la
+    // couverture le relève d'un niveau à la fois, sans repousser la caméra de seize fois sa hauteur.
+    const now = performance.now();
+    if (this._floorLevel === 0 || target >= this._floorLevel) {
+      this._floorLevel = target;
+      this._floorDecayAtMs = now;
+    } else if (
+      target <= tileset.maxLevel &&
+      now - this._floorDecayAtMs >= FLOOR_DECAY_MS
+    ) {
+      this._floorLevel -= 1;
+      this._floorDecayAtMs = now;
+    }
+    const finest = Math.max(this._floorLevel, target);
     if (host.setStreamedImageryWidth(pyramidWidthPx(finest, tileset.matrix)))
       this._onImageryWidthChanged();
   }
@@ -932,17 +1002,15 @@ export class PlanetarySurfaceEngine {
     // source régionale (lot 53, pas 4), avec sa grille de base pour la finesse affichée ; un
     // carreau au-delà de la base qu'elle ne sert pas montre l'image de la base à son niveau
     // maximal, et c'est ce niveau que le bandeau annonce.
-    const serving = this._servingRegional(
-      tileIndexAt(
-        level,
-        centre.latitudeDeg,
-        centre.longitudeDeg,
-        tileset.matrix
-      ),
-      tileset
-    );
-    if (serving) tileset = { ...serving.tileset, matrix: tileset.matrix };
-    else level = Math.min(level, tileset.maxLevel);
+    const shown = painted > 0 ? this._shownUnder(centre, level) : null;
+    if (shown?.regional) {
+      tileset = { ...shown.regional.tileset, matrix: tileset.matrix };
+      level = shown.dataLevel;
+    } else {
+      // Ni région peinte ni carreau lisible : la base, à son niveau maximal au plus. Un carreau qui
+      // montre un morceau de l'ancêtre de la base annonce le niveau de CET ancêtre.
+      level = Math.min(shown ? shown.dataLevel : level, tileset.maxLevel);
+    }
     const next: SurfaceImageryState = {
       body: tileset.body,
       tilesetId: tileset.id,
@@ -994,6 +1062,34 @@ export class PlanetarySurfaceEngine {
       return;
     this._state = next;
     this._onState(next);
+  }
+
+  /**
+   * Ce que montre RÉELLEMENT l'image sous la visée : le carreau peint le plus fin de la
+   * génération courante qui contient le point visé, en remontant de `fromLevel` vers le niveau
+   * minimal. `null` si rien n'est peint là.
+   */
+  private _shownUnder(
+    centre: { latitudeDeg: number; longitudeDeg: number },
+    fromLevel: number
+  ): { regional: RegionalBinding | null; dataLevel: number } | null {
+    const tileset = this._tileset;
+    if (!tileset) return null;
+    for (let level = fromLevel; level >= tileset.minLevel; level -= 1) {
+      const tile = this._tiles.get(
+        this._key(
+          tileIndexAt(
+            level,
+            centre.latitudeDeg,
+            centre.longitudeDeg,
+            tileset.matrix
+          )
+        )
+      );
+      const served = tile ? this._served.get(tile) : undefined;
+      if (served) return served;
+    }
+    return null;
   }
 
   /**
@@ -1134,13 +1230,26 @@ export class PlanetarySurfaceEngine {
       },
       pixelsPerTexel: (index) => {
         const n = nearest(index);
-        // Distance au SOL mesuré sous la visée, pas à la sphère moyenne : sur l'Olympus de Mars
-        // (sol à 19,9 km au-dessus de la sphère) la caméra à 7,5 km du sol se croyait à 27 km, voyait
-        // 0,57 pixel par texel et ne subdivisait jamais plus fin que le niveau 11 (mesuré 2026-11-20).
+        // Distance au SOL, pas à la sphère moyenne : sur l'Olympus Mons (sol à 19,9 km de la sphère)
+        // la caméra à 7,5 km du sol se croyait à 27 km, voyait 0,57 pixel par texel et ne subdivisait
+        // jamais plus fin que le niveau 11 (mesuré 2026-11-20). L'altitude est celle du relief posé
+        // sous CE point quand sa tuile de hauteurs est chargée ; à défaut, celle du sol sous la visée.
+        const elevationM =
+          this._heights && this._radiusKm > 0
+            ? this._groundElevationAt(
+                { latitudeDeg: n.latitudeDeg, longitudeDeg: n.longitudeDeg },
+                index.level
+              )
+            : null;
+        const lift =
+          elevationM !== null && this._heights
+            ? (this._heights.manifest.datumRadiusKm + elevationM / 1000) /
+              this._radiusKm
+            : groundLift;
         const lifted = point(n.latitudeDeg, n.longitudeDeg).sub(
           this._bodyWorld
         );
-        lifted.multiplyScalar(groundLift).add(this._bodyWorld);
+        lifted.multiplyScalar(lift).add(this._bodyWorld);
         const distanceKm = camera.position.distanceTo(lifted) * kmPerUnit;
         return (
           groundResolutionKm(index.level, this._radiusKm, tileset.matrix) *
@@ -1224,6 +1333,7 @@ export class PlanetarySurfaceEngine {
     this._queue.length = 0;
     this._failed.clear();
     this._unserved.clear();
+    this._floorLevel = 0;
     for (const tile of this._tiles.values()) tile.dispose();
     this._tiles.clear();
     for (const kept of this._retained.values()) kept.tile.dispose();
@@ -1617,7 +1727,7 @@ export class PlanetarySurfaceEngine {
             })
           )
         );
-        return { primary, crop, image, compareImage };
+        return { primary, crop, image, compareImage, entry };
       };
       let loaded: Awaited<ReturnType<typeof load>>;
       if (serving) {
@@ -1635,9 +1745,19 @@ export class PlanetarySurfaceEngine {
             error instanceof RegionalMiss ||
             (error instanceof TileHttpError && error.status === 404);
           if (!missing) throw error;
+          // Une réponse devenue obsolète (tuile abandonnée, corps quitté) ne laisse aucune trace :
+          // elle ne doit pas marquer manquante une tuile d'une vue ou d'un corps à venir.
+          if (this._pending.get(key) !== controller || this._host !== host) {
+            release();
+            return;
+          }
           // L'image écartée ne servira à rien : la mémoire qu'elle tient est rendue tout de suite.
           for (const dropped of bitmaps.splice(0)) dropped.close?.();
           this._unserved.add(key);
+          if (this._unserved.size > MAX_TRACKED_FAILURES) {
+            const oldest = this._unserved.values().next().value;
+            if (oldest !== undefined) this._unserved.delete(oldest);
+          }
           loaded = await load(null);
         }
       } else loaded = await load(null);
@@ -1646,6 +1766,7 @@ export class PlanetarySurfaceEngine {
         crop,
         image: bitmap,
         compareImage: compareBitmap,
+        entry: usedRegional,
       } = loaded;
       // La cible a pu changer pendant le vol : ne rien poser sur un corps qu'on a quitté, ni
       // un carreau qu'on vient d'abandonner.
@@ -1697,6 +1818,11 @@ export class PlanetarySurfaceEngine {
         compareBitmap ? textureOf(compareBitmap) : undefined,
         stillWanted && !prefersReducedMotion() ? 'hold' : undefined
       );
+      this._served.set(tile, {
+        regional: usedRegional,
+        // Le niveau de la donnée : celui de l'ancêtre de la base quand la tuile en montre un morceau.
+        dataLevel: usedRegional || !crop ? index.level : tileset.maxLevel,
+      });
       host.attachSpinningChild(tile.mesh);
       if (!stillWanted) {
         this._retain(

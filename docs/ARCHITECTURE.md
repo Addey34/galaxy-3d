@@ -5401,9 +5401,30 @@ PNG 404 ou dont un pixel n'est pas opaque (`hasHoles`, vérifié une fois au dé
 l'image de la base, mémorisée (`_unserved`) pour n'être pas redemandée ; un échec réseau (503, coupure)
 n'est PAS un manque et se retient comme avant. Les bornes d'acquisition d'une mosaïque sont des
 INTERVALLES (ses images les plus anciennes et les plus récentes), jamais une date de prise de vue.
-**Le plancher d'approche et la sélection mesurent la distance au SOL mesuré**, pas à la sphère
-moyenne : sur Olympus Mons (sol à 19,9 km de la sphère) la caméra à 7,5 km du sol se croyait à 27 km
-et ne subdivisait pas au-delà du niveau 11. Une imagerie plus fine n'est PAS un éclairage assisté :
+**Le bandeau et le plancher d'approche suivent ce qui est PEINT, jamais la sélection.** Chaque
+carreau pose, en même temps que son image, ce qu'il montre vraiment (`_served` : la région qui l'a
+servi ou la base, et le niveau de la DONNÉE : un carreau de niveau 13 dont la région a répondu 404
+montre un morceau de l'image du niveau 8). `_shownUnder` lit le carreau peint le plus fin sous la
+visée : le bandeau nomme cette source et annonce ce niveau, le plancher autorise UN niveau de plus
+que le niveau régional peint (contrat progressif) et ne se relâche pas parce que la sélection
+subdivise alors que la source fine manque (404, trou, attente, 503). Il ne se referme jamais d'un
+coup : un niveau fin qui disparaît un instant est gardé, et la sortie de la couverture le relève
+d'un niveau toutes les 600 ms, sans repousser la caméra de seize fois sa hauteur. Une réponse
+obsolète (carreau abandonné, corps quitté) ne marque aucun manque ; `_unserved` est borné comme
+`_failed`. Sans `OffscreenCanvas`, le détecteur de trous lit un canevas du document ; sans contexte
+2D, aucun trou n'est signalé (limite : un trou sera alors peint en noir). Gardes :
+`PlanetarySurfaceEngine.provenance.test.ts` (falsifiée), `e2e/regionalNac.spec.ts` (VRAI PNG à un
+pixel transparent, 404, attente, titres WAC/NAC/Viking/CTX, containment complet de l'emprise).
+**La sélection mesure la distance au SOL**, pas à la sphère moyenne : sur Olympus Mons (sol à
+19,9 km de la sphère) la caméra à 7,5 km du sol se croyait à 27 km et ne subdivisait pas au-delà du
+niveau 11. L'altitude est celle du relief posé sous le point de CHAQUE nœud quand sa tuile de hauteurs
+est chargée, à défaut celle du sol sous la visée, à défaut aucune (`PlanetarySurfaceEngine.ground.test.ts`).
+**Droits des mosaïques de Trek (lus le 2026-11-20, non tranchés)** : les conditions LROC déclarent
+publiques les données du PDS et protégées celles du site LROC, sans nommer les mosaïques de Trek ; la
+mosaïque d'Apollo 11 est un traitement ISIS3 de Trek (NAC rééquilibrées), la CTX d'Olympus Mons est
+une section bêta préliminaire du Murray Lab (Caltech, Photoshop), qui demande de remercier MSSS et JPL.
+Aucune des deux n'énonce de licence : les fiches portent `license: other` avec le lien des
+conditions lues, jamais un domaine public déduit de l'hébergeur. Une imagerie plus fine n'est PAS un éclairage assisté :
 l'éclairage de lecture reste un réglage à part. Garde : `PlanetarySurfaceEngine.regional.test.ts`,
 `regionalImagery.bbox.test.ts`, `e2e/regionalNac.spec.ts`.
 
