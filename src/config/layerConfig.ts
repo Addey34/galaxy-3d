@@ -22,6 +22,7 @@ import { isSoftwareRenderer } from '@/components/systems/rendererKind';
 import { srgbByteToLinear } from '@/core/srgb';
 import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
+import { installReadingLight } from './readingLight';
 import {
   TERMINATOR_GLSL,
   TERMINATOR_WRAP_ATMOSPHERE,
@@ -279,7 +280,7 @@ export function createSurfaceMaterial(
     sunMat.color.multiplyScalar(1.6);
     return sunMat;
   }
-  return createShadowAwareStandardMaterial(
+  const material = createShadowAwareStandardMaterial(
     {
       color: fallbackColor ?? 0xffffff,
       roughness: 0.7,
@@ -306,6 +307,9 @@ export function createSurfaceMaterial(
           : undefined,
     }
   );
+  // L'éclairage de lecture (éteint par défaut) : la Terre, qui a ses lumières nocturnes, n'en porte pas.
+  if (!moonlight) installReadingLight(material);
+  return material;
 }
 
 const EARTH_OCEAN_ROUGHNESS_GLSL = `

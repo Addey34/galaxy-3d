@@ -364,6 +364,15 @@ export const fr: Record<MessageKey, string> = {
   'settings.group.body.aria': 'Afficher tous les objets : {group}',
   'settings.group.orbit.aria': 'Afficher toutes les orbites : {group}',
   'settings.exposure': 'Luminosité (exposition)',
+  'settings.readingLight': 'Éclairage de lecture (observation assistée)',
+  'settings.readingLight.hint':
+    "Relève la luminosité minimale des surfaces pour lire le relief là où le Soleil n'éclaire pas. Non physique : lumière du Soleil, date et terminateur inchangés.",
+  'settings.readingLight.level': "Niveau de l'éclairage de lecture",
+  'readingLight.badge': 'Éclairage de lecture actif : lumière non naturelle',
+  'readingLight.badge.none':
+    'Éclairage de lecture actif : sans effet sur ce corps',
+  'readingLight.on': 'Éclairage de lecture activé',
+  'readingLight.off': 'Éclairage de lecture désactivé',
   'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
   'settings.gazetteer': 'Noms de la surface',
   'settings.eventLabels': 'Étiquettes des événements',

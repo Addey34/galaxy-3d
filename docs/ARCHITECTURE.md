@@ -7830,3 +7830,12 @@ Tout autre corps n'intègre que `rotationSpeed · Δt` : bon rythme, phase arbit
 Conventions : date UTC passée à astronomy-engine avec la convention d'échelle de temps de `core/timeScale` ; longitude Est positive, 0 au centre de la carte ; repère de la scène = écliptique J2000 (`frames.ts`) ; le point subsolaire se mesure en repère local du maillage de surface (`worldPointToGeographic`).
 
 Mesure : `node scripts/measure-surface-light.mjs --origin <url>` (hors `verify`) compare la sonde `?debug-light` (`ui/lightProbe.ts`, scène réelle) à une référence indépendante (rotations IAU `Rz·Rx·Rz`, ou `Horizon` pour la Terre). Mesuré le 2026-11-19 (PC, rendu GPU) : avant correction, Lune et Mars avaient un point subsolaire faux de 15,4° (Apollo 11), 63,6°, 107,6°… selon la date ; après, 0,00° en Exploration. En mode Éducatif la distance Soleil compressée fait diverger la direction du Soleil de ≤ 2,6° (Lune) et la face tournée vers la Terre de ≤ 4,2° (Mars) : contrat du mode, non corrigé. La régression est `src/core/datedSurfaceRotation.test.ts` (falsifiée : liste vide, 6 tests rouges).
+
+## L'éclairage de lecture : une aide visuelle, pas de la lumière (GAL-IMMERSION-003A)
+
+Réglage « Reading light » (Réglages, onglet Image), éteint par défaut et jamais mémorisé. Il relève la luminance MINIMALE de la surface pour lire un relief que le Soleil n'éclaire pas ; il ne simule aucune lumière.
+
+- **Mécanisme** (`config/readingLight.ts`) : juste avant `opaque_fragment`, `outgoingLight = max(outgoingLight, √albédo × plancher × forme)`. Un `max`, donc un pixel déjà plus clair n'est pas modifié et, à 0, le rendu est celui du mode naturel. La racine relève les albédos faibles (la Lune) sans effacer la texture. La forme est un éclairage frontal fixe dans le repère de la caméra.
+- **Périmètre** : le patch est posé par `createSurfaceMaterial` (sphère de base ET carreaux streamés, un seul uniforme `READING_LIGHT` partagé : l'allumer ne recompile rien). Le Soleil, la Terre (corps à lumières nocturnes), les nuages, atmosphères, anneaux, étoiles et repères n'en portent pas. `CelestialObject.carriesReadingLight()` le dit ; l'indicateur distingue « lumière non naturelle » de « sans effet sur ce corps ».
+- **Intact** : date, position du Soleil, rotation, hauteur solaire, terminateur, éclipses, exposition globale. Le plancher est un second terme appliqué après eux.
+- **Gardes** : `config/readingLight.test.ts`, `e2e/readingLight.spec.ts`, `e2e/device-readingLight.spec.ts` (Pixel 7 et iPhone 15 émulés, hors `verify`).

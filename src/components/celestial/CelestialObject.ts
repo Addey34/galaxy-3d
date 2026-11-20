@@ -18,6 +18,7 @@ import {
   SKY_LOAD_RADII,
 } from '@/core/layerDistances';
 import * as THREE from 'three';
+import { hasReadingLight } from '@/config/readingLight';
 import {
   buildLayers,
   createSurfaceLayerMaterial,
@@ -614,6 +615,15 @@ export default class CelestialObject {
    * de chaque frame : sans cela un carreau resterait à pleine lumière pendant que la sphère
    * qu'il recouvre s'assombrit, et la différence se verrait d'abord à l'éclipse.
    */
+  carriesReadingLight(): boolean {
+    const surface = this.layers.get('surface');
+    return (
+      !!surface &&
+      !Array.isArray(surface.material) &&
+      hasReadingLight(surface.material)
+    );
+  }
+
   hasOceanMask(): boolean {
     const surface = this.layers.get('surface');
     return !!(
