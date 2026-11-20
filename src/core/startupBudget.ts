@@ -539,6 +539,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "tourne la caméra vers une formation nommée (lot 55) : importé par la recherche au choix d'un lieu, ou à l'ouverture d'une adresse `?place=` (les liens des pages /places/), jamais au démarrage ordinaire.",
   },
   {
+    chunk: 'formationMarker',
+    reason:
+      "le repère (anneau et nom) d'une formation choisie ou d'un lieu de plongée (`ui/formationMarker`, GAL-IMMERSION-002) : partagé par `lookAtFormation` (recherche, `?place=`) et par la plongée (`ui/placeDive`, au clic sur un nom ou à une étape de visite), Vite l'en a sorti en morceau commun ; il n'est chargé qu'avec l'un d'eux, jamais au démarrage ordinaire.",
+  },
+  {
     chunk: 'paletteSearch',
     reason:
       "la recherche typée de la palette (lot 47 : lieux, missions, instruments, survols) n'est importée qu'à la première frappe d'au moins deux caractères ; son index (77 ko gzip) est un fichier servi, demandé au même moment.",

@@ -7818,6 +7818,16 @@ un disque de 170 pixels.
   texels à son bord proche, et n'est pas chargé pour un disque que le palier plus grossier couvre
   avec quatre fois de marge ; falsifiées avec l'ancienne table).
 
+## Le repère d'une plongée (GAL-IMMERSION-002)
+
+Une plongée sur un lieu nommé (`ui/placeDive`, au clic sur un nom du gazetteer ou à une étape `diveTo` d'une visite) pose le repère existant `ui/formationMarker` (anneau et nom), au lieu d'un second système de repères : le lieu est celui de la plongée (`surfacePointToWorld`, la chaîne qui oriente la texture et les noms), jamais un objet physique. C'est une couche DOM d'instrument, sans mesh.
+
+- **Projection** : abonnée à la boucle de rendu (`AnimationSystem.onFrame`, après la mise à jour des positions et de la caméra). Dans sa propre `requestAnimationFrame` elle avait une image de retard sur un corps qui avance de 30 km/s : plusieurs degrés de latitude à 170 km d'altitude (mesuré).
+- **Cycle de vie** : un seul repère ; remplacé par un autre lieu ; retiré au premier geste sur la caméra, sur Échap, au changement de cible (autre corps, vue globale, fin de visite), après 90 s ; masqué quand le lieu est derrière le limbe ou hors de l'image. Rien ne reste dans le DOM ni dans la boucle.
+- **Lieu au centre** : `CameraSystem.holdLevelView` suspend le relevé de la visée vers l'horizon (`_tiltTowardsHorizon`) pendant une plongée ; à 150 km d'altitude ce relevé rejetait le lieu sous le bord de l'écran (la visite Apollo 11 ne montrait pas Statio). Le premier geste le rend en 0,6 s.
+- **Téléphone, visite** : la sélection d'un corps par une visite replie la fiche du corps sur ≤ 640 px (`ui/tourPlayer`) ; le corps reste sélectionné, le bouton ⓘ la rouvre, les crédits d'imagerie ne bougent pas.
+- Gardes : `e2e/diveMarker.spec.ts`, `e2e/tourPlayer.spec.ts` (« folds the body card »), toutes deux falsifiées.
+
 ## La phase de rotation des corps à modèle IAU (GAL-IMMERSION-001)
 
 La rotation propre d'un corps est posée par `CelestialObject.setSurfaceRotation`. Deux voies seulement :
