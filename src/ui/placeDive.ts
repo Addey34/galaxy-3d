@@ -103,6 +103,12 @@ export function setupPlaceDive(
   let wanted = 0;
   /** Le lieu dont le repère est posé (une plongée rejouée par `diveUntilReached` ne le repose pas). */
   let markedKey = '';
+  /**
+   * L'INTENTION courante, incrémentée par tout ce qui l'abandonne (un geste, une autre plongée) :
+   * un repère dont le chargement finit APRÈS un tel événement ne se pose pas. Le test sur le lieu
+   * et la cible ne suffit pas, un geste sur la même cible ne change ni l'un ni l'autre.
+   */
+  let intent = 0;
 
   /**
    * Le REPÈRE du lieu visé (`ui/formationMarker`, une couche d'instrument, jamais un mesh) : sur un
@@ -116,40 +122,54 @@ export function setupPlaceDive(
     if (key === markedKey && document.getElementById(FORMATION_MARKER_ID))
       return;
     markedKey = key;
+    const mine = intent;
     const target = cameraSystem.currentTarget;
     void Promise.all([
       import('./formationMarker'),
       loadDeferredMessages(),
-    ]).then(([marker]) => {
-      // Une autre plongée ou un autre corps a pris la main pendant le chargement.
-      if (markedKey !== key || cameraSystem.currentTarget !== target) return;
-      const lon = iauLongitudeToSceneLongitude(place.lon);
-      marker.showFormationMarker({
-        camera: cameraSystem,
-        body: place.body,
-        place: place.name,
-        target,
-        hint: null,
-        onFrame,
-        announce: false,
-        lifetimeMs: MARKER_MS,
-        point: (out) => {
-          const live = sceneSystem.getBody(place.body);
-          if (!live) return false;
-          out.copy(live.surfacePointToWorld(place.lat, lon));
-          return true;
-        },
-        centre: (out) => {
-          const live = sceneSystem.getBody(place.body);
-          if (!live) return false;
-          live.group.getWorldPosition(out);
-          return true;
-        },
-      });
-    });
+    ]).then(
+      ([marker]) => {
+        // Une autre plongée, un geste ou un autre corps a pris la main pendant le chargement.
+        if (
+          intent !== mine ||
+          markedKey !== key ||
+          cameraSystem.currentTarget !== target
+        )
+          return;
+        const lon = iauLongitudeToSceneLongitude(place.lon);
+        marker.showFormationMarker({
+          camera: cameraSystem,
+          body: place.body,
+          place: place.name,
+          target,
+          hint: null,
+          onFrame,
+          announce: false,
+          lifetimeMs: MARKER_MS,
+          point: (out) => {
+            const live = sceneSystem.getBody(place.body);
+            if (!live) return false;
+            out.copy(live.surfacePointToWorld(place.lat, lon));
+            return true;
+          },
+          centre: (out) => {
+            const live = sceneSystem.getBody(place.body);
+            if (!live) return false;
+            live.group.getWorldPosition(out);
+            return true;
+          },
+        });
+      },
+      () => {
+        // Chargement refusé (réseau coupé) : la plongée n'en souffre pas, et une plongée rejouée
+        // pourra retenter, puisque rien n'est marqué comme posé.
+        if (markedKey === key) markedKey = '';
+      }
+    );
   };
 
   const cancel = (): void => {
+    intent += 1;
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
   };

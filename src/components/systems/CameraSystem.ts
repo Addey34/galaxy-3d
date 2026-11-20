@@ -109,6 +109,8 @@ export class CameraSystem {
    */
   private _tiltShare = 1;
   private _tiltHeld = false;
+  /** La cible de la plongée qui a posé le maintien : un autre corps le lève. */
+  private _tiltHeldTarget: object | null = null;
   private _opticalFov = CAMERA_SETTINGS.opticalMaxFov;
   private _scaleMode: 'educ' | 'explo' = 'educ';
   /** Rayon à ne pas traverser pour le zoom par altitude ; 0 sans corps suivi. */
@@ -505,6 +507,7 @@ export class CameraSystem {
    */
   holdLevelView(): void {
     this._tiltHeld = true;
+    this._tiltHeldTarget = this.currentTarget;
     this._tiltShare = 0;
   }
 
@@ -537,6 +540,11 @@ export class CameraSystem {
       this.refreshApproachBounds();
     }
 
+    // Un autre corps, ou la vue globale, ne garde pas la visée à la verticale d'un lieu qu'il n'a pas.
+    if (this._tiltHeld && this.currentTarget !== this._tiltHeldTarget) {
+      this._tiltHeld = false;
+      this._tiltShare = 1;
+    }
     if (!this._tiltHeld && this._tiltShare < 1)
       this._tiltShare = Math.min(1, this._tiltShare + _delta / TILT_RELEASE_S);
     this._updateClipPlanes();
