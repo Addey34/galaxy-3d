@@ -117,9 +117,15 @@ export function setupPlaceDive(
    * de Mars), se masque derrière le limbe, et disparaît au premier geste, sur Échap, au
    * changement de cible, au remplacement par un autre lieu ou après `MARKER_MS`.
    */
-  const markTarget = (place: DivePlace): void => {
+  const markTarget = (place: DivePlace, replay: boolean): void => {
     const key = `${place.body}|${place.name}`;
-    if (key === markedKey && document.getElementById(FORMATION_MARKER_ID))
+    // Une plongée REJOUÉE ne repose jamais un repère déjà demandé pour ce lieu : s'il a été retiré
+    // (Échap, geste, changement de cible), c'est voulu. Seul un chargement refusé (`markedKey`
+    // remis à vide) autorise un nouvel essai. Une demande NEUVE, elle, repose le repère absent.
+    if (
+      key === markedKey &&
+      (replay || document.getElementById(FORMATION_MARKER_ID))
+    )
       return;
     markedKey = key;
     const mine = intent;
@@ -162,8 +168,9 @@ export function setupPlaceDive(
       },
       () => {
         // Chargement refusé (réseau coupé) : la plongée n'en souffre pas, et une plongée rejouée
-        // pourra retenter, puisque rien n'est marqué comme posé.
-        if (markedKey === key) markedKey = '';
+        // pourra retenter, puisque rien n'est marqué comme posé. Un refus ANCIEN (intention
+        // abandonnée ou remplacée, même lieu) ne touche pas à la demande en cours.
+        if (intent === mine && markedKey === key) markedKey = '';
       }
     );
   };
@@ -178,8 +185,18 @@ export function setupPlaceDive(
   const canvas = cameraSystem.renderer.domElement;
   canvas.addEventListener('pointerdown', cancel);
   canvas.addEventListener('wheel', cancel, { passive: true });
+  // Échap abandonne le repère demandé, même si son module n'est pas encore arrivé (le gestionnaire
+  // du repère n'existe qu'une fois posé). Ni la plongée ni sa persistance ne sont touchées, et
+  // l'événement n'est ni retenu ni arrêté : les autres usages d'Échap (fiches, visites) restent.
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Escape') intent += 1;
+    },
+    true
+  );
 
-  const dive = (place: DivePlace): boolean => {
+  const dive = (place: DivePlace, replay = false): boolean => {
     const object = sceneSystem.getBody(place.body);
     const km = radiusKm(place.body);
     const sceneRadius =
@@ -207,7 +224,8 @@ export function setupPlaceDive(
     const distance = diveDistance(sceneRadius, km, altitude);
     if (!(distance > 0)) return false;
 
-    cancel();
+    // Une plongée rejouée ne change pas d'intention : elle ne doit pas invalider le repère en attente.
+    if (!replay) cancel();
     wanted = distance;
     // Le lieu visé reste au centre : sans cela le relevé vers l'horizon le rejette sous l'écran.
     cameraSystem.holdLevelView();
@@ -230,7 +248,7 @@ export function setupPlaceDive(
         distance
       );
       publish();
-      markTarget(place);
+      markTarget(place, replay);
       return true;
     }
 
@@ -253,7 +271,7 @@ export function setupPlaceDive(
       }
     };
     frame = requestAnimationFrame(step);
-    markTarget(place);
+    markTarget(place, replay);
     return true;
   };
 
@@ -303,7 +321,7 @@ export function setupPlaceDive(
         return;
       }
       // Encore en vol : on laisse finir. Sinon on rejoue, la borne d'approche a pu descendre.
-      if (frame === 0) dive(place);
+      if (frame === 0) dive(place, true);
     }, PERSIST_INTERVAL_MS);
     return true;
   };
