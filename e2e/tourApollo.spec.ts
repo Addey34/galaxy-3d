@@ -147,3 +147,57 @@ test('fermer la visite en cours restaure le mode et retire le repère', async ({
     'educ'
   );
 });
+
+test('éclairage assisté pendant la visite : repère et légende intacts, retour exact au naturel', async ({
+  page,
+}) => {
+  await boot(page, 'en');
+  const next = page.locator('.stour-next');
+  const caption = page.locator('.stour-caption');
+  // Avancer jusqu'à l'étape du lieu : le repère « Statio Tranquillitatis » est posé.
+  const marker = page.locator('#formation-marker');
+  for (let i = 0; i < 8; i += 1) {
+    await expect(next).toBeEnabled({ timeout: 60_000 });
+    if (
+      (await marker.count()) &&
+      /Tranquillitatis/.test(
+        (await marker.locator('.formation-marker-name').textContent()) ?? ''
+      ) &&
+      /Statio/.test((await marker.textContent()) ?? '')
+    )
+      break;
+    await next.click();
+  }
+  await expect(marker.locator('.formation-marker-name')).toContainText(
+    'Statio Tranquillitatis'
+  );
+  await page.waitForTimeout(3_000);
+  const natural = await sceneStats(page);
+  // Le rendu naturel est déjà éclairé (rotation lunaire datée) : l'assistance n'est pas requise.
+  expect(natural.p99).toBeGreaterThan(20);
+
+  const set = (on: boolean) =>
+    page.evaluate((v) => {
+      const cb = document.querySelector<HTMLInputElement>(
+        '#reading-light-toggle'
+      );
+      if (!cb) throw new Error('réglage absent');
+      cb.checked = v;
+      cb.dispatchEvent(new Event('change'));
+    }, on);
+  await set(true);
+  await expect(page.locator('#reading-light-badge')).toBeVisible();
+  await page.waitForTimeout(2_000);
+  const assisted = await sceneStats(page);
+  // L'assistance ne fait que relever un plancher : la scène déjà éclairée ne s'assombrit pas.
+  expect(assisted.mean).toBeGreaterThanOrEqual(natural.mean - 1);
+  await expect(marker).toHaveCount(1);
+  await expect(caption).not.toBeEmpty();
+
+  await set(false);
+  await expect(page.locator('#reading-light-badge')).toBeHidden();
+  await page.waitForTimeout(2_000);
+  const back = await sceneStats(page);
+  expect(Math.abs(back.mean - natural.mean)).toBeLessThan(1.5);
+  await expect(marker).toHaveCount(1);
+});

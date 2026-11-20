@@ -77,6 +77,7 @@ import { registerPlaceDive, setupPlaceDive } from './ui/placeDive';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
+import { setupReadingLightToggle } from './ui/readingLightToggle';
 import { setupSettingsTabs } from './ui/settingsTabs';
 import { setupSurfacePanel } from './ui/surfacePanel';
 import { setupUnitsToggle } from './ui/unitsToggle';
@@ -374,9 +375,11 @@ function wireChrome(): {
     setupDocumentChrome();
     // Ce que l'application DIT quand elle change d'état (lot 19, D4, D6 et D11).
     const announcer = getAnnouncer();
+    let readingLight: { setTarget: (body: string) => void } | null = null;
     const planetNav = setupPlanetControls(
       cameraSystem,
       (name) => {
+        readingLight?.setTarget(name);
         if (name === 'overview') bodyInfo.hide();
         else bodyInfo.show(name);
         exploScaleBadge.setHasTarget(name !== 'overview');
@@ -462,6 +465,10 @@ function wireChrome(): {
     exploHud.setMode('educ');
     exploHud.setActive(true);
     setupRenderExposure(sceneSystem);
+    readingLight = setupReadingLightToggle(
+      (name) => sceneSystem.getBody(name)?.carriesReadingLight() ?? false
+    );
+    readingLight.setTarget(planetNav.getSelectedBody() ?? 'overview');
     setupSettingsTabs();
     setupColorblindToggle(sceneSystem);
     setupUnitsToggle();
