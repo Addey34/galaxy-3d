@@ -22,7 +22,11 @@ import type { DatedProduct, TimeInterval } from '@/core/temporal';
 import { parseDayDomain, publishedDay, type DayRange } from '@/core/timeDomain';
 import Logger from '@/utils/Logger';
 import regionalCoverage from './regionalCoverage.json';
-import type { RegionalCoverage, RegionalSource } from '@/core/regionalImagery';
+import type {
+  BoxCoverage,
+  RegionalCoverage,
+  RegionalSource,
+} from '@/core/regionalImagery';
 
 /**
  * TypeScript ÉLARGIT les chaînes d'un import JSON (`"type": "tileset"` arrive typé `string`).
@@ -355,36 +359,51 @@ export function createDatedChooser(options: {
   };
 }
 
+/** Une imagerie régionale branchée sur le corps : sa fiche de jeu de tuiles et sa couverture. */
+export interface RegionalEntry {
+  readonly tileset: SurfaceTileset;
+  readonly source: RegionalSource;
+}
+
 /**
  * Les IMAGERIES RÉGIONALES (lot 53, pas 4), par corps : plus fines que la base, servies sur sa
- * grille et seulement dans leur couverture, lue dans `config/regionalCoverage.json` (écrit par
- * `pnpm surface:regions`). La règle de choix vit dans `core/regionalImagery.ts`.
+ * grille et seulement dans leur couverture. Un corps en porte UNE OU PLUSIEURS, chacune sa
+ * couverture (GAL-IMMERSION-003B), et le moteur
+ * choisit celle qui s'applique à chaque tuile (`core/regionalImagery.ts::pickRegional`).
+ *
+ * Deux origines de couverture : l'EMPRISE que la fiche déclare (`coverage.bbox`, le rectangle de
+ * données de la mosaïque d'un service WMTS), ou, pour une imagerie nationale, les boîtes lues dans
+ * `config/regionalCoverage.json` (écrit par `pnpm surface:regions`, frontières d'un pays).
  */
-export const REGIONAL_TILESETS: ReadonlyMap<
-  string,
-  { tileset: SurfaceTileset; source: RegionalSource }
-> = new Map(
-  FICHES.filter((fiche) => fiche.regional).map((fiche) => {
-    // TypeScript élargit les tableaux d'un import JSON : la forme est celle du générateur.
-    const region = (
-      regionalCoverage.regions as unknown as Record<
-        string,
-        { rows: RegionalCoverage['rows'] }
-      >
-    )[fiche.id];
-    if (!region)
-      throw new Error(
-        `imagerie régionale ${fiche.id} sans couverture : relancer pnpm surface:regions`
-      );
-    return [
-      fiche.body,
-      {
+export const REGIONAL_TILESETS: ReadonlyMap<string, readonly RegionalEntry[]> =
+  (() => {
+    const byBody = new Map<string, RegionalEntry[]>();
+    for (const fiche of FICHES.filter((candidate) => candidate.regional)) {
+      let coverage: RegionalCoverage;
+      if (fiche.coverage) coverage = { bbox: fiche.coverage.bbox };
+      else {
+        // TypeScript élargit les tableaux d'un import JSON : la forme est celle du générateur.
+        const region = (
+          regionalCoverage.regions as unknown as Record<
+            string,
+            { rows: BoxCoverage['rows'] }
+          >
+        )[fiche.id];
+        if (!region)
+          throw new Error(
+            `imagerie régionale ${fiche.id} sans couverture : relancer pnpm surface:regions`
+          );
+        coverage = { boxDeg: regionalCoverage.boxDeg, rows: region.rows };
+      }
+      const entries = byBody.get(fiche.body) ?? [];
+      entries.push({
         tileset: toTileset(fiche),
         source: {
-          coverage: { boxDeg: regionalCoverage.boxDeg, rows: region.rows },
+          coverage,
           publishedPixelsPerDegree: fiche.publishedPixelsPerDegree,
         },
-      },
-    ] as const;
-  })
-);
+      });
+      byBody.set(fiche.body, entries);
+    }
+    return byBody;
+  })();
