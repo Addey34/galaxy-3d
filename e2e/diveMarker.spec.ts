@@ -130,9 +130,11 @@ test('un chargement refusé ne casse pas la plongée et la suivante réessaie', 
 });
 
 /**
- * LE CONTRAT ASYNCHRONE, SUITE (GAL-IMMERSION-002-FINAL, lot A). Chaque test tient le morceau du
- * repère derrière une barrière libérée par l'ÉVÉNEMENT du test, puis attend la réponse réseau et
- * deux images : aucune durée n'est une preuve.
+ * LE CONTRAT ASYNCHRONE, SUITE (GAL-IMMERSION-002-CLOSE). Un seul parcours réel ici : Échap avant
+ * l'arrivée du morceau, tenu derrière une barrière libérée par l'ÉVÉNEMENT du test. Les chemins
+ * persistants (relance, échec puis Échap, demande neuve, unicité, rejet ancien) sont démontrés
+ * par `ui/placeDiveMarker.test.ts` et `core/markerIntent.test.ts`, avec des promesses contrôlées
+ * et falsifiés un à un : un clic sur un nom appelle `dive`, pas la plongée persistante.
  */
 const afterTwoFrames = (page: import('@playwright/test').Page) =>
   page.evaluate(
@@ -177,90 +179,4 @@ test('Échap avant l’arrivée du module : aucun repère, même après les rela
   // Une relance persistante (si la plongée n'est pas arrivée) ne le repose pas non plus.
   await afterTwoFrames(page);
   await expect(page.locator('#formation-marker')).toHaveCount(0);
-});
-
-test('Échap retire le repère posé et la plongée persistante ne le recrée pas', async ({
-  page,
-}) => {
-  await diveByTapping(page, (x, y) => page.mouse.click(x, y));
-  await expect(page.locator('#formation-marker')).toHaveCount(1, {
-    timeout: 15_000,
-  });
-  await page.keyboard.press('Escape');
-  await expect(page.locator('#formation-marker')).toHaveCount(0);
-  // Attendre une relance de la plongée (elle réécrit `data-place-dive`) ou son arrêt, par
-  // événement : un observateur de mutations, borné par la durée de persistance d'une relance.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        const canvas = document.querySelector('canvas');
-        if (!canvas) return resolve();
-        const observer = new MutationObserver(() => {
-          observer.disconnect();
-          resolve();
-        });
-        observer.observe(canvas, { attributes: true });
-        window.setTimeout(() => {
-          observer.disconnect();
-          resolve();
-        }, 4_000);
-      })
-  );
-  await afterTwoFrames(page);
-  await expect(page.locator('#formation-marker')).toHaveCount(0);
-});
-
-test('la dernière intention gagne pour un même lieu : une seule pose', async ({
-  page,
-}) => {
-  const hold = await holdMarkerModule(page);
-  // Deux demandes sur le MÊME lieu avant l'arrivée du module (les deux import() partagent la
-  // même requête) : seule la dernière a le droit de poser le repère.
-  const name = await diveByTapping(page, async (x, y) => {
-    // Deux appuis dans la MÊME image (un aller-retour de souris laisserait une image passer).
-    await page.evaluate(
-      ([cx, cy]) => {
-        const canvas = document.querySelector('canvas');
-        if (!canvas) throw new Error('canvas absent');
-        const init = {
-          clientX: cx,
-          clientY: cy,
-          pointerId: 1,
-          pointerType: 'mouse',
-          isPrimary: true,
-          button: 0,
-          bubbles: true,
-        };
-        for (let i = 0; i < 2; i += 1) {
-          canvas.dispatchEvent(new PointerEvent('pointerdown', init));
-          canvas.dispatchEvent(new PointerEvent('pointerup', init));
-        }
-      },
-      [x, y]
-    );
-  });
-  await expect.poll(() => hold.held(), { timeout: 15_000 }).toBeGreaterThan(0);
-  await page.evaluate(() => {
-    const w = window as unknown as { __markerPoses: number };
-    w.__markerPoses = 0;
-    new MutationObserver((records) => {
-      for (const record of records)
-        for (const node of record.addedNodes)
-          if (node instanceof HTMLElement && node.id === 'formation-marker')
-            w.__markerPoses += 1;
-    }).observe(document.body, { childList: true });
-  });
-  await hold.release();
-  await expect(page.locator('#formation-marker')).toHaveCount(1, {
-    timeout: 15_000,
-  });
-  await expect(
-    page.locator('#formation-marker .formation-marker-name')
-  ).toContainText(name);
-  await afterTwoFrames(page);
-  expect(
-    await page.evaluate(
-      () => (window as unknown as { __markerPoses: number }).__markerPoses
-    )
-  ).toBe(1);
 });

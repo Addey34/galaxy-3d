@@ -9,6 +9,7 @@
  */
 import * as THREE from 'three';
 import { iauLongitudeToSceneLongitude } from '@/core/gazetteer';
+import { createMarkerIntent } from '@/core/markerIntent';
 import { altitudeToFrame, diveDistance } from '@/core/placeDive';
 import { viewAnglesFromDirection } from '@/core/viewAngles';
 import { t } from '@/i18n';
@@ -101,14 +102,12 @@ export function setupPlaceDive(
   let frame = 0;
   /** Distance (unités de scène) de la dernière plongée lancée, `0` avant la première. */
   let wanted = 0;
-  /** Le lieu dont le repère est posé (une plongée rejouée par `diveUntilReached` ne le repose pas). */
-  let markedKey = '';
   /**
-   * L'INTENTION courante, incrémentée par tout ce qui l'abandonne (un geste, une autre plongée) :
-   * un repère dont le chargement finit APRÈS un tel événement ne se pose pas. Le test sur le lieu
-   * et la cible ne suffit pas, un geste sur la même cible ne change ni l'un ni l'autre.
+   * L'INTENTION du repère (`core/markerIntent.ts`) : un repère dont le chargement finit APRÈS un
+   * abandon (geste, Échap, autre corps) ne se pose pas, et une plongée rejouée ne le repose que
+   * si le chargement a ÉCHOUÉ, jamais après un abandon.
    */
-  let intent = 0;
+  const markerIntent = createMarkerIntent();
 
   /**
    * Le REPÈRE du lieu visé (`ui/formationMarker`, une couche d'instrument, jamais un mesh) : sur un
@@ -119,29 +118,24 @@ export function setupPlaceDive(
    */
   const markTarget = (place: DivePlace, replay: boolean): void => {
     const key = `${place.body}|${place.name}`;
-    // Une plongée REJOUÉE ne repose jamais un repère déjà demandé pour ce lieu : s'il a été retiré
-    // (Échap, geste, changement de cible), c'est voulu. Seul un chargement refusé (`markedKey`
-    // remis à vide) autorise un nouvel essai. Une demande NEUVE, elle, repose le repère absent.
-    if (
-      key === markedKey &&
-      (replay || document.getElementById(FORMATION_MARKER_ID))
-    )
-      return;
-    markedKey = key;
-    const mine = intent;
+    const mine = markerIntent.request(
+      key,
+      replay,
+      !!document.getElementById(FORMATION_MARKER_ID)
+    );
+    if (mine === null) return;
     const target = cameraSystem.currentTarget;
     void Promise.all([
       import('./formationMarker'),
       loadDeferredMessages(),
     ]).then(
       ([marker]) => {
-        // Une autre plongée, un geste ou un autre corps a pris la main pendant le chargement.
-        if (
-          intent !== mine ||
-          markedKey !== key ||
-          cameraSystem.currentTarget !== target
-        )
+        // Une autre demande, un abandon ou un autre corps a pris la main pendant le chargement.
+        if (cameraSystem.currentTarget !== target) {
+          markerIntent.abandon();
           return;
+        }
+        if (!markerIntent.resolved(mine)) return;
         const lon = iauLongitudeToSceneLongitude(place.lon);
         marker.showFormationMarker({
           camera: cameraSystem,
@@ -166,32 +160,30 @@ export function setupPlaceDive(
           },
         });
       },
-      () => {
-        // Chargement refusé (réseau coupé) : la plongée n'en souffre pas, et une plongée rejouée
-        // pourra retenter, puisque rien n'est marqué comme posé. Un refus ANCIEN (intention
-        // abandonnée ou remplacée, même lieu) ne touche pas à la demande en cours.
-        if (intent === mine && markedKey === key) markedKey = '';
-      }
+      () => markerIntent.rejected(mine)
     );
   };
 
   const cancel = (): void => {
-    intent += 1;
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
   };
 
   // Un geste de l'utilisateur reprend la main : la plongée ne lutte pas contre lui.
   const canvas = cameraSystem.renderer.domElement;
-  canvas.addEventListener('pointerdown', cancel);
-  canvas.addEventListener('wheel', cancel, { passive: true });
+  const abandon = (): void => {
+    cancel();
+    markerIntent.abandon();
+  };
+  canvas.addEventListener('pointerdown', abandon);
+  canvas.addEventListener('wheel', abandon, { passive: true });
   // Échap abandonne le repère demandé, même si son module n'est pas encore arrivé (le gestionnaire
   // du repère n'existe qu'une fois posé). Ni la plongée ni sa persistance ne sont touchées, et
   // l'événement n'est ni retenu ni arrêté : les autres usages d'Échap (fiches, visites) restent.
   document.addEventListener(
     'keydown',
     (event) => {
-      if (event.key === 'Escape') intent += 1;
+      if (event.key === 'Escape') markerIntent.abandon();
     },
     true
   );
