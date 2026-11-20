@@ -31,6 +31,7 @@ import { educationalParentOrbitScale } from './educationalScale';
 import { HOURS_TO_RAD } from './MathConstants';
 import { surfaceRotationForSubsolarLongitude } from './frames';
 import { flattenBodies, forEachBody } from '@/config/catalog';
+import { DATED_ROTATION_BODIES } from '@/config/datedRotation';
 import type { PositionSource } from './positionProvenance';
 import { READ_AHEAD_SECONDS, readAheadDays } from './ephemerisWindow';
 
@@ -338,11 +339,12 @@ export class OrbitalMechanics {
         for (const listener of this._positionsJumpedListeners) listener();
     }
 
-    // HORS du throttle, et après lui : la phase de rotation terrestre est la seule grandeur
-    // qui doit être exacte À CHAQUE frame. Le throttle ci-dessus ne concerne que les positions
+    // HORS du throttle, et après lui : la phase de rotation de la Terre, de la Lune et de Mars
+    // (`DATED_ROTATION_BODIES`) est ce qui doit être exact À CHAQUE frame. Le throttle ci-dessus ne concerne que les positions
     // orbitales, dont l'imprécision tolérée est bornée à 0,5° d'orbite ; une erreur de phase,
     // elle, se cumulerait sans borne (cf. syncEarthSurfaceRotation).
     this.syncEarthSurfaceRotation(date);
+    this.syncDatedSurfaceRotations(date);
   }
 
   /**
@@ -653,6 +655,7 @@ export class OrbitalMechanics {
   syncAnglesFromEphemeris(date: Date): void {
     this.syncAxesFromEphemeris(date);
     this.syncEarthSurfaceRotation(date);
+    this.syncDatedSurfaceRotations(date);
   }
 
   /**
@@ -741,6 +744,41 @@ export class OrbitalMechanics {
         computeGreenwichSubsolarLongitude(date)
       )
     );
+  }
+
+  /**
+   * Pose la rotation propre des corps de `DATED_ROTATION_BODIES` (Lune, Mars) depuis la DATE :
+   * le méridien origine du modèle IAU (pôle, angle de méridien W, libration comprise) est amené
+   * sur sa vraie direction. Même principe que la Terre, autre grandeur de référence : la phase
+   * est DÉRIVÉE de la date, jamais cumulée.
+   *
+   * Avant, ces corps n'intégraient que `rotationSpeed · Δt` depuis `rotation.y = 0` à la création :
+   * bon rythme, phase arbitraire. Mesuré (GAL-IMMERSION-001, `scripts/measure-surface-light.mjs`) :
+   * la longitude du point subsolaire et celle de la face tournée vers la Terre étaient fausses du
+   * MÊME angle (15,4° pour Apollo 11, 63,6° quatre jours plus tard, 107,6° en 2000), croissant
+   * à 13,2°/jour comme la rotation de la Lune. Le site d'Apollo 11 passait ainsi côté nuit
+   * alors que le Soleil y était à 10,7° au-dessus de l'horizon. Le terminateur, lui, était juste
+   * (il ne dépend que de la direction du Soleil) : c'est la CARTE qui était décalée.
+   *
+   * Appelé à chaque frame comme `syncEarthSurfaceRotation` (une phase dérivée ne dérive pas,
+   * quelles que soient les frames sautées). Coût : un `RotationAxis` par corps listé.
+   */
+  syncDatedSurfaceRotations(date: Date): void {
+    forEachBody(this.config, ({ name, config: cfg }) => {
+      if (!cfg.astroBody || !DATED_ROTATION_BODIES.has(cfg.astroBody)) return;
+      const body = this.bodies[name];
+      if (!body?.group) return;
+      const meridian = this.ephemeris.getPrimeMeridianDirection(
+        cfg.rotationBody ?? cfg.astroBody,
+        date
+      );
+      if (!meridian) return;
+      // Dans le repère où le corps TOURNE (le `_tiltGroup`, aligné sur le pôle IAU), comme la Terre.
+      meridian.applyQuaternion(
+        body.getTiltQuaternion(_tmpTiltQuaternion).invert()
+      );
+      body.setSurfaceRotation(surfaceRotationForSubsolarLongitude(meridian, 0));
+    });
   }
 
   /**

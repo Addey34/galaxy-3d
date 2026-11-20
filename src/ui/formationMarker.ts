@@ -24,7 +24,8 @@ import { t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 
-export const FORMATION_MARKER_ID = 'formation-marker';
+import { FORMATION_MARKER_ID } from './formationMarkerId';
+export { FORMATION_MARKER_ID };
 /** Durée d'affichage : de quoi lire, pas de quoi s'installer. */
 export const LIFETIME_MS = 12_000;
 
@@ -38,6 +39,22 @@ export interface FormationMarkerRequest {
   centre(out: THREE.Vector3): boolean;
   /** La cible que la caméra suivait QUAND la formation a été choisie (identité, pas un nom). */
   readonly target: object | null;
+  /**
+   * Phrase d'aide sous le nom. Par défaut « approchez-vous pour voir les noms » (recherche et
+   * `?place=`, vue encore lointaine) ; `null` pour une plongée, déjà arrivée près du lieu.
+   */
+  readonly hint?: string | null;
+  /** Durée d'affichage, ms (défaut `LIFETIME_MS`). */
+  readonly lifetimeMs?: number;
+  /**
+   * S'abonner à la boucle de rendu de la scène : la projection se fait alors APRÈS la mise à jour
+   * des positions et de la caméra de la même image. Sans elle le repère a une image de retard sur
+   * un corps qui avance (30 km/s autour du Soleil : ~0,5 km par image, soit plusieurs degrés de
+   * latitude à 170 km d'altitude, mesuré sur la plongée Apollo 11).
+   */
+  readonly onFrame?: (callback: () => void) => () => void;
+  /** Faux quand l'appelant annonce déjà le geste (la plongée a sa propre annonce). */
+  readonly announce?: boolean;
 }
 
 let stop: (() => void) | null = null;
@@ -64,10 +81,13 @@ export function showFormationMarker(request: FormationMarkerRequest): void {
   const title = document.createElement('span');
   title.className = 'formation-marker-name';
   title.textContent = `${place} · ${name}`;
-  const hint = document.createElement('span');
-  hint.className = 'formation-marker-hint';
-  hint.textContent = t('place.marker.hint');
-  caption.append(title, hint);
+  caption.append(title);
+  if (request.hint !== null) {
+    const hint = document.createElement('span');
+    hint.className = 'formation-marker-hint';
+    hint.textContent = request.hint ?? t('place.marker.hint');
+    caption.append(hint);
+  }
   pin.append(ring, caption);
   host.append(pin);
   // Un repère visuel : le lecteur d'écran reçoit la phrase ci-dessous, une seule fois.
@@ -79,10 +99,12 @@ export function showFormationMarker(request: FormationMarkerRequest): void {
   const toCamera = new THREE.Vector3();
   const normal = new THREE.Vector3();
   let raf = 0;
+  let unsubscribe: (() => void) | null = null;
   let timer = 0;
 
   const end = (): void => {
     cancelAnimationFrame(raf);
+    unsubscribe?.();
     window.clearTimeout(timer);
     camera.controls.removeEventListener('start', end);
     document.removeEventListener('keydown', onKey, true);
@@ -116,16 +138,18 @@ export function showFormationMarker(request: FormationMarkerRequest): void {
     host.hidden = !visible;
     if (visible)
       pin.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-    raf = requestAnimationFrame(frame);
+    if (!request.onFrame) raf = requestAnimationFrame(frame);
   };
 
   stop = end;
   camera.controls.addEventListener('start', end);
   document.addEventListener('keydown', onKey, true);
-  timer = window.setTimeout(end, LIFETIME_MS);
+  timer = window.setTimeout(end, request.lifetimeMs ?? LIFETIME_MS);
+  if (request.onFrame) unsubscribe = request.onFrame(frame);
   frame();
-  getAnnouncer().announce(
-    t('place.marker.announce', { place, body: name }),
-    'formation-marker'
-  );
+  if (request.announce !== false)
+    getAnnouncer().announce(
+      t('place.marker.announce', { place, body: name }),
+      'formation-marker'
+    );
 }

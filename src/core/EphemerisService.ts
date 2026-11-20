@@ -21,6 +21,7 @@ import './timeScale';
 import * as THREE from 'three';
 import type { JupiterMoonKey } from '@/types';
 import { equatorialToScene } from './frames';
+import { primeMeridianEquatorial } from './bodyRotation';
 
 export class EphemerisService {
   /**
@@ -101,6 +102,22 @@ export class EphemerisService {
   getSpinAxisDirection(body: Body, date: Date): THREE.Vector3 {
     const north = this.getNorthPoleDirection(body, date);
     return this._spinsRightHanded(body) ? north : north.multiplyScalar(-1);
+  }
+
+  /**
+   * Direction du MÉRIDIEN ORIGINE d'un corps (longitude 0, latitude 0) dans le repère Three.js,
+   * vecteur unité, à partir du même modèle IAU 2015 que le pôle (`RotationAxis` : α0, δ0 et
+   * l'angle de méridien W, libration comprise pour la Lune).
+   *
+   * `null` pour un corps qui tourne en main GAUCHE autour de son pôle nord IAU : son axe de spin
+   * rendu est l'opposé de ce pôle, et la longitude Est n'y a pas le sens du repère de la carte
+   * (aucun corps de cette catégorie n'est concerné aujourd'hui, cf. `config/datedRotation`).
+   */
+  getPrimeMeridianDirection(body: Body, date: Date): THREE.Vector3 | null {
+    if (!this._spinsRightHanded(body)) return null;
+    const axis = RotationAxis(body, date);
+    const p = primeMeridianEquatorial(axis.ra * 15, axis.dec, axis.spin);
+    return equatorialToScene(p.x, p.y, p.z).normalize();
   }
 
   private readonly _rightHanded = new Map<Body, boolean>();

@@ -7817,3 +7817,26 @@ un disque de 170 pixels.
 - **Gardes** : `core/textureLod.test.ts`, dont deux sur la table (un palier ne manque pas de
   texels à son bord proche, et n'est pas chargé pour un disque que le palier plus grossier couvre
   avec quatre fois de marge ; falsifiées avec l'ancienne table).
+
+## Le repère d'une plongée (GAL-IMMERSION-002)
+
+Une plongée sur un lieu nommé (`ui/placeDive`, au clic sur un nom du gazetteer ou à une étape `diveTo` d'une visite) pose le repère existant `ui/formationMarker` (anneau et nom), au lieu d'un second système de repères : le lieu est celui de la plongée (`surfacePointToWorld`, la chaîne qui oriente la texture et les noms), jamais un objet physique. C'est une couche DOM d'instrument, sans mesh.
+
+- **Projection** : abonnée à la boucle de rendu (`AnimationSystem.onFrame`, après la mise à jour des positions et de la caméra). Dans sa propre `requestAnimationFrame` elle avait une image de retard sur un corps qui avance de 30 km/s : plusieurs degrés de latitude à 170 km d'altitude (mesuré).
+- **Cycle de vie** : un seul repère ; remplacé par un autre lieu ; retiré au premier geste sur la caméra, sur Échap, au changement de cible (autre corps, vue globale, fin de visite), après 90 s ; masqué quand le lieu est derrière le limbe ou hors de l'image. Rien ne reste dans le DOM ni dans la boucle.
+- **Lieu au centre** : `CameraSystem.holdLevelView` suspend le relevé de la visée vers l'horizon (`_tiltTowardsHorizon`) pendant une plongée ; à 150 km d'altitude ce relevé rejetait le lieu sous le bord de l'écran (la visite Apollo 11 ne montrait pas Statio). Le premier geste le rend en 0,6 s.
+- **Téléphone, visite** : la sélection d'un corps par une visite replie la fiche du corps sur ≤ 640 px (`ui/tourPlayer`) ; le corps reste sélectionné, le bouton ⓘ la rouvre, les crédits d'imagerie ne bougent pas.
+- Gardes : `e2e/diveMarker.spec.ts`, `e2e/tourPlayer.spec.ts` (« folds the body card »), toutes deux falsifiées.
+
+## La phase de rotation des corps à modèle IAU (GAL-IMMERSION-001)
+
+La rotation propre d'un corps est posée par `CelestialObject.setSurfaceRotation`. Deux voies seulement :
+
+- **Terre** : le temps sidéral (`OrbitalMechanics.syncEarthSurfaceRotation`).
+- **Corps de `config/datedRotation.ts`** (Lune, Mars) : le méridien origine du modèle IAU, calculé par `EphemerisService.getPrimeMeridianDirection` (`RotationAxis` d'astronomy-engine : α0, δ0, W, libration lunaire comprise) puis `core/bodyRotation.primeMeridianEquatorial`, à chaque image (`OrbitalMechanics.syncDatedSurfaceRotations`).
+
+Tout autre corps n'intègre que `rotationSpeed · Δt` : bon rythme, phase arbitraire, donc longitudes de lieux non fiables. Ouvrir un corps = l'ajouter à la liste après un témoin de longitude de sa carte (`textureOrientation.test.ts`). Un corps en rotation rétrograde (main gauche autour du pôle IAU) est refusé par `getPrimeMeridianDirection`.
+
+Conventions : date UTC passée à astronomy-engine avec la convention d'échelle de temps de `core/timeScale` ; longitude Est positive, 0 au centre de la carte ; repère de la scène = écliptique J2000 (`frames.ts`) ; le point subsolaire se mesure en repère local du maillage de surface (`worldPointToGeographic`).
+
+Mesure : `node scripts/measure-surface-light.mjs --origin <url>` (hors `verify`) compare la sonde `?debug-light` (`ui/lightProbe.ts`, scène réelle) à une référence indépendante (rotations IAU `Rz·Rx·Rz`, ou `Horizon` pour la Terre). Mesuré le 2026-11-19 (PC, rendu GPU) : avant correction, Lune et Mars avaient un point subsolaire faux de 15,4° (Apollo 11), 63,6°, 107,6°… selon la date ; après, 0,00° en Exploration. En mode Éducatif la distance Soleil compressée fait diverger la direction du Soleil de ≤ 2,6° (Lune) et la face tournée vers la Terre de ≤ 4,2° (Mars) : contrat du mode, non corrigé. La régression est `src/core/datedSurfaceRotation.test.ts` (falsifiée : liste vide, 6 tests rouges).

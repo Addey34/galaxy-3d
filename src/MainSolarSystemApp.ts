@@ -276,6 +276,7 @@ function wireChrome(): {
     void debugProbes?.then((m) => {
       m.setupSolarDebug(api);
       m.setupGeoDebug(api);
+      m.setupLightProbe(api);
       m.setupEarthDebug(api);
       m.setupTerminatorProbe(api);
       m.setupSurfaceProbe(api);
@@ -577,8 +578,12 @@ function wireChrome(): {
       )
     );
 
-    const placeDive = setupPlaceDive(cameraSystem, sceneSystem, (body) =>
-      body === EARTH_NAMES_BODY ? earthRadiusKm : gazetteerRadii.get(body)
+    const placeDive = setupPlaceDive(
+      cameraSystem,
+      sceneSystem,
+      (body) =>
+        body === EARTH_NAMES_BODY ? earthRadiusKm : gazetteerRadii.get(body),
+      (cb) => animationSystem.onFrame(cb)
     );
     registerPlaceDive(placeDive.diveUntilReached);
     // Inspecteur météo (GAL-METEO-INSPECT-003) : un morceau chargé au premier clic sur le bouton du
