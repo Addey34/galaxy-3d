@@ -1,0 +1,59 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "mars-ctx-olympus-mons",
+  "type": "tileset",
+  "body": "mars",
+  "title": "MRO CTX Mosaic, Olympus Mons, beta section (olympus_mons.eq)",
+  "providerId": "nasa-trek",
+  "regional": true,
+  "coverage": {
+    "bbox": [-136, 12, -124, 24]
+  },
+  "mission": "Mars Reconnaissance Orbiter",
+  "instrument": "Context Camera (CTX)",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Mars/EQ/olympus_mons.eq/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/png",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 8,
+    "maxLevel": 13
+  },
+  "publishedPixelsPerDegree": 11650,
+  "acquired": {
+    "interval": [["2006-03-10T00:00:00Z", "2018-08-21T20:52:38Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Mars/EQ/olympus_mons.eq/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://www.hou.usra.edu/meetings/lpsc2018/pdf/2480.pdf"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/mars/"
+    },
+    {
+      "name": "NASA/JPL/MSSS (MRO CTX images, NASA Planetary Data System); mosaic by J. L. Dickson, Caltech",
+      "roles": ["producer"]
+    }
+  ],
+  "verified": "2026-11-20"
+}

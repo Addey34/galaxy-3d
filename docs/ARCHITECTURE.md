@@ -5387,6 +5387,26 @@ un A/B sur le même build. Garde : `src/ui/surfaceTileBudget.test.ts` (falsifié
 image, la version boîte par boîte coûtait 3,4 s sur 10 près du sol de la Terre. Garde
 d'équivalence contre le parcours boîte par boîte sur la vraie couverture.
 
+**Une imagerie régionale peut être une EMPRISE, plusieurs par corps, sans trou (GAL-IMMERSION-003B,
+2026-11-20).** Une mosaïque WMTS de NASA Trek est un rectangle de données : la fiche du jeu de
+tuiles porte `coverage.bbox` [ouest, sud, est, nord], lu dans les capacités du service, au lieu des
+boîtes de `regionalCoverage.json` (`core/regionalImagery.ts`, `BBoxCoverage`). Un corps peut en porter
+plusieurs (`REGIONAL_TILESETS` : une liste par corps, `pickRegional` choisit la région qui couvre la
+tuile, sinon celle qu'elle touche) ; la garde de `surfaceTilesets.test.ts` exige que les emprises d'un
+même corps ne se recouvrent pas. Le niveau d'une région reste DÉRIVÉ de sa finesse publiée
+(`regionalMaxLevel`) : la NAC d'Apollo 11 (46 603 px/°, grille au niveau 15) et la CTX d'Olympus Mons
+(11 650 px/°, niveau 13) n'annoncent que ce que leur grille porte. Une mosaïque a des trous à
+l'INTÉRIEUR de son emprise (mesuré : 3 tuiles sur 64 sans pixel opaque sur Olympus Mons) : une tuile
+PNG 404 ou dont un pixel n'est pas opaque (`hasHoles`, vérifié une fois au décodage) est remplacée par
+l'image de la base, mémorisée (`_unserved`) pour n'être pas redemandée ; un échec réseau (503, coupure)
+n'est PAS un manque et se retient comme avant. Les bornes d'acquisition d'une mosaïque sont des
+INTERVALLES (ses images les plus anciennes et les plus récentes), jamais une date de prise de vue.
+**Le plancher d'approche et la sélection mesurent la distance au SOL mesuré**, pas à la sphère
+moyenne : sur Olympus Mons (sol à 19,9 km de la sphère) la caméra à 7,5 km du sol se croyait à 27 km
+et ne subdivisait pas au-delà du niveau 11. Une imagerie plus fine n'est PAS un éclairage assisté :
+l'éclairage de lecture reste un réglage à part. Garde : `PlanetarySurfaceEngine.regional.test.ts`,
+`regionalImagery.bbox.test.ts`, `e2e/regionalNac.spec.ts`.
+
 
 **Le ciel n'est plus une cubemap (2026-10-18).** Posée en `scene.background`, l'image équirectangulaire
 des étoiles était convertie par Three.js en une cubemap dont chaque face mesure la HAUTEUR de

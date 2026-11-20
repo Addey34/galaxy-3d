@@ -287,6 +287,23 @@ const imageryTileset = z
      */
     regional: z.literal(true).optional(),
     /**
+     * EMPRISE d'une imagerie régionale qui n'est PAS un pays (GAL-IMMERSION-003B) : le rectangle
+     * `[ouest, sud, est, nord]`, en degrés, que la source publie pour sa mosaïque (`WGS84BoundingBox`
+     * des capacités WMTS citées par `rel=describedby`). Sans elle, la couverture vient de
+     * `src/config/regionalCoverage.json` (frontières d'un pays). Réservée à une fiche `regional`.
+     */
+    coverage: z
+      .object({
+        bbox: z.tuple([
+          z.number().min(-180).max(180),
+          z.number().min(-90).max(90),
+          z.number().min(-180).max(180),
+          z.number().min(-90).max(90),
+        ]),
+      })
+      .strict()
+      .optional(),
+    /**
      * MOSAÏQUE À CHOISIR (2026-10-31) : ses couleurs ne sont pas celles de l'oeil (rapports de
      * bandes infrarouges, prises de vue de dates différentes) et elle recouvre une base
      * continue ; le corps ne la montre donc qu'une fois choisie dans les Réglages (imagerie du
@@ -424,6 +441,21 @@ const imageryTileset = z
         message:
           'un jeu de tuiles cite les capacités WMTS dont son gabarit est recopié (rel=describedby)',
       });
+    if (product.coverage) {
+      const [west, south, east, north] = product.coverage.bbox;
+      if (!product.regional)
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'une emprise est celle d’une imagerie régionale (`regional`)',
+        });
+      if (!(west < east && south < north))
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'emprise [ouest, sud, est, nord] : ouest < est et sud < nord',
+        });
+    }
     if (product.edition !== undefined && !product.variant)
       ctx.addIssue({
         code: 'custom',

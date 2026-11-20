@@ -25,8 +25,8 @@ import {
   type TileMatrixShape,
 } from './tilePyramid';
 
-/** Couverture d'une imagerie régionale, telle que le générateur l'écrit. */
-export interface RegionalCoverage {
+/** Couverture par BOÎTES, telle que le générateur l'écrit (un pays, d'après ses frontières). */
+export interface BoxCoverage {
   /** Côté d'une boîte, en degrés ; boîtes indexées depuis −180° est et +90° nord. */
   readonly boxDeg: number;
   /** Ligne → plages de colonnes `[début, fin]` incluses. */
@@ -34,6 +34,20 @@ export interface RegionalCoverage {
     Record<string, readonly (readonly [number, number])[]>
   >;
 }
+
+/**
+ * Couverture par EMPRISE : le rectangle que la source publie pour sa mosaïque, en degrés
+ * `[ouest, sud, est, nord]` (les capacités WMTS de NASA Trek, `WGS84BoundingBox`). Sans passage de
+ * l'antiméridien : l'ouest est strictement à l'ouest de l'est. Une mosaïque de Trek est un
+ * rectangle de données, ce que mesure `e2e/regionalNac.spec.ts` ; un carreau à cheval sur son bord
+ * n'est pas servi par elle (voir `servedByRegion`), il montre l'image de la base.
+ */
+export interface BBoxCoverage {
+  readonly bbox: readonly [number, number, number, number];
+}
+
+/** Couverture d'une imagerie régionale : des boîtes (pays) ou une emprise (mosaïque d'un corps). */
+export type RegionalCoverage = BoxCoverage | BBoxCoverage;
 
 /** Une imagerie régionale branchée sur une base. */
 export interface RegionalSource {
@@ -66,6 +80,15 @@ export function coversBounds(
   bounds: Bounds,
   coverage: RegionalCoverage
 ): boolean {
+  if ('bbox' in coverage) {
+    const [west, south, east, north] = coverage.bbox;
+    return (
+      bounds.west >= west - EPSILON &&
+      bounds.east <= east + EPSILON &&
+      bounds.south >= south - EPSILON &&
+      bounds.north <= north + EPSILON
+    );
+  }
   const { r0, r1, c0, c1 } = boxSpan(bounds, coverage.boxDeg);
   for (let r = r0; r <= r1; r += 1) {
     // Les plages d'une ligne sont triées ; deux plages contiguës se recollent.
@@ -85,6 +108,16 @@ export function touchesCoverage(
   bounds: Bounds,
   coverage: RegionalCoverage
 ): boolean {
+  if ('bbox' in coverage) {
+    const [west, south, east, north] = coverage.bbox;
+    // Intersection d'AIRE non nulle : deux emprises qui ne se touchent que par un bord ne comptent pas.
+    return (
+      bounds.west < east - EPSILON &&
+      bounds.east > west + EPSILON &&
+      bounds.south < north - EPSILON &&
+      bounds.north > south + EPSILON
+    );
+  }
   const { r0, r1, c0, c1 } = boxSpan(bounds, coverage.boxDeg);
   for (let r = r0; r <= r1; r += 1)
     for (const [from, to] of coverage.rows[String(r)] ?? [])
@@ -174,4 +207,27 @@ export function baseCrop(
     offset: [subColumn / n, (n - 1 - subRow) / n],
     repeat: 1 / n,
   };
+}
+
+/**
+ * Parmi les imageries régionales d'un corps (chacune sa couverture), celle qui s'applique à une
+ * tuile : la première qui la COUVRE entièrement, sinon la première qu'elle touche (la tuile se
+ * subdivise alors vers elle sans qu'elle la serve), sinon aucune. Les couvertures d'un même corps
+ * ne se recouvrent pas (`config/surfaceTilesets.test.ts`) : l'ordre ne départage rien, il rend
+ * seulement le choix déterministe.
+ */
+export function pickRegional<T extends { readonly source: RegionalSource }>(
+  entries: readonly T[],
+  index: TileIndex,
+  shape: TileMatrixShape
+): T | null {
+  if (entries.length === 0) return null;
+  const bounds = tileBounds(index, shape);
+  let touching: T | null = null;
+  for (const entry of entries) {
+    if (coversBounds(bounds, entry.source.coverage)) return entry;
+    if (touching === null && touchesCoverage(bounds, entry.source.coverage))
+      touching = entry;
+  }
+  return touching;
 }

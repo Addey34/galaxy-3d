@@ -49,7 +49,9 @@ const ALL_TILESETS: ReadonlyArray<[string, SurfaceTileset]> = [
   ...[...SURFACE_VARIANTS.values()].flatMap((variants) =>
     [...variants.values()].flat()
   ),
-  ...[...REGIONAL_TILESETS.values()].map((regional) => regional.tileset),
+  ...[...REGIONAL_TILESETS.values()].flatMap((entries) =>
+    entries.map((regional) => regional.tileset)
+  ),
 ].map((tileset) => [`${tileset.body} (${tileset.id})`, tileset]);
 
 /** Un gabarit WMS (lot 53, pas 4) : une emprise par requête, pas un chemin WMTS. */
@@ -82,7 +84,9 @@ describe('fiches de jeux de tuiles', () => {
     expect(SURFACE_TILESETS.size).toBeGreaterThan(0);
     for (const product of TILESET_PRODUCTS) {
       const found = product.regional
-        ? REGIONAL_TILESETS.get(product.body)?.tileset
+        ? REGIONAL_TILESETS.get(product.body)?.find(
+            (entry) => entry.tileset.id === product.id
+          )?.tileset
         : product.variant
           ? SURFACE_VARIANTS.get(product.body)
               ?.get(product.variant)
@@ -766,29 +770,67 @@ describe('les éditions annuelles de Sentinel-2 (lot 50)', () => {
 describe('imageries régionales (lot 53, pas 4)', () => {
   it('ne sont jamais une base, et prennent la suite de la base la plus fine de leur grille', () => {
     expect(REGIONAL_TILESETS.size).toBeGreaterThan(0);
-    for (const [body, { tileset }] of REGIONAL_TILESETS) {
-      expect(SURFACE_TILESETS.get(body)?.id).not.toBe(tileset.id);
-      // Les niveaux de la fiche sont ceux qu'elle prendrait sur sa propre matrice : jusqu'à sa
-      // finesse publiée, et à partir du niveau suivant la base la plus fine de même grille.
-      expect(tileset.maxLevel, tileset.id).toBe(
-        regionalMaxLevel(tileset.matrix, tileset.publishedPixelsPerDegree)
-      );
-      const sameGrid = [...(SURFACE_VARIANTS.get(body)?.values() ?? [])]
-        .flat()
-        .filter(
+    for (const [body, entries] of REGIONAL_TILESETS)
+      for (const { tileset } of entries) {
+        expect(SURFACE_TILESETS.get(body)?.id).not.toBe(tileset.id);
+        // Les niveaux de la fiche sont ceux qu'elle prendrait sur sa propre matrice : jusqu'à sa
+        // finesse publiée, et à partir du niveau suivant la base la plus fine de même grille
+        // (la mosaïque par défaut du corps, ou l'un de ses fonds de rechange).
+        expect(tileset.maxLevel, tileset.id).toBe(
+          regionalMaxLevel(tileset.matrix, tileset.publishedPixelsPerDegree)
+        );
+        const sameGrid = [
+          ...(SURFACE_TILESETS.has(body) ? [SURFACE_TILESETS.get(body)!] : []),
+          ...[...(SURFACE_VARIANTS.get(body)?.values() ?? [])].flat(),
+        ].filter(
           (t) =>
             t.matrix.columnsAtLevelZero === tileset.matrix.columnsAtLevelZero &&
             t.matrix.tileSizePx === tileset.matrix.tileSizePx
         );
-      expect(sameGrid.length, tileset.id).toBeGreaterThan(0);
-      expect(tileset.minLevel, tileset.id).toBe(
-        Math.max(...sameGrid.map((t) => t.maxLevel)) + 1
+        expect(sameGrid.length, tileset.id).toBeGreaterThan(0);
+        expect(tileset.minLevel, tileset.id).toBe(
+          Math.max(...sameGrid.map((t) => t.maxLevel)) + 1
+        );
+      }
+  });
+
+  it('les couvertures d’un même corps ne se recouvrent pas (le choix d’une tuile n’en dépend pas)', () => {
+    for (const [body, entries] of REGIONAL_TILESETS)
+      for (const [i, a] of entries.entries())
+        for (const b of entries.slice(i + 1)) {
+          const [ca, cb] = [a.source.coverage, b.source.coverage];
+          if (!('bbox' in ca) || !('bbox' in cb)) continue;
+          const disjoint =
+            ca.bbox[2] <= cb.bbox[0] ||
+            cb.bbox[2] <= ca.bbox[0] ||
+            ca.bbox[3] <= cb.bbox[1] ||
+            cb.bbox[3] <= ca.bbox[1];
+          expect(disjoint, `${body} : ${a.tileset.id} et ${b.tileset.id}`).toBe(
+            true
+          );
+        }
+  });
+
+  it('une imagerie à emprise déclarée est SERVIE sur la grille de la base, en PNG, sans WMS', () => {
+    const declared = [...REGIONAL_TILESETS.values()]
+      .flat()
+      .filter((entry) => 'bbox' in entry.source.coverage);
+    expect(declared.length).toBeGreaterThan(0);
+    for (const { tileset, source } of declared) {
+      expect(isWms(tileset.service.template), tileset.id).toBe(false);
+      const base = SURFACE_TILESETS.get(tileset.body)!;
+      // Même grille que la base : la tuile demandée à la région est celle de la base.
+      expect(tileset.matrix, tileset.id).toEqual(base.matrix);
+      expect(tileset.service.tileMatrixSet, tileset.id).toBe(
+        base.service.tileMatrixSet
       );
+      const bbox = 'bbox' in source.coverage ? source.coverage.bbox : null;
+      expect(bbox![0] < bbox![2] && bbox![1] < bbox![3], tileset.id).toBe(true);
     }
   });
 
   it('couvre la France et pas ses voisins (témoins nommés)', () => {
-    const ign = REGIONAL_TILESETS.get('earth')!.source.coverage;
+    const ign = REGIONAL_TILESETS.get('earth')![0]!.source.coverage;
     const around = (lat: number, lon: number) => ({
       west: lon - 0.001,
       east: lon + 0.001,

@@ -57,6 +57,7 @@ import { geographicToLocalDirection } from '@/core/frames';
 import { tileUrl } from '@/core/tileUrl';
 import {
   maxLevelFor,
+  pickRegional,
   regionalMaxLevel,
   baseCrop,
   servedByRegion,
@@ -233,6 +234,12 @@ const MAX_TILE_SEGMENTS = 32;
 const MAX_CACHED_HEIGHT_TILES = 32;
 
 /** Récupération d'une tuile : isolée pour que les tests puissent la remplacer. */
+/** Une imagerie régionale branchée sur le corps : sa fiche et sa couverture. */
+export interface RegionalBinding {
+  readonly tileset: SurfaceTileset;
+  readonly source: RegionalSource;
+}
+
 export type TileFetcher = (
   url: string,
   signal: AbortSignal
@@ -244,6 +251,44 @@ export type HeightFetcher = (
   signal: AbortSignal
 ) => Promise<ArrayBuffer>;
 
+/**
+ * Une tuile que le service refuse : le code HTTP est PORTÉ, parce qu'un 404 d'une imagerie
+ * régionale veut dire « la mosaïque n'a rien ici » (Trek, hors de son emprise de données), ce qui
+ * se traite par le repli sur la base, alors qu'un 429 ou un 5xx se redemande.
+ */
+export class TileHttpError extends Error {
+  constructor(
+    readonly status: number,
+    url: string
+  ) {
+    super(`tuile ${status} : ${url}`);
+    this.name = 'TileHttpError';
+  }
+}
+
+/** Y a-t-il un pixel non opaque dans cette image ? Un trou de la mosaïque, jamais une surface. */
+export type TileHoleDetector = (bitmap: ImageBitmap) => boolean;
+
+/**
+ * Détecteur par défaut : une copie de la tuile sur un canevas hors écran, dont le canal alpha est
+ * lu en entier. Absent (`OffscreenCanvas` manquant) : aucun trou n'est signalé, ce qui retombe sur
+ * le comportement d'avant (le 404 reste traité). Coût mesuré à la mise en service : voir
+ * `docs/ARCHITECTURE.md`, § « Une imagerie régionale ne laisse pas de trou ».
+ */
+const defaultHoleDetector: TileHoleDetector = (bitmap) => {
+  if (typeof OffscreenCanvas === 'undefined') return false;
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) return false;
+  context.drawImage(bitmap, 0, 0);
+  const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height);
+  for (let i = 3; i < data.length; i += 4) if (data[i] !== 255) return true;
+  return false;
+};
+
+/** Un manque d'imagerie régionale : la tuile se montre avec l'image de la base. */
+class RegionalMiss extends Error {}
+
 const defaultFetcher: TileFetcher = async (url, signal) => {
   const response = await fetch(url, {
     signal,
@@ -251,7 +296,7 @@ const defaultFetcher: TileFetcher = async (url, signal) => {
     credentials: 'omit',
   });
   if (!response.ok) {
-    throw new Error(`tuile ${response.status} : ${url}`);
+    throw new TileHttpError(response.status, url);
   }
   // `imageOrientation: 'flipY'` n'est PAS cosmétique : Three.js ignore `Texture.flipY` pour un
   // ImageBitmap (l'orientation doit être décidée à la création, pas à l'envoi au GPU). Sans
@@ -281,10 +326,14 @@ export class PlanetarySurfaceEngine {
    * couverture : elle sert les niveaux au-delà de la base (`core/regionalImagery.ts`). Ignorée
    * pendant une comparaison, dont les deux images doivent rester de la même source.
    */
-  private _regional: {
-    tileset: SurfaceTileset;
-    source: RegionalSource;
-  } | null = null;
+  private _regionals: readonly RegionalBinding[] = [];
+  /**
+   * Carreaux que l'imagerie régionale n'a PAS pu servir (404 du service, ou un pixel non opaque :
+   * un trou de la mosaïque, qui serait peint en noir) : ils montrent l'image de la base. Une
+   * mosaïque de Trek est un rectangle de données qui peut avoir des trous à l'intérieur (mesuré sur
+   * le Mars d'Olympus Mons). Vidé avec les échecs, à chaque changement de corps ou de jeu.
+   */
+  private readonly _unserved = new Set<string>();
   private _radiusKm = 0;
   /**
    * GÉNÉRATION des carreaux d'imagerie (lot 48). Elle change quand le jeu attaché change sur le
@@ -349,6 +398,7 @@ export class PlanetarySurfaceEngine {
   /** Ramène le budget à la taille du carreau servi (`tileBudgetForSize`) : faux en rendu logiciel. */
   private readonly _scaleBudgetToTileSize: boolean;
   private readonly _fetchTile: TileFetcher;
+  private readonly _hasHoles: TileHoleDetector;
   private readonly _fetchHeights: HeightFetcher;
   private readonly _onState: (state: SurfaceImageryState | null) => void;
   private readonly _onImageryWidthChanged: () => void;
@@ -385,11 +435,13 @@ export class PlanetarySurfaceEngine {
     onState?: (state: SurfaceImageryState | null) => void;
     onImageryWidthChanged?: () => void;
     fetchTile?: TileFetcher;
+    hasHoles?: TileHoleDetector;
     fetchHeights?: HeightFetcher;
   }) {
     this._budget = options.budget;
     this._scaleBudgetToTileSize = options.scaleBudgetToTileSize ?? false;
     this._fetchTile = options.fetchTile ?? defaultFetcher;
+    this._hasHoles = options.hasHoles ?? defaultHoleDetector;
     this._fetchHeights = options.fetchHeights ?? defaultHeightFetcher;
     this._onState = options.onState ?? (() => undefined);
     this._onImageryWidthChanged =
@@ -408,18 +460,37 @@ export class PlanetarySurfaceEngine {
   }
 
   /** Branche l'imagerie régionale du corps attaché, ou la retire (`null`). */
-  setRegional(
-    regional: { tileset: SurfaceTileset; source: RegionalSource } | null
-  ): void {
-    this._regional = regional;
+  setRegional(regionals: readonly RegionalBinding[] | null): void {
+    this._regionals = regionals ?? [];
   }
 
-  /** La source régionale active : aucune pendant une comparaison. */
-  private _activeRegional(): {
-    tileset: SurfaceTileset;
-    source: RegionalSource;
-  } | null {
-    return this._compare ? null : this._regional;
+  /** Les sources régionales actives : aucune pendant une comparaison. */
+  private _activeRegionals(): readonly RegionalBinding[] {
+    return this._compare ? [] : this._regionals;
+  }
+
+  /**
+   * L'imagerie régionale qui SERT cette tuile, ou `null` : celle dont la couverture la contient
+   * entièrement (jamais une tuile à cheval sur un bord), sauf si le service a déjà refusé cette
+   * tuile ou y a laissé un trou (`_unserved`). Une seule source (la Terre) : pas de choix à faire,
+   * et le chemin chaud de la sélection reste celui d'avant.
+   */
+  private _servingRegional(
+    index: TileIndex,
+    tileset: SurfaceTileset
+  ): RegionalBinding | null {
+    const regionals = this._activeRegionals();
+    if (regionals.length === 0) return null;
+    const entry =
+      regionals.length === 1
+        ? regionals[0]!
+        : pickRegional(regionals, index, tileset.matrix);
+    if (
+      !entry ||
+      !servedByRegion(index, tileset.matrix, tileset.maxLevel, entry.source)
+    )
+      return null;
+    return this._unserved.has(this._key(index)) ? null : entry;
   }
 
   /** Corps couvert aujourd'hui, ou `null`. */
@@ -496,6 +567,7 @@ export class PlanetarySurfaceEngine {
     this._pending.clear();
     this._queue.length = 0;
     this._failed.clear();
+    this._unserved.clear();
     const current = this._prefix();
     const hasStale = [...this._tiles.keys()].some(
       (key) => !key.startsWith(current)
@@ -561,26 +633,32 @@ export class PlanetarySurfaceEngine {
     // demandée (run 38985771615) ; calculé pour la finesse MAXIMALE de l'IGN, il la laissait
     // descendre à 23 m du sol, où 64 carreaux n'atteignent que le niveau 12 sous elle : une
     // bouillie verte à l'écran.
-    const regional = this._activeRegional();
-    const regionalMax = regional
-      ? regionalMaxLevel(
+    let finest = tileset.maxLevel;
+    for (const entry of this._activeRegionals()) {
+      const regionalMax = regionalMaxLevel(
+        tileset.matrix,
+        entry.source.publishedPixelsPerDegree
+      );
+      if (
+        servedByRegion(
+          tileIndexAt(
+            regionalMax,
+            centre.latitudeDeg,
+            centre.longitudeDeg,
+            tileset.matrix
+          ),
           tileset.matrix,
-          regional.source.publishedPixelsPerDegree
+          tileset.maxLevel,
+          entry.source
         )
-      : tileset.maxLevel;
-    const finest = servedByRegion(
-      tileIndexAt(
-        regionalMax,
-        centre.latitudeDeg,
-        centre.longitudeDeg,
-        tileset.matrix
-      ),
-      tileset.matrix,
-      tileset.maxLevel,
-      regional?.source ?? null
-    )
-      ? Math.min(regionalMax, Math.max(tileset.maxLevel, servedLevel) + 1)
-      : tileset.maxLevel;
+      ) {
+        finest = Math.min(
+          regionalMax,
+          Math.max(tileset.maxLevel, servedLevel) + 1
+        );
+        break;
+      }
+    }
     if (host.setStreamedImageryWidth(pyramidWidthPx(finest, tileset.matrix)))
       this._onImageryWidthChanged();
   }
@@ -675,32 +753,41 @@ export class PlanetarySurfaceEngine {
     // UN QUADTREE, plus une fenêtre d'un seul niveau (lot 48, pas 5) : la caméra regarde
     // l'horizon près du sol, et le sol visible va de quelques kilomètres à quelques centaines.
     // La règle de subdivision et ce qui l'a décidée vivent dans `core/tileSelection.ts`.
-    const regional = this._activeRegional();
-    const regionalMax = regional
-      ? regionalMaxLevel(
-          tileset.matrix,
-          regional.source.publishedPixelsPerDegree
-        )
-      : tileset.maxLevel;
+    const regionals = this._activeRegionals();
+    // Le niveau maximal de CHAQUE imagerie régionale, dérivé de sa finesse publiée et de la grille.
+    const regionalLevels = new Map(
+      regionals.map((entry) => [
+        entry,
+        regionalMaxLevel(tileset.matrix, entry.source.publishedPixelsPerDegree),
+      ])
+    );
+    const regionalMax = Math.max(tileset.maxLevel, ...regionalLevels.values());
     const tiles = selectTiles(
       this._tileView(camera, viewportHeightPx, centre, kmPerUnit),
       {
         shape: tileset.matrix,
-        maxLevel: Math.max(tileset.maxLevel, regionalMax),
+        maxLevel: regionalMax,
         firstDrawableLevel,
         maxTiles: this._scaleBudgetToTileSize
           ? tileBudgetForSize(this._budget.maxTiles, tileset.matrix.tileSizePx)
           : this._budget.maxTiles,
-        ...(regional
+        ...(regionals.length > 0
           ? {
-              maxLevelAt: (index: TileIndex) =>
-                maxLevelFor(
-                  index,
-                  tileset.matrix,
-                  tileset.maxLevel,
-                  regional.source,
-                  regionalMax
-                ),
+              maxLevelAt: (index: TileIndex) => {
+                const entry =
+                  regionals.length === 1
+                    ? regionals[0]!
+                    : pickRegional(regionals, index, tileset.matrix);
+                return entry
+                  ? maxLevelFor(
+                      index,
+                      tileset.matrix,
+                      tileset.maxLevel,
+                      entry.source,
+                      regionalLevels.get(entry)!
+                    )
+                  : tileset.maxLevel;
+              },
             }
           : {}),
       }
@@ -845,21 +932,16 @@ export class PlanetarySurfaceEngine {
     // source régionale (lot 53, pas 4), avec sa grille de base pour la finesse affichée ; un
     // carreau au-delà de la base qu'elle ne sert pas montre l'image de la base à son niveau
     // maximal, et c'est ce niveau que le bandeau annonce.
-    const regional = this._activeRegional();
-    if (
-      servedByRegion(
-        tileIndexAt(
-          level,
-          centre.latitudeDeg,
-          centre.longitudeDeg,
-          tileset.matrix
-        ),
-        tileset.matrix,
-        tileset.maxLevel,
-        regional?.source ?? null
-      )
-    )
-      tileset = { ...regional!.tileset, matrix: tileset.matrix };
+    const serving = this._servingRegional(
+      tileIndexAt(
+        level,
+        centre.latitudeDeg,
+        centre.longitudeDeg,
+        tileset.matrix
+      ),
+      tileset
+    );
+    if (serving) tileset = { ...serving.tileset, matrix: tileset.matrix };
     else level = Math.min(level, tileset.maxLevel);
     const next: SurfaceImageryState = {
       body: tileset.body,
@@ -1009,6 +1091,11 @@ export class PlanetarySurfaceEngine {
         viewportHeightPx: Math.max(1, viewportHeightPx),
       });
     const reliefUnits = HIGHEST_RELIEF_KM / kmPerUnit;
+    // Rapport du rayon du sol mesuré sous la visée au rayon de la sphère rendue (1 sans relief posé).
+    const groundLift =
+      this._measuredGroundKm !== null && this._radiusKm > 0
+        ? this._measuredGroundKm / this._radiusKm
+        : 1;
 
     const nearest = (index: TileIndex) => {
       const b = tileBounds(index, tileset.matrix);
@@ -1047,9 +1134,14 @@ export class PlanetarySurfaceEngine {
       },
       pixelsPerTexel: (index) => {
         const n = nearest(index);
-        const distanceKm =
-          camera.position.distanceTo(point(n.latitudeDeg, n.longitudeDeg)) *
-          kmPerUnit;
+        // Distance au SOL mesuré sous la visée, pas à la sphère moyenne : sur l'Olympus de Mars
+        // (sol à 19,9 km au-dessus de la sphère) la caméra à 7,5 km du sol se croyait à 27 km, voyait
+        // 0,57 pixel par texel et ne subdivisait jamais plus fin que le niveau 11 (mesuré 2026-11-20).
+        const lifted = point(n.latitudeDeg, n.longitudeDeg).sub(
+          this._bodyWorld
+        );
+        lifted.multiplyScalar(groundLift).add(this._bodyWorld);
+        const distanceKm = camera.position.distanceTo(lifted) * kmPerUnit;
         return (
           groundResolutionKm(index.level, this._radiusKm, tileset.matrix) *
           pxPerKm(distanceKm)
@@ -1131,6 +1223,7 @@ export class PlanetarySurfaceEngine {
     this._pending.clear();
     this._queue.length = 0;
     this._failed.clear();
+    this._unserved.clear();
     for (const tile of this._tiles.values()) tile.dispose();
     this._tiles.clear();
     for (const kept of this._retained.values()) kept.tile.dispose();
@@ -1503,31 +1596,57 @@ export class PlanetarySurfaceEngine {
       // Au-delà de la base, la source régionale sert la tuile, demandée sur la grille de la base.
       // Un carreau au-delà de la base que la région ne sert pas (à cheval sur sa frontière) montre
       // son morceau de l'image de son ancêtre au niveau maximal de la base (`baseCrop`).
-      const regional = this._activeRegional();
-      const byRegion = servedByRegion(
-        index,
-        tileset.matrix,
-        tileset.maxLevel,
-        regional?.source ?? null
-      );
-      const primary = byRegion
-        ? {
-            ...regional!.tileset,
-            service: { ...regional!.tileset.service, matrix: tileset.matrix },
-          }
-        : tileset;
-      const crop = byRegion ? null : baseCrop(index, tileset.maxLevel);
-      const asked = crop?.ancestor ?? index;
-      const [bitmap, compareBitmap] = await Promise.all(
-        [primary, ...(compareSet ? [compareSet] : [])].map((set) =>
-          this._fetchTile(tileUrl(set.service, asked), controller.signal).then(
-            (image) => {
-              bitmaps.push(image);
-              return image;
+      const serving = this._servingRegional(index, tileset);
+      const load = async (entry: RegionalBinding | null) => {
+        const primary = entry
+          ? {
+              ...entry.tileset,
+              service: { ...entry.tileset.service, matrix: tileset.matrix },
             }
+          : tileset;
+        const crop = entry ? null : baseCrop(index, tileset.maxLevel);
+        const asked = crop?.ancestor ?? index;
+        const [image, compareImage] = await Promise.all(
+          [primary, ...(compareSet ? [compareSet] : [])].map((set) =>
+            this._fetchTile(
+              tileUrl(set.service, asked),
+              controller.signal
+            ).then((loaded) => {
+              bitmaps.push(loaded);
+              return loaded;
+            })
           )
-        )
-      );
+        );
+        return { primary, crop, image, compareImage };
+      };
+      let loaded: Awaited<ReturnType<typeof load>>;
+      if (serving) {
+        try {
+          loaded = await load(serving);
+          // Un pixel non opaque est un TROU de la mosaïque, que le GPU peindrait en noir : la tuile
+          // montre l'image de la base. Seul un PNG peut en porter un (le JPEG est toujours opaque).
+          if (
+            serving.tileset.service.template.endsWith('.png') &&
+            this._hasHoles(loaded.image)
+          )
+            throw new RegionalMiss(`trou dans ${serving.tileset.id}`);
+        } catch (error) {
+          const missing =
+            error instanceof RegionalMiss ||
+            (error instanceof TileHttpError && error.status === 404);
+          if (!missing) throw error;
+          // L'image écartée ne servira à rien : la mémoire qu'elle tient est rendue tout de suite.
+          for (const dropped of bitmaps.splice(0)) dropped.close?.();
+          this._unserved.add(key);
+          loaded = await load(null);
+        }
+      } else loaded = await load(null);
+      const {
+        primary,
+        crop,
+        image: bitmap,
+        compareImage: compareBitmap,
+      } = loaded;
       // La cible a pu changer pendant le vol : ne rien poser sur un corps qu'on a quitté, ni
       // un carreau qu'on vient d'abandonner.
       if (this._pending.get(key) !== controller || this._host !== host) {
