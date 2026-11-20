@@ -368,7 +368,7 @@ export interface RegionalEntry {
 /**
  * Les IMAGERIES RÉGIONALES (lot 53, pas 4), par corps : plus fines que la base, servies sur sa
  * grille et seulement dans leur couverture. Un corps en porte UNE OU PLUSIEURS, chacune sa
- * couverture (les Apollo de la Lune, le Mars d'Olympus Mons : GAL-IMMERSION-003B), et le moteur
+ * couverture (GAL-IMMERSION-003B), et le moteur
  * choisit celle qui s'applique à chaque tuile (`core/regionalImagery.ts::pickRegional`).
  *
  * Deux origines de couverture : l'EMPRISE que la fiche déclare (`coverage.bbox`, le rectangle de

@@ -21,17 +21,17 @@ requestAnimationFrame
 
 ## Index des répertoires
 
-| Répertoire                  | Responsabilité                                                | Dépendances autorisées                 |
-| --------------------------- | -------------------------------------------------------------- | -------------------------------------- |
-| `src/config`                | Catalogues et réglages moteur                                  | Données pures et types partagés        |
-| `src/core`                  | Horloges, repères, échelles, éphémérides, mécanique orbitale   | Three.js seulement à la frontière service |
-| `src/components/systems`    | Renderer, caméra, textures, éclairage, animation               | Three.js et config                     |
-| `src/components/celestial`  | Construction et disposal des meshes/couches                    | Three.js, config et TextureSystem      |
-| `src/ui`                    | Contrôles DOM et overlays projetés                              | DOM, i18n et PublicAPI                 |
-| `src/i18n`                  | État de locale et traduction statique/dynamique                | DOM seulement dans `dom.ts`            |
-| `src/utils`                 | Helpers navigateur transverses et logging                       | Pas d'orchestration applicative        |
-| `src/seo`                   | Pages d'atterrissage par corps et par éclipse, pages `/methodology` et `/sources`, sitemap, vignettes | Catalogue seulement — **jamais chargé par l'application**, tenu par `src/seo/buildOnly.test.ts` |
-| `scripts`                   | Génération d'assets réservée aux mainteneurs                   | Node.js et dépendances de dev          |
+| Répertoire                 | Responsabilité                                                                                        | Dépendances autorisées                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `src/config`               | Catalogues et réglages moteur                                                                         | Données pures et types partagés                                                                 |
+| `src/core`                 | Horloges, repères, échelles, éphémérides, mécanique orbitale                                          | Three.js seulement à la frontière service                                                       |
+| `src/components/systems`   | Renderer, caméra, textures, éclairage, animation                                                      | Three.js et config                                                                              |
+| `src/components/celestial` | Construction et disposal des meshes/couches                                                           | Three.js, config et TextureSystem                                                               |
+| `src/ui`                   | Contrôles DOM et overlays projetés                                                                    | DOM, i18n et PublicAPI                                                                          |
+| `src/i18n`                 | État de locale et traduction statique/dynamique                                                       | DOM seulement dans `dom.ts`                                                                     |
+| `src/utils`                | Helpers navigateur transverses et logging                                                             | Pas d'orchestration applicative                                                                 |
+| `src/seo`                  | Pages d'atterrissage par corps et par éclipse, pages `/methodology` et `/sources`, sitemap, vignettes | Catalogue seulement — **jamais chargé par l'application**, tenu par `src/seo/buildOnly.test.ts` |
+| `scripts`                  | Génération d'assets réservée aux mainteneurs                                                          | Node.js et dépendances de dev                                                                   |
 
 ## Propriété des ressources
 
@@ -161,13 +161,13 @@ ici, et chacune est verrouillée par un test nommé.
 
 `OrbitalMechanics._positionAU` essaie dans cet ordre, et le premier qui répond gagne :
 
-| Source | Pour qui | Remarque |
-| --- | --- | --- |
-| Binaire Horizons (`HorizonsEphemerisService`) | planètes (dont Jupiter et Uranus depuis le lot 2b), naines, satellites, sondes, et depuis le lot 11 tous les petits corps du catalogue | états exacts à pas fixe par fichier (4 jours en général, 1 jour pour 5 sondes, 4 à 64 jours pour les petits corps : cf. « Binaires des petits corps ») |
-| Noyau SPK (optionnel, `VITE_SPK_KERNEL_URL`) | lunes de Saturne de SAT441 | prime sur les binaires quand il est actif |
-| `JupiterMoons()` d'astronomy-engine | Io et Europe ; Ganymède et Callisto hors de la couverture de leur fichier | vecteurs jovicentriques directs |
-| Éphéméride astronomy-engine (`astroBody`) | la Lune, Io et Europe (plus précis que tout fichier abordable, mesuré au lot 12), le Soleil, et le repli des planètes hors de la couverture de leur fichier | théorie planétaire |
-| Éléments képlériens du catalogue | **repli** d'un petit corps hors de la couverture de son binaire, et de tout satellite | cf. « le repli » ci-dessous |
+| Source                                        | Pour qui                                                                                                                                                    | Remarque                                                                                                                                               |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Binaire Horizons (`HorizonsEphemerisService`) | planètes (dont Jupiter et Uranus depuis le lot 2b), naines, satellites, sondes, et depuis le lot 11 tous les petits corps du catalogue                      | états exacts à pas fixe par fichier (4 jours en général, 1 jour pour 5 sondes, 4 à 64 jours pour les petits corps : cf. « Binaires des petits corps ») |
+| Noyau SPK (optionnel, `VITE_SPK_KERNEL_URL`)  | lunes de Saturne de SAT441                                                                                                                                  | prime sur les binaires quand il est actif                                                                                                              |
+| `JupiterMoons()` d'astronomy-engine           | Io et Europe ; Ganymède et Callisto hors de la couverture de leur fichier                                                                                   | vecteurs jovicentriques directs                                                                                                                        |
+| Éphéméride astronomy-engine (`astroBody`)     | la Lune, Io et Europe (plus précis que tout fichier abordable, mesuré au lot 12), le Soleil, et le repli des planètes hors de la couverture de leur fichier | théorie planétaire                                                                                                                                     |
+| Éléments képlériens du catalogue              | **repli** d'un petit corps hors de la couverture de son binaire, et de tout satellite                                                                       | cf. « le repli » ci-dessous                                                                                                                            |
 
 Une position issue d'un binaire passe d'abord `isPlausibleRelativePosition` /
 `isPlausibleHeliocentricPosition`, qui bornent la distance **des deux côtés**. La borne basse
@@ -312,11 +312,11 @@ Sous le seuil d'Hermite, le service propage une conique à deux corps depuis l'�
 encadrant. L'écart ne dépend donc pas de QUAND on regarde mais de la durée propagée depuis le
 nœud le plus proche, et c'est ce que mesure `pnpm ephemeris:propagation`. Sur Amalthée :
 
-| distance au nœud | écart moyen |
-|---|---|
-| 0 à 0,005 j | **12,7 km** |
-| 0,01 à 0,02 j | 263 km |
-| 0,04 à 0,08 j | 851 km |
+| distance au nœud   | écart moyen           |
+| ------------------ | --------------------- |
+| 0 à 0,005 j        | **12,7 km**           |
+| 0,01 à 0,02 j      | 263 km                |
+| 0,04 à 0,08 j      | 851 km                |
 | au-delà de 0,125 j | ~1 100 km, **saturé** |
 
 **Deux régimes**, et c'est ce qui explique qu'un pas seize fois plus fin (4 j vers 6 h) n'ait
@@ -469,11 +469,11 @@ dans la page : **25 fetchs sur 64 aboutissent, 39 échouent en « TypeError: Fai
 706 s**. Conséquence à l'écran, remesurée depuis sur deux builds du même arbre, cinq fichiers
 servis et les 59 autres coupés :
 
-| | avant | après |
-| --- | --- | --- |
-| Mercure, dont le fichier ÉTAIT arrivé | Astronomy Engine, 2 600 km | binaire Horizons, 7,3 km |
-| Juno, dont le fichier ÉTAIT arrivé | entrée `aria-disabled`, inerte | sélectionnable |
-| ce que l'écran en dit | rien | le bandeau `#ephemeris-notice` |
+|                                       | avant                          | après                          |
+| ------------------------------------- | ------------------------------ | ------------------------------ |
+| Mercure, dont le fichier ÉTAIT arrivé | Astronomy Engine, 2 600 km     | binaire Horizons, 7,3 km       |
+| Juno, dont le fichier ÉTAIT arrivé    | entrée `aria-disabled`, inerte | sélectionnable                 |
+| ce que l'écran en dit                 | rien                           | le bandeau `#ephemeris-notice` |
 
 Trois décisions, prises avant d'écrire, chacune tenue par une garde falsifiée.
 
@@ -512,11 +512,11 @@ longtemps que le TOTAL, et c'est cette durée qui expirait. Mesuré sur le build
 bridage à 500 ko/s, page statique de la même origine (la page d'accueil fausserait la mesure avec
 ses propres requêtes) :
 
-| requêtes simultanées | total | requête médiane | requête la plus longue |
-| --- | --- | --- | --- |
-| 64 | 77,1 s | 50,1 s | 77,1 s |
-| 12 | 77,1 s | 12,9 s | 21,2 s |
-| **6** | **77,1 s** | **10,2 s** | **10,6 s** |
+| requêtes simultanées | total      | requête médiane | requête la plus longue |
+| -------------------- | ---------- | --------------- | ---------------------- |
+| 64                   | 77,1 s     | 50,1 s          | 77,1 s                 |
+| 12                   | 77,1 s     | 12,9 s          | 21,2 s                 |
+| **6**                | **77,1 s** | **10,2 s**      | **10,6 s**             |
 
 Le total ne bouge pas, la bande passante le fixe ; la requête la plus longue est divisée par
 7,3. Démarrage complet mesuré sur deux builds du même arbre, actifs identiques au SHA-256 :
@@ -529,11 +529,11 @@ chargement-là. **Piège de mesure** : ce même service worker relaie les requê
 donc une garde Playwright qui coupe des `.bin` sur le build doit bloquer le service worker, sinon
 elle mesure un chargement complet en croyant l'avoir coupé (58 fichiers passés, 6 coupés).
 
-| Garde | Ce qu'elle tient |
-| --- | --- |
+| Garde                                   | Ce qu'elle tient                                                                                                                                                                                                                                                 |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `core/HorizonsEphemerisService.test.ts` | tolérance par fichier, raison et reprenabilité de chaque absence, calendrier par passage, 404 et taille fausse jamais repris même au milieu d'échecs reprenables, reprise qui ne redemande pas ce qu'elle a, un seul chargement à la fois, borne de simultanéité |
-| `utils/concurrency.test.ts` | la borne elle-même, et l'ordre des résultats |
-| `e2e/ephemerisDegraded.spec.ts` | ce qui est arrivé sert, ce qui manque est écrit avec ses comptes, la reprise répare sans recharger, un chargement complet ne dit rien, et à 390 px le bandeau ne recouvre aucun dock |
+| `utils/concurrency.test.ts`             | la borne elle-même, et l'ordre des résultats                                                                                                                                                                                                                     |
+| `e2e/ephemerisDegraded.spec.ts`         | ce qui est arrivé sert, ce qui manque est écrit avec ses comptes, la reprise répare sans recharger, un chargement complet ne dit rien, et à 390 px le bandeau ne recouvre aucun dock                                                                             |
 
 ### Une position ne coûte pas un fichier (lot 17, phases 17A et 17B)
 
@@ -560,10 +560,10 @@ seraient payés pour rien, ce qui est déjà le cas de Neptune, dont la demi-pé
 **Deux choses ne se déduisent pas d'une fenêtre, et c'est un test rouge qui l'a montré**, pas
 une relecture :
 
-| | ce qu'une fenêtre changeait | comment le contrat le règle |
-| --- | --- | --- |
-| facteur d'échelle du temps de propagation | 28,2 m sur Encelade, jusqu'à 202,4 m sur Mimas | il est **publié au manifeste** (`meanMotionScale`), calculé une fois depuis le fichier entier |
-| ballant de Pluton et de ses petites lunes | position visiblement autre | le compagnon (Charon) se charge sur le **même intervalle d'index** : `_withoutReflex` soustrait état par état et exige une grille identique |
+|                                           | ce qu'une fenêtre changeait                    | comment le contrat le règle                                                                                                                 |
+| ----------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| facteur d'échelle du temps de propagation | 28,2 m sur Encelade, jusqu'à 202,4 m sur Mimas | il est **publié au manifeste** (`meanMotionScale`), calculé une fois depuis le fichier entier                                               |
+| ballant de Pluton et de ses petites lunes | position visiblement autre                     | le compagnon (Charon) se charge sur le **même intervalle d'index** : `_withoutReflex` soustrait état par état et exige une grille identique |
 
 Le facteur est la médiane, sur le fichier ENTIER, du rapport période osculatrice sur période du
 catalogue : il échantillonne de l'index 0 à l'index `count - 1`, donc aucune fenêtre ne peut le
@@ -578,11 +578,11 @@ longueur brotli et ses octets ne sont pas ceux du fichier. Un `200` signifie que
 ignoré la plage et rendu tout le fichier : on le GARDE, ce qui dégrade proprement vers le
 comportement d'avant sur un hôte sans plages.
 
-| Garde | Ce qu'elle tient |
-| --- | --- |
-| `core/ephemerisWindow.test.ts` | la plage désigne bien ces octets-là dans le fichier livré, l'échantillon suivant est toujours inclus, rien n'est demandé hors couverture, la fenêtre couvre les deux extrémités d'une ligne d'orbite, et **une fenêtre place chaque corps au bit près comme le fichier entier** |
-| `core/meanMotionScale.test.ts` | le facteur est publié pour les corps qui le déclarent et pour eux seuls, il vaut exactement ce que le binaire donne, et forcer 1 déplace le corps (il n'est pas décoratif) |
-| `pnpm ephemeris:meanmotion --check` | le manifeste committé n'a pas dérivé des binaires |
+| Garde                               | Ce qu'elle tient                                                                                                                                                                                                                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/ephemerisWindow.test.ts`      | la plage désigne bien ces octets-là dans le fichier livré, l'échantillon suivant est toujours inclus, rien n'est demandé hors couverture, la fenêtre couvre les deux extrémités d'une ligne d'orbite, et **une fenêtre place chaque corps au bit près comme le fichier entier** |
+| `core/meanMotionScale.test.ts`      | le facteur est publié pour les corps qui le déclarent et pour eux seuls, il vaut exactement ce que le binaire donne, et forcer 1 déplace le corps (il n'est pas décoratif)                                                                                                      |
+| `pnpm ephemeris:meanmotion --check` | le manifeste committé n'a pas dérivé des binaires                                                                                                                                                                                                                               |
 
 ### Le service charge des fenêtres, et l'horloge les attend (lot 17, phase 17C)
 
@@ -591,13 +591,13 @@ des octets arrivés. Mesuré contre le build livré, service worker bloqué, mê
 côtés (un seul drapeau du serveur décide s'il honore `Range`, ce qui reproduit exactement le
 comportement d'avant) :
 
-| | A : fichiers entiers | B : fenêtres | |
-| --- | --- | --- | --- |
-| éphémérides au démarrage | 38 040 720 o, 62 requêtes | **987 168 o**, 62 plages | **38,5 fois moins** |
-| octets servis jusqu'au loader masqué, lien non bridé | 48 111 453 o | **11 057 901 o** | 4,4 fois moins |
-| démarrage complet, lien non bridé | 12,84 / 12,67 s | 12,49 / 13,47 s | aucun gain |
-| démarrage, 10 Mbit/s | 47,17 / 55,46 s | 28,65 / 17,58 s | ~2 fois |
-| démarrage, 2 Mbit/s | 186,48 / 180,70 s | **36,80 / 28,00 s** | ~5,7 fois |
+|                                                      | A : fichiers entiers      | B : fenêtres             |                     |
+| ---------------------------------------------------- | ------------------------- | ------------------------ | ------------------- |
+| éphémérides au démarrage                             | 38 040 720 o, 62 requêtes | **987 168 o**, 62 plages | **38,5 fois moins** |
+| octets servis jusqu'au loader masqué, lien non bridé | 48 111 453 o              | **11 057 901 o**         | 4,4 fois moins      |
+| démarrage complet, lien non bridé                    | 12,84 / 12,67 s           | 12,49 / 13,47 s          | aucun gain          |
+| démarrage, 10 Mbit/s                                 | 47,17 / 55,46 s           | 28,65 / 17,58 s          | ~2 fois             |
+| démarrage, 2 Mbit/s                                  | 186,48 / 180,70 s         | **36,80 / 28,00 s**      | ~5,7 fois           |
 
 Annoncer « 38 fois plus léger » serait vrai en octets et trompeur en secondes : sur un lien
 rapide il n'y a rien à gagner, ce sont les allers-retours et le décodage qui dominent. Le gain
@@ -676,11 +676,11 @@ le lien de l'utilisateur.
 **L'avance de lecture (décision D4) est mesurée, pas choisie.** Dix secondes de lecture au
 curseur maximal (un an simulé par seconde réelle) :
 
-| avance | 10 Mbit/s | 2 Mbit/s |
-| --- | --- | --- |
-| 2 s | 3,97 ans parcourus, 1,16 Mbit/s | 2,07 ans, 0,71 Mbit/s |
-| **4 s (livré)** | **5,10 ans, 2,01 Mbit/s** | **2,75 ans, 0,84 Mbit/s** |
-| 12 s | 6,35 ans, 4,34 Mbit/s | **la date n'avance plus du tout** |
+| avance          | 10 Mbit/s                       | 2 Mbit/s                          |
+| --------------- | ------------------------------- | --------------------------------- |
+| 2 s             | 3,97 ans parcourus, 1,16 Mbit/s | 2,07 ans, 0,71 Mbit/s             |
+| **4 s (livré)** | **5,10 ans, 2,01 Mbit/s**       | **2,75 ans, 0,84 Mbit/s**         |
+| 12 s            | 6,35 ans, 4,34 Mbit/s           | **la date n'avance plus du tout** |
 
 La dernière ligne est le contre-intuitif du lot : un plus gros tampon d'avance n'aide pas un lien
 pauvre, il l'achève, chaque demande portant alors plus de trois mégaoctets.
@@ -732,13 +732,13 @@ cache). Ce n'est pas le serveur qui coûte, il sert une plage PLUS VITE qu'un fi
 ne montre aucun écart (12,5 s contre 12,8 s). C'est pour cette raison, et avec cette mesure écrite
 à côté du chiffre, que le budget local de `playwright.config.ts` rejoint celui de la CI.
 
-| Garde | Ce qu'elle tient |
-| --- | --- |
+| Garde                              | Ce qu'elle tient                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `core/ephemerisWindowLoad.test.ts` | contre les binaires RÉELLEMENT livrés : une fenêtre place chaque corps au bit près comme le fichier entier (Mercure, Uranus, Encelade, Mimas, Pluton, Nix, Bennu, Voyager 1), moins de 3 % des octets, aucune requête pour un corps hors couverture, le compagnon du ballant couvre TOUTE sa famille, un hôte sans plages est absorbé, une fenêtre perdue est nommée et comptée par le bandeau, et un corps hors couverture n'entre dans AUCUN des deux comptes |
-| `core/ephemerisClockGate.test.ts` | la date se fige et est redemandée, elle repart exactement où elle s'était arrêtée, un saut atterrit exactement sur sa cible, deux clics pendant l'attente comptent deux, l'avance suit la vitesse et son signe, et rien ne fige la scène pour toujours |
-| `core/SimulationClock.test.ts` | `holdAt` ne laisse aucune dette : la reprise ne rattrape pas l'attente |
-| `e2e/ephemerisWindow.spec.ts` | dans un vrai navigateur : chaque demande porte un `Range`, moins d'un vingtième des octets, la fiche dit toujours « JPL Horizons », un saut de cinquante ans garde cette source, un lien daté démarre à sa date SANS seconde fenêtre, et une fenêtre qui échoue EN COURS DE SESSION fait apparaître le bandeau |
-| `core/permalink.test.ts` | la date demandée se lit dans la query puis dans le chemin d'éclipse, la query prime, et une date illisible ne devient pas une date |
+| `core/ephemerisClockGate.test.ts`  | la date se fige et est redemandée, elle repart exactement où elle s'était arrêtée, un saut atterrit exactement sur sa cible, deux clics pendant l'attente comptent deux, l'avance suit la vitesse et son signe, et rien ne fige la scène pour toujours                                                                                                                                                                                                          |
+| `core/SimulationClock.test.ts`     | `holdAt` ne laisse aucune dette : la reprise ne rattrape pas l'attente                                                                                                                                                                                                                                                                                                                                                                                          |
+| `e2e/ephemerisWindow.spec.ts`      | dans un vrai navigateur : chaque demande porte un `Range`, moins d'un vingtième des octets, la fiche dit toujours « JPL Horizons », un saut de cinquante ans garde cette source, un lien daté démarre à sa date SANS seconde fenêtre, et une fenêtre qui échoue EN COURS DE SESSION fait apparaître le bandeau                                                                                                                                                  |
+| `core/permalink.test.ts`           | la date demandée se lit dans la query puis dans le chemin d'éclipse, la query prime, et une date illisible ne devient pas une date                                                                                                                                                                                                                                                                                                                              |
 
 ### Le curseur se plafonne au débit mesuré, et une attente se dit (lot 17, phase 17D)
 
@@ -765,8 +765,7 @@ annonçant des positions en retard, qui est « une position fausse en attendant 
   tient.
 
 **Le modèle de demande reproduit la seule mesure publiée du plan, et c'est ce qui le valide** :
-les 64 corps du manifeste livré (5 fichiers au pas de 1 jour, 1 à 2, 39 à 4, 9 à 8, 3 à 16, 7 à
-64) donnent **800,2 octets par jour simulé**, donc **292 291 o/s = 2,34 Mbit/s** à la vitesse
+les 64 corps du manifeste livré (5 fichiers au pas de 1 jour, 1 à 2, 39 à 4, 9 à 8, 3 à 16, 7 à 64) donnent **800,2 octets par jour simulé**, donc **292 291 o/s = 2,34 Mbit/s** à la vitesse
 maximale : exactement le chiffre mesuré le 2026-09-23. Conséquence à écrire parce qu'elle borne
 l'utilité de la phase : **au-dessus de 2,36 Mbit/s (les 2,34 de demande plus le coût fixe des
 marges) il n'y a AUCUN plafond à afficher**, et l'interface n'affiche alors rien. À 2 Mbit/s il
@@ -866,17 +865,17 @@ décision est prise par une fonction pure, `ui/ephemerisNotice.noticeState`.
 10 Mbit/s et un saut de date coûte 3,2 s. Une attente d'une seconde est donc le prix NORMAL d'un
 saut, et l'annoncer ferait clignoter un bandeau à chaque clic dans le panneau de dates.
 
-| Garde | Ce qu'elle tient |
-| --- | --- |
-| `core/playbackBudget.test.ts` | la demande reproduit les 2,34 Mbit/s mesurés du plan depuis le manifeste LIVRÉ, le coût fixe des marges est compté, aucun plafond au-dessus de la demande maximale, jamais sous le temps réel, et un pas deux fois plus fin coûte deux fois plus |
-| `core/transferRate.test.ts` | le débit mesure LE LIEN et non la requête, additionne les périodes occupées sans les trous, compte le temps d'un échec, se tait sous ses deux seuils, et OUBLIE le lien du départ sans déformer le débit à l'instant où il oublie |
-| `core/playbackCeiling.test.ts` | chemin de production, contre les binaires livrés : les octets comptés sont ceux que l'hôte a SERVIS, un corps hors couverture n'entre ni dans la mesure ni dans le budget (62 sur 64 au 2026-09-23, Cassini et Rosetta étant des missions closes), et un lien à 2 Mbit/s plafonne là où un lien rapide ne plafonne rien |
-| `ui/speedSlider.test.ts` | l'inverse du curseur est exact sur toute la demi-course, la poignée revient sur le plafond, le plafond porte sur la magnitude et garde le sens du temps, et un plafond absurde ne fige pas la scène |
-| `ui/ephemerisNotice.test.ts` | un fichier manquant PRIME sur une attente, le seuil de 1,5 s se tait juste en dessous, et une reprise réussie garde sa ligne |
-| `core/ephemerisClockGate.test.ts` | l'attente se compte en temps RÉEL, se remet à zéro dès que la date repart, et cesse d'être une attente quand on renonce à attendre |
-| `ui/playbackTour.test.ts` | une visite emprunte sa vitesse : le plafond baisse puis remonte pendant ou après la visite, et la vitesse demandée avant la visite revient, signe compris |
-| `e2e/tourSpeed.spec.ts` | dans un vrai navigateur : curseur, libellé, ARIA et horloge mesurée disent la vitesse de la visite, puis celle du visiteur, en avant comme en arrière |
-| `e2e/playbackCeiling.spec.ts` | dans un vrai navigateur : sur un lien lent le curseur affiche la vitesse soutenable et sa raison, la poignée y revient, la fiche dit toujours « JPL Horizons » ; quand les octets ne viennent pas le bandeau dit que la date attend, sans le mot « precision » et sans reprise ; et à 390 px il ne couvre aucun dock, passe axe et ne déborde pas |
+| Garde                             | Ce qu'elle tient                                                                                                                                                                                                                                                                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/playbackBudget.test.ts`     | la demande reproduit les 2,34 Mbit/s mesurés du plan depuis le manifeste LIVRÉ, le coût fixe des marges est compté, aucun plafond au-dessus de la demande maximale, jamais sous le temps réel, et un pas deux fois plus fin coûte deux fois plus                                                                                                  |
+| `core/transferRate.test.ts`       | le débit mesure LE LIEN et non la requête, additionne les périodes occupées sans les trous, compte le temps d'un échec, se tait sous ses deux seuils, et OUBLIE le lien du départ sans déformer le débit à l'instant où il oublie                                                                                                                 |
+| `core/playbackCeiling.test.ts`    | chemin de production, contre les binaires livrés : les octets comptés sont ceux que l'hôte a SERVIS, un corps hors couverture n'entre ni dans la mesure ni dans le budget (62 sur 64 au 2026-09-23, Cassini et Rosetta étant des missions closes), et un lien à 2 Mbit/s plafonne là où un lien rapide ne plafonne rien                           |
+| `ui/speedSlider.test.ts`          | l'inverse du curseur est exact sur toute la demi-course, la poignée revient sur le plafond, le plafond porte sur la magnitude et garde le sens du temps, et un plafond absurde ne fige pas la scène                                                                                                                                               |
+| `ui/ephemerisNotice.test.ts`      | un fichier manquant PRIME sur une attente, le seuil de 1,5 s se tait juste en dessous, et une reprise réussie garde sa ligne                                                                                                                                                                                                                      |
+| `core/ephemerisClockGate.test.ts` | l'attente se compte en temps RÉEL, se remet à zéro dès que la date repart, et cesse d'être une attente quand on renonce à attendre                                                                                                                                                                                                                |
+| `ui/playbackTour.test.ts`         | une visite emprunte sa vitesse : le plafond baisse puis remonte pendant ou après la visite, et la vitesse demandée avant la visite revient, signe compris                                                                                                                                                                                         |
+| `e2e/tourSpeed.spec.ts`           | dans un vrai navigateur : curseur, libellé, ARIA et horloge mesurée disent la vitesse de la visite, puis celle du visiteur, en avant comme en arrière                                                                                                                                                                                             |
+| `e2e/playbackCeiling.spec.ts`     | dans un vrai navigateur : sur un lien lent le curseur affiche la vitesse soutenable et sa raison, la poignée y revient, la fiche dit toujours « JPL Horizons » ; quand les octets ne viennent pas le bandeau dit que la date attend, sans le mot « precision » et sans reprise ; et à 390 px il ne couvre aucun dock, passe axe et ne déborde pas |
 
 ### Ce que l'appareil tient, et qui ne se redemande pas (lot 17, phase 17E)
 
@@ -886,12 +885,12 @@ qu'il a fallu MESURER pour les voir, le 2026-09-24, sur le build livré de 17D, 
 côté SERVEUR (le trafic du service worker n'apparaît pas dans le CDP de la page), service worker
 actif, trois chargements successifs dans le même navigateur :
 
-| | visite 1, à froid | visite 2 | visite 3 |
-| --- | --- | --- | --- |
-| total servi | 11 310 743 o, 173 requêtes | **987 168 o, 62 requêtes** | 991 799 o, 63 requêtes |
-| dont éphémérides | 987 168 o (62 plages) | 987 168 o | 987 168 o |
-| part des éphémérides | 8,7 % | **100 %** | 99,5 % |
-| entrées `.bin` en cache | 0 | 0 | 0 |
+|                         | visite 1, à froid          | visite 2                   | visite 3               |
+| ----------------------- | -------------------------- | -------------------------- | ---------------------- |
+| total servi             | 11 310 743 o, 173 requêtes | **987 168 o, 62 requêtes** | 991 799 o, 63 requêtes |
+| dont éphémérides        | 987 168 o (62 plages)      | 987 168 o                  | 987 168 o              |
+| part des éphémérides    | 8,7 %                      | **100 %**                  | 99,5 %                 |
+| entrées `.bin` en cache | 0                          | 0                          | 0                      |
 
 **La visite de retour était donc de l'éphéméride et RIEN d'autre** : textures, modèles,
 JavaScript et page venaient tous du service worker, et seuls les 987 168 octets de fenêtres se
@@ -985,11 +984,11 @@ service worker : `sw.js` continue de ne garder que l'app shell, et les 38 Mo res
 de l'utilisateur. Un navigateur sans `Cache` (navigation privée stricte) n'a pas de magasin du
 tout : la section le DIT, et l'application redemande ses fenêtres comme avant cette phase.
 
-| Garde | Ce qu'elle tient |
-| --- | --- |
-| `core/ephemerisStore.test.ts` | l'aller-retour d'une clé, le refus d'une clé étrangère ou d'une tranche inversée, l'inclusion exigée à un échantillon près, « fichier entier » qui n'accepte que le fichier entier, une tranche contenue qui n'écrase jamais la plus large, UNE entrée par fichier, un doublon laissé par un arrêt en cours d'écriture qui se résout sans hésiter puis se purge, une entrée tronquée SUPPRIMÉE au lieu d'être lue, la purge qui épargne le manifeste, et l'absence de magasin qui ne lève pas |
-| `core/ephemerisOffline.test.ts` | chemin de production contre les binaires livrés : une visite de retour ne fait AUCUNE requête et place les corps au bit près, une date éloignée redemande ce qui manque et lui seul, une lecture du magasin n'entre pas dans le débit observé, la préparation rend un état LU, une visite entière sans le moindre octet à n'importe quelle date, des octets tronqués qui ne sont pas rangés, et un manifeste injoignable qui reste un échec quand le magasin est vide |
-| `e2e/ephemerisOffline.spec.ts` | dans un vrai navigateur, avec le vrai `Cache` : la visite de retour ne demande plus un seul octet d'éphéméride, la section dit ce que l'appareil tient et rend la place, et une fois préparé l'appareil place les corps à une date jamais visitée avec TOUT `/assets/ephemerides/**` coupé |
+| Garde                           | Ce qu'elle tient                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/ephemerisStore.test.ts`   | l'aller-retour d'une clé, le refus d'une clé étrangère ou d'une tranche inversée, l'inclusion exigée à un échantillon près, « fichier entier » qui n'accepte que le fichier entier, une tranche contenue qui n'écrase jamais la plus large, UNE entrée par fichier, un doublon laissé par un arrêt en cours d'écriture qui se résout sans hésiter puis se purge, une entrée tronquée SUPPRIMÉE au lieu d'être lue, la purge qui épargne le manifeste, et l'absence de magasin qui ne lève pas |
+| `core/ephemerisOffline.test.ts` | chemin de production contre les binaires livrés : une visite de retour ne fait AUCUNE requête et place les corps au bit près, une date éloignée redemande ce qui manque et lui seul, une lecture du magasin n'entre pas dans le débit observé, la préparation rend un état LU, une visite entière sans le moindre octet à n'importe quelle date, des octets tronqués qui ne sont pas rangés, et un manifeste injoignable qui reste un échec quand le magasin est vide                         |
+| `e2e/ephemerisOffline.spec.ts`  | dans un vrai navigateur, avec le vrai `Cache` : la visite de retour ne demande plus un seul octet d'éphéméride, la section dit ce que l'appareil tient et rend la place, et une fois préparé l'appareil place les corps à une date jamais visitée avec TOUT `/assets/ephemerides/**` coupé                                                                                                                                                                                                    |
 
 ### Le budget du démarrage, famille par famille (lot 17, phase 17F)
 
@@ -1010,17 +1009,17 @@ CDP (`encodedDataLength`, en-têtes comprises), observation arrêtée quand `#lo
 avoir été attendu VISIBLE. Neuf visites ; les six dernières tiennent dans 0,01 % l'une de l'autre.
 La méthode est un script, pas un paragraphe : `node scripts/measure-startup-bytes.mjs`.
 
-| famille | octets servis | requêtes | part |
-| --- | --- | --- | --- |
-| textures | 6 866 520 | 62 | **59,6 %** |
-| éphémérides | 1 048 819 | 63 | 9,1 % |
-| modèles de forme | 828 987 | 15 | 7,2 % |
-| JavaScript | 309 678 | 12 | 2,7 % |
-| instantané des petits corps | 177 624 | 1 | 1,5 % |
-| CSS | 9 125 | 1 | 0,1 % |
-| HTML | 7 667 | 1 | 0,1 % |
-| divers (balise Cloudflare) | 179 | 2 | 0,0 % |
-| **total** | **11 511 538** | **157** | chargeur masqué à 10,0 s |
+| famille                     | octets servis  | requêtes | part                     |
+| --------------------------- | -------------- | -------- | ------------------------ |
+| textures                    | 6 866 520      | 62       | **59,6 %**               |
+| éphémérides                 | 1 048 819      | 63       | 9,1 %                    |
+| modèles de forme            | 828 987        | 15       | 7,2 %                    |
+| JavaScript                  | 309 678        | 12       | 2,7 %                    |
+| instantané des petits corps | 177 624        | 1        | 1,5 %                    |
+| CSS                         | 9 125          | 1        | 0,1 %                    |
+| HTML                        | 7 667          | 1        | 0,1 %                    |
+| divers (balise Cloudflare)  | 179            | 2        | 0,0 %                    |
+| **total**                   | **11 511 538** | **157**  | chargeur masqué à 10,0 s |
 
 Le renversement du lot 17 est là, en une ligne : les éphémérides pesaient **77,5 %** du démarrage
 au § 2 du plan, elles en pèsent **9,1 %**, et ce sont les textures qui dominent désormais.
@@ -1033,12 +1032,12 @@ légèrement au-DESSUS de 1, leurs en-têtes pesant plus que ce qu'un `206` éco
 
 **Deux origines de plafond, et la différence est le cœur de la phase.**
 
-| famille | plafond | origine |
-| --- | --- | --- |
-| textures | 6 580 464 o | **dérivé** : la somme du palier PLANCHER (`core/textureLadder.TIERS[0]`, soit 1k) des 60 couches que le démarrage touche (5 601 457 o), plus le raffinement de première vue nommé (le ciel, 979 007 o). C'était 6 979 356 o avec le Soleil en 2k (398 892 o de plus), jusqu'au 2026-10-25 |
-| modèles | 1 079 152 o | **dérivé** : le niveau le plus léger (`core/modelLod`) des 15 corps modélisés |
-| éphémérides | 1 800 000 o | **posé** : le pire cas mesuré sur toute la couverture, plus 5,3 % |
-| JavaScript | 1 306 000 o | **posé** : la mesure, plus environ huit lots de croissance ordinaire |
+| famille     | plafond     | origine                                                                                                                                                                                                                                                                                   |
+| ----------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| textures    | 6 580 464 o | **dérivé** : la somme du palier PLANCHER (`core/textureLadder.TIERS[0]`, soit 1k) des 60 couches que le démarrage touche (5 601 457 o), plus le raffinement de première vue nommé (le ciel, 979 007 o). C'était 6 979 356 o avec le Soleil en 2k (398 892 o de plus), jusqu'au 2026-10-25 |
+| modèles     | 1 079 152 o | **dérivé** : le niveau le plus léger (`core/modelLod`) des 15 corps modélisés                                                                                                                                                                                                             |
+| éphémérides | 1 800 000 o | **posé** : le pire cas mesuré sur toute la couverture, plus 5,3 %                                                                                                                                                                                                                         |
+| JavaScript  | 1 306 000 o | **posé** : la mesure, plus environ huit lots de croissance ordinaire                                                                                                                                                                                                                      |
 
 Un plafond **dérivé** ne se choisit pas, il se recalcule, et c'est ce qui rend ces deux familles
 insensibles à la pression : ajouter un palier 2k, 4k ou 8k ne coûte RIEN au démarrage, qui ne
@@ -1059,13 +1058,13 @@ vue s'est mise à charger un palier fin, soit c'est légitime et il faut l'écri
 de démarrage a été balayée sur toute la couverture livrée, en faisant tourner le VRAI service
 contre les VRAIS binaires du dépôt. Elle varie d'un facteur 80 :
 
-| date de scène | octets de la fenêtre de démarrage |
-| --- | --- |
-| 1900-06-15 | 21 216 (presque tout hors couverture) |
-| 1969-07-20 | 984 624 |
+| date de scène  | octets de la fenêtre de démarrage                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| 1900-06-15     | 21 216 (presque tout hors couverture)                                                          |
+| 1969-07-20     | 984 624                                                                                        |
 | **2015-06-15** | **1 709 040**, pire cas : la ligne de Neptune tient dans la couverture, 722 544 o à elle seule |
-| 2026-09-23 | 987 264 (17C en mesurait 987 168 dans un navigateur : un échantillon d'écart) |
-| 2099-12-01 | 57 888 |
+| 2026-09-23     | 987 264 (17C en mesurait 987 168 dans un navigateur : un échantillon d'écart)                  |
+| 2099-12-01     | 57 888                                                                                         |
 
 Les 987 168 octets de 17C sont donc un cas MOYEN, ni le pire ni un majorant : une adresse datée de
 l'an 2000 fait payer 1,71 Mo au démarrage, la demi-période de Neptune ne tenant dans la couverture
@@ -1083,12 +1082,12 @@ compte moins que la réalité est pire qu'aucun budget. La clôture calculée es
 aux `modulepreload` que Vite écrit dans le document : si l'analyse dérive, le script échoue en le
 disant au lieu de rendre un nombre plausible.
 
-| Garde | Ce qu'elle tient | Où |
-| --- | --- | --- |
-| `core/startupBudget.test.ts` | la règle : le classement par famille, l'indépendance des verdicts, le palier du démarrage, et qu'une texture dégradée n'achète rien | `pnpm verify` |
-| `config/startupBudget.test.ts` | les trois familles qui se comptent sur les artefacts COMMITTÉS : la fenêtre d'éphémérides à quatre dates fixes dont le pire cas, les 60 couches de texture au plancher, les 15 maillages au plus léger | `pnpm verify` |
-| `scripts/check-startup-budget.mjs` | la famille JavaScript, la seule qui exige un build : clôture, partition exhaustive, témoin des `modulepreload` | étape bloquante de `ci.yml`, après `pnpm build` |
-| `e2e/startupBudget.spec.ts` | dans un vrai navigateur : aucun palier au-dessus du plancher sauf les raffinements déclarés, chacun d'eux réellement demandé, les maillages au plus léger, et la fenêtre sous son plafond | `pnpm test:e2e` |
+| Garde                              | Ce qu'elle tient                                                                                                                                                                                       | Où                                              |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| `core/startupBudget.test.ts`       | la règle : le classement par famille, l'indépendance des verdicts, le palier du démarrage, et qu'une texture dégradée n'achète rien                                                                    | `pnpm verify`                                   |
+| `config/startupBudget.test.ts`     | les trois familles qui se comptent sur les artefacts COMMITTÉS : la fenêtre d'éphémérides à quatre dates fixes dont le pire cas, les 60 couches de texture au plancher, les 15 maillages au plus léger | `pnpm verify`                                   |
+| `scripts/check-startup-budget.mjs` | la famille JavaScript, la seule qui exige un build : clôture, partition exhaustive, témoin des `modulepreload`                                                                                         | étape bloquante de `ci.yml`, après `pnpm build` |
+| `e2e/startupBudget.spec.ts`        | dans un vrai navigateur : aucun palier au-dessus du plancher sauf les raffinements déclarés, chacun d'eux réellement demandé, les maillages au plus léger, et la fenêtre sous son plafond              | `pnpm test:e2e`                                 |
 
 **Ce que la phase ne budgète pas, et l'écrit.** L'instantané des petits corps (177 624 o), la CSS,
 le HTML et la balise d'audience ne portent pas de plafond : ils ne croissent pas par décision de
@@ -1231,37 +1230,37 @@ parti à l'an 1000 LIT un chiffre, et la barre de temps garde sa date à l'an 50
 
 ### Tests qui verrouillent tout ça
 
-| Fichier | Ce qu'il garde |
-| --- | --- |
-| `core/horizonsSatelliteOrbits.test.ts` | chaque satellite boucle un tour sur sa période, sur les binaires **réellement committés** |
-| `core/relativeElements.test.ts` | le repli décrit la même orbite que le binaire (deux sources sans code commun) |
-| `core/satelliteOrbitRate.test.ts` | la cadence du repli, sur la sortie observable |
-| `core/twoBodyPropagation.test.ts` | la propagation, jusqu'à 40 révolutions |
-| `core/orbitLineSampling.test.ts` | amplitude **et** régularité de la ligne, dans les deux modes ; le corps à moins de 1 000 km de sa ligne, aux bords de la couverture et au milieu |
-| `core/orbitPath.test.ts` | la phase 0 de la ligne tombe sur la date affichée, pas une période avant |
-| `core/kepler.test.ts` | solveur hyperbolique (résidu, M non réduite, vis-viva, asymptote ν∞) |
-| `config/interstellar.test.ts` | 21 vecteurs Horizons de −20 à +20 ans, Tp dérivé, ligne répartie en F |
-| `core/ephemerisPlausibility.test.ts` | les deux bornes, sur 400 dates par fichier relatif et 2 000 par fichier héliocentrique ; Sedna et Halley acceptés |
-| `core/horizonsInterpolation.test.ts` | vecteurs Horizons ENTRE échantillons : rythme moyen, ballant de Pluton, seuil 100, binaires de Jupiter et d'Uranus |
-| `core/timeScale.test.ts` | convention TT/TDB unique, installée dans astronomy-engine, importée partout |
-| `config/smallBodies.test.ts` | chaque jeu d'éléments contre Horizons à son époque ; décalage barycentrique |
-| `components/celestial/spinDirection.test.ts` | sens de rotation des corps du catalogue, dans les deux sens du temps |
+| Fichier                                      | Ce qu'il garde                                                                                                                                   |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `core/horizonsSatelliteOrbits.test.ts`       | chaque satellite boucle un tour sur sa période, sur les binaires **réellement committés**                                                        |
+| `core/relativeElements.test.ts`              | le repli décrit la même orbite que le binaire (deux sources sans code commun)                                                                    |
+| `core/satelliteOrbitRate.test.ts`            | la cadence du repli, sur la sortie observable                                                                                                    |
+| `core/twoBodyPropagation.test.ts`            | la propagation, jusqu'à 40 révolutions                                                                                                           |
+| `core/orbitLineSampling.test.ts`             | amplitude **et** régularité de la ligne, dans les deux modes ; le corps à moins de 1 000 km de sa ligne, aux bords de la couverture et au milieu |
+| `core/orbitPath.test.ts`                     | la phase 0 de la ligne tombe sur la date affichée, pas une période avant                                                                         |
+| `core/kepler.test.ts`                        | solveur hyperbolique (résidu, M non réduite, vis-viva, asymptote ν∞)                                                                             |
+| `config/interstellar.test.ts`                | 21 vecteurs Horizons de −20 à +20 ans, Tp dérivé, ligne répartie en F                                                                            |
+| `core/ephemerisPlausibility.test.ts`         | les deux bornes, sur 400 dates par fichier relatif et 2 000 par fichier héliocentrique ; Sedna et Halley acceptés                                |
+| `core/horizonsInterpolation.test.ts`         | vecteurs Horizons ENTRE échantillons : rythme moyen, ballant de Pluton, seuil 100, binaires de Jupiter et d'Uranus                               |
+| `core/timeScale.test.ts`                     | convention TT/TDB unique, installée dans astronomy-engine, importée partout                                                                      |
+| `config/smallBodies.test.ts`                 | chaque jeu d'éléments contre Horizons à son époque ; décalage barycentrique                                                                      |
+| `components/celestial/spinDirection.test.ts` | sens de rotation des corps du catalogue, dans les deux sens du temps                                                                             |
 
 ## Terminateur jour/nuit — contrat partagé entre couches
 
 `src/core/terminator.ts` est la **source unique** de toute décision jour/nuit. Le module expose
-une implémentation JS *et* son miroir GLSL exact (`TERMINATOR_GLSL`, injecté dans les shaders en
+une implémentation JS _et_ son miroir GLSL exact (`TERMINATOR_GLSL`, injecté dans les shaders en
 remplacement de `#include <common>`) : les deux côtés doivent rester la même formule, c'est ce
 qui rend les invariants ci-dessous testables sans GPU.
 
 ### Les trois courbes
 
-| Fonction | Pour quoi | Bande | Forme |
-| --- | --- | --- | --- |
-| `terminatorLight(raw, wrap)` | éclairement direct d'une surface (remplace le `dotNL` de three.js) | `+wrap` → `−wrap` | Lambert pur au-dessus de `+wrap`, extinction tangente en `−wrap` |
-| `terminatorDay(raw, wrap)` | fraction de jour d'un calque superposé (nuages, pluie, halo) | `+wrap` → `−wrap` | smootherstep |
-| `terminatorNight(raw, onset, rampWidth)` | couche qui **apparaît** la nuit (lumières de ville, clair de Lune) | `onset` → `onset − rampWidth` | ease-out cubique |
-| `terminatorTwilight(raw, wrap)` | lueur du **ciel** au-dessus d'un sol déjà éteint (bandeau crépusculaire) | `+wrap` → ~`−wrap` | colonne d'air éclairée × extinction côté jour |
+| Fonction                                 | Pour quoi                                                                | Bande                         | Forme                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------ | ----------------------------- | ---------------------------------------------------------------- |
+| `terminatorLight(raw, wrap)`             | éclairement direct d'une surface (remplace le `dotNL` de three.js)       | `+wrap` → `−wrap`             | Lambert pur au-dessus de `+wrap`, extinction tangente en `−wrap` |
+| `terminatorDay(raw, wrap)`               | fraction de jour d'un calque superposé (nuages, pluie, halo)             | `+wrap` → `−wrap`             | smootherstep                                                     |
+| `terminatorNight(raw, onset, rampWidth)` | couche qui **apparaît** la nuit (lumières de ville, clair de Lune)       | `onset` → `onset − rampWidth` | ease-out cubique                                                 |
+| `terminatorTwilight(raw, wrap)`          | lueur du **ciel** au-dessus d'un sol déjà éteint (bandeau crépusculaire) | `+wrap` → ~`−wrap`            | colonne d'air éclairée × extinction côté jour                    |
 
 `raw` est **toujours** `dot(normaleMonde, directionSoleil)`, c'est-à-dire le sinus de la hauteur
 solaire. Aucune couche ne doit re-dériver sa propre rampe.
@@ -1269,7 +1268,7 @@ solaire. Aucune couche ne doit re-dériver sa propre rampe.
 ### Quatre invariants, chacun verrouillé par un test
 
 1. **Règle produit — rien de nocturne sur le côté éclairé.** Toute couche qui n'existe que la
-   nuit vaut `0` *exactement* dès que le Soleil est au-dessus de l'horizon. C'est pourquoi
+   nuit vaut `0` _exactement_ dès que le Soleil est au-dessus de l'horizon. C'est pourquoi
    `terminatorNight` part de `onset = 0` et non d'une valeur reculée.
 
 2. **Direction du Soleil par fragment, jamais depuis le centre du corps.** Une direction unique
@@ -1291,12 +1290,12 @@ solaire. Aucune couche ne doit re-dériver sa propre rampe.
    le coucher. D'où l'ease-out cubique (`f'(0) = 3`) et non smootherstep, dont les dérivées
    première et seconde nulles en `0` laissaient une marge sombre le long du terminateur.
 
-5. **La bande ne doit pas dépendre de l'albédo.** L'invariant 4 était formulé en *relatif* —
+5. **La bande ne doit pas dépendre de l'albédo.** L'invariant 4 était formulé en _relatif_ —
    « la somme sol + villes ne descend pas sous sa valeur au terminateur » — et cela ne suffit
    pas : cette valeur de référence, `wrap/4 ≈ 2,6 %` du plein soleil, est elle-même **sous le
    plancher d'affichage** une fois multipliée par l'albédo et compressée par le tone mapping.
    Mesuré sur le rendu (albédo neutre 0,5) : la surface atteint le noir 8 bits dès `raw ≈
-   +0,013`, soit **0,75° au-dessus** de l'horizon, et vaut 0 sur toute la bande de crépuscule.
++0,013`, soit **0,75° au-dessus** de l'horizon, et vaut 0 sur toute la bande de crépuscule.
    Statistique pixel par pixel du disque texturé : 100 % des pixels au-dessus du plancher à
    +8°, 4 % à +0,6°, **0 % de 0° à −2°**. La rampe des villes ne peut pas combler ce trou —
    elle ne s'allume que là où il y a des villes.
@@ -1322,8 +1321,7 @@ solaire. Aucune couche ne doit re-dériver sa propre rampe.
    **7,5 à +5°**, 25 au terminateur. Ce facteur 3 se lit comme un trait sombre séparant le jour
    de sa propre lueur, et faisait paraître le bandeau posé sur l'image plutôt qu'issu d'elle.
    La règle du projet dit où est la faute : **la largeur est une propriété de la couche**, et
-   cette lueur est émise par l'air, pas par le sol. Après correction, 18,6 contre une épaule à
-   25. Côté nuit rien ne déborde : c'est `sunlitColumnFraction` qui y décide de l'extinction.
+   cette lueur est émise par l'air, pas par le sol. Après correction, 18,6 contre une épaule à 25. Côté nuit rien ne déborde : c'est `sunlitColumnFraction` qui y décide de l'extinction.
 
    Amplitude posée par **continuité**, pas à l'œil : le maximum vaut l'éclairement du sol au
    haut de la bande (`wrap × I × albédo / π`, albédo de Bond publié 0,306), donc la courbe
@@ -2103,7 +2101,6 @@ déjà à l'ancien plancher), parce que la direction d'approche vise le terminat
 trois points n'a changé au lot 9C (2026-09-21), qui n'a touché ni la géométrie de la sphère, ni
 les couches d'instrument, ni la direction d'approche ; le § suivant dit ce qu'il a changé.
 
-
 ### Le fond d'arrivée de la Terre (2026-10-23)
 
 Le fond du sol de la Terre à l'arrivée est Sentinel-2, l'édition de l'année de la scène
@@ -2282,17 +2279,17 @@ ne change.
 
 **Deux jeux déclarés, et ils ne se ressemblent pas** — c'est ce qui rend la preuve utile :
 
-| | Lune | Mars |
-|---|---|---|
-| Mosaïque | LRO WAC (LROC, ASU) | Viking MDIM 2.1 colorisée (USGS, NASA Ames) |
-| Campagne | novembre 2009 à février 2011 | juin 1976 à août 1980 |
-| Niveaux publiés par Trek | 0 à 8 | 0 à 7 (le niveau 8 répond 404, mesuré) |
-| Finesse servie au maximum | 83 m/px | 325 m/px |
-| Texture livrée du catalogue | 8k, 1,33 km/px | 8k, 2,60 km/px |
-| Rapport à la texture livrée | 16x | 8x |
-| Finesse publiée de la source | 303 px/degré | 256 px/degré |
-| Niveau maximal vis-à-vis d'elle | l'agrandit de 1,20 | reste à 0,71, donc plus grossier |
-| Plancher d'approche | 128,0 → 8,0 km | 249,7 → 31,2 km |
+|                                 | Lune                         | Mars                                        |
+| ------------------------------- | ---------------------------- | ------------------------------------------- |
+| Mosaïque                        | LRO WAC (LROC, ASU)          | Viking MDIM 2.1 colorisée (USGS, NASA Ames) |
+| Campagne                        | novembre 2009 à février 2011 | juin 1976 à août 1980                       |
+| Niveaux publiés par Trek        | 0 à 8                        | 0 à 7 (le niveau 8 répond 404, mesuré)      |
+| Finesse servie au maximum       | 83 m/px                      | 325 m/px                                    |
+| Texture livrée du catalogue     | 8k, 1,33 km/px               | 8k, 2,60 km/px                              |
+| Rapport à la texture livrée     | 16x                          | 8x                                          |
+| Finesse publiée de la source    | 303 px/degré                 | 256 px/degré                                |
+| Niveau maximal vis-à-vis d'elle | l'agrandit de 1,20           | reste à 0,71, donc plus grossier            |
+| Plancher d'approche             | 128,0 → 8,0 km               | 249,7 → 31,2 km                             |
 
 La dernière ligne du tableau est ce que le bandeau fait de différent : il n'annonce un
 sur-échantillonnage que lorsqu'il y en a un, donc il se tait sur Mars. Et sur un poste, où la
@@ -2666,12 +2663,12 @@ niveau 4 (1 333 m/échantillon, depuis `LDEM_64`) plus trois aires cuites aux ni
 répertoire de nomenclature de l'UAI : Tycho, Rima Hadley (site d'Apollo 15) et Statio
 Tranquillitatis (site d'Apollo 11). 637 tuiles, 84,2 Mo.
 
-| | Socle global | Aires nommées |
-|---|---|---|
-| Niveau | 4 | 7 et 8 |
-| Finesse | 1 333 m/échantillon | 83 m/échantillon |
-| Source | LOLA `LDEM_64` (64 px/degré) | LOLA `LDEM_1024` (1 024 px/degré) |
-| Emprise | le corps entier | le carré dérivé du diamètre publié de l'entité |
+|         | Socle global                 | Aires nommées                                  |
+| ------- | ---------------------------- | ---------------------------------------------- |
+| Niveau  | 4                            | 7 et 8                                         |
+| Finesse | 1 333 m/échantillon          | 83 m/échantillon                               |
+| Source  | LOLA `LDEM_64` (64 px/degré) | LOLA `LDEM_1024` (1 024 px/degré)              |
+| Emprise | le corps entier              | le carré dérivé du diamètre publié de l'entité |
 
 **Ce que la fiche porte, et ce que le manifeste porte.** La fiche déclare l'identité, la mission,
 l'instrument, la licence, les fournisseurs et l'intervalle d'acquisition. Tout ce qui se MESURE —
@@ -2715,8 +2712,8 @@ confronte à celle de l'application, parce que le cuiseur, qui ne lit pas de Typ
 la règle.
 
 **Un relief se cuit depuis un RAYON, jamais depuis une hauteur sur un géoïde.** Le relief de Mars
-livré jusqu'au 2026-10-09 venait de `MEGT90N000FB`, dont l'étiquette dit « *Topography is the
-planetary radius minus the areoid radius* » : posé sur la sphère de référence de 3 396 km, il
+livré jusqu'au 2026-10-09 venait de `MEGT90N000FB`, dont l'étiquette dit « _Topography is the
+planetary radius minus the areoid radius_ » : posé sur la sphère de référence de 3 396 km, il
 mettait le pôle nord vers 3 394 km, environ 18 km au-dessus du demi-axe polaire publié. Il vient
 désormais de `MEGR90N000FB`, le rayon planétaire de la même grille (`OFFSET` = 3 396 000 m), dont
 le pôle nord tombe sur le demi-axe polaire du noyau. Deux gardes, falsifiées l'une et l'autre : le
@@ -2862,14 +2859,13 @@ tuiles servies, et un témoin d'une cuisson périmée ne se trouve plus. Les gar
 falsifiées en recuisant avec la règle désarmée ; `e2e/surfaceImageryEarth.spec.ts` tient l'origine, le
 répertoire haché et la grille des tuiles DEMANDÉES.
 
-| | |
-|---|---|
-| La recette (sources, niveaux, masque, témoins) | `scripts/surface-height-targets.json` |
-| La lecture des balises GeoTIFF | `scripts/geotiff-grid.mjs` |
-| La règle de l'eau | `scripts/earth-water-level.mjs` (testé : `src/config/earthRelief.test.ts`) |
-| Les mesures (grille, géoïde, eau, origine) | `public/assets/height-tiles/earth/manifest.json` |
-| Déployer les tuiles | `services/galaxy-data/README.md` § « Le relief de la Terre » |
-
+|                                                |                                                                            |
+| ---------------------------------------------- | -------------------------------------------------------------------------- |
+| La recette (sources, niveaux, masque, témoins) | `scripts/surface-height-targets.json`                                      |
+| La lecture des balises GeoTIFF                 | `scripts/geotiff-grid.mjs`                                                 |
+| La règle de l'eau                              | `scripts/earth-water-level.mjs` (testé : `src/config/earthRelief.test.ts`) |
+| Les mesures (grille, géoïde, eau, origine)     | `public/assets/height-tiles/earth/manifest.json`                           |
+| Déployer les tuiles                            | `services/galaxy-data/README.md` § « Le relief de la Terre »               |
 
 ### La descente regarde l'horizon : une bascule géométrique, et un quadtree de carreaux (lot 48, pas 5)
 
@@ -3196,13 +3192,13 @@ corps n'en avaient aucun avant le lot 16 et chargeaient donc leur 2k à toute di
 
 ### Qui détient quoi
 
-| | |
-|---|---|
-| La règle | `src/core/textureLadder.ts` (pur, testé) |
-| Le relevé mesuré, palier par palier | `src/config/textureLadder.json`, écrit par `pnpm textures:ladder --write` |
+|                                              |                                                                              |
+| -------------------------------------------- | ---------------------------------------------------------------------------- |
+| La règle                                     | `src/core/textureLadder.ts` (pur, testé)                                     |
+| Le relevé mesuré, palier par palier          | `src/config/textureLadder.json`, écrit par `pnpm textures:ladder --write`    |
 | La largeur de la source, lue à son étiquette | `review.sourcePixelWidth` des fiches `src/registry/products/textures/*.json` |
-| L'échelle déclarée au catalogue | `textureResolutions` (fiches d'entité), `surfaceResolutions` (petits corps) |
-| La confrontation des quatre | `src/config/textureLadder.test.ts` |
+| L'échelle déclarée au catalogue              | `textureResolutions` (fiches d'entité), `surfaceResolutions` (petits corps)  |
+| La confrontation des quatre                  | `src/config/textureLadder.test.ts`                                           |
 
 Le relevé est **volontairement hors de `pnpm verify`** : il décode les 172 JPEG livrés, dont 23 jeux montant à 8k,
 ce qui dure des minutes. La porte rapide est le test, qui lit le relevé committé, relit les
@@ -3408,14 +3404,14 @@ Trek, mosaïques Cassini du PDS), ou sur un repère à l'œil seulement (Io, Tri
 Quinze corps portaient un modèle de forme sans texture, peints à leur albédo. Draper une carte
 suppose que la carte ET le modèle soient dans le même repère, et c'est la condition qui a trié :
 
-| Corps | Carte | Carte contre l'UAI | Modèle contre l'UAI ou contre la carte | Décision |
-|---|---|---|---|---|
-| Éros | albédos NEAR MSI de Golish et al. (2023), 760/550/450 nm, composés en couleur | Psyche à sa longitude, Himeros à son antipode | 25 des 33 grands cratères nommés sont des creux du modèle à 0°, 17 au mieux autrement | **drapée** |
-| Itokawa | photomosaïque AMICA de Stooke (PDS) | grille de la carte (0 aux bords) | recalage sur le modèle : pic à 1°, sans miroir | **drapée** |
-| Ida | photomosaïque Galileo de Stooke et Nyrtsov (30 % imagé), projetée sur le modèle de Thomas | 92 % des noms sur des pixels imagés, Afon au méridien | modèle en longitudes Est (étiquette `243ida.lbl`), repère de Davies et al. 1996 ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05) |
-| Gaspra | photomosaïque Galileo de Stooke (35 % imagé), contrôle de position de Thomas | 91 % des noms sur des pixels imagés | modèle de Thomas laissé dans le repère de son pôle mesuré (il était tourné dans ses axes principaux, pôle déplacé de 11°) ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05), **couleur moyenne mesurée** (ci-dessous) |
-| Ryugu | carte d'albédo à 550 nm FABRIQUÉE depuis les cubes ONC recalés (aucune n'est publiée comme donnée) | plans de latitude et longitude de l'ONC : direction de visée résolue par image, résidu d'émission médian 9,4° (7,7 à 10,9), contre 17 à 18° décalée de 90° ou 180° ou en miroir | 6 des 7 cratères nommés sont des creux du modèle de Watanabe à 0°, 1 à 3 décalés, 2 en miroir | **drapée** (2026-10-05), **albédo seul, couleur moyenne** (ci-dessous) |
-| Mathilde | photomosaïque NEAR de Stooke et Pfau (20 % imagé), grille sans étiquettes | 83 % des noms sur des pixels imagés | le recalage par l'ombrage ne s'y distingue pas du hasard (R² 0,30 à 0°, jusqu'à 0,42 ailleurs, autant qu'un couple de deux corps différents) | en attente : aucune mesure ne prouve le repère de la carte |
+| Corps    | Carte                                                                                              | Carte contre l'UAI                                                                                                                                                              | Modèle contre l'UAI ou contre la carte                                                                                                                                                      | Décision                                                               |
+| -------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Éros     | albédos NEAR MSI de Golish et al. (2023), 760/550/450 nm, composés en couleur                      | Psyche à sa longitude, Himeros à son antipode                                                                                                                                   | 25 des 33 grands cratères nommés sont des creux du modèle à 0°, 17 au mieux autrement                                                                                                       | **drapée**                                                             |
+| Itokawa  | photomosaïque AMICA de Stooke (PDS)                                                                | grille de la carte (0 aux bords)                                                                                                                                                | recalage sur le modèle : pic à 1°, sans miroir                                                                                                                                              | **drapée**                                                             |
+| Ida      | photomosaïque Galileo de Stooke et Nyrtsov (30 % imagé), projetée sur le modèle de Thomas          | 92 % des noms sur des pixels imagés, Afon au méridien                                                                                                                           | modèle en longitudes Est (étiquette `243ida.lbl`), repère de Davies et al. 1996 ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné                                           | **drapée** (2026-10-05)                                                |
+| Gaspra   | photomosaïque Galileo de Stooke (35 % imagé), contrôle de position de Thomas                       | 91 % des noms sur des pixels imagés                                                                                                                                             | modèle de Thomas laissé dans le repère de son pôle mesuré (il était tourné dans ses axes principaux, pôle déplacé de 11°) ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05), **couleur moyenne mesurée** (ci-dessous)      |
+| Ryugu    | carte d'albédo à 550 nm FABRIQUÉE depuis les cubes ONC recalés (aucune n'est publiée comme donnée) | plans de latitude et longitude de l'ONC : direction de visée résolue par image, résidu d'émission médian 9,4° (7,7 à 10,9), contre 17 à 18° décalée de 90° ou 180° ou en miroir | 6 des 7 cratères nommés sont des creux du modèle de Watanabe à 0°, 1 à 3 décalés, 2 en miroir                                                                                               | **drapée** (2026-10-05), **albédo seul, couleur moyenne** (ci-dessous) |
+| Mathilde | photomosaïque NEAR de Stooke et Pfau (20 % imagé), grille sans étiquettes                          | 83 % des noms sur des pixels imagés                                                                                                                                             | le recalage par l'ombrage ne s'y distingue pas du hasard (R² 0,30 à 0°, jusqu'à 0,42 ailleurs, autant qu'un couple de deux corps différents)                                                | en attente : aucune mesure ne prouve le repère de la carte             |
 
 **Le recalage par l'ombrage (2026-10-05)**, parce que ni les cratères ni la pente n'ont tranché pour
 ces trois corps. Le test des creux (le centre d'un cratère nommé plus bas que son pourtour) ne
@@ -3458,13 +3454,13 @@ une par filtre, dont une seule série (E) porte rouge, vert et violet. Leur moye
 méthode **échoue à son témoin** : appliquée aux images étalonnées de GASPRA, celles-là mêmes que
 ses cubes recalent, elle ne rend pas ce que les cubes disent. Série B, rapports au vert :
 
-| Filtre | Cube | Images étalonnées |
-|---|---|---|
-| violet 404 nm | 0,713 | 0,731 |
-| rouge 671 nm | 1,158 | 1,513 |
-| IR 756 nm | 1,320 | 1,507 |
-| IR 889 nm | 0,996 | 1,393 |
-| IR 968 nm | 0,903 | 1,518 |
+| Filtre        | Cube  | Images étalonnées |
+| ------------- | ----- | ----------------- |
+| violet 404 nm | 0,713 | 0,731             |
+| rouge 671 nm  | 1,158 | 1,513             |
+| IR 756 nm     | 1,320 | 1,507             |
+| IR 889 nm     | 0,996 | 1,393             |
+| IR 968 nm     | 0,903 | 1,518             |
 
 Le cube montre le spectre d'un type S, qui monte jusqu'à 756 nm puis creuse la bande à 1 µm ; les
 images étalonnées n'ont aucune bande (968 nm égal à 671 nm), et leurs niveaux absolus sont quatre
@@ -3540,16 +3536,16 @@ Les deux hôtes de l'Université du Maryland répondent 403 sur leurs `holdings`
 adresses exactes que le registre publie (`pdssbn.astro.umd.edu` et
 `pds-smallbodies.astro.umd.edu`).
 
-| Corps | Images | Hôte | Pose | Verdict |
-|---|---|---|---|---|
-| Ryugu | ONC : I/F étalonnés et réflectances multi-filtres recalées | PSI (`hyb2_onc`) | plans de latitude et longitude par pixel | **accessible**, carte livrée le 2026-10-05 (ci-dessus) |
-| Mathilde | NEAR MSI : images brutes et étalonnées en I/F | PSI (`NEAR_A_MSI_3_EDR_MATHILDE_V1_0`) | noyaux du survol à PSI (`NEAR_A_SPICE_6_MATHILDE_V1_0`) | accessible, mais **aucune pose établie sur le modèle** (2026-10-06, ci-dessous) : rien de livré |
-| Lutetia, Šteins | OSIRIS NAC et WAC, niveaux 2 à 4 (réflectance) | PSA de l'ESA | noyaux de Rosetta chez NAIF | accessible ; licence CC BY-NC 3.0 IGO lue et acceptée le 2026-10-06 (ci-dessous) |
-| Didymos, Dimorphos | DRACO, dont des images étalonnées avec plans géométriques | UMD seulement | | bloqué (403) |
-| Arrokoth | LORRI, produits dérivés | UMD seulement | | bloqué (403) |
-| Donaldjohanson | aucune image L'LORRI au registre, seulement des spectres LEISA | UMD seulement | | bloqué |
-| Tempel 1 | Deep Impact et Stardust-NExT | UMD seulement | | bloqué (403) |
-| Psyché, Apophis | aucune image rapprochée n'existe encore | | | sans objet |
+| Corps              | Images                                                         | Hôte                                   | Pose                                                    | Verdict                                                                                         |
+| ------------------ | -------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Ryugu              | ONC : I/F étalonnés et réflectances multi-filtres recalées     | PSI (`hyb2_onc`)                       | plans de latitude et longitude par pixel                | **accessible**, carte livrée le 2026-10-05 (ci-dessus)                                          |
+| Mathilde           | NEAR MSI : images brutes et étalonnées en I/F                  | PSI (`NEAR_A_MSI_3_EDR_MATHILDE_V1_0`) | noyaux du survol à PSI (`NEAR_A_SPICE_6_MATHILDE_V1_0`) | accessible, mais **aucune pose établie sur le modèle** (2026-10-06, ci-dessous) : rien de livré |
+| Lutetia, Šteins    | OSIRIS NAC et WAC, niveaux 2 à 4 (réflectance)                 | PSA de l'ESA                           | noyaux de Rosetta chez NAIF                             | accessible ; licence CC BY-NC 3.0 IGO lue et acceptée le 2026-10-06 (ci-dessous)                |
+| Didymos, Dimorphos | DRACO, dont des images étalonnées avec plans géométriques      | UMD seulement                          |                                                         | bloqué (403)                                                                                    |
+| Arrokoth           | LORRI, produits dérivés                                        | UMD seulement                          |                                                         | bloqué (403)                                                                                    |
+| Donaldjohanson     | aucune image L'LORRI au registre, seulement des spectres LEISA | UMD seulement                          |                                                         | bloqué                                                                                          |
+| Tempel 1           | Deep Impact et Stardust-NExT                                   | UMD seulement                          |                                                         | bloqué (403)                                                                                    |
+| Psyché, Apophis    | aucune image rapprochée n'existe encore                        |                                        |                                                         | sans objet                                                                                      |
 
 **Mathilde : les images se posent sur le ciel, pas sur le modèle (2026-10-06).** Le plan était
 celui de Ryugu, la pose en plus : calculer chaque prise de vue depuis les noyaux, projeter chaque
@@ -3951,12 +3947,12 @@ triaxiale, rend 129 860 à 132 218.
 (`pds.nasa.gov/api/search/1`, les 3 863 collections listées puis filtrées, la requête
 `lid like … and …` étant refusée par l'API) :
 
-| Corps | Ce que la mission publie | Servi par | Statut |
-|---|---|---|---|
-| Tempel 1 | le modèle de forme de Farnham et Thomas (`DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0`), aucune carte | — | absence prouvée |
-| Donaldjohanson | des spectres LEISA bruts et étalonnés, aucun produit dérivé ; **aucune collection d'images L'LORRI du survol** au registre (relu le 2026-10-05 : les seules données L'LORRI sont celles de Didymos ; « images L'LORRI brutes » écrit plus tôt le même jour était faux) | — | absence prouvée |
-| Didymos, Dimorphos | une table d'albédo RELATIF par facette du modèle SPC (`dart_shapemodel`, `data_derived_*`), sans question de repère | `pdssbn.astro.umd.edu` seulement | bloqué par la source |
-| Arrokoth | la carte d'albédo de Porter et al. 2024 (deux projections azimutales polaires, une par lobe, ses coordonnées de texture dans l'OBJ du même jeu), et les cartes d'albédo et de réflectance de `nh_derived:arrokoth_geophysics` | `pdssbn.astro.umd.edu` seulement | bloqué par la source |
+| Corps              | Ce que la mission publie                                                                                                                                                                                                                                               | Servi par                        | Statut               |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------------- |
+| Tempel 1           | le modèle de forme de Farnham et Thomas (`DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0`), aucune carte                                                                                                                                                                      | —                                | absence prouvée      |
+| Donaldjohanson     | des spectres LEISA bruts et étalonnés, aucun produit dérivé ; **aucune collection d'images L'LORRI du survol** au registre (relu le 2026-10-05 : les seules données L'LORRI sont celles de Didymos ; « images L'LORRI brutes » écrit plus tôt le même jour était faux) | —                                | absence prouvée      |
+| Didymos, Dimorphos | une table d'albédo RELATIF par facette du modèle SPC (`dart_shapemodel`, `data_derived_*`), sans question de repère                                                                                                                                                    | `pdssbn.astro.umd.edu` seulement | bloqué par la source |
+| Arrokoth           | la carte d'albédo de Porter et al. 2024 (deux projections azimutales polaires, une par lobe, ses coordonnées de texture dans l'OBJ du même jeu), et les cartes d'albédo et de réflectance de `nh_derived:arrokoth_geophysics`                                          | `pdssbn.astro.umd.edu` seulement | bloqué par la source |
 
 **Le blocage est mesuré, pas supposé** : les deux hôtes de l'UMD répondent HTTP 403 sur tout
 `holdings/`, avec ou sans en-têtes de navigateur, depuis un service distant, et dans le navigateur
@@ -4202,6 +4198,7 @@ c'est vérifiable en cherchant `renderSphere` dans `dist/assets/*.js`.
      la page statique sur TOUS les corps — sans quoi un rechargement ferait clignoter le titre.
      La divergence française est assumée : la page statique est anglaise par référencement,
      l'interface doit parler la langue du visiteur.
+
 3. **Du contenu réel.** Chaque page porte la description du catalogue et les données mesurées de
    ce corps. Cinquante coquilles identiques seraient du contenu dupliqué, exactement ce que
    l'opération existe pour éviter.
@@ -4298,7 +4295,6 @@ polices le sont —
 le runner rend le texte en DejaVu Sans, un poste Windows en Segoe UI. La mise en page et les
 chiffres suscrits tiennent dans les deux cas (vérifié à l'écran sur l'artefact déployé), mais ne
 pas s'attendre à une comparaison d'empreinte entre local et production.
-
 
 **Le segment de langue d'un chemin (2026-10-17).** `/fr/moon/` est la page française de la Lune,
 et `/fr/eclipse/2026-08-12/` celle de l'éclipse : `core/localePath.ts` ôte le segment de langue
@@ -5003,9 +4999,9 @@ l'œuvre et résout toujours vers la version la plus récente. C'est le DOI de c
 avant partout, parce qu'une référence écrite aujourd'hui ne doit pas pourrir à la prochaine
 publication ; le DOI de version est déclaré à côté, pour qui veut désigner un état figé.
 
-| | |
-| --- | --- |
-| DOI de concept | `10.5281/zenodo.22985614` |
+|                          |                           |
+| ------------------------ | ------------------------- |
+| DOI de concept           | `10.5281/zenodo.22985614` |
 | DOI de la version 0.10.0 | `10.5281/zenodo.22985615` |
 
 **Un seul propriétaire : `CITATION.cff`.** C'est déjà le fichier que GitHub et la plupart des
@@ -5029,11 +5025,11 @@ lève une erreur qui NOMME les champs manquants, et le build s'arrête. Elle ref
 complète écrite à la place du DOI (le cas réel : un lecteur finit par cliquer sur
 `https://doi.org/https://doi.org/…`) et une date qui n'est pas ISO.
 
-| Garde | Ce qu'elle tient |
-| --- | --- |
-| `src/seo/citation.test.ts` | la lecture du VRAI `CITATION.cff` livré, l'ordre des auteurs, la référence d'une ligne, et six refus (un champ manquant, une URL au lieu d'un DOI, une date non ISO, aucun auteur lisible) |
+| Garde                                 | Ce qu'elle tient                                                                                                                                                                                                                                                                                |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/seo/citation.test.ts`            | la lecture du VRAI `CITATION.cff` livré, l'ordre des auteurs, la référence d'une ligne, et six refus (un champ manquant, une URL au lieu d'un DOI, une date non ISO, aucun auteur lisible)                                                                                                      |
 | `src/config/citationMetadata.test.ts` | que `package.json`, `CITATION.cff` et le titre de section du `CHANGELOG` disent la MÊME version et la même date ; qu'aucun DOI du README ne soit inconnu de `CITATION.cff` ; que le DOI de concept y domine celui de version ; et qu'un DOI ne soit jamais publié sous une forme non résolvable |
-| `src/seo/docPages.test.ts` | que les QUATRE documents affichent le DOI qu'on leur donne, sous forme résolvable, avec la section titrée dans leur langue |
+| `src/seo/docPages.test.ts`            | que les QUATRE documents affichent le DOI qu'on leur donne, sous forme résolvable, avec la section titrée dans leur langue                                                                                                                                                                      |
 
 **Un piège payé en écrivant ces gardes, et c'est sa falsification qui l'a dit.** La première
 version de « le README cite le même DOI » comptait les occurrences : « au moins deux égales au DOI
@@ -5055,7 +5051,7 @@ quatre pages qui portent désormais le bloc.
 ## Quatre langues, une seule chargée (lot 20)
 
 Galaxy est servi en **anglais, français, espagnol et portugais du Brésil**. Le contrat tient en une
-phrase : *un visiteur télécharge la langue qu'il lit, et rien de plus*. Il se décline en quatre
+phrase : _un visiteur télécharge la langue qu'il lit, et rien de plus_. Il se décline en quatre
 règles, chacune tenue par une garde.
 
 ### 1. Les clés sont dérivées, jamais listées deux fois
@@ -5188,6 +5184,7 @@ documents générés identiques. Gardes : `src/build/clientFactSnapshot.test.ts`
 exactement ses rayons (falsifié en oubliant Saturne : rouge) et aucun autre module livré
 n'importe le relevé, sans quoi il recevrait un objet amputé (falsifié par un second lecteur :
 rouge).
+
 ### 3 quinquies. Les phrases des blocs hors démarrage ont leur dictionnaire (lot 52, C)
 
 74 clés du dictionnaire n'étaient lues que par des morceaux chargés à la demande : les blocs de
@@ -5394,9 +5391,8 @@ boîtes de `regionalCoverage.json` (`core/regionalImagery.ts`, `BBoxCoverage`). 
 plusieurs (`REGIONAL_TILESETS` : une liste par corps, `pickRegional` choisit la région qui couvre la
 tuile, sinon celle qu'elle touche) ; la garde de `surfaceTilesets.test.ts` exige que les emprises d'un
 même corps ne se recouvrent pas. Le niveau d'une région reste DÉRIVÉ de sa finesse publiée
-(`regionalMaxLevel`) : la NAC d'Apollo 11 (46 603 px/°, grille au niveau 15) et la CTX d'Olympus Mons
-(11 650 px/°, niveau 13) n'annoncent que ce que leur grille porte. Une mosaïque a des trous à
-l'INTÉRIEUR de son emprise (mesuré : 3 tuiles sur 64 sans pixel opaque sur Olympus Mons) : une tuile
+(`regionalMaxLevel`) : une région n'annonce que ce que sa grille porte. Une mosaïque a des trous à
+l'INTÉRIEUR de son emprise (mesuré sur une section de CTX d'Olympus Mons : 3 tuiles sur 64 sans pixel opaque) : une tuile
 PNG 404 ou dont un pixel n'est pas opaque (`hasHoles`, vérifié une fois au décodage) est remplacée par
 l'image de la base, mémorisée (`_unserved`) pour n'être pas redemandée ; un échec réseau (503, coupure)
 n'est PAS un manque et se retient comme avant. Les bornes d'acquisition d'une mosaïque sont des
@@ -5405,7 +5401,8 @@ INTERVALLES (ses images les plus anciennes et les plus récentes), jamais une da
 carreau pose, en même temps que son image, ce qu'il montre vraiment (`_served` : la région qui l'a
 servi ou la base, et le niveau de la DONNÉE : un carreau de niveau 13 dont la région a répondu 404
 montre un morceau de l'image du niveau 8). `_shownUnder` lit le carreau peint le plus fin sous la
-visée : le bandeau nomme cette source et annonce ce niveau, le plancher autorise UN niveau de plus
+visée, en partant du niveau le plus fin que le jeu et ses régions déclarent et non du niveau voulu (au
+dézoom, un carreau fin encore à l'écran faute de remplaçant reste l'image annoncée) : le bandeau nomme cette source et annonce ce niveau, le plancher autorise UN niveau de plus
 que le niveau régional peint (contrat progressif) et ne se relâche pas parce que la sélection
 subdivise alors que la source fine manque (404, trou, attente, 503). Il ne se referme jamais d'un
 coup : un niveau fin qui disparaît un instant est gardé, et la sortie de la couverture le relève
@@ -5413,21 +5410,29 @@ d'un niveau toutes les 600 ms, sans repousser la caméra de seize fois sa hauteu
 obsolète (carreau abandonné, corps quitté) ne marque aucun manque ; `_unserved` est borné comme
 `_failed`. Sans `OffscreenCanvas`, le détecteur de trous lit un canevas du document ; sans contexte
 2D, aucun trou n'est signalé (limite : un trou sera alors peint en noir). Gardes :
-`PlanetarySurfaceEngine.provenance.test.ts` (falsifiée), `e2e/regionalNac.spec.ts` (VRAI PNG à un
-pixel transparent, 404, attente, titres WAC/NAC/Viking/CTX, containment complet de l'emprise).
+`PlanetarySurfaceEngine.provenance.test.ts` (falsifiée ; dézoom, retour après indisponibilité, sortie
+de couverture), `e2e/regionalImagery.spec.ts` (sortie de la couverture de l'IGN par navigation de Paris
+à Londres, la recherche menant la caméra).
 **La sélection mesure la distance au SOL**, pas à la sphère moyenne : sur Olympus Mons (sol à
 19,9 km de la sphère) la caméra à 7,5 km du sol se croyait à 27 km et ne subdivisait pas au-delà du
 niveau 11. L'altitude est celle du relief posé sous le point de CHAQUE nœud quand sa tuile de hauteurs
 est chargée, à défaut celle du sol sous la visée, à défaut aucune (`PlanetarySurfaceEngine.ground.test.ts`).
-**Droits des mosaïques de Trek (lus le 2026-11-20, non tranchés)** : les conditions LROC déclarent
-publiques les données du PDS et protégées celles du site LROC, sans nommer les mosaïques de Trek ; la
-mosaïque d'Apollo 11 est un traitement ISIS3 de Trek (NAC rééquilibrées), la CTX d'Olympus Mons est
-une section bêta préliminaire du Murray Lab (Caltech, Photoshop), qui demande de remercier MSSS et JPL.
-Aucune des deux n'énonce de licence : les fiches portent `license: other` avec le lien des
-conditions lues, jamais un domaine public déduit de l'hébergeur. Une imagerie plus fine n'est PAS un éclairage assisté :
+**Aucune imagerie régionale de la Lune ni de Mars n'est livrée (2026-11-20).** Deux candidates ont été
+construites sur la chaîne ci-dessus (la NAC d'Apollo 11 et la CTX d'Olympus Mons, hébergées par
+NASA Trek) puis RETIRÉES du catalogue : aucune n'a de droits établis. Les conditions LROC déclarent
+publiques les données du PDS et protégées celles du site, sans nommer les mosaïques de Trek ; la
+CTX d'Olympus Mons est une section préliminaire du Murray Lab, distincte des versions V01 et Beta01
+dont le laboratoire accorde l'usage libre « pour tous usages » avec le crédit NASA/JPL/MSSS/The Murray
+Lab. Ces deux versions sont servies en tuiles par Esri (`astro.arcgis.com`, 512 px, 5 m au niveau 12,
+sans clé), mais la FAQ d'Esri réserve ces services à un logiciel Esri ou à un abonnement et interdit
+de les auto-héberger : l'usage par une application tierce n'est pas établi. Côté Lune, la NAC
+`NAC_ROI_APOLLO11LOA` est au PDS (IMG de 2,06 Go à 0,52 m/px, version à 5 m de 22,8 Mo) sans service de
+tuiles. Le travail est conservé dans la branche `gal-immersion-003b-research-trek`. Le moteur, lui, est
+livré et testé avec des sources fictives. Un champ `rights: notice` d'une fiche de jeu de tuiles
+exprime une autorisation d'usage explicite qui n'est pas le domaine public (jamais un CC0 ni un
+identifiant SPDX inventé). Une imagerie plus fine n'est PAS un éclairage assisté :
 l'éclairage de lecture reste un réglage à part. Garde : `PlanetarySurfaceEngine.regional.test.ts`,
-`regionalImagery.bbox.test.ts`, `e2e/regionalNac.spec.ts`.
-
+`regionalImagery.bbox.test.ts`.
 
 **Le ciel n'est plus une cubemap (2026-10-18).** Posée en `scene.background`, l'image équirectangulaire
 des étoiles était convertie par Three.js en une cubemap dont chaque face mesure la HAUTEUR de
@@ -5472,10 +5477,10 @@ qu'au palier « high » : `low` et `medium` plafonnent à 2k (`core/qualityTier.
 ne les charge jamais. Encodées par `ktx create` (KTX-Software 4.4.2) et relues par le transcodeur de
 three, contre la source :
 
-| Carte 8k | JPEG livré | UASTC + zstd | ETC1S |
-|---|---|---|---|
-| Couleur | 3,5 Mo, 171 Mio GPU | 15,2 Mo (× 4,3), 47,3 dB, ~43 Mio GPU | 2,8 Mo, 34,5 dB (écart jusqu'à 156/255) |
-| Normales | 10,7 Mo, 171 Mio GPU | 36,8 Mo (× 3,4), 34,4 dB | inutilisable |
+| Carte 8k | JPEG livré           | UASTC + zstd                          | ETC1S                                   |
+| -------- | -------------------- | ------------------------------------- | --------------------------------------- |
+| Couleur  | 3,5 Mo, 171 Mio GPU  | 15,2 Mo (× 4,3), 47,3 dB, ~43 Mio GPU | 2,8 Mo, 34,5 dB (écart jusqu'à 156/255) |
+| Normales | 10,7 Mo, 171 Mio GPU | 36,8 Mo (× 3,4), 34,4 dB              | inutilisable                            |
 
 Sur le seul palier où le gain existe, il coûte quatre fois les octets d'une carte couleur ou une
 perte visible de près. **Ce qui rouvrirait la question** : un palier « high » servi à une machine
@@ -5497,23 +5502,23 @@ prouvé ici une quatrième fois.
 
 Les six pièces, dans l'ordre où une fiche les traverse :
 
-| Pièce | Rôle |
-|---|---|
-| `src/registry/tours/*.json` | la visite : un titre, une suite d'étapes |
-| `src/registry/schema/tour.ts` | le schéma Zod, SEULE déclaration de la forme ; `tour.schema.json` en est généré par `pnpm schema:generate` et comparé octet pour octet |
-| `src/registry/tours/index.ts` | l'ordre (`TOUR_ORDER`) et la conversion pure d'une fiche en script ; AUCUN glob |
-| `src/registry/tours/lazy.ts` | le chargeur différé : un `import()` par fiche, seul chemin de l'application vers le contenu d'une visite |
-| `src/registry/tours/all.ts`, `src/config/tourScripts.ts` | la lecture EXHAUSTIVE (glob), build et tests seulement : jamais importée par le démarrage |
-| `src/config/tourEvents.ts` | la résolution d'un événement (`resolveEventDate`) |
-| `src/core/tourEngine.ts` | le séquenceur PUR qui exécute les étapes |
-| `src/ui/tourPlayer.ts` | la carte, le sélecteur, le focus, la localisation |
+| Pièce                                                    | Rôle                                                                                                                                   |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/registry/tours/*.json`                              | la visite : un titre, une suite d'étapes                                                                                               |
+| `src/registry/schema/tour.ts`                            | le schéma Zod, SEULE déclaration de la forme ; `tour.schema.json` en est généré par `pnpm schema:generate` et comparé octet pour octet |
+| `src/registry/tours/index.ts`                            | l'ordre (`TOUR_ORDER`) et la conversion pure d'une fiche en script ; AUCUN glob                                                        |
+| `src/registry/tours/lazy.ts`                             | le chargeur différé : un `import()` par fiche, seul chemin de l'application vers le contenu d'une visite                               |
+| `src/registry/tours/all.ts`, `src/config/tourScripts.ts` | la lecture EXHAUSTIVE (glob), build et tests seulement : jamais importée par le démarrage                                              |
+| `src/config/tourEvents.ts`                               | la résolution d'un événement (`resolveEventDate`)                                                                                      |
+| `src/core/tourEngine.ts`                                 | le séquenceur PUR qui exécute les étapes                                                                                               |
+| `src/ui/tourPlayer.ts`                                   | la carte, le sélecteur, le focus, la localisation                                                                                      |
 
 ## Les noms de la surface viennent de l'UAI, et arrivent à l'approche
 
 Trente-six corps du catalogue portent des formations nommées, dont 9 087 pour la seule Lune ; le
 total se lit dans `src/config/gazetteerIndex.json` (15 920 au 2026-09-30, après le retrait de douze
-doublons que l'UAI publie elle-même, cf. ci-dessous). La seule autorité qui nomme une formation planétaire est le *Working Group for
-Planetary System Nomenclature* de l'UAI, et son Gazetteer publie chaque nuit, par corps, un KMZ
+doublons que l'UAI publie elle-même, cf. ci-dessous). La seule autorité qui nomme une formation planétaire est le _Working Group for
+Planetary System Nomenclature_ de l'UAI, et son Gazetteer publie chaque nuit, par corps, un KMZ
 qui porte tout ce qu'elle a approuvé. `pnpm gazetteer:generate` le lit ; rien n'est saisi à la
 main, et surtout pas une étymologie.
 
@@ -5560,17 +5565,17 @@ Une fiche ne porte aucune expression : elle choisit parmi neuf formes nommées, 
 formes déclarées du registre d'entités (`{"$deg": …}`). C'est cette fermeture qui permet à la
 donnée de décrire un comportement sans devenir du code.
 
-| Forme | Effet |
-|---|---|
-| `flyTo` | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` ; avec `from`, la regarde ensuite DEPUIS un autre corps (lot 57) ; avec `side`, de PROFIL par rapport à un corps (lot 58, § « Les activités pour la classe ») ; `distanceRadii` (1,5 à 60 rayons de la cible, 2026-10-28) pose la distance d'arrivée APRÈS le cadrage (`CameraSystem.viewAtRadii`, même nombre en Éduc et en Explo) |
-| `jumpToDate` | saute à une date déclarée, `{"$date": "…Z"}` |
-| `jumpToEvent` | saute à la prochaine occurrence RÉELLE d'un événement, depuis la date courante |
-| `setTimeScale` | accélère (ou renverse) le temps, plafonné à ce que le curseur sait représenter |
-| `setMode` | bascule l'échelle, `educ` ou `explo` (lot 35) |
-| `diveTo` | plonge sur un lieu NOMMÉ du corps suivi, cadré sur `frameKm` (lot 63, § « La visite qui montre un lieu à deux dates ») |
-| `setSurface` | choisit le fond d'imagerie du sol, un des `SURFACE_CHOICES` ; la visite rend le fond de DÉPART |
-| `caption` | une légende localisée ; sans `durationMs` elle attend un geste |
-| `wait` | laisse la scène tourner |
+| Forme          | Effet                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flyTo`        | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` ; avec `from`, la regarde ensuite DEPUIS un autre corps (lot 57) ; avec `side`, de PROFIL par rapport à un corps (lot 58, § « Les activités pour la classe ») ; `distanceRadii` (1,5 à 60 rayons de la cible, 2026-10-28) pose la distance d'arrivée APRÈS le cadrage (`CameraSystem.viewAtRadii`, même nombre en Éduc et en Explo) |
+| `jumpToDate`   | saute à une date déclarée, `{"$date": "…Z"}`                                                                                                                                                                                                                                                                                                                                                                     |
+| `jumpToEvent`  | saute à la prochaine occurrence RÉELLE d'un événement, depuis la date courante                                                                                                                                                                                                                                                                                                                                   |
+| `setTimeScale` | accélère (ou renverse) le temps, plafonné à ce que le curseur sait représenter                                                                                                                                                                                                                                                                                                                                   |
+| `setMode`      | bascule l'échelle, `educ` ou `explo` (lot 35)                                                                                                                                                                                                                                                                                                                                                                    |
+| `diveTo`       | plonge sur un lieu NOMMÉ du corps suivi, cadré sur `frameKm` (lot 63, § « La visite qui montre un lieu à deux dates »)                                                                                                                                                                                                                                                                                           |
+| `setSurface`   | choisit le fond d'imagerie du sol, un des `SURFACE_CHOICES` ; la visite rend le fond de DÉPART                                                                                                                                                                                                                                                                                                                   |
+| `caption`      | une légende localisée ; sans `durationMs` elle attend un geste                                                                                                                                                                                                                                                                                                                                                   |
+| `wait`         | laisse la scène tourner                                                                                                                                                                                                                                                                                                                                                                                          |
 
 **`setMode` est la seule forme ajoutée depuis le lot 21**, et elle suit le patron de `flyTo` :
 l'hôte agit, puis le moteur attend un FAIT (`isMorphing`), jamais une durée. Recopier
@@ -5843,11 +5848,11 @@ Arrokoth, Didymos, Lutetia, Gaspra, Mathilde, Steins, les Troyens de Lucy.
 
 ### Zéro octet au démarrage, mesuré
 
-| | |
-|---|---|
-| Index (`src/config/missionIndex.json`) | morceau séparé, **hors** clôture de démarrage (`NON_BOOT_CHUNKS`) |
-| Listes (`public/assets/missions/{corps}.json`) | 48 fichiers, servis à l'ouverture d'une fiche |
-| Adresse | **ABSOLUE**, parce que le corps est porté par le CHEMIN de l'URL |
+|                                                |                                                                   |
+| ---------------------------------------------- | ----------------------------------------------------------------- |
+| Index (`src/config/missionIndex.json`)         | morceau séparé, **hors** clôture de démarrage (`NON_BOOT_CHUNKS`) |
+| Listes (`public/assets/missions/{corps}.json`) | 48 fichiers, servis à l'ouverture d'une fiche                     |
+| Adresse                                        | **ABSOLUE**, parce que le corps est porté par le CHEMIN de l'URL  |
 
 Un corps que l'index donne à zéro ne déclenche **aucune** requête : son fichier n'existe pas, et
 demander pour recevoir un 404 serait une requête de trop. L'adresse absolue n'est pas un détail :
@@ -6091,12 +6096,12 @@ vision décrivait cette timeline comme une recherche par corps, chaque phrase de
 La mesure du 2026-10-01 a trouvé que la découverte est DÉCLARÉE, champ par champ, par trois
 sources primaires dont deux étaient déjà des sources du dépôt :
 
-| Source | Ce qu'elle déclare | Corps couverts |
-|---|---|---|
-| JPL SSD, *Planetary Satellite Discovery Circumstances* | année, découvreurs, référence UAI, pour **chaque** satellite reconnu | les 30 lunes du catalogue hors la Lune, et les 460 satellites des six systèmes |
-| JPL SBDB, `discovery=1` | jour, découvreurs, lieu | les 19 petits corps |
-| JPL SBDB, `sat=1` (pas 2, ci-dessous) | année de découverte, référence, confirmation, par satellite | les petits corps qui ont une lune hors de la table du JPL (sept au 2026-10-02 ; la liste se lit dans `pnpm inventory:gaps`) |
-| NSSDCA, fiches planétaires | `Discoverer`, `Discovery Date` | Uranus, Neptune, Pluton ; « Prehistoric » pour les cinq planètes visibles à l'œil nu |
+| Source                                                 | Ce qu'elle déclare                                                   | Corps couverts                                                                                                              |
+| ------------------------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| JPL SSD, _Planetary Satellite Discovery Circumstances_ | année, découvreurs, référence UAI, pour **chaque** satellite reconnu | les 30 lunes du catalogue hors la Lune, et les 460 satellites des six systèmes                                              |
+| JPL SBDB, `discovery=1`                                | jour, découvreurs, lieu                                              | les 19 petits corps                                                                                                         |
+| JPL SBDB, `sat=1` (pas 2, ci-dessous)                  | année de découverte, référence, confirmation, par satellite          | les petits corps qui ont une lune hors de la table du JPL (sept au 2026-10-02 ; la liste se lit dans `pnpm inventory:gaps`) |
+| NSSDCA, fiches planétaires                             | `Discoverer`, `Discovery Date`                                       | Uranus, Neptune, Pluton ; « Prehistoric » pour les cinq planètes visibles à l'œil nu                                        |
 
 Deux affirmations qu'aucune table ne déclare sont **citées mot pour mot** et retrouvées dans la
 page servie à chaque génération, sans quoi le générateur échoue : la Lune (JPL, « known to mankind
@@ -6152,11 +6157,11 @@ publie sous forme de table.
 
 ### Rien au démarrage, et le lot a fait de la place
 
-| | |
-|---|---|
-| Index (`src/config/discoveryIndex.json`) | morceau séparé, **hors** clôture de démarrage (`NON_BOOT_CHUNKS`) |
-| Satellites (`public/assets/discovery/{parent}.json`) | 6 fichiers, servis à l'ouverture de la fiche du parent |
-| Adresse | **ABSOLUE**, pour la raison du lot 37 ; `e2e/discovery.spec.ts` boote par le CHEMIN (`/jupiter/`), la seule forme sous laquelle une adresse relative casserait, et rougit si on la rend relative (falsifié) |
+|                                                      |                                                                                                                                                                                                             |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Index (`src/config/discoveryIndex.json`)             | morceau séparé, **hors** clôture de démarrage (`NON_BOOT_CHUNKS`)                                                                                                                                           |
+| Satellites (`public/assets/discovery/{parent}.json`) | 6 fichiers, servis à l'ouverture de la fiche du parent                                                                                                                                                      |
+| Adresse                                              | **ABSOLUE**, pour la raison du lot 37 ; `e2e/discovery.spec.ts` boote par le CHEMIN (`/jupiter/`), la seule forme sous laquelle une adresse relative casserait, et rougit si on la rend relative (falsifié) |
 
 **LES QUATRE BLOCS DE FICHE SONT SORTIS DU DÉMARRAGE.** Le lot 43 avait laissé 22 063 octets de
 marge au budget JavaScript, et le bloc « Découverte » en coûtait environ huit mille. Or les blocs
@@ -6287,7 +6292,7 @@ La fiche de Vénus dit, selon la date de la scène, qu'un possible satellite ava
 du 15 juin 2009, qu'une recherche n'en a trouvé aucun jusqu'à environ 0,3 km de rayon.
 
 **UNE SEULE SOURCE PRIMAIRE RACONTE L'HISTOIRE ET SA RÉFUTATION, EN TEXTE LISIBLE** : Sheppard et
-Trujillo, *A Survey for Satellites of Venus* (arXiv 0906.2781). Le générateur lit son PDF par
+Trujillo, _A Survey for Satellites of Venus_ (arXiv 0906.2781). Le générateur lit son PDF par
 `pdftotext`, avec la méthode et le cache du relevé des faits, et exige que chaque citation y soit
 retrouvée MOT POUR MOT, puis que l'année, les noms et le rayon affichés figurent DANS ces
 citations. La date de la non-détection est celle du dépôt sur arXiv, LUE sur la page de l'article,

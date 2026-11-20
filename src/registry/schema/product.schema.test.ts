@@ -167,3 +167,41 @@ describe('le schéma des produits refuse', () => {
     ).toBe(false);
   });
 });
+
+describe('le schéma d’un jeu de tuiles et les droits (GAL-IMMERSION-003B-UNBLOCK)', () => {
+  const base = JSON.parse(
+    readFileSync(
+      join(PRODUCTS, 'tilesets/moon-lroc-wac-global-303ppd-v02.json'),
+      'utf8'
+    )
+  ) as Record<string, unknown>;
+  const authorised = {
+    ...base,
+    license: 'other',
+    rights: 'notice',
+    links: [
+      ...(base['links'] as Array<{ rel: string; href: string }>).filter(
+        (l) => l.rel !== 'license'
+      ),
+      { rel: 'license', href: 'https://example.org/free-use' },
+    ],
+    providers: [
+      { name: 'NASA/JPL/Exemple, The Lab', roles: ['licensor'] },
+      { name: 'Un hébergeur', roles: ['host'] },
+    ],
+  };
+
+  it('accepte une autorisation d’usage explicite qui n’est pas le domaine public', () => {
+    expect(productSchema.safeParse(authorised).success).toBe(true);
+  });
+
+  it.each([
+    ['une autorisation sans fournisseur qui l’accorde', { ...authorised, providers: [{ name: 'Un hébergeur', roles: ['host'] }] }], // prettier-ignore
+    ['une autorisation sans lien de licence', { ...authorised, links: (authorised.links as Array<{ rel: string }>).filter((l) => l.rel !== 'license') }], // prettier-ignore
+    ['« other » sans dire pourquoi', { ...authorised, rights: undefined }],
+    ['une raison de droits à côté d’une licence SPDX', { ...authorised, license: 'CC-BY-4.0' }], // prettier-ignore
+    ['un domaine public déduit sans le dire (valeur inventée)', { ...authorised, rights: 'cc0' }], // prettier-ignore
+  ])('%s', (_label, record) => {
+    expect(productSchema.safeParse(record).success).toBe(false);
+  });
+});

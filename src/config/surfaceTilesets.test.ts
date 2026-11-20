@@ -815,7 +815,9 @@ describe('imageries régionales (lot 53, pas 4)', () => {
     const declared = [...REGIONAL_TILESETS.values()]
       .flat()
       .filter((entry) => 'bbox' in entry.source.coverage);
-    expect(declared.length).toBeGreaterThan(0);
+    // Aucune imagerie à emprise n'est livrée à ce jour (GAL-IMMERSION-003B-UNBLOCK : droits non
+    // établis) ; la garde vaut pour celles qui viendront, la fiche fictive de la couverture
+    // régionale étant testée dans `regionalImagery.bbox.test.ts`.
     for (const { tileset, source } of declared) {
       expect(isWms(tileset.service.template), tileset.id).toBe(false);
       const base = SURFACE_TILESETS.get(tileset.body)!;

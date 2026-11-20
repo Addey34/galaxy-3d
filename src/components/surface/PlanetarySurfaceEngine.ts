@@ -1065,9 +1065,14 @@ export class PlanetarySurfaceEngine {
   }
 
   /**
-   * Ce que montre RÉELLEMENT l'image sous la visée : le carreau peint le plus fin de la
-   * génération courante qui contient le point visé, en remontant de `fromLevel` vers le niveau
-   * minimal. `null` si rien n'est peint là.
+   * Ce que montre RÉELLEMENT l'image sous la visée : le carreau peint, VISIBLE et le plus fin de
+   * la génération courante qui contient le point visé, du niveau le plus fin que le jeu et ses
+   * régions déclarent vers le niveau minimal. `null` si rien n'est peint là.
+   *
+   * On ne part PAS du niveau voulu `fromLevel` : au dézoom, les carreaux fins restent à l'écran
+   * (ils couvrent du sol voulu pas encore peint) alors que le niveau voulu a baissé, et les
+   * ignorer ferait annoncer une image plus grossière que celle que l'on voit
+   * (GAL-IMMERSION-003B-UNBLOCK, lot D).
    */
   private _shownUnder(
     centre: { latitudeDeg: number; longitudeDeg: number },
@@ -1075,7 +1080,13 @@ export class PlanetarySurfaceEngine {
   ): { regional: RegionalBinding | null; dataLevel: number } | null {
     const tileset = this._tileset;
     if (!tileset) return null;
-    for (let level = fromLevel; level >= tileset.minLevel; level -= 1) {
+    let finest = Math.max(fromLevel, tileset.maxLevel);
+    for (const entry of this._activeRegionals())
+      finest = Math.max(
+        finest,
+        regionalMaxLevel(tileset.matrix, entry.source.publishedPixelsPerDegree)
+      );
+    for (let level = finest; level >= tileset.minLevel; level -= 1) {
       const tile = this._tiles.get(
         this._key(
           tileIndexAt(

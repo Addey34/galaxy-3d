@@ -739,7 +739,8 @@
         "rights": {
           "type": "string",
           "enum": [
-            "public-domain"
+            "public-domain",
+            "notice"
           ]
         },
         "links": {

@@ -271,6 +271,72 @@ describe('provenance et plancher : ce qui est peint', () => {
   });
 });
 
+describe('transitions de couverture (GAL-IMMERSION-003B-UNBLOCK, lot D)', () => {
+  it('dézoom : tant que le carreau fin reste visible faute de remplaçant, le bandeau le nomme encore', async () => {
+    let hang = false;
+    const r = rig(
+      vi.fn<TileFetcher>(async () => {
+        // Après la descente, plus aucun carreau nouveau n'arrive : les fins restent seuls à l'écran.
+        if (hang) return new Promise<ImageBitmap>(() => undefined);
+        return bitmap();
+      })
+    );
+    await approach(r);
+    await vi.waitFor(() => {
+      r.step(cameraAt(1.5));
+      expect(r.engine.state?.tilesetId).toBe('region');
+    });
+    // Laisse finir les fondus : tout ce qui est peint est visible.
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    r.step(cameraAt(1.5));
+    const fineLevel = r.engine.state!.level;
+    expect(fineLevel).toBeGreaterThan(8);
+    hang = true;
+    for (let i = 0; i < 4; i += 1) {
+      r.step(cameraAt(12));
+      await settleTiles();
+    }
+    // Les carreaux fins couvrent encore le sol sous la visée : c'est CETTE image que l'on voit.
+    expect(r.engine.state?.tilesetId).toBe('region');
+    expect(r.engine.state?.level).toBeGreaterThan(8);
+    r.engine.dispose();
+  });
+
+  it('retour dans la couverture après une sortie, tuiles d’abord indisponibles : la base reste dite, puis la région revient', async () => {
+    let failing = false;
+    const r = rig(
+      vi.fn<TileFetcher>(async (url) => {
+        if (isRegion(url) && failing) throw new TileHttpError(503, url);
+        return bitmap();
+      })
+    );
+    await approach(r);
+    await vi.waitFor(() => {
+      r.step(cameraAt(1.5));
+      expect(r.engine.state?.tilesetId).toBe('region');
+    });
+    for (let i = 0; i < 6; i += 1) {
+      r.step(cameraAt(1.5, 20));
+      await settleTiles();
+    }
+    expect(r.engine.state?.tilesetId).toBe('base');
+    // Retour ailleurs dans la couverture : d'autres carreaux, que le service refuse d'abord.
+    failing = true;
+    for (let i = 0; i < 4; i += 1) {
+      r.step(cameraAt(1.5, 0.7));
+      await settleTiles();
+    }
+    expect(r.engine.state?.tilesetId).not.toBe('region');
+    failing = false;
+    r.engine.retryFailedNow();
+    await vi.waitFor(() => {
+      r.step(cameraAt(1.5, 0.7));
+      expect(r.engine.state?.tilesetId).toBe('region');
+    });
+    r.engine.dispose();
+  });
+});
+
 describe('détecteur de trous sur de vrais octets', () => {
   const rgba = (alphas: number[]): Uint8ClampedArray =>
     Uint8ClampedArray.from(alphas.flatMap((a) => [90, 90, 90, a]));

@@ -135,3 +135,93 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
     expect(east - west, url).toBeLessThanOrEqual(1.125);
   }
 });
+
+/**
+ * SORTIE DE COUVERTURE PAR NAVIGATION (GAL-IMMERSION-003B-UNBLOCK, lot D) : on descend sur Paris
+ * jusqu'à ce que le bandeau crédite l'IGN, puis on cherche Londres (hors de la France). La caméra
+ * y est menée par la recherche, un déplacement commandé et non un glissement imprécis ; le bandeau
+ * doit cesser de créditer l'IGN, et rien d'une région absente ne doit être demandé autour de Londres.
+ */
+test('leaving the IGN coverage by navigating to London: the credit moves off the IGN', async ({
+  page,
+}) => {
+  test.setTimeout(420_000);
+  const tile = (route: import('@playwright/test').Route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'image/jpeg',
+      headers: { 'access-control-allow-origin': '*' },
+      body: TILE_JPEG,
+    });
+  const ign: string[] = [];
+  await page.route('**data.geopf.fr/**', (route) => {
+    ign.push(decodeURIComponent(route.request().url()));
+    return tile(route);
+  });
+  await page.route('**gibs.earthdata.nasa.gov/**', tile);
+  await page.route('**tiles.maps.eox.at/**', tile);
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=earth&date=2024-07-01T12:00:00Z'
+  );
+  await page.locator('#settings-trigger').click();
+  await openSettingsTab(page, 'image');
+  await page.locator('#surface-earth-base').selectOption('mosaic');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#orbit-options')).toBeHidden();
+  const goTo = async (name: string) => {
+    await page.locator('#body-search-trigger').click();
+    await page.locator('#palette-input').pressSequentially(name);
+    const hit = page
+      .locator('.palette-hit[data-kind="place"]')
+      .filter({ hasText: 'Earth' })
+      .first();
+    await expect(hit).toContainText(name, { timeout: 30_000 });
+    await hit.click();
+    await expect(page.locator('canvas').first()).toHaveAttribute(
+      'data-search-focus',
+      new RegExp('^' + name + '[|]'),
+      { timeout: 60_000 }
+    );
+  };
+  await goTo('Paris');
+  const canvas = page.locator('canvas').first();
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('canvas absent');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const credit = page.locator('#surface-imagery .si-credit');
+  await expect
+    .poll(
+      async () => {
+        await page.mouse.wheel(0, -12_000);
+        return (await credit.textContent()) ?? '';
+      },
+      { timeout: 180_000, intervals: [2000] }
+    )
+    .toContain('IGN, BD ORTHO®');
+  const before = ign.length;
+  await goTo('London');
+  // La recherche ramène la caméra à une distance d'orbite : le bandeau est masqué tant qu'elle
+  // est au-dessus de la surface streamée. On redescend sur Londres, par crans, jusqu'à ce que le
+  // bandeau soit de nouveau visible : il doit alors citer la base, pas l'IGN.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const badge = page.locator('#surface-imagery');
+  await expect
+    .poll(
+      async () => {
+        await page.mouse.wheel(0, -12_000);
+        if (!(await badge.isVisible())) return 'hors surface';
+        return (await credit.textContent()) ?? '';
+      },
+      { timeout: 240_000, intervals: [2000] }
+    )
+    .toMatch(/^(?!hors surface).+/);
+  expect((await credit.textContent()) ?? '').not.toContain('IGN, BD ORTHO®');
+  await expect(badge).toBeVisible();
+  // Londres est à plus de 2° de toute tuile française servie : aucune nouvelle requête IGN ne
+  // peut viser le nord de 51,75°.
+  for (const url of ign.slice(before)) {
+    const north = Number(/BBOX=([^&]+)/.exec(url)![1]!.split(',')[2]);
+    expect(north, url).toBeLessThanOrEqual(51.75);
+  }
+});
