@@ -101,7 +101,7 @@ test('un chargement refusé ne casse pas la plongée et la suivante réessaie', 
   const name = await diveByTapping(page, (x, y) => page.mouse.click(x, y));
   await expect(page.locator('canvas').first()).toHaveAttribute(
     'data-place-dive',
-    new RegExp(`^${name}\|`)
+    new RegExp(`^${name}[|]`)
   );
   await page.waitForTimeout(1_500);
   await expect(page.locator('#formation-marker')).toHaveCount(0);
