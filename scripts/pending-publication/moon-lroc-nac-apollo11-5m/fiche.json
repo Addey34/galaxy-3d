@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../../src/registry/schema/product.schema.json",
+  "id": "moon-lroc-nac-apollo11-5m",
+  "type": "tileset",
+  "body": "moon",
+  "title": "LROC NAC controlled mosaic, Apollo 11 low Sun, 5 m (NAC_ROI_APOLLO11LOA_E004N0235_5M v1.3)",
+  "providerId": "galaxy-data-tiles",
+  "regional": true,
+  "coverage": {
+    "bbox": [23.433362, -0.030999, 23.605354, 0.914477]
+  },
+  "mission": "Lunar Reconnaissance Orbiter",
+  "instrument": "Lunar Reconnaissance Orbiter Camera, Narrow Angle Camera (NAC)",
+  "service": {
+    "template": "https://galaxy-data.adrianguichard.dev/assets/imagery/moon-lroc-nac-apollo11-5m/2a218dbaa134/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "galaxy-eq2x1",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 9,
+    "maxLevel": 13
+  },
+  "publishedPixelsPerDegree": 6064.67,
+  "acquired": {
+    "interval": [["2009-07-12T01:08:02Z", "2011-06-08T06:44:44Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://lroc.im-ldi.com/about/terms"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://galaxy.adrianguichard.dev/assets/imagery/moon-lroc-nac-apollo11-5m/manifest.json"
+    },
+    {
+      "rel": "via",
+      "href": "https://data.lroc.im-ldi.com/lroc/view_rdr_product/NAC_ROI_APOLLO11LOA_E004N0235_5M"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/BDR/NAC_ROI/APOLLO11LOA/NAC_ROI_APOLLO11LOA_E004N0235_5M.IMG"
+    },
+    {
+      "rel": "via",
+      "href": "https://www.hou.usra.edu/meetings/lpsc2014/pdf/2885.pdf"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Galaxy",
+      "roles": ["host"],
+      "url": "https://galaxy.adrianguichard.dev/"
+    },
+    {
+      "name": "NASA/GSFC/Arizona State University (LROC Science Operations Center, PDS product, controlled mosaic of Klem et al. 2014)",
+      "roles": ["producer"]
+    }
+  ],
+  "verified": "2026-11-20"
+}

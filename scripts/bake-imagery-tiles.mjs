@@ -13,6 +13,9 @@
  * tuiles AVANT de livrer un manifeste ou une fiche qui les nomme. Le chemin `default/galaxy-eq2x1/`
  * imite le WMTS RESTful, pour que la fiche et ses gardes restent celles d'un service WMTS.
  *
+ * MODE REGION (`region: true` dans la recette) : voir `bakeRegion` ; une source PDS3 flottante qui
+ * ne couvre qu'une emprise, des tuiles seulement la ou tout est valide.
+ *
  * La source est telechargee une fois dans `.cache/imagery-bake/`, sa taille CONFRONTEE a la recette
  * (un fichier remplace chez l'editeur ne se cuit pas en silence) et son SHA-256 ecrit au manifeste.
  */
@@ -30,6 +33,11 @@ import {
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import {
+  photometryStats,
+  readRegionSource,
+  resampleTile,
+} from './pds-region.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RECIPE = join(ROOT, 'scripts', 'imagery-tile-targets.json');
@@ -230,4 +238,144 @@ async function bake(id, target) {
     );
 }
 
-for (const id of ids) await bake(id, recipe.targets[id]);
+async function bakeRegion(id, target) {
+  const { source, tileSizePx, levels, jpegQuality, dnPerUnit } = target;
+  const file = await download(source.url, source.bytes);
+  const src = readRegionSource(file, source);
+  if (src.sha256 !== source.sha256)
+    throw new Error(
+      `${id} : SHA-256 ${src.sha256}, la recette attend ${source.sha256}`
+    );
+  const staging = join(TILE_OUT, id, '.baking');
+  rmSync(staging, { recursive: true, force: true });
+  const hash = createHash('sha256');
+  const perLevel = {};
+  const objects = [];
+  let tileCount = 0;
+  let totalBytes = 0;
+  const lonEast = src.lonWest + (src.width - 1) / src.pixelsPerDegreeLon;
+  const latSouth = src.latTop - (src.height - 1) / src.pixelsPerDegree;
+  for (const level of levels) {
+    const tileDeg = 180 / 2 ** level;
+    const column0 = Math.floor((src.lonWest + 180) / tileDeg);
+    const column1 = Math.floor((lonEast + 180) / tileDeg);
+    const row0 = Math.floor((90 - src.latTop) / tileDeg);
+    const row1 = Math.floor((90 - latSouth) / tileDeg);
+    perLevel[level] = { written: 0, skipped: 0 };
+    for (let row = row0; row <= row1; row++)
+      for (let column = column0; column <= column1; column++) {
+        const gray = resampleTile(
+          src,
+          level,
+          row,
+          column,
+          tileSizePx,
+          dnPerUnit
+        );
+        if (!gray) {
+          perLevel[level].skipped += 1;
+          continue;
+        }
+        const jpeg = await sharp(gray, {
+          raw: { width: tileSizePx, height: tileSizePx, channels: 1 },
+        })
+          .jpeg({ quality: jpegQuality, mozjpeg: true })
+          .toBuffer();
+        const rel = `${TILE_PATH}/${level}/${row}/${column}.jpg`;
+        if (!DRY_RUN) {
+          const path = join(staging, rel);
+          mkdirSync(dirname(path), { recursive: true });
+          writeFileSync(path, jpeg);
+        }
+        hash.update(rel).update(jpeg);
+        objects.push({
+          path: rel,
+          bytes: jpeg.length,
+          sha256: createHash('sha256').update(jpeg).digest('hex'),
+        });
+        perLevel[level].written += 1;
+        tileCount++;
+        totalBytes += jpeg.length;
+      }
+    console.log(`${id} niveau ${level} : ${JSON.stringify(perLevel[level])}`);
+  }
+  const digest = hash.digest('hex').slice(0, 12);
+  const halfLon = 0.5 / src.pixelsPerDegreeLon;
+  const halfLat = 0.5 / src.pixelsPerDegree;
+  const manifest = {
+    id,
+    body: target.body,
+    source: {
+      url: source.url,
+      bytes: src.bytes,
+      sha256: src.sha256,
+      width: src.width,
+      height: src.height,
+      channels: 1,
+      format: 'PDS3 PC_REAL 32 bits',
+      productId: src.label.productId,
+      productVersion: src.label.version,
+      productCreated: src.label.created,
+      pixelsPerDegree: src.pixelsPerDegree,
+      standardParallel: src.label.standardParallel,
+      centerLongitude: src.label.centerLongitude,
+      radiusKm: src.radiusKm,
+      georeferenceDeviationDeg: src.deviations,
+    },
+    region: {
+      bbox: [
+        src.lonWest - halfLon,
+        latSouth - halfLat,
+        lonEast + halfLon,
+        src.latTop + halfLat,
+      ],
+      levels,
+      dnPerUnit,
+      toneMatch: target.toneMatch,
+      photometry: photometryStats(src, dnPerUnit),
+      tilesPerLevel: perLevel,
+    },
+    matrix: { columnsAtLevelZero: 2, rowsAtLevelZero: 1, tileSizePx },
+    minLevel: Math.min(...levels),
+    maxLevel: Math.max(...levels),
+    format: 'image/jpeg',
+    jpegQuality,
+    path: TILE_PATH,
+    hash: digest,
+    tileCount,
+    totalBytes,
+  };
+  if (DRY_RUN) {
+    console.log(JSON.stringify(manifest, null, 2));
+    return;
+  }
+  const final = join(TILE_OUT, id, digest);
+  rmSync(final, { recursive: true, force: true });
+  renameSync(staging, final);
+  // Un jeu `pending` n'est PAS livré : manifeste et inventaire des objets restent à côté de sa fiche
+  // (`scripts/pending-publication/<id>/`), hors de ce que l'application charge et de `public/`.
+  const manifestDir = target.pending
+    ? join(ROOT, 'scripts', 'pending-publication', id)
+    : join(MANIFEST_OUT, id);
+  mkdirSync(manifestDir, { recursive: true });
+  writeFileSync(
+    join(manifestDir, 'manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}
+`
+  );
+  if (target.pending)
+    writeFileSync(
+      join(manifestDir, 'objects.json'),
+      `${JSON.stringify({ id, hash: digest, root: `assets/imagery/${id}/${digest}`, count: objects.length, totalBytes, objects }, null, 1)}
+`
+    );
+  console.log(
+    `${id} : ${tileCount} tuiles, ${totalBytes} octets, hachage ${digest} -> ${final}`
+  );
+}
+
+for (const id of ids) {
+  const target = recipe.targets[id];
+  if (target.region) await bakeRegion(id, target);
+  else await bake(id, target);
+}

@@ -337,6 +337,31 @@ describe('transitions de couverture (GAL-IMMERSION-003B-UNBLOCK, lot D)', () => 
   });
 });
 
+describe('région plus étroite que les tuiles qui suivent la base (GAL-IMMERSION-003B-PDS-001)', () => {
+  it('le plancher s’ouvre jusqu’au premier niveau que la région sert, pas seulement un niveau après la base', async () => {
+    // Emprise de 0,18 degré : aucune tuile des niveaux 9 et 10 (0,35 et 0,18 degré) n'y tient, les
+    // premières tuiles servies sont celles du niveau 11 (0,088 degré).
+    // Les tuiles de la région ne sont pas encore peintes (en vol) : le plancher ne doit pas dépendre
+    // d'un niveau régional que la région n'a, par construction, aucune tuile pour porter.
+    const r = rig(
+      vi.fn<TileFetcher>((url) =>
+        isRegion(url)
+          ? new Promise<ImageBitmap>(() => undefined)
+          : Promise.resolve(bitmap())
+      ),
+      [region([-0.09, -0.09, 0.09, 0.09])],
+      () => false
+    );
+    await approach(r);
+    for (let i = 0; i < 6; i += 1) {
+      r.step(cameraAt(1.5));
+      await settleTiles();
+    }
+    expect(Math.max(...r.widths)).toBe(widthOf(11));
+    r.engine.dispose();
+  });
+});
+
 describe('détecteur de trous sur de vrais octets', () => {
   const rgba = (alphas: number[]): Uint8ClampedArray =>
     Uint8ClampedArray.from(alphas.flatMap((a) => [90, 90, 90, a]));

@@ -5417,6 +5417,34 @@ de couverture), `e2e/regionalImagery.spec.ts` (sortie de la couverture de l'IGN 
 19,9 km de la sphère) la caméra à 7,5 km du sol se croyait à 27 km et ne subdivisait pas au-delà du
 niveau 11. L'altitude est celle du relief posé sous le point de CHAQUE nœud quand sa tuile de hauteurs
 est chargée, à défaut celle du sol sous la visée, à défaut aucune (`PlanetarySurfaceEngine.ground.test.ts`).
+**Une région PDS cuite par nous (GAL-IMMERSION-003B-PDS-001 et -002, préparée, NON activée, 2026-11-20).** La
+mosaïque contrôlée `NAC_ROI_APOLLO11LOA_E004N0235_5M` (PDS, version v1.3, 5 m/px, flottant 32 bits)
+est HAUTE et ÉTROITE : 1 043 échantillons (est-ouest) sur 5 734 lignes (nord-sud), soit 5,2 km sur
+28,7 km, équirectangulaire planétocentrique sur sphère de 1 737,4 km (jamais « 20 x 100 km »). Elle se cuit par
+`node scripts/bake-imagery-tiles.mjs --only moon-lroc-nac-apollo11-5m` (mode `region` du même cuiseur,
+code pur dans `scripts/pds-region.mjs`, jamais une seconde chaîne). La géométrie est lue à l'étiquette de
+l'IMG, confrontée à ses emprises (écart sous un pixel) ; `sourceCoordinates` est la seule fonction qui relie
+géographie et indices du tableau (ligne 0 = nord, échantillon 0 = ouest ; garde
+`src/config/pdsRegionGeoreference.test.ts`, falsifiée : transposition, nord inversé, décalage). Un
+décalage de longitude d'environ un pixel (5 m) reste possible, l'étiquette ne le tranchant pas.
+La réflectance devient 8 bits à 9 500 niveaux par unité : facteur apparié à la moyenne de la WAC v02 sur 18 992
+échantillons communs, une continuité visuelle, pas un étalonnage (la corrélation est de 0,21). Le maximum de la
+source (0,054) vaut 513 niveaux et est ÉCRÊTÉ à 255 ; la mesure (manifeste, `region.photometry`) donne
+0,010 % des échantillons valides écrêtés (579 sur 5,54 millions, le 99,99e centile vaut 256) et 2,09 % à zéro
+(réflectance nulle ou négative : bruit et ombre). Les 442 835 échantillons nuls de la source ne sont JAMAIS
+encodés : une tuile qui en touche un est omise (404, repli sur la base), les noirs écrits sont donc de
+vraies mesures. Seules les tuiles de la grille de la base entièrement valides sont écrites (niveaux 11 à 13,
+334 tuiles, 5 063 008 o). Les données PDS sont dans le domaine public (conditions de LROC lues le 2026-11-20),
+crédit NASA/GSFC/Arizona State University.
+
+**Préparé n'est pas activé.** Un jeu `pending` de la recette vit dans `scripts/pending-publication/<id>/`
+(`fiche.json`, `manifest.json`, `objects.json` : 334 objets, taille et SHA-256 de chacun) et non dans
+`src/registry/products/tilesets/` ni `public/assets/imagery/` : l'application ne le charge pas, n'émet aucune
+requête vers des tuiles absentes, et une fusion accidentelle n'active rien. Séquence d'activation, vérifications
+et retour arrière : `scripts/pending-publication/moon-lroc-nac-apollo11-5m/PUBLICATION.md`. Le plancher
+d'approche s'ouvre jusqu'au premier niveau que la région sert sous la visée (une emprise plus étroite que les
+tuiles des niveaux qui suivent la base n'en sert aucune avant le niveau 11).
+
 **Aucune imagerie régionale de la Lune ni de Mars n'est livrée (2026-11-20).** Deux candidates ont été
 construites sur la chaîne ci-dessus (la NAC d'Apollo 11 et la CTX d'Olympus Mons, hébergées par
 NASA Trek) puis RETIRÉES du catalogue : aucune n'a de droits établis. Les conditions LROC déclarent
