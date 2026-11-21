@@ -23,6 +23,7 @@ import {
  * livrés (toujours exécutés), puis l'IMG réel quand `.cache/imagery-bake/` le contient.
  */
 const ROOT = resolve(import.meta.dirname, '../..');
+// Inventaire des 334 objets hébergés (le manifeste, lui, est livré sous `public/`).
 const PENDING = resolve(
   ROOT,
   'scripts/pending-publication/moon-lroc-nac-apollo11-5m'
@@ -196,7 +197,13 @@ describe('source synthétique : chaque valeur encode sa position', () => {
 
 describe('manifeste et inventaire livrés : la géographie du produit', () => {
   const manifest = JSON.parse(
-    readFileSync(resolve(PENDING, 'manifest.json'), 'utf8')
+    readFileSync(
+      resolve(
+        ROOT,
+        'public/assets/imagery/moon-lroc-nac-apollo11-5m/manifest.json'
+      ),
+      'utf8'
+    )
   ) as {
     source: { width: number; height: number };
     region: { bbox: [number, number, number, number] };

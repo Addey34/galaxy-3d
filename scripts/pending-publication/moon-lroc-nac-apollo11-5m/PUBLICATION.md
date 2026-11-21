@@ -1,6 +1,6 @@
 # Publication de `moon-lroc-nac-apollo11-5m` (préparée, non exécutée)
 
-Statut : **cuit en local, non téléversé, non activé.** Rien dans ce dossier n'est lu par l'application.
+Statut (2026-11-21) : **tuiles hébergées (334 objets, vérifiés en volume et en HTTP), code d'activation PRÉPARÉ dans une PR Draft non fusionnée, fonctionnalité NON visible en production.** La fiche est sous `src/registry/products/tilesets/` et le manifeste sous `public/assets/imagery/` dans cette PR ; fusionner celle-ci l'active publiquement par le déploiement automatique de `main`. Ce dossier ne garde que l'inventaire `objects.json` (lu par `e2e/regionalImageryMoon.spec.ts` et `pdsRegionGeoreference.test.ts`) et ce contrat.
 
 ## Objets à publier
 
