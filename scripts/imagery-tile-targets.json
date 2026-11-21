@@ -63,8 +63,7 @@
         "samples": 18992,
         "correlation": 0.214,
         "note": "Appariement de continuité à la WAC (éclairage différent : NAC à 73 et 80 degrés d'incidence), pas un étalonnage radiométrique ; la corrélation faible ne le valide pas. Le même facteur place le 99,99e centile de la source à 255 (écrêtage mesuré au manifeste)."
-      },
-      "pending": true
+      }
     }
   }
 }

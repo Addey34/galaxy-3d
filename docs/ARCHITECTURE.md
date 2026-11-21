@@ -5437,13 +5437,17 @@ vraies mesures. Seules les tuiles de la grille de la base entièrement valides s
 334 tuiles, 5 063 008 o). Les données PDS sont dans le domaine public (conditions de LROC lues le 2026-11-20),
 crédit NASA/GSFC/Arizona State University.
 
-**Préparé n'est pas activé.** Un jeu `pending` de la recette vit dans `scripts/pending-publication/<id>/`
-(`fiche.json`, `manifest.json`, `objects.json` : 334 objets, taille et SHA-256 de chacun) et non dans
-`src/registry/products/tilesets/` ni `public/assets/imagery/` : l'application ne le charge pas, n'émet aucune
-requête vers des tuiles absentes, et une fusion accidentelle n'active rien. Séquence d'activation, vérifications
-et retour arrière : `scripts/pending-publication/moon-lroc-nac-apollo11-5m/PUBLICATION.md`. Le plancher
-d'approche s'ouvre jusqu'au premier niveau que la région sert sous la visée (une emprise plus étroite que les
-tuiles des niveaux qui suivent la base n'en sert aucune avant le niveau 11).
+**Hébergée, activation en PR (2026-11-21).** Les 334 objets (hachage `2a218dbaa134`) sont sur le service de
+données, vérifiés en volume et en HTTP. La fiche `moon-lroc-nac-apollo11-5m` et son manifeste sont livrés par
+la PR d'activation (Draft, non fusionnée au moment de l'écriture : la fonctionnalité n'est pas visible en
+production tant qu'elle ne l'est pas). Le bandeau annonce la résolution des carreaux PEINTS (niveau 11 : 10 m
+par pixel), pas les 5 m de la source ; la géométrie reste celle du relief LOLA (83 m). Le jeu n'est chargé qu'à
+la demande, par tuile, sous la visée dans l'emprise. L'inventaire des objets reste dans
+`scripts/pending-publication/moon-lroc-nac-apollo11-5m/objects.json` (contrat de publication et de retour
+arrière : `PUBLICATION.md` du même dossier) ; le scénario navigateur déterministe est
+`e2e/regionalImageryMoon.spec.ts` (service qui sert, qui n'a rien, qui est en panne). Le plancher d'approche
+s'ouvre jusqu'au premier niveau que la région sert sous la visée (une emprise plus étroite que les tuiles des
+niveaux qui suivent la base n'en sert aucune avant le niveau 11).
 
 **Aucune imagerie régionale de la Lune ni de Mars n'est livrée (2026-11-20).** Deux candidates ont été
 construites sur la chaîne ci-dessus (la NAC d'Apollo 11 et la CTX d'Olympus Mons, hébergées par
