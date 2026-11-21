@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { waitForInteractiveMainThread } from './mainThread';
 import { boot, prepareSurfacePage, TILE_JPEG } from './surfaceTiles';
 import { openSettingsTab } from './settingsTab';
 
@@ -170,6 +171,10 @@ test('leaving the IGN coverage by navigating to London: the credit moves off the
   await page.keyboard.press('Escape');
   await expect(page.locator('#orbit-options')).toBeHidden();
   const goTo = async (name: string) => {
+    // Après une descente au sol (tuiles qui se décodent, caméra en vol), le fil principal est saturé
+    // des secondes : la saisie touche par touche de `pressSequentially` (15 s d'`actionTimeout` pour
+    // six touches) expirait en CI, sur le seul second appel. On attend le signal du fil, pas une durée.
+    await waitForInteractiveMainThread(page);
     await page.locator('#body-search-trigger').click();
     await page.locator('#palette-input').pressSequentially(name);
     const hit = page
