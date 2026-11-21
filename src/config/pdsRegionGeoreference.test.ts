@@ -1,7 +1,7 @@
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import {
   photometryStats,
@@ -261,9 +261,14 @@ const IMG = resolve(
   '.cache/imagery-bake/NAC_ROI_APOLLO11LOA_E004N0235_5M.IMG'
 );
 describe.skipIf(!existsSync(IMG))('IMG réel (cache local du cuiseur)', () => {
-  const src = readRegionSource(IMG, {
-    productId: 'NAC_ROI_APOLLO11LOA_E004N0235_5M',
-    productVersion: 'v1.3',
+  // Lu dans `beforeAll` : le corps d'un `describe` s'exécute même quand la suite est ignorée, et
+  // lirait alors un fichier absent (CI propre : ENOENT). `beforeAll` ne tourne que si un test tourne.
+  let src: ReturnType<typeof readRegionSource>;
+  beforeAll(() => {
+    src = readRegionSource(IMG, {
+      productId: 'NAC_ROI_APOLLO11LOA_E004N0235_5M',
+      productVersion: 'v1.3',
+    });
   });
 
   it('1 043 échantillons x 5 734 lignes, bornes dans le pixel de celles de l’étiquette', () => {

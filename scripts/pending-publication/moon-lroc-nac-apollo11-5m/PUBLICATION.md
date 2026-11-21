@@ -27,4 +27,6 @@ Statut : **cuit en local, non téléversé, non activé.** Rien dans ce dossier 
 
 - Avant activation : rien à faire (rien n'est servi).
 - Après activation : revert de la PR d'activation. La fiche disparaît, l'application ne demande plus de tuile NAC ; les objets hachés restent inertes sur la VM (suppression facultative, sur accord).
-- Origine indisponible : une tuile en erreur retombe sur la base (404 ou 5xx) sans bloquer la scène (garde `PlanetarySurfaceEngine.provenance.test.ts`) ; les échecs sont redemandés après 8 s.
+- Deux cas distincts côté moteur (`PlanetarySurfaceEngine`) :
+  - **404** (tuile absente, ou tuile à trou) : le carreau est marqué non servi par la région et montre aussitôt un morceau de la base WAC (repli explicite). Garde : `PlanetarySurfaceEngine.provenance.test.ts`.
+  - **5xx, 429 ou coupure** (origine indisponible) : ce n'est PAS un repli. L'échec est retenu pour ne pas redemander la tuile à chaque image, puis redemandé selon `isTileRetryPending` (au plus après `FAILED_RETRY_MS`, 8 s, avec décompte d'échecs). Dans l'intervalle le carreau garde ce qui est déjà à l'écran (la base ou un niveau plus grossier) ; la continuité visuelle exacte sous 5xx n'a pas été démontrée par un test dédié pour cette région.
