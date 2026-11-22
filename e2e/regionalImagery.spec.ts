@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { waitForInteractiveMainThread } from './mainThread';
 import { boot, prepareSurfacePage, TILE_JPEG } from './surfaceTiles';
 import { openSettingsTab } from './settingsTab';
 
@@ -170,8 +171,16 @@ test('leaving the IGN coverage by navigating to London: the credit moves off the
   await page.keyboard.press('Escape');
   await expect(page.locator('#orbit-options')).toBeHidden();
   const goTo = async (name: string) => {
+    // Après une descente au sol (tuiles qui se décodent), le fil principal rend la main par à-coups
+    // de plusieurs secondes sur le coureur : la trace du run 44854202668 montre chaque action de
+    // Playwright à 2-6 s dès le début du scénario, le clic sur la recherche à 15,4 s et la frappe de
+    // « London » à 16,2 s (le champ affichait « Londo »). Deux protections, aucune durée allongée :
+    // on attend le signal du fil, et on remplit le champ en UNE action (`fill`, comme `places.spec`),
+    // car six touches successives payaient six fois cette latence pour un test qui ne vérifie pas
+    // la frappe (celle de la recherche l'est par `search.spec`).
+    await waitForInteractiveMainThread(page);
     await page.locator('#body-search-trigger').click();
-    await page.locator('#palette-input').pressSequentially(name);
+    await page.locator('#palette-input').fill(name);
     const hit = page
       .locator('.palette-hit[data-kind="place"]')
       .filter({ hasText: 'Earth' })
