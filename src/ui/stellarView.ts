@@ -24,11 +24,10 @@ import {
   type NeighbourFile,
 } from '@/core/neighbours';
 import {
-  clampMotionYears,
   distanceFromSunPc,
+  motionWindow,
   parsecsToLightYears,
   scaleRingsPc,
-  STELLAR_MOTION_LIMIT_YEARS,
   yearsFromJ2000,
 } from '@/core/stellarSpace';
 import { loadDeferredMessages } from '@/i18n/deferredMessages';
@@ -37,6 +36,11 @@ import { prefersReducedMotion } from '@/utils/reducedMotion';
 import Logger from '@/utils/Logger';
 import { getAnnouncer } from './announcer';
 import type { OverlayCoordinator } from './overlayCoordinator';
+import {
+  maskElements,
+  restoreElements,
+  type MaskedElement,
+} from './stellarMask';
 import './stellarView.css';
 
 export const NEIGHBOURS_URL = '/assets/sky/neighbours.json';
@@ -124,7 +128,7 @@ export async function setupStellarView(
     controls: OrbitControls;
     root: HTMLElement;
     cleanups: Array<() => void>;
-    inert: Element[];
+    inert: MaskedElement[];
     opener: HTMLElement | null;
     close(): void;
   }
@@ -163,6 +167,8 @@ export async function setupStellarView(
     const systems = scene.systems;
     const names = systems.map(systemName);
     const sceneYears = yearsFromJ2000(host.simulationDate());
+    // Curseur, année affichée et calcul décrivent le même instant : voir `motionWindow`.
+    const timeWindow = motionWindow(sceneYears, TIME_STEP_YEARS);
     let offsetYears = 0;
     let current = -1;
 
@@ -202,8 +208,8 @@ export async function setupStellarView(
     timeLabel.htmlFor = 'stellar-time';
     const time = el('input', 'sv-time-input', 'stellar-time');
     time.type = 'range';
-    time.min = String(-STELLAR_MOTION_LIMIT_YEARS);
-    time.max = String(STELLAR_MOTION_LIMIT_YEARS);
+    time.min = String(timeWindow.min);
+    time.max = String(timeWindow.max);
     time.step = String(TIME_STEP_YEARS);
     time.value = '0';
     const timeOut = el('output', 'sv-time-out', 'stellar-time-out');
@@ -218,7 +224,7 @@ export async function setupStellarView(
     document.body.append(root);
 
     // ---- les éléments de la scène solaire : rendus inertes et invisibles, rétablis à la fermeture
-    const inert: Element[] = [];
+    const toMask: Element[] = [];
     for (const child of Array.from(document.body.children)) {
       if (
         child === root ||
@@ -229,10 +235,10 @@ export async function setupStellarView(
         child.hasAttribute('data-stellar-hidden')
       )
         continue;
-      child.setAttribute('data-stellar-hidden', '');
-      child.setAttribute('inert', '');
-      inert.push(child);
+      toMask.push(child);
     }
+    // L'état `inert` initial de chaque élément est mémorisé et rendu tel quel (stellarMask).
+    const inert = maskElements(toMask);
     document.body.classList.add('stellar-view-active');
 
     // ---- les contrôles, sur la surface (jamais sur le canevas solaire)
@@ -367,12 +373,12 @@ export async function setupStellarView(
     };
 
     // ---- le temps : position à la date de la scène, déplacée en ligne droite
-    const yearsNow = (): number => clampMotionYears(sceneYears + offsetYears);
+    const yearsNow = (): number => timeWindow.base + offsetYears;
     function renderTime(): void {
-      const absolute = 2000 + sceneYears + offsetYears;
+      const absolute = 2000 + yearsNow();
       const sign = offsetYears > 0 ? '+' : '';
       timeOut.textContent =
-        offsetYears === 0
+        offsetYears === 0 && timeWindow.base === sceneYears
           ? t('st.timeNow')
           : t('st.timeValue', {
               years: `${sign}${new Intl.NumberFormat(getLocale()).format(offsetYears)}`,
@@ -631,10 +637,7 @@ export async function setupStellarView(
         scene.dispose();
         root.remove();
         document.body.classList.remove('stellar-view-active');
-        for (const child of inert) {
-          child.removeAttribute('data-stellar-hidden');
-          child.removeAttribute('inert');
-        }
+        restoreElements(inert);
         getAnnouncer().announce(t('st.closed'));
         // Le focus revient où il était ; à défaut, au canevas de la scène solaire.
         (opener && document.contains(opener) ? opener : canvas).focus?.();

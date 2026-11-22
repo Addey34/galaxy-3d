@@ -8062,7 +8062,10 @@ clic ; **le démarrage ne grossit que de 906 octets** (le bouton, une clé de la
   du calcul) : Barnard, la plus rapide (~90 km/s tangentiels et −110 km/s radiaux, soit ~142 km/s),
   parcourt environ 1,5 pc en 10 000 ans, un tiers du volume. Au-delà, le potentiel galactique, les
   orbites des doubles et surtout les vitesses radiales manquantes dominent : ce serait un tracé, pas une
-  position. La vue donne l'année absolue et rappelle la limite.
+  position. La vue donne l'année absolue et rappelle la limite. Le curseur compte des années
+  depuis la date de la scène, la limite est comptée depuis J2000 : `motionWindow` (`core/stellarSpace.ts`) borne le curseur
+  pour que curseur, année affichée et calcul décrivent le même instant (une scène de 2026 s'arrête à +9 900 ans, année 11 927,
+  au lieu d'afficher 12 026 pour un calcul resté à 12 000 ; qualifié 2026-11-22).
 
 **Garanties d'exactitude, tenues par des tests.** (1) Chaque étoile est à sa distance publiée du Soleil
 (norme de ses trois coordonnées, à 1e-9 pc près) ; (2) **la direction (l, b) de Proxima et de Barnard à
@@ -8098,6 +8101,14 @@ Tab vers la liste des étoiles (des boutons, `aria-pressed`) qui donne le même 
 de la scène (noms 2D) est `aria-hidden`, l'information est dans la liste et la fiche ; `prefers-reduced-motion` :
 pas d'amortissement des contrôles ; annonces par l'`aria-live` unique (ouverture, étoile choisie, retour) ;
 axe sans violation sur la vue.
+
+**Restauration du DOM et vol de caméra en cours (qualifié 2026-11-22).** Chaque élément masqué mémorise son état `inert`
+initial (`ui/stellarMask.ts`) et le retrouve à la fermeture : un élément déjà inerte le reste, les autres redeviennent
+interactifs (tests unitaire et navigateur). Ouvrir la vue PENDANT un vol de la caméra solaire : le tween appartient à
+`CameraSystem` et avance à l'horloge murale (`tweenGroup.update(performance.now())`), la vue n'y touche pas. Le test navigateur
+(`stellarView.spec.ts`, mouvement réel, ouverture constatée `data-scene-moving="1"`) montre que le vol se termine derrière la
+vue, que le corps choisi est conservé et qu'au retour la scène est calme et répond à un glissement : aucun défaut reproduit,
+`AnimationSystem` inchangé.
 
 **Défauts trouvés par les tests navigateur, corrigés.** La surface plein écran passait AU-DESSUS du bouton
 « Retour » (empilement : `z-index` explicites) ; le focus se lisait après la fermeture des Réglages donc

@@ -1,7 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
-import { clickWhenInteractive } from './mainThread';
+import {
+  clickWhenInteractive,
+  waitForInteractiveMainThread,
+} from './mainThread';
+import { useAnimatedMotion } from './motion';
 import { openSettingsTab } from './settingsTab';
 
 /**
@@ -157,6 +161,50 @@ for (const [label, viewport, hasTouch] of [
       await expect(page.locator('#palette-input')).toBeFocused();
     });
 
+    test('an element that was already inert stays inert after the view closes; the others come back interactive', async ({
+      page,
+    }) => {
+      test.setTimeout(120_000);
+      await boot(page);
+      // Un élément que la vue masquera (mêmes critères que `stellarView`), rendu inerte AVANT l'ouverture.
+      const marked = await page.evaluate(() => {
+        const canvas = document.querySelector('canvas');
+        const candidates = Array.from(document.body.children).filter(
+          (c) =>
+            c !== canvas &&
+            !/^(SCRIPT|STYLE|LINK|NOSCRIPT)$/.test(c.tagName) &&
+            !c.hasAttribute('aria-live') &&
+            !c.classList.contains('sr-only') &&
+            !c.contains(canvas) &&
+            !c.hasAttribute('inert')
+        );
+        const target = candidates[candidates.length - 1];
+        target?.setAttribute('data-test-preinert', '');
+        target?.setAttribute('inert', '');
+        return candidates.length;
+      });
+      expect(marked).toBeGreaterThan(1);
+      const interactiveBefore = await page
+        .locator('body > :not([inert])')
+        .count();
+      await openFromSettings(page);
+      await expect(page.locator('[data-test-preinert]')).toHaveAttribute(
+        'data-stellar-hidden',
+        ''
+      );
+      await page.locator('#stellar-back').click();
+      await expect(page.locator('#stellar-view')).toHaveCount(0);
+      await expect(page.locator('[data-stellar-hidden]')).toHaveCount(0);
+      // L'élément initialement inerte l'est toujours ; tous les autres sont rétablis comme avant.
+      await expect(page.locator('[data-test-preinert]')).toHaveAttribute(
+        'inert',
+        ''
+      );
+      await expect(page.locator('body > :not([inert])')).toHaveCount(
+        interactiveBefore
+      );
+    });
+
     test('opening from a star card centres the view on it, Escape returns and gives the focus back', async ({
       page,
     }) => {
@@ -200,8 +248,10 @@ for (const [label, viewport, hasTouch] of [
       };
       const now = await distanceAt();
       const slider = page.locator('#stellar-time');
+      // Scène de 2026 : la fenêtre est ±10 000 ans autour de J2000, donc le curseur (années depuis la
+      // date de la scène) s'arrête à 9 900, jamais à 10 000 (ce qui affichait 12 026 pour un calcul à 12 000).
       await expect(slider).toHaveAttribute('min', '-10000');
-      await expect(slider).toHaveAttribute('max', '10000');
+      await expect(slider).toHaveAttribute('max', '9900');
       await slider.fill('3000');
       await expect(page.locator('#stellar-time-out')).toContainText(
         '3,000 years'
@@ -210,6 +260,23 @@ for (const [label, viewport, hasTouch] of [
       await expect(page.locator('#stellar-view')).toContainText(
         'limited to 10,000 years'
       );
+    });
+
+    test('time: at both ends of the slider the year shown is the instant the positions use', async ({
+      page,
+    }) => {
+      await boot(page);
+      await openFromSettings(page);
+      const slider = page.locator('#stellar-time');
+      const out = page.locator('#stellar-time-out');
+      // La scène est au 2026-09-15 (≈ 2026,7) : fin de fenêtre = J2000 + 10 000 ans, année affichée 11 927.
+      await slider.fill('9900');
+      await expect(out).toContainText('9,900 years, year 11927');
+      await slider.fill('-10000');
+      await expect(out).toContainText('-10,000 years, year -7973');
+      // Retour à la date de la scène.
+      await slider.fill('0');
+      await expect(out).toHaveText('The scene date');
     });
   });
 }
@@ -283,4 +350,91 @@ test.describe('keyboard, languages, accessibility', () => {
         /light-years|nb\.card/
       );
     });
+});
+
+/**
+ * Ouvrir la vue pendant un vol de caméra de la scène solaire (GAL-UNIVERSE-002-RELEASE-QUAL, B).
+ * Le tween appartient à `CameraSystem` (groupe de `AnimationSystem`, avancé à l'horloge murale) : la vue
+ * ne le touche pas. On prouve que le vol se TERMINE normalement derrière la vue (le corps choisi, les
+ * contrôles solaires actifs au retour, rien de bloqué) au lieu de supposer qu'il faille le suspendre.
+ */
+test.describe('a camera flight in progress when the view opens', () => {
+  useAnimatedMotion();
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('the solar flight finishes behind the view; back in the Solar System the camera is settled and answers to a drag', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await boot(page);
+    // Chunk et données en cache : la réouverture sous le vol est ensuite immédiate.
+    await openFromSettings(page);
+    await page.locator('#stellar-back').click();
+    await expect(page.locator('#stellar-view')).toHaveCount(0);
+    await waitForInteractiveMainThread(page);
+
+    const canvas = page.locator('canvas[data-scene-moving]');
+    await page.evaluate(() => {
+      const w = window as unknown as { __movingAtOpen: string | null };
+      w.__movingAtOpen = null;
+      const c = document.querySelector('canvas[data-scene-moving]');
+      new MutationObserver((records, observer) => {
+        for (const r of records)
+          for (const n of Array.from(r.addedNodes))
+            if ((n as HTMLElement).id === 'stellar-view') {
+              w.__movingAtOpen =
+                (c as HTMLElement).dataset['sceneMoving'] ?? null;
+              observer.disconnect();
+            }
+      }).observe(document.body, { childList: true });
+    });
+    // Un vol vers Jupiter, puis, sans attendre, l'ouverture de la vue stellaire.
+    await page.evaluate(() => {
+      (document.getElementById('orbit-jupiter') as HTMLElement).click();
+    });
+    await expect(canvas).toHaveAttribute('data-scene-moving', '1');
+    await page.locator('#settings-trigger').dispatchEvent('click');
+    await page.evaluate(() => {
+      (document.getElementById('stellar-open') as HTMLElement).click();
+    });
+    await expect(page.locator('#stellar-view')).toBeVisible({
+      timeout: 30_000,
+    });
+    const movingAtOpen = await page.evaluate(
+      () =>
+        (window as unknown as { __movingAtOpen: string | null }).__movingAtOpen
+    );
+    // La preuve n'a de sens que si la vue s'est bien ouverte PENDANT le vol.
+    expect(movingAtOpen).toBe('1');
+
+    // Le vol se termine en temps réel derrière la vue (le groupe de tweens suit l'horloge murale).
+    await page.waitForTimeout(3000);
+    await page.locator('#stellar-back').click();
+    await expect(page.locator('#stellar-view')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/jupiter\//);
+    await expect(canvas).toHaveAttribute('data-scene-moving', '0', {
+      timeout: 20_000,
+    });
+    await waitForInteractiveMainThread(page);
+
+    // Les contrôles de la scène solaire sont actifs : un glissement change l'image du canevas.
+    const frame = (): Promise<string> =>
+      page.evaluate(() => {
+        const c = document.querySelector(
+          'canvas[data-scene-moving]'
+        ) as HTMLCanvasElement;
+        const d = c.toDataURL('image/png');
+        let h = 0;
+        for (let i = 0; i < d.length; i += 97)
+          h = (h * 31 + d.charCodeAt(i)) | 0;
+        return `${d.length}:${h}`;
+      });
+    const before = await frame();
+    await page.mouse.move(640, 400);
+    await page.mouse.down();
+    await page.mouse.move(820, 440, { steps: 12 });
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+    expect(await frame()).not.toBe(before);
+  });
 });
