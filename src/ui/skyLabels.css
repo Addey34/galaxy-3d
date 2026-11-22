@@ -7,6 +7,7 @@
  */
 .constellation-names,
 .deepsky-names,
+.neighbour-names,
 .meteor-names {
   position: fixed;
   inset: 0;
@@ -16,6 +17,7 @@
 }
 .constellation-names-item,
 .deepsky-names-item,
+.neighbour-names-item,
 .meteor-names-item {
   position: absolute;
   left: 0;
@@ -32,6 +34,9 @@
 }
 .deepsky-names-item {
   color: rgba(255, 205, 150, 0.8);
+}
+.neighbour-names-item {
+  color: rgba(185, 255, 160, 0.82);
 }
 .meteor-names-item {
   color: rgba(150, 225, 255, 0.85);

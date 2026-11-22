@@ -516,6 +516,25 @@ merges:
 It also lists the HEASARC tables (messier, mwsc, lbn, plnebulae, lmcextobj and smcclustrs) and
 Harold Corwin's NGC/IC Positions and Notes (<http://haroldcorwin.net/ngcic/index.html>).
 
+**Nearby stars** (`public/assets/sky/neighbours.json`). The stars that the HYG database v4.4
+(see above, CC BY-SA 4.0) places at 5 parsecs or less, 61 of them, with the distance and the proper
+motion of Gaia DR3 (<https://www.cosmos.esa.int/gaia>, queried through the ESA Gaia archive TAP
+service by `scripts/generate-neighbours.mjs`) when the counterpart is reliable (parallax over 20
+sigma, RUWE below 1.4, distance within 20 % of HYG's), and those of HYG otherwise; each row says
+which (`origin`, and the Gaia `source_id`). The file is an adaptation of both and is shared under
+the licence of HYG (CC BY-SA 4.0). The ESA asks for this acknowledgement for any use of Gaia DR3
+data (<https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/>,
+read on 2026-11-22), shown in the help credits and on the card of each star measured by Gaia:
+
+> This work has made use of data from the European Space Agency (ESA) mission Gaia
+> (https://www.cosmos.esa.int/gaia), processed by the Gaia Data Processing and Analysis Consortium
+> (DPAC, https://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the DPAC has been
+> provided by national institutions, in particular the institutions participating in the Gaia
+> Multilateral Agreement.
+
+The reference paper is Gaia Collaboration, *Astronomy & Astrophysics* 674 (2023),
+<https://doi.org/10.1051/0004-6361/202243940>.
+
 **Earth weather layers** are fetched at runtime and are not bundled either:
 
 - NASA GIBS (EOSDIS): VIIRS and MODIS cloud imagery, IMERG precipitation, MERRA-2 surface air

@@ -4014,6 +4014,11 @@ body.is-capturing #loader {
   gap: var(--sp-1);
   padding: var(--sp-1) 0;
 }
+.exo-search[hidden] {
+  /* `hidden` DOIT gagner sur `display: grid` : le champ des exoplanètes, du ciel profond et des
+     étoiles voisines restait affiché une fois sa couche décochée (même défaut que `.palette-item`). */
+  display: none;
+}
 .exo-search input {
   min-width: 0;
   box-sizing: border-box;

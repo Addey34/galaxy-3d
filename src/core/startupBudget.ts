@@ -459,6 +459,21 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       'la couche du ciel profond (2026-11-03) : repères et noms des objets NGC/IC, importée par `ui/skyLayerToggles` à la première activation de la case « Objets du ciel profond », éteinte au démarrage.',
   },
   {
+    chunk: 'neighbourLayer',
+    reason:
+      'la couche des étoiles voisines (GAL-UNIVERSE-001) : repères (`NeighbourMarkers`) et noms avec leur distance, importée par `ui/skyLayerToggles` à la première activation de la case « Étoiles voisines », éteinte au démarrage. Elle lit `sky/neighbours.json` une seule fois.',
+  },
+  {
+    chunk: 'neighbourCard',
+    reason:
+      "la fiche d'une étoile voisine et sa recherche (GAL-UNIVERSE-001) : importées par `ui/skyLayerToggles` à la première activation de la case « Étoiles voisines », éteinte au démarrage. Elle porte ses phrases dans `dict-card-*` et attend `loadDeferredMessages()`.",
+  },
+  {
+    chunk: 'neighbours',
+    reason:
+      "la lecture pure du fichier des étoiles voisines (`core/neighbours` : regroupement, distances, alias), partagée par `neighbourLayer`, `neighbourCard` et `NeighbourMarkers`, des morceaux hors démarrage : Rollup en fait un morceau commun qui ne se charge qu'avec eux.",
+  },
+  {
     chunk: 'skyLabels',
     reason:
       "le noyau des noms 2D écrits sur le ciel (projection, évitement, boucle d'images), partagé par `constellationNames` et `deepSkyLayer`, deux morceaux hors démarrage : Rollup en fait un morceau commun.",
