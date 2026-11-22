@@ -147,6 +147,11 @@ test('leaving the IGN coverage by navigating to London: the credit moves off the
   page,
 }) => {
   test.setTimeout(420_000);
+  // Le coût d'une image en rendu logiciel suit le nombre de pixels : mesuré sur ce scénario, 300 ms
+  // à 1280x720 contre 118 ms à 800x480 (SwiftShader). Le coureur GitHub tenait 1,7 s l'image à
+  // 1280x720 (run `44975785836`) : on réduit la CAUSE, pas un seuil. 800x480 reste au-dessus des
+  // seuils d'adaptation de l'interface (768 px de large, 460 px de haut). Avant le démarrage.
+  await page.setViewportSize({ width: 800, height: 480 });
   const tile = (route: import('@playwright/test').Route) =>
     route.fulfill({
       status: 200,
