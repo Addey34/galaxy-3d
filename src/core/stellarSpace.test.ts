@@ -8,6 +8,7 @@ import {
   equatorialToGalactic,
   galacticPosition,
   galacticToScene,
+  motionWindow,
   PARSECS_PER_UNIT,
   parsecsToLightYears,
   scaleRingsPc,
@@ -210,5 +211,57 @@ describe("l'échelle", () => {
 
   it('un parsec vaut 3,2616 années-lumière', () => {
     expect(parsecsToLightYears(1)).toBeCloseTo(3.26156, 5);
+  });
+});
+
+describe('la fenêtre du curseur de temps', () => {
+  const LIMIT = STELLAR_MOTION_LIMIT_YEARS;
+  const STEP = 100;
+  const cases: Array<[string, Date]> = [
+    ['une scène de 2026', new Date('2026-09-15T11:00:00Z')],
+    ['J2000', new Date(Date.UTC(2000, 0, 1, 12))],
+    ['une date historique (1969)', new Date('1969-07-20T20:17:00Z')],
+    ['une date lointaine (an 13000)', new Date('+013000-01-01T00:00:00Z')],
+  ];
+
+  for (const [label, date] of cases) {
+    it(`${label} : aux deux extrémités, curseur, année et calcul décrivent le même instant`, () => {
+      const sceneYears = yearsFromJ2000(date);
+      const w = motionWindow(sceneYears, STEP);
+      expect(Math.abs(w.min % STEP)).toBe(0);
+      expect(Math.abs(w.max % STEP)).toBe(0);
+      expect(w.min).toBeLessThanOrEqual(0);
+      expect(w.max).toBeGreaterThanOrEqual(0);
+      for (const offset of [w.min, 0, w.max]) {
+        // L'instant décrit par le curseur : ce que la vue affiche (2000 + années) ET ce que le calcul utilise.
+        const used = w.base + offset;
+        expect(used).toBeGreaterThanOrEqual(-LIMIT);
+        expect(used).toBeLessThanOrEqual(LIMIT);
+        expect(clampMotionYears(used)).toBe(used);
+        const displayedYear = 2000 + used;
+        expect(displayedYear - 2000).toBeCloseTo(used, 9);
+      }
+      // L'extrémité est la plus proche de la limite que le pas permet : moins d'un pas d'écart.
+      expect(LIMIT - (w.base + w.max)).toBeLessThan(STEP);
+      expect(w.base + w.min + LIMIT).toBeLessThan(STEP);
+    });
+  }
+
+  it('une scène de 2026 : le curseur ne dépasse plus ce que le calcul applique (régression 12 026 contre 10 000)', () => {
+    const sceneYears = yearsFromJ2000(new Date('2026-09-15T11:00:00Z'));
+    const w = motionWindow(sceneYears, STEP);
+    expect(w.max).toBe(9900);
+    expect(w.min).toBe(-10000);
+    expect(sceneYears + w.max).toBeLessThan(LIMIT);
+  });
+
+  it('une scène hors de la fenêtre est ramenée à son bord, jamais au-delà', () => {
+    const w = motionWindow(
+      yearsFromJ2000(new Date('+013000-01-01T00:00:00Z')),
+      STEP
+    );
+    expect(w.base).toBe(LIMIT);
+    expect(w.max).toBe(0);
+    expect(Object.is(w.max, -0)).toBe(false);
   });
 });

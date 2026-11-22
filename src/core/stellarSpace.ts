@@ -55,6 +55,23 @@ export function clampMotionYears(years: number): number {
   );
 }
 
+/**
+ * Fenêtre du curseur de temps. Le curseur compte des années À PARTIR DE LA DATE DE LA SCÈNE, alors que
+ * le mouvement est borné à ±`STELLAR_MOTION_LIMIT_YEARS` autour de J2000 : sans cette fenêtre, une
+ * scène de 2026 permettait d'afficher 12 026 pendant que le calcul restait à 10 000. `base` est la date
+ * de la scène ramenée à la fenêtre ; `min` et `max` sont des multiples du pas, donc atteignables par le
+ * curseur, et `base + offset` reste toujours dans la fenêtre.
+ */
+export function motionWindow(
+  sceneYears: number,
+  stepYears: number
+): { base: number; min: number; max: number } {
+  const base = clampMotionYears(sceneYears);
+  const min = -Math.floor((STELLAR_MOTION_LIMIT_YEARS + base) / stepYears);
+  const max = Math.floor((STELLAR_MOTION_LIMIT_YEARS - base) / stepYears);
+  return { base, min: min * stepYears + 0, max: max * stepYears + 0 };
+}
+
 /** Équatorial J2000 (x, y, z) → galactique (x, y, z). */
 export function equatorialToGalactic(v: Readonly<Vec3>): Vec3 {
   const m = EQUATORIAL_TO_GALACTIC;
