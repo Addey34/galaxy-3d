@@ -1,6 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { noteTrail, reportFailureDiagnostics } from './failureDiagnostics';
-import { waitForCalmMainThread } from './mainThread';
+import {
+  waitForCalmMainThread,
+  waitForInteractiveMainThread,
+} from './mainThread';
 import { MOON_SCENE_DATE } from './moonScene';
 import { blockExternalNetwork } from './netBlock';
 
@@ -102,6 +105,15 @@ test('going back to the global view removes the marker', async ({ page }) => {
   await openPalette(page);
   await searchPlace(page, 'Tycho', 'Tycho');
   await expect(marker(page)).toBeVisible({ timeout: 60_000 });
+  // Le repère s'affiche pendant que la scène charge encore la Lune. Un clic de Playwright y attend
+  // son tour : « click action done » puis « waiting for scheduled navigations to finish » jusqu'aux
+  // 15 s (run `44971241404`, shard 2 : l'application avait pourtant répondu, URL revenue à la vue
+  // d'ensemble, `marker: null`, 2 textures en vol). Mesuré en local, frein CPU x8, ce test seul :
+  // 2 échecs sur 4 sans cette attente, 0 sur 6 avec (puis 5 sur 5 avec la variante interactive, même
+  // frein). Variante INTERACTIVE : la cause est la texture en vol, que le contrat interactif garde
+  // (avec l'absence de vol de caméra), et son budget d'image de 3 s (cf. `mainThread.ts`) évite
+  // d'expirer sur un coureur lent où `waitForCalmMainThread` exigerait des images sous 1,5 s.
+  await waitForInteractiveMainThread(page);
   await page.locator('#orbit-overview').click();
   await expect(marker(page)).toHaveCount(0);
 });
