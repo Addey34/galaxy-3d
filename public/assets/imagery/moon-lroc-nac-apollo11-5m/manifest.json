@@ -1,0 +1,84 @@
+{
+  "id": "moon-lroc-nac-apollo11-5m",
+  "body": "moon",
+  "source": {
+    "url": "https://pds.lroc.im-ldi.com/data/LRO-L-LROC-5-RDR-V1.0/LROLRC_2001/DATA/BDR/NAC_ROI/APOLLO11LOA/NAC_ROI_APOLLO11LOA_E004N0235_5M.IMG",
+    "bytes": 23930592,
+    "sha256": "67831d4320e2d1d534f467bda5c7a988731ed879467548e0d7239407b7b5a3bd",
+    "width": 1043,
+    "height": 5734,
+    "channels": 1,
+    "format": "PDS3 PC_REAL 32 bits",
+    "productId": "NAC_ROI_APOLLO11LOA_E004N0235_5M",
+    "productVersion": "v1.3",
+    "productCreated": "2020-08-31T06:30:25",
+    "pixelsPerDegree": 6064.6700848299,
+    "standardParallel": 0.7,
+    "centerLongitude": 23,
+    "radiusKm": 1737.4,
+    "georeferenceDeviationDeg": {
+      "MAXIMUM_LATITUDE": -0.000015813071675085943,
+      "MINIMUM_LATITUDE": 0.00012793482324348349,
+      "WESTERNMOST_LONGITUDE": 0.000056467024542428135,
+      "EASTERNMOST_LONGITUDE": -0.0001473445369555293
+    }
+  },
+  "region": {
+    "bbox": [
+      23.433361766824664,
+      -0.030999213043799535,
+      23.605354279304922,
+      0.9144767847920869
+    ],
+    "levels": [
+      11,
+      12,
+      13
+    ],
+    "dnPerUnit": 9500,
+    "toneMatch": {
+      "reference": "LRO WAC v02 (Trek), niveau 8, lignes 126 et 127, colonne 289",
+      "method": "facteur = niveau moyen de la WAC / réflectance moyenne de la NAC sur 18 992 échantillons communs (la NAC réduite à 83 m)",
+      "wacMeanDn": 40.908,
+      "nacMeanReflectance": 0.0043052,
+      "samples": 18992,
+      "correlation": 0.214,
+      "note": "Appariement de continuité à la WAC (éclairage différent : NAC à 73 et 80 degrés d'incidence), pas un étalonnage radiométrique ; la corrélation faible ne le valide pas. Le même facteur place le 99,99e centile de la source à 255 (écrêtage mesuré au manifeste)."
+    },
+    "photometry": {
+      "validSamples": 5537727,
+      "nullSamples": 442835,
+      "meanReflectance": 0.004311245454542593,
+      "maxReflectance": 0.05401873216032982,
+      "clippedHighFraction": 0.00010455553334427645,
+      "zeroFraction": 0.020878060619456323
+    },
+    "tilesPerLevel": {
+      "11": {
+        "written": 10,
+        "skipped": 26
+      },
+      "12": {
+        "written": 50,
+        "skipped": 60
+      },
+      "13": {
+        "written": 274,
+        "skipped": 122
+      }
+    }
+  },
+  "matrix": {
+    "columnsAtLevelZero": 2,
+    "rowsAtLevelZero": 1,
+    "tileSizePx": 256
+  },
+  "minLevel": 11,
+  "maxLevel": 13,
+  "format": "image/jpeg",
+  "jpegQuality": 90,
+  "path": "default/galaxy-eq2x1",
+  "hash": "2a218dbaa134",
+  "tileCount": 334,
+  "totalBytes": 5063008
+}

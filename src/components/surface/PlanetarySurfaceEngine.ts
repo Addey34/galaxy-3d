@@ -707,9 +707,29 @@ export class PlanetarySurfaceEngine {
           entry.source
         )
       ) {
+        // Sans tuile régionale peinte, le premier pas est le PREMIER niveau que la région sert
+        // sous la visée : une emprise plus étroite que les tuiles des niveaux suivant la base n'en
+        // sert aucune avant un niveau plus fin (Apollo 11 : le 11 ; sans cela le plancher restait
+        // au niveau de la base plus un, et la région n'était jamais demandée).
+        let first = tileset.maxLevel + 1;
+        while (
+          first < regionalMax &&
+          !servedByRegion(
+            tileIndexAt(
+              first,
+              centre.latitudeDeg,
+              centre.longitudeDeg,
+              tileset.matrix
+            ),
+            tileset.matrix,
+            tileset.maxLevel,
+            entry.source
+          )
+        )
+          first += 1;
         target = Math.min(
           regionalMax,
-          Math.max(tileset.maxLevel, servedData) + 1
+          servedData > tileset.maxLevel ? servedData + 1 : first
         );
         break;
       }

@@ -823,9 +823,8 @@ describe('imageries régionales (lot 53, pas 4)', () => {
       const base = SURFACE_TILESETS.get(tileset.body)!;
       // Même grille que la base : la tuile demandée à la région est celle de la base.
       expect(tileset.matrix, tileset.id).toEqual(base.matrix);
-      expect(tileset.service.tileMatrixSet, tileset.id).toBe(
-        base.service.tileMatrixSet
-      );
+      // Le NOM de la matrice peut différer (une région cuite par nous : `galaxy-eq2x1`) ; seule la
+      // GRILLE (ci-dessus) compte.
       const bbox = 'bbox' in source.coverage ? source.coverage.bbox : null;
       expect(bbox![0] < bbox![2] && bbox![1] < bbox![3], tileset.id).toBe(true);
     }
