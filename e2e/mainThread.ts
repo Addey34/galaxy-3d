@@ -48,6 +48,23 @@ import { LOD_UPDATE_INTERVAL } from '../src/core/modelLod';
 const CALM_BUDGET_MS = 1500;
 
 /**
+ * Budget d'une image pour qu'un clic ou une saisie de Playwright PUISSE aboutir (variante
+ * « interactive » seulement ; `CALM_BUDGET_MS` des scènes à stabiliser ne change pas).
+ *
+ * MESURÉ (GAL-CI-REGIONAL-003) : en rendu logiciel la latence d'un événement égale la durée d'une
+ * image (326 ms de latence pour 300 ms d'image, scène de Paris au sol, SwiftShader) : le fil est
+ * occupé pendant toute l'image. Une action de Playwright a besoin de quelques images (contrôle de
+ * stabilité, clic, acquittement : 4,5 s à 1,7 s l'image dans la trace du run `44854202668`) et
+ * dispose de 15 s (`actionTimeout`) : elle aboutit tant que l'image reste sous 15 / 5 = 3 s.
+ *
+ * Run `44975785836`, shard 10, Xeon 8573C : images CONSTANTES de 1,62 à 1,74 s pendant que la file
+ * de carreaux se vidait d'un par image (56 à 17 en 60 s). Ce n'était pas un fil bloqué mais un
+ * rendu lent et régulier ; le budget de 1 500 ms le prenait pour une indisponibilité, l'observation
+ * expirait (60 s) avant la recherche, et `fill()` n'était jamais atteint.
+ */
+const INTERACTIVE_BUDGET_MS = 3000;
+
+/**
  * Nombre d'images calmes CONSÉCUTIVES exigées, observées sans trou dans la page.
  *
  * C'étaient trois allers-retours, chacun lisant UNE image : la série mesurée ci-dessus retombe à
@@ -121,7 +138,11 @@ export async function waitForInteractiveMainThread(
   page: Page,
   options: CalmOptions = {}
 ): Promise<string[]> {
-  return observeMainThread(page, options, false);
+  return observeMainThread(
+    page,
+    { budgetMs: INTERACTIVE_BUDGET_MS, ...options },
+    false
+  );
 }
 
 async function observeMainThread(
