@@ -8104,7 +8104,10 @@ axe sans violation sur la vue.
 
 **Restauration du DOM et vol de caméra en cours (qualifié 2026-11-22).** Chaque élément masqué mémorise son état `inert`
 initial (`ui/stellarMask.ts`) et le retrouve à la fermeture : un élément déjà inerte le reste, les autres redeviennent
-interactifs (tests unitaire et navigateur). Ouvrir la vue PENDANT un vol de la caméra solaire : le tween appartient à
+interactifs (tests unitaire et navigateur). Les noms 2D se disputent la place par priorité (Soleil, axe, puis étoiles de la plus proche à la plus lointaine, puis
+cercles d'échelle) : un repère d'échelle ne masque jamais un nom d'étoile (la campagne complète a montré le contraire sur
+polices larges de Linux : « 2 pc · 6,5 al » cachait « Proxima Centauri »).
+Ouvrir la vue PENDANT un vol de la caméra solaire : le tween appartient à
 `CameraSystem` et avance à l'horloge murale (`tweenGroup.update(performance.now())`), la vue n'y touche pas. Le test navigateur
 (`stellarView.spec.ts`, mouvement réel, ouverture constatée `data-scene-moving="1"`) montre que le vol se termine derrière la
 vue, que le corps choisi est conservé et qu'au retour la scène est calme et répond à un glissement : aucun défaut reproduit,

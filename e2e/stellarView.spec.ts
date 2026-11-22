@@ -86,6 +86,25 @@ for (const [label, viewport, hasTouch] of [
       );
     });
 
+    test('the nearest star keeps its name on screen with a wider font (a scale ring never hides a star name)', async ({
+      page,
+    }) => {
+      await boot(page);
+      await page.locator('#settings-trigger').dispatchEvent('click');
+      await openSettingsTab(page, 'scene');
+      // Linux (CI) a des polices plus larges que Windows : mêmes noms, plus de pixels.
+      await page.addStyleTag({
+        content: '.sv-label{letter-spacing:0.12em !important}',
+      });
+      await page.locator('#stellar-open').click();
+      await expect(page.locator('#stellar-view')).toBeVisible({
+        timeout: 30_000,
+      });
+      await expect(
+        page.locator('.sv-label--star').filter({ hasText: /^Proxima Centauri/ })
+      ).toBeVisible({ timeout: 20_000 });
+    });
+
     test('Proxima: position x, y, z, dont la norme est sa distance, à 4,25 années-lumière', async ({
       page,
     }) => {
@@ -140,8 +159,11 @@ for (const [label, viewport, hasTouch] of [
       test.setTimeout(120_000);
       await boot(page);
       const inertBefore = await page.locator('[inert]').count();
-      const before = await sceneClock(page);
       await openFromSettings(page);
+      // La date est lue vue ouverte : le temps passé avant (import du morceau, lecture des données,
+      // lent sur un runner logiciel : 7 à 11 s mesurés) n'est pas du temps de la vue. C'est le gel
+      // PENDANT la vue qui est prouvé : sans gel l'écart dépasserait les 6 s d'attente.
+      const before = await sceneClock(page);
       await page.waitForTimeout(6000);
       await page.locator('#stellar-back').click();
       await expect(page.locator('#stellar-view')).toHaveCount(0);
