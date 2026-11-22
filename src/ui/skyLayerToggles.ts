@@ -14,6 +14,8 @@ import { onLocaleChange, t } from '@/i18n';
 import type { ConstellationNames } from './constellationNames';
 import type { DeepSkyLayer } from './deepSkyLayer';
 import type { DeepSkyCard } from './deepSkyCard';
+import type { NeighbourLayer } from './neighbourLayer';
+import type { NeighbourCard } from './neighbourCard';
 import type { MeteorLayer } from './meteorLayer';
 import type { ExoplanetCard } from './exoplanetCard';
 import type { OverlayCoordinator } from './overlayCoordinator';
@@ -91,6 +93,8 @@ export function setupSkyLayerToggles(
   let names: Promise<ConstellationNames | null> | null = null;
   let deep: Promise<DeepSkyLayer | null> | null = null;
   let deepCard: Promise<DeepSkyCard | null> | null = null;
+  let neighbours: Promise<NeighbourLayer | null> | null = null;
+  let neighbourCard: Promise<NeighbourCard | null> | null = null;
   let meteors: Promise<MeteorLayer | null> | null = null;
   mount({
     id: 'constellations-toggle',
@@ -140,6 +144,30 @@ export function setupSkyLayerToggles(
               })
             );
           void deepCard?.then((c) => c?.setActive(on));
+        });
+    },
+  });
+  mount({
+    id: 'neighbours-toggle',
+    labelKey: 'settings.neighbours',
+    ready: () => true,
+    set: (on) => {
+      // Fichier et repères n'existent pas au démarrage : ils se chargent à la première activation.
+      if (on || neighbours)
+        void (neighbours ??= import('./neighbourLayer').then((m) =>
+          m.setupNeighbourLayer({ starfield, ...environment })
+        )).then((l) => {
+          l?.setActive(on);
+          // La fiche d'une étoile se charge avec la couche, à sa première activation.
+          if (l && on && !neighbourCard)
+            neighbourCard = import('./neighbourCard').then((m) =>
+              m.setupNeighbourCard({
+                markers: l.markers,
+                file: l.file,
+                ...environment,
+              })
+            );
+          void neighbourCard?.then((c) => c?.setActive(on));
         });
     },
   });

@@ -98,8 +98,14 @@ export function createSkyLabelLayer(
         if (inFront && x > 0 && x < width && y > 0 && y < height) {
           let w = widths.get(e);
           if (w === undefined) {
-            w = e.el.offsetWidth || e.item.text.length * 9;
-            widths.set(e, w);
+            // Un élément en `display: none` mesure 0 : on l'affiche AVANT de le mesurer. Sinon le repli
+            // (9 px par lettre) était mis en cache pour toujours et le nom, centré avec cette largeur,
+            // glissait de ~24 px sous son repère (mesuré : « Proxima Centauri · 4,2 al », 225 px estimés
+            // pour 177 réels), assez pour qu'un clic sur le repère lu d'après son nom le rate.
+            if (e.el.style.display === 'none') e.el.style.display = '';
+            const measured = e.el.offsetWidth;
+            w = measured || e.item.text.length * 9;
+            if (measured) widths.set(e, w);
           }
           const clash = placed.some(
             (p) =>

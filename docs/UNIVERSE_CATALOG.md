@@ -235,6 +235,8 @@ explicitement.
 
 Candidats pedagogiques : Proxima Centauri, Alpha Centauri, Sirius, Betelgeuse, Vega, Polaris, TRAPPIST-1, Kepler-186, Kepler-452, 51 Pegasi et les systemes avec planetes confirmees.
 
+**Premiere tranche livree (2026-11-22, GAL-UNIVERSE-001)** : les etoiles a 5 parsecs ou moins (Proxima, Alpha Centauri, Barnard, Sirius...), distances et mouvements de Gaia DR3 quand la mesure est sure, en couche d'instrument 2D (direction reelle, distance dite par la fiche, jamais dessinee). Contrat et limites : `docs/ARCHITECTURE.md` § « Les etoiles voisines ». Voyager vers une etoile (scene stellaire, origine et echelles propres) reste a faire.
+
 Cette vague necessite un nouveau referentiel stellarSystem ou interstellar, une distance en annees-lumiere, des incertitudes de catalogue et une vue distincte du Systeme solaire. Elle ne doit pas etre branchee comme une simple orbite heliocentrique.
 
 ### Vague E - ciel profond et cosmologie

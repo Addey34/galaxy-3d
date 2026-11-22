@@ -127,6 +127,7 @@ const CONTEXTUAL_SURFACE_ANCHORS: Partial<
   // La fiche d'un système se pose là où se pose celle d'un corps : même gabarit, même feuille mobile.
   'exoplanet-card': { trigger: '#info-trigger', panel: '#exoplanet-card' },
   'deepsky-card': { trigger: '#info-trigger', panel: '#deepsky-card' },
+  'neighbour-card': { trigger: '#info-trigger', panel: '#neighbour-card' },
 };
 
 function positionContextualSurface(id: SecondaryOverlayId): void {

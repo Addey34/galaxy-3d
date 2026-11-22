@@ -257,6 +257,7 @@ export const ptBR: Record<MessageKey, string> = {
     'Estrelas: base HYG v4.4 (catálogos Hipparcos, Yale Bright Star e Gliese), seleção até a magnitude 6,5 e conversão de unidades,',
   'credits.exoplanets': 'Exoplanetas',
   'credits.deepsky': 'Céu profundo',
+  'credits.neighbours': 'Estrelas próximas',
   'credits.meteors': 'Chuvas de meteoros',
   'credits.satellites': 'Satélites',
   'credits.data': 'Dados',
@@ -385,6 +386,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.constellations': 'Figuras das constelações',
   'settings.exoplanets': 'Estrelas com exoplanetas',
   'settings.deepsky': 'Objetos do céu profundo',
+  'settings.neighbours': 'Estrelas próximas',
   'settings.meteors': 'Chuvas de meteoros',
   'settings.meteors.active':
     '{count} chuva(s) de meteoros ativa(s) nesta data, radiantes do IAU Meteor Data Center.',
