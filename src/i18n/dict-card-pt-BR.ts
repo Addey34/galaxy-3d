@@ -64,6 +64,42 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'nb.unit.ly': 'a.l.',
   'nb.search.label': 'Encontrar uma estrela próxima',
   'nb.search.placeholder': 'Próxima, Sirius, Barnard',
+  'st.title': 'Vizinhança solar em 3D',
+  'st.back': 'Voltar ao Sistema Solar',
+  'st.reset': 'Recentralizar a vista',
+  'st.open': 'Ver na vizinhança solar',
+  'st.scale':
+    '1 unidade = 1 parsec = 3,26 anos-luz. Um círculo por parsec ao redor do Sol, no plano galáctico.',
+  'st.ring': '{pc} pc · {ly} a.l.',
+  'st.sun': 'Sol',
+  'st.centre': 'Centro galáctico (direção)',
+  'st.symbolic':
+    'Os pontos são símbolos de tamanho constante: o tamanho real de uma estrela não é desenhado. A cor segue o tipo espectral.',
+  'st.frame':
+    'Referencial galáctico: x em direção ao centro galáctico, z em direção ao polo norte galáctico. As posições são as da data da cena, deslocadas em linha reta a partir dos valores do catálogo em J2000.',
+  'st.help':
+    'Arraste para girar, roda ou pinça para aproximar, botão direito ou dois dedos para mover. Teclado: as setas giram, mais e menos aproximam, Home recentraliza, Esc volta.',
+  'st.list': 'Estrelas da vizinhança',
+  'st.listItem': '{name}, {ly} anos-luz',
+  'st.selected': 'Estrela escolhida',
+  'st.noSelection': 'Escolha uma estrela para ver sua distância e sua posição.',
+  'st.distSun': 'Distância do Sol (publicada)',
+  'st.distAtDate': 'Distância do Sol nesta data',
+  'st.position': 'Posição (x, y, z)',
+  'st.positionValue': '{x} ; {y} ; {z} pc',
+  'st.timeLabel': 'Anos a partir da data da cena',
+  'st.timeNow': 'A data da cena',
+  'st.timeValue': '{years} anos, ano {year}',
+  'st.timeLimit':
+    'Movimento retilíneo, limitado a 10 000 anos de cada lado de J2000: além disso a aproximação não é defensável.',
+  'st.noRadial':
+    'Nenhuma velocidade radial é publicada para esta estrela: sua aproximação ou afastamento do Sol não é considerado.',
+  'st.opened':
+    'Vizinhança solar em 3D. {n} sistemas de estrelas ao redor do Sol.',
+  'st.closed': 'De volta ao Sistema Solar.',
+  'st.selectedAnnounce': '{name}, a {ly} anos-luz do Sol.',
+  'st.unavailable':
+    'A vista 3D não está disponível: o contexto gráfico não responde.',
   'exo.card.unknown': 'não publicado',
   'exo.card.period': 'Período orbital',
   'exo.card.radius': 'Raio',
