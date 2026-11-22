@@ -102,6 +102,12 @@ test('going back to the global view removes the marker', async ({ page }) => {
   await openPalette(page);
   await searchPlace(page, 'Tycho', 'Tycho');
   await expect(marker(page)).toBeVisible({ timeout: 60_000 });
+  // Le repère s'affiche pendant que la scène charge encore la Lune. Un clic de Playwright y attend
+  // son tour : « click action done » puis « waiting for scheduled navigations to finish » jusqu'aux
+  // 15 s (run `44971241404`, shard 2 : l'application avait pourtant répondu, URL revenue à la vue
+  // d'ensemble, `marker: null`, 2 textures en vol). Mesuré en local, frein CPU x8, ce test seul :
+  // 2 échecs sur 4 sans cette attente, 0 sur 6 avec. Même remède que « two quick choices » ci-dessous.
+  await waitForCalmMainThread(page);
   await page.locator('#orbit-overview').click();
   await expect(marker(page)).toHaveCount(0);
 });
