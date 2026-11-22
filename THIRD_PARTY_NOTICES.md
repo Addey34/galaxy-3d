@@ -520,7 +520,8 @@ Harold Corwin's NGC/IC Positions and Notes (<http://haroldcorwin.net/ngcic/index
 (see above, CC BY-SA 4.0) places at 5 parsecs or less, 61 of them, with the distance and the proper
 motion of Gaia DR3 (<https://www.cosmos.esa.int/gaia>, queried through the ESA Gaia archive TAP
 service by `scripts/generate-neighbours.mjs`) when the counterpart is reliable (parallax over 20
-sigma, RUWE below 1.4, distance within 20 % of HYG's), and those of HYG otherwise; each row says
+sigma, RUWE below 1.4, and the same parallax, proper motion and brightness as HYG's star), and those of
+HYG otherwise (35 and 26 stars on 2026-11-22); each row says
 which (`origin`, and the Gaia `source_id`). The file is an adaptation of both and is shared under
 the licence of HYG (CC BY-SA 4.0). The ESA asks for this acknowledgement for any use of Gaia DR3
 data (<https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/>,

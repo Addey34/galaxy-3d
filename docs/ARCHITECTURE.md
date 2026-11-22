@@ -7931,7 +7931,11 @@ Réglage « Reading light » (Réglages, onglet Image), éteint par défaut et j
 ## Les étoiles voisines (GAL-UNIVERSE-001, 2026-11-22)
 
 Couche optionnelle (case « Étoiles voisines », Réglages, scène), éteinte par défaut et jamais
-mémorisée : les étoiles à 5 parsecs ou moins, chacune avec sa distance réelle. Comme les autres
+mémorisée : les étoiles à 5 parsecs ou moins, chacune avec sa distance réelle. **61 étoiles, 48
+repères** : treize systèmes à deux composantes (séparation sous 60″ : Sirius A et B, α Cen A et B,
+61 Cyg A et B…) se partagent un repère, car un repère fait 9 pixels ; la fiche liste les composantes.
+La documentation, la fiche et les tests disent « étoiles » ou « repères » selon ce qu'ils comptent,
+jamais l'un pour l'autre (`core/neighbours.test.ts`). Comme les autres
 couches du ciel, un repère est une DIRECTION à l'infini (carré creux de 11 px, profondeur épinglée
 au plan lointain comme `ExoplanetHosts`) ; **la distance n'est ni dessinée ni utilisée pour placer
 quoi que ce soit**. À 4,25 années-lumière, Proxima serait à 9,4 millions d'unités de scène (1 UA =
@@ -7943,12 +7947,31 @@ tranche suivante, pas celle-ci.
 
 **Les données** (`pnpm neighbours:generate`, `scripts/generate-neighbours.mjs`, 7,9 ko). Les 61
 étoiles que HYG v4.4 place à 5 pc ou moins, avec la distance et le mouvement de Gaia DR3 (archive
-de l'ESA, service TAP) quand la contrepartie est sûre : parallaxe à plus de 20 sigmas, RUWE
-inférieur à 1,4, distance cohérente à 20 % avec HYG. Sinon la ligne reste celle de HYG, et la ligne
-le dit (`origin`, plus le `source_id` de Gaia) ; une distance de HYG n'a **pas d'incertitude
-publiée** et la fiche ne l'invente pas. Mesuré le 2026-11-22 : 34 étoiles par Gaia, 27 par HYG
+de l'ESA, service TAP) quand la contrepartie est la MÊME étoile et que sa mesure est sûre : cône de
+0,1° autour de la position HYG propagée à 2016, parallaxe cohérente à 20 % avec HYG, mouvement
+propre cohérent (10 % du mouvement, au moins 250 mas/an), éclat cohérent (|G − V| ≤ 4), puis
+parallaxe à plus de 20 sigmas et RUWE inférieur à 1,4. Les composantes d'un système sont attribuées
+dans l'ordre d'éclat (la plus brillante de HYG prend la source Gaia la plus brillante) et une
+source n'est jamais adoptée deux fois. Sinon la ligne reste celle de HYG, et la ligne le dit
+(`origin`, plus le `source_id` de Gaia) ; une distance de HYG n'a **pas d'incertitude publiée** et la
+fiche ne l'invente pas. Mesuré le 2026-11-22 : 35 étoiles par Gaia, 26 par HYG
 (aucune contrepartie Gaia sûre pour α Cen A et B ni pour Procyon, trop brillantes ; RUWE de 2,4
-à 10,5 pour Sirius et Gliese 65 A et B, doubles trop serrées pour une astrométrie fiable).
+à 10,5 pour Sirius et Gliese 65 A et B, doubles trop serrées pour une astrométrie fiable ; Keid,
+RUWE 1,9 ; Kruger 60 et Ross 614 n'ont dans Gaia DR3 qu'une solution à deux paramètres, SANS
+parallaxe, vérifié le 2026-11-22 par une requête sans filtre de parallaxe).
+
+**Audit des associations (GAL-UNIVERSE-001-QUAL, 2026-11-22), et ce qu'il a corrigé.** Les 35
+associations retenues ont été confrontées à l'archive : aucun identifiant adopté deux fois, parallaxes
+à moins de 3 % de HYG (GJ 1061 : 16,8 %, HYG a tort, la NASA donne aussi 3,67 pc), mouvements
+propres concordants. Trois défauts RÉELS de la première version ont été trouvés et corrigés :
+(1) **A et B permutés** pour 61 Cyg, Struve 2398 et Groombridge 34 (la parallaxe seule ne distingue pas
+deux composantes à 0,0001 pc : la source la plus proche en parallaxe n'était pas la bonne) ; (2) une
+composante faible adoptée pour Keid ; (3) **GJ 3618 manquée** : sa contrepartie (parallaxe 207 mas,
+mouvement 346 / 1611 mas/an) était à 0,3° du cône de 0,02°, les positions des étoiles de Gliese
+seules étant décalées de plus d'une minute d'arc. Les témoins sont dans
+`src/config/neighbourMatching.test.ts`, falsifiés contre l'ancien fichier. Les résidus de position
+HYG → Gaia vont de 0,02″ à 61″ sur ces étoiles (positions de Gliese imprécises) : la position
+livrée pour une étoile de Gaia est celle de Gaia, jamais celle de HYG.
 
 **Deux défauts de HYG, mesurés, qui justifient la seconde source.** (1) Son mouvement propre est
 plafonné à 9 999,99 mas/an : l'étoile de Barnard, à 10 362,39 mas/an dans Gaia, y est à 9 999,99 ;
@@ -7981,15 +8004,25 @@ désignation de Gliese ou d'Hipparcos et les alias usuels (« Alpha Centauri »,
 Retrouver le Système solaire : la scène n'a jamais quitté le corps suivi ; Échap ferme la fiche, et la
 fiche centre l'étoile par `ui/cardCentering` comme celles du ciel profond et des exoplanètes.
 
-**Tenu par** `core/neighbours.test.ts` (17 tests : en-tête, tri, provenance et incertitudes,
-Barnard hors plafond, distances et UA, regroupement falsifié, alias, mouvement propre) et
-`e2e/neighbourStars.spec.ts` (bureau et téléphone : couche éteinte sans recherche, Proxima avec sa
-distance Gaia et le remerciement, α Cen par HYG sans incertitude, décocher ferme la fiche, axe,
-aucun débordement). **Défaut préexistant trouvé par le test** : `.exo-search { display: grid }`
+**Tenu par** `core/neighbours.test.ts` (18 tests : en-tête, tri, provenance et incertitudes,
+Barnard hors plafond, distances et UA, 61 étoiles / 48 repères, regroupement falsifié, alias,
+mouvement propre), `src/config/neighbourMatching.test.ts` (15 tests : critères d'association, retour
+de J2016 à J2000, permutations A/B) et `e2e/neighbourStars.spec.ts` (bureau et téléphone : couche
+éteinte sans recherche ni requête, un VRAI clic ou tap sur le repère lu d'après son nom, Proxima avec
+sa distance Gaia et le remerciement, α Cen par HYG sans incertitude, trois clics rapides sur la
+case avant l'arrivée du fichier, une seule lecture du fichier, quatre langues, changement de langue
+couche allumée, axe, aucun débordement). **Défaut préexistant trouvé par le test** : `.exo-search { display: grid }`
 l'emportait sur l'attribut `hidden`, donc le champ de recherche des exoplanètes et du ciel profond
 restait affiché une fois la couche décochée ; `.exo-search[hidden]` le corrige pour les trois.
 
-**Limites.** Le clic sur un repère n'est pas couvert par un test navigateur (la sélection est celle
-de `core/skyPick`, testée, et des fiches voisines). Aucune mesure sur appareil réel. Les étoiles
+**Un défaut partagé, trouvé par le vrai clic.** `ui/skyLabels` mesurait la largeur d'un nom encore en
+`display: none` (0) et gardait pour toujours le repli « 9 px par lettre » : « Proxima Centauri · 4,2 al »
+était estimé à 225 px pour 177 réels, donc centré 24 px à côté de son repère. Le nom est désormais
+affiché avant d'être mesuré (valable pour les constellations, le ciel profond et les météores). Un
+clic sur le repère lu d'après son nom ratait avant, passe après (bureau et tactile).
+
+**Limites.** Aucune mesure sur appareil réel. Le champ de recherche vit dans les Réglages, que
+l'ouverture d'une fiche referme (une seule surface contextuelle) : pour chercher une seconde étoile
+on rouvre les Réglages, comme pour les autres fiches du ciel ; un champ dans la fiche serait plus direct. Les étoiles
 sans Gaia (Alpha Centauri : 4,32 al dans HYG) n'ont pas d'incertitude et peuvent différer de
 publications plus récentes ; un `--check` du générateur dira quand le fichier dérive.

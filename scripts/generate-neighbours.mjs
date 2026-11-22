@@ -41,6 +41,17 @@ const HYG_PM_CAP = 9999.99;
 const RUWE_MAX = 1.4;
 const PARALLAX_SNR_MIN = 20;
 const HYG_AGREEMENT = 0.2;
+/**
+ * Cône de recherche autour de la position HYG propagée à 2016 : large, car les positions des étoiles
+ * de Gliese seules peuvent être décalées de plus d'une minute d'arc (GJ 3618 : contrepartie Gaia
+ * trouvée à 0,3° d'un cône de 0,02°). L'identification repose sur la parallaxe ET le mouvement propre.
+ */
+const CONE_DEG = 0.1;
+/** Écart de mouvement propre toléré entre HYG et Gaia : 10 % du mouvement, au moins 250 mas/an. */
+const PM_AGREEMENT = 0.1;
+const PM_FLOOR_MAS = 250;
+/** |G de Gaia − V de HYG| maximal : une naine rouge a V − G jusqu'à ~3, une naine blanche ~0. */
+const MAG_AGREEMENT = 4;
 
 const ACKNOWLEDGEMENT =
   'This work has made use of data from the European Space Agency (ESA) mission Gaia (https://www.cosmos.esa.int/gaia), processed by the Gaia Data Processing and Analysis Consortium (DPAC, https://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the DPAC has been provided by national institutions, in particular the institutions participating in the Gaia Multilateral Agreement.';
@@ -148,10 +159,10 @@ async function queryGaia(star) {
         star.pmDec,
         GAIA_EPOCH - 2000
       );
-  const radius = censored ? 0.08 : 0.02;
+  const radius = censored ? 0.15 : CONE_DEG;
   const plxHyg = 1000 / star.distPc;
   const adql =
-    'SELECT TOP 20 source_id,ra,dec,parallax,parallax_error,pmra,pmdec,radial_velocity,ruwe,phot_g_mean_mag ' +
+    'SELECT TOP 40 source_id,ra,dec,parallax,parallax_error,pmra,pmdec,radial_velocity,ruwe,phot_g_mean_mag ' +
     'FROM gaiadr3.gaia_source ' +
     `WHERE 1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${at2016.raDeg.toFixed(6)},${at2016.decDeg.toFixed(6)},${radius})) ` +
     `AND parallax IS NOT NULL AND parallax > ${(plxHyg * 0.5).toFixed(2)} ORDER BY parallax DESC`;
@@ -180,7 +191,14 @@ async function queryGaia(star) {
     pmDec: l[6] === '' ? null : Number(l[6]),
     rv: l[7] === '' ? null : Number(l[7]),
     ruwe: l[8] === '' ? null : Number(l[8]),
+    gMag: l[9] === '' ? null : Number(l[9]),
   }));
+}
+
+function censoredPm(star) {
+  return (
+    Math.abs(star.pmRa) >= HYG_PM_CAP || Math.abs(star.pmDec) >= HYG_PM_CAP
+  );
 }
 
 /** La contrepartie sûre de Gaia, ou null (et la raison). Pur, testé par `neighbours.test.ts`. */
@@ -191,7 +209,18 @@ export function chooseGaia(star, candidates, taken = new Set()) {
     if (taken.has(c.sourceId)) continue;
     const gap = Math.abs(c.parallax - plxHyg) / plxHyg;
     if (gap > HYG_AGREEMENT) continue;
-    if (!best || gap < best.gap) best = { c, gap };
+    // Même étoile = même parallaxe ET même mouvement (sauf mouvement plafonné de HYG, inutilisable).
+    if (!censoredPm(star) && c.pmRa !== null && c.pmDec !== null) {
+      const total = Math.hypot(star.pmRa, star.pmDec);
+      const gapPm = Math.hypot(c.pmRa - star.pmRa, c.pmDec - star.pmDec);
+      if (gapPm > Math.max(PM_FLOOR_MAS, PM_AGREEMENT * total)) continue;
+    }
+    // Même étoile = même éclat : écarte la composante d'un système multiple prise pour l'autre.
+    if (c.gMag === null || Math.abs(c.gMag - star.vmag) > MAG_AGREEMENT)
+      continue;
+    // Parmi les candidats cohérents, le plus BRILLANT : `chooseGaia` est appelé de la composante la
+    // plus brillante de HYG à la plus faible, donc A prend la plus brillante, B la suivante.
+    if (!best || c.gMag < best.c.gMag) best = { c, gap };
   }
   if (!best)
     return { gaia: null, reason: 'aucune contrepartie Gaia cohérente' };
@@ -296,7 +325,7 @@ async function main() {
   const taken = new Set();
   const rows = [];
   const notes = [];
-  for (const star of hyg) {
+  for (const star of [...hyg].sort((a, b) => a.vmag - b.vmag)) {
     const { gaia, reason } = chooseGaia(star, cache[star.id], taken);
     if (gaia) taken.add(gaia.sourceId);
     else if (

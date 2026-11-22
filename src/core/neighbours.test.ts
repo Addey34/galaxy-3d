@@ -115,6 +115,15 @@ describe('systèmes', () => {
     expect(alpha.members.some((m) => m[0] === 'Proxima Centauri')).toBe(false);
   });
 
+  it('61 étoiles, 48 repères : 13 systèmes à deux composantes se partagent un repère', () => {
+    // Le regroupement est voulu (séparation sous 60″, un repère fait 9 pixels) : la documentation
+    // et la fiche parlent d'étoiles ET de repères, jamais l'une pour l'autre.
+    expect(file.count).toBe(61);
+    expect(systems).toHaveLength(48);
+    expect(systems.filter((s) => s.members.length === 2)).toHaveLength(13);
+    expect(systems.filter((s) => s.members.length > 2)).toHaveLength(0);
+  });
+
   it('ne perd et ne duplique aucune étoile', () => {
     const all = systems.flatMap((s) => s.members.map((m) => m[0]));
     expect(all).toHaveLength(file.stars.length);
