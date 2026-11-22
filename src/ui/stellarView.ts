@@ -330,7 +330,8 @@ export async function setupStellarView(
             ly: fixed(parsecsToLightYears(r), 1),
           }),
           'sv-label--ring',
-          500 - r,
+          // Sous TOUTES les étoiles (priorité 50 à 100) : un repère d'échelle ne masque jamais un nom d'étoile.
+          50 - r,
           () => new THREE.Vector3(0, 0, r)
         );
       systems.forEach((system, i) =>
