@@ -102,3 +102,66 @@ describe('adaptation de l’éclairage au corps suivi (ligne 45.7)', () => {
     );
   });
 });
+
+/**
+ * LE RENDU DE REMPLACEMENT (GAL-UNIVERSE-002) : le voisinage solaire dessine à la place de la scène
+ * solaire, avec le MÊME renderer et la MÊME boucle. Une seule boucle (`setAnimationLoop` posé une
+ * fois), un seul rendu par image, simulation figée (delta 0) tant qu'il est posé, et la scène solaire
+ * reprend dès qu'il est retiré.
+ */
+describe('rendu de remplacement (voisinage solaire)', () => {
+  function harness() {
+    const system = new AnimationSystem();
+    const calls = { solarRender: 0, update: [] as number[], override: 0 };
+    const loops: Array<(() => void) | null> = [];
+    Reflect.set(system, 'renderer', {
+      setAnimationLoop: (fn: (() => void) | null) => loops.push(fn),
+    });
+    Reflect.set(system, 'tweenGroup', { update: () => undefined });
+    Reflect.set(system, 'fpsCounter', { update: () => undefined });
+    Reflect.set(system, '_update', (delta: number) => calls.update.push(delta));
+    Reflect.set(system, '_render', () => (calls.solarRender += 1));
+    // `clock.getDelta` d'une horloge réelle : 16 ms entre deux images.
+    Reflect.set(system, 'clock', {
+      getDelta: () => 0.016,
+      start: () => undefined,
+    });
+    const frame = Reflect.get(system, '_animate') as () => void;
+    return { system, calls, loops, frame: () => frame.call(system) };
+  }
+
+  it("ne pose qu'une boucle, et rend la scène solaire tant qu'aucun remplacement n'est posé", () => {
+    const { system, calls, loops, frame } = harness();
+    system.run();
+    expect(loops.filter(Boolean)).toHaveLength(1);
+    frame();
+    expect(calls.solarRender).toBe(1);
+    expect(calls.update).toEqual([0.016]);
+  });
+
+  it('remplacé : un seul rendu par image (le remplaçant), simulation figée, boucle inchangée', () => {
+    const { system, calls, loops, frame } = harness();
+    system.run();
+    let override = 0;
+    system.setRenderOverride(() => (override += 1));
+    frame();
+    frame();
+    expect(override).toBe(2);
+    expect(calls.solarRender).toBe(0);
+    // delta 0 : la date de la scène ne dérive pas pendant que la vue stellaire est ouverte.
+    expect(calls.update).toEqual([0, 0]);
+    // Aucune seconde boucle n'a été posée.
+    expect(loops.filter(Boolean)).toHaveLength(1);
+  });
+
+  it('retiré : la scène solaire reprend, avec son delta réel (falsification : un remplaçant oublié la figerait)', () => {
+    const { system, calls, frame } = harness();
+    system.run();
+    system.setRenderOverride(() => undefined);
+    frame();
+    system.setRenderOverride(null);
+    frame();
+    expect(calls.solarRender).toBe(1);
+    expect(calls.update).toEqual([0, 0.016]);
+  });
+});
