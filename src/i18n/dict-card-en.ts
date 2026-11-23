@@ -107,6 +107,10 @@ export const cardEn = {
   'st.selectedAnnounce': '{name}, {ly} light-years from the Sun.',
   'st.unavailable':
     'The 3D view is not available: the graphics context is not responding.',
+  'st.unknownStar':
+    'The link names a star that is not among the nearby stars. The view is open with no star selected.',
+  'st.dataUnavailable':
+    'The 3D view is not available: the file of nearby stars could not be read.',
   'st.fieldAu': 'Field width at the Sun: {au} AU',
   'st.fieldLy': 'Field width at the Sun: {ly} ly ({pc} pc)',
   'st.ringAu': '{au} AU',
