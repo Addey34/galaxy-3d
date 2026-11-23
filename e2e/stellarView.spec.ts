@@ -86,7 +86,7 @@ for (const [label, viewport, hasTouch] of [
       );
     });
 
-    test('the nearest star keeps its name on screen with a wider font (a scale ring never hides a star name)', async ({
+    test('with a wider font, names stay readable: no two visible names overlap and most stars keep theirs', async ({
       page,
     }) => {
       await boot(page);
@@ -100,9 +100,38 @@ for (const [label, viewport, hasTouch] of [
       await expect(page.locator('#stellar-view')).toBeVisible({
         timeout: 30_000,
       });
-      await expect(
-        page.locator('.sv-label--star').filter({ hasText: /^Proxima Centauri/ })
-      ).toBeVisible({ timeout: 20_000 });
+      await expect(page.locator('.sv-label--star:visible').first()).toBeVisible(
+        { timeout: 20_000 }
+      );
+      await page.waitForTimeout(800);
+      const boxes = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('.sv-label'))
+          .filter((e) => (e as HTMLElement).style.display !== 'none')
+          .map((e) => {
+            const r = e.getBoundingClientRect();
+            return {
+              star: e.classList.contains('sv-label--star'),
+              x: r.x,
+              y: r.y,
+              w: r.width,
+              h: r.height,
+            };
+          })
+      );
+      // Le contrat du placement : aucun recouvrement de noms (le plus prioritaire reste, l'autre se tait).
+      for (let i = 0; i < boxes.length; i++)
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i]!;
+          const b = boxes[j]!;
+          const overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+          const overlapY = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+          expect(
+            overlapX > 1 && overlapY > 1,
+            `${i} et ${j} se recouvrent`
+          ).toBe(false);
+        }
+      // L'ordre de priorité (core/stellarLabels, testé) laisse aux étoiles la place des repères.
+      expect(boxes.filter((b) => b.star).length).toBeGreaterThan(8);
     });
 
     test('Proxima: position x, y, z, dont la norme est sa distance, à 4,25 années-lumière', async ({
