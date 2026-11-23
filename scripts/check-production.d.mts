@@ -45,6 +45,8 @@ export interface BakedTileset {
   tileMatrixSet: string;
   matrix: { columnsAtLevelZero: number; rowsAtLevelZero: number };
   maxLevel: number;
+  /** Présente pour un jeu RÉGIONAL : `bbox` = [ouest, sud, est, nord] en degrés, `levels` publiés. */
+  region?: { bbox: number[]; levels: number[] };
 }
 export function bakedTileProbes(
   set: BakedTileset
