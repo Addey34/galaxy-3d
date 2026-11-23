@@ -500,16 +500,21 @@ export async function setupStellarView(
           if (item.el.style.display === 'none') item.el.style.display = '';
           if (item.width === 0) item.width = item.el.offsetWidth || 90;
           const x = s.x;
-          const y = s.y + 16;
-          const clash = placed.some(
-            (p) =>
-              Math.abs(p.x - x) < (p.w + item.width) / 2 + 6 &&
-              Math.abs(p.y - y) < 18
-          );
-          if (!clash) {
+          // Le nom se pose sous le point ; s'il y recouvre un nom plus prioritaire, au-dessus ; sinon il se tait.
+          for (const y of [s.y + 16, s.y - 16]) {
+            const clash = placed.some(
+              (p) =>
+                Math.abs(p.x - x) < (p.w + item.width) / 2 + 6 &&
+                Math.abs(p.y - y) < 18
+            );
+            if (clash) continue;
             placed.push({ x, y, w: item.width });
             item.el.style.transform = `translate(${Math.round(x - item.width / 2)}px, ${Math.round(y - 8)}px)`;
+            // Où est le point lui-même (px écran) : les tests cliquent l'étoile, pas son nom.
+            item.el.dataset['sx'] = String(Math.round(s.x));
+            item.el.dataset['sy'] = String(Math.round(s.y));
             visible = true;
+            break;
           }
         }
         item.el.style.display = visible ? '' : 'none';
