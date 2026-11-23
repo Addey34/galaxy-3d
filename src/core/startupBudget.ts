@@ -479,6 +479,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le voisinage solaire en 3D (GAL-UNIVERSE-002) : interface, contrôles et scène Three.js des étoiles voisines en parsecs (`NeighbourhoodScene`, `core/stellarSpace`), importée par `ui/skyLayerToggles` au premier clic sur « Voisinage solaire en 3D » ou sur le bouton d'une fiche d'étoile, jamais au démarrage. Une seule boucle et un seul renderer : le rendu de remplacement est posé dans `AnimationSystem`.",
   },
   {
+    chunk: 'cloudComplement',
+    reason:
+      "le comblement des coins noirs de fauchée d'une image MODIS par l'autre instrument MODIS du même jour (GAL-CLOUD-VISUAL-001 : `ui/cloudComplement` et `core/cloudComposite`), importé par `ui/realtimeClouds` à la première image de nuages demandée, jamais au démarrage. Il ne s'exécute que pour une image MODIS : VIIRS, quand il publie, n'y passe pas.",
+  },
+  {
     chunk: 'skyLabels',
     reason:
       "le noyau des noms 2D écrits sur le ciel (projection, évitement, boucle d'images), partagé par `constellationNames` et `deepSkyLayer`, deux morceaux hors démarrage : Rollup en fait un morceau commun.",
