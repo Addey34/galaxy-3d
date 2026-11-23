@@ -26,10 +26,29 @@ import {
 import {
   distanceFromSunPc,
   motionWindow,
+  solarSceneToStellar,
   parsecsToLightYears,
   scaleRingsPc,
   yearsFromJ2000,
 } from '@/core/stellarSpace';
+import {
+  auRingLabelPriority,
+  AXIS_LABEL_PRIORITY,
+  parsecRingLabelPriority,
+  starLabelPriority,
+  SUN_LABEL_PRIORITY,
+} from '@/core/stellarLabels';
+import {
+  auToParsecs,
+  AU_PER_PARSEC,
+  fieldWidthPc,
+  homeDirection,
+  KM_PER_AU,
+  readField,
+  START_DISTANCE_AU,
+  transitionDistancePc,
+  transitionProgress,
+} from '@/core/scaleTransition';
 import { loadDeferredMessages } from '@/i18n/deferredMessages';
 import { getLocale, onLocaleChange, t } from '@/i18n';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
@@ -61,6 +80,11 @@ export interface StellarHost {
   coordinator: OverlayCoordinator;
   /** Date de la scène solaire au moment de l'ouverture. */
   simulationDate: () => Date;
+  /**
+   * Le regard de la caméra solaire (vers sa cible, repère de la scène solaire), pour garder le cap
+   * à l'arrivée. Absent ou nul : la direction d'ouverture.
+   */
+  gaze?: () => readonly [number, number, number] | null;
 }
 
 export interface StellarView {
@@ -182,9 +206,21 @@ export async function setupStellarView(
     const reset = el('button', 'sv-button', 'stellar-reset');
     reset.type = 'button';
     top.append(title, back, reset);
+    const skip = el('button', 'sv-button sv-skip', 'stellar-skip');
+    skip.type = 'button';
+    skip.hidden = true;
+    top.append(skip);
     const head = el('div', 'sv-head');
     const scale = el('p', 'sv-scale', 'stellar-scale');
-    head.append(top, scale);
+    // La largeur du champ de vue, en UA puis en années-lumière : l'échelle LUE, à chaque image.
+    const field = el('p', 'sv-scale sv-field', 'stellar-field');
+    // Pendant la transition seulement : dans quelle unité et dans quel repère on est.
+    const stage = el('div', 'sv-scale sv-stage', 'stellar-stage');
+    stage.hidden = true;
+    const stageText = el('p');
+    const stageNote = el('p');
+    stage.append(stageText, stageNote);
+    head.append(top, scale, field, stage);
     const surface = el('div', 'sv-surface', 'stellar-surface');
     surface.tabIndex = 0;
     surface.setAttribute('role', 'group');
@@ -249,11 +285,43 @@ export async function setupStellarView(
     controls.minDistance = MIN_DISTANCE_PC;
     controls.maxDistance = scene.extentPc * 6;
     controls.screenSpacePanning = true;
-    const home = (): void => {
-      const d = scene.extentPc * 2.1;
-      scene.camera.position.set(d * 0.72, d * 0.5, d * 0.62);
+    // Le cap du regard solaire (jamais le roulis) : on arrive en regardant le même côté du ciel.
+    const gazeSolar = host.gaze?.() ?? null;
+    const homeDir = homeDirection(
+      gazeSolar ? solarSceneToStellar(gazeSolar) : null
+    );
+    const homeDistance = scene.extentPc * 2.1;
+    const startDistance = auToParsecs(START_DISTANCE_AU);
+    // La transition : un recul de la caméra, du Soleil à 70 UA jusqu'à la vue d'ensemble, en une seule
+    // échelle géométrique (voir core/scaleTransition). Elle vit dans la boucle de rendu : la fermer la
+    // supprime avec elle, aucun minuteur à défaire.
+    let transition: { t0: number } | null = null;
+    const placeCamera = (distance: number): void => {
+      scene.camera.position.set(
+        homeDir[0] * distance,
+        homeDir[1] * distance,
+        homeDir[2] * distance
+      );
       controls.target.set(0, 0, 0);
+      scene.fitClipping(distance);
       controls.update();
+    };
+    const endTransition = (): void => {
+      if (!transition) return;
+      transition = null;
+      controls.minDistance = MIN_DISTANCE_PC;
+      controls.enabled = true;
+      placeCamera(homeDistance);
+      // Le bouton qui disparaît ne doit pas emporter le focus avec lui : il revient à « Retour ».
+      const hadFocus = document.activeElement === skip;
+      skip.hidden = true;
+      stage.hidden = true;
+      if (hadFocus) back.focus();
+      layout();
+    };
+    const home = (): void => {
+      endTransition();
+      placeCamera(homeDistance);
     };
     home();
 
@@ -264,6 +332,11 @@ export async function setupStellarView(
       back.textContent = t('st.back');
       reset.textContent = t('st.reset');
       scale.textContent = t('st.scale');
+      skip.textContent = t('st.skip');
+      stageNote.textContent = t('st.stageNote');
+      fieldText = '';
+      stageUnit = '';
+      renderField(true);
       help.textContent = t('st.help');
       surface.setAttribute('aria-label', t('st.title'));
       listTitle.textContent = t('st.list');
@@ -299,6 +372,8 @@ export async function setupStellarView(
       priority: number;
       point(): THREE.Vector3;
       width: number;
+      /** Un repère du plan galactique : caché tant que le champ se lit en UA. */
+      guide: boolean;
     }
     let labelItems: Label[] = [];
     const buildLabels = (sunText: string): void => {
@@ -308,20 +383,27 @@ export async function setupStellarView(
         text: string,
         className: string,
         priority: number,
-        point: () => THREE.Vector3
+        point: () => THREE.Vector3,
+        guide = false
       ): void => {
         const node = el('span', `sv-label ${className}`);
         node.textContent = text;
         node.style.display = 'none';
         labels.append(node);
-        labelItems.push({ el: node, priority, point, width: 0 });
+        labelItems.push({ el: node, priority, point, width: 0, guide });
       };
-      add(sunText, 'sv-label--sun', 1000, () => new THREE.Vector3(0, 0, 0));
+      add(
+        sunText,
+        'sv-label--sun',
+        SUN_LABEL_PRIORITY,
+        () => new THREE.Vector3(0, 0, 0)
+      );
       add(
         t('st.centre'),
         'sv-label--axis',
-        900,
-        () => new THREE.Vector3(scene.extentPc + 0.6, 0, 0)
+        AXIS_LABEL_PRIORITY,
+        () => new THREE.Vector3(scene.extentPc + 0.6, 0, 0),
+        true
       );
       for (const r of scaleRingsPc(scene.extentPc))
         add(
@@ -330,19 +412,73 @@ export async function setupStellarView(
             ly: fixed(parsecsToLightYears(r), 1),
           }),
           'sv-label--ring',
-          // Sous TOUTES les étoiles (priorité 50 à 100) : un repère d'échelle ne masque jamais un nom d'étoile.
-          50 - r,
-          () => new THREE.Vector3(0, 0, r)
+          parsecRingLabelPriority(r),
+          () => new THREE.Vector3(0, 0, r),
+          true
         );
+      // Les repères de l'écliptique : sous les étoiles dans la priorité des noms (core/stellarLabels).
+      scene.eclipticAnchors.forEach(({ au, point }, k) =>
+        add(
+          t('st.ringAu', { au: fixed(au, 0) }),
+          'sv-label--au',
+          auRingLabelPriority(k),
+          () => new THREE.Vector3(...point)
+        )
+      );
       systems.forEach((system, i) =>
         add(
           `${names[i]!} · ${fixed(distanceFacts(systemPrimary(system)).lightYears, 1)} ${t('nb.unit.ly')}`,
           'sv-label--star',
-          100 - systemPrimary(system)[5] * 10,
+          starLabelPriority(systemPrimary(system)[5], scene.extentPc),
           () => new THREE.Vector3(...scene.positionOf(i))
         )
       );
       labelItems.sort((a, b) => b.priority - a.priority);
+    };
+
+    // La largeur du champ de vue, lue dans l'unité qui se lit (UA, puis années-lumière) : le texte
+    // n'est réécrit que s'il change, et pas plus de dix fois par seconde.
+    let fieldText = '';
+    let stageUnit = '';
+    let guidesVisible = true;
+    let fieldAt = 0;
+    const renderField = (force = false): void => {
+      const now = performance.now();
+      if (!force && now - fieldAt < 100) return;
+      fieldAt = now;
+      const distance = scene.camera.position.distanceTo(controls.target);
+      const width = fieldWidthPc(
+        distance,
+        scene.camera.fov,
+        scene.camera.aspect
+      );
+      const reading = readField(width);
+      const text =
+        reading.unit === 'au'
+          ? t('st.fieldAu', { au: number(reading.au, 3) })
+          : t('st.fieldLy', {
+              ly: number(reading.ly, 3),
+              pc: number(reading.pc, 2),
+            });
+      if (text !== fieldText) {
+        fieldText = text;
+        field.textContent = text;
+      }
+      const guides = reading.unit === 'ly';
+      if (guides !== guidesVisible) {
+        guidesVisible = guides;
+        scene.setGuidesVisible(guides);
+      }
+      if (transition && reading.unit !== stageUnit) {
+        stageUnit = reading.unit;
+        stageText.textContent =
+          reading.unit === 'au'
+            ? t('st.stageAu', { km: fixed(KM_PER_AU / 1e6, 1) })
+            : t('st.stageLy', {
+                ly: fixed(parsecsToLightYears(1), 2),
+                au: number(AU_PER_PARSEC, 6),
+              });
+      }
     };
 
     const updateLabels = (): void => {
@@ -352,21 +488,33 @@ export async function setupStellarView(
       for (const item of labelItems) {
         const s = scene.projectVector(item.point(), width, height);
         let visible = false;
-        if (s && s.x > 0 && s.x < width && s.y > 60 && s.y < height) {
+        if (
+          s &&
+          !(item.guide && !guidesVisible) &&
+          s.x > 0 &&
+          s.x < width &&
+          s.y > 60 &&
+          s.y < height
+        ) {
           // Un élément en `display: none` mesure 0 : on l'affiche avant de le mesurer.
           if (item.el.style.display === 'none') item.el.style.display = '';
           if (item.width === 0) item.width = item.el.offsetWidth || 90;
           const x = s.x;
-          const y = s.y + 16;
-          const clash = placed.some(
-            (p) =>
-              Math.abs(p.x - x) < (p.w + item.width) / 2 + 6 &&
-              Math.abs(p.y - y) < 18
-          );
-          if (!clash) {
+          // Le nom se pose sous le point ; s'il y recouvre un nom plus prioritaire, au-dessus ; sinon il se tait.
+          for (const y of [s.y + 16, s.y - 16]) {
+            const clash = placed.some(
+              (p) =>
+                Math.abs(p.x - x) < (p.w + item.width) / 2 + 6 &&
+                Math.abs(p.y - y) < 18
+            );
+            if (clash) continue;
             placed.push({ x, y, w: item.width });
             item.el.style.transform = `translate(${Math.round(x - item.width / 2)}px, ${Math.round(y - 8)}px)`;
+            // Où est le point lui-même (px écran) : les tests cliquent l'étoile, pas son nom.
+            item.el.dataset['sx'] = String(Math.round(s.x));
+            item.el.dataset['sy'] = String(Math.round(s.y));
             visible = true;
+            break;
           }
         }
         item.el.style.display = visible ? '' : 'none';
@@ -492,6 +640,12 @@ export async function setupStellarView(
     // ---- le clic ou le tap sur une étoile (même tolérance de glisser que les autres surfaces)
     let start: { id: number; x: number; y: number } | null = null;
     const down = (event: PointerEvent): void => {
+      // Un geste pendant la transition la termine : il ne choisit pas une étoile par accident.
+      if (transition) {
+        endTransition();
+        start = null;
+        return;
+      }
       if (!event.isPrimary || event.button !== 0) return;
       start = { id: event.pointerId, x: event.clientX, y: event.clientY };
     };
@@ -514,11 +668,14 @@ export async function setupStellarView(
       );
       if (index >= 0) select(index);
     };
+    const wheel = (): void => endTransition();
     surface.addEventListener('pointerdown', down);
     surface.addEventListener('pointerup', up);
+    surface.addEventListener('wheel', wheel, { passive: true });
     cleanups.push(() => {
       surface.removeEventListener('pointerdown', down);
       surface.removeEventListener('pointerup', up);
+      surface.removeEventListener('wheel', wheel);
     });
 
     // ---- le clavier : flèches (tourner), + et - (zoom), Origine (recentrer), Échap (revenir)
@@ -552,6 +709,12 @@ export async function setupStellarView(
         return;
       }
       if (event.target !== surface) return;
+      if (transition && !/^(Tab|Shift|Control|Alt|Meta)$/.test(event.key)) {
+        // Une touche pendant la transition la termine (aucun autre effet : le geste n'est pas rejoué).
+        endTransition();
+        event.preventDefault();
+        return;
+      }
       const handled = ((): boolean => {
         switch (event.key) {
           case 'ArrowLeft':
@@ -586,6 +749,7 @@ export async function setupStellarView(
     root.addEventListener('keydown', keydown);
     cleanups.push(() => root.removeEventListener('keydown', keydown));
     back.addEventListener('click', () => session.close());
+    skip.addEventListener('click', endTransition);
     reset.addEventListener('click', home);
 
     // Le cadrage : le centre de la zone libre (bandeau et volet exclus) reçoit le Soleil.
@@ -616,7 +780,12 @@ export async function setupStellarView(
     // ---- la boucle : le rendu de remplacement de l'application
     scene.setYears(yearsNow(), true);
     host.animation.setRenderOverride(() => {
-      controls.update();
+      if (transition) {
+        const p = transitionProgress(performance.now() - transition.t0);
+        if (p >= 1) endTransition();
+        else placeCamera(transitionDistancePc(p, startDistance, homeDistance));
+      } else controls.update();
+      renderField();
       scene.render(host.renderer);
       updateLabels();
     });
@@ -645,6 +814,15 @@ export async function setupStellarView(
       },
     };
     opened = session;
+    // Mouvement réduit : arrivée directe, sans animation (le champ affiché dit la même chose).
+    if (!reduced) {
+      transition = { t0: performance.now() };
+      controls.enabled = false;
+      controls.minDistance = 1e-7;
+      placeCamera(startDistance);
+      skip.hidden = false;
+      stage.hidden = false;
+    }
     pointerRender();
     layout();
     const wanted = focus
@@ -654,6 +832,8 @@ export async function setupStellarView(
       : -1;
     if (wanted >= 0) select(wanted, false);
     getAnnouncer().announce(t('st.opened', { n: String(systems.length) }));
+    if (transition) getAnnouncer().announce(t('st.transitionStart'));
+    renderField(true);
     back.focus();
   }
 

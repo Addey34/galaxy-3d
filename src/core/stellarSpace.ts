@@ -1,6 +1,6 @@
 /**
  * L'ESPACE STELLAIRE : où sont VRAIMENT les étoiles voisines autour du Soleil, en parsecs. Pur, sans
- * DOM ni Three.js.
+ * DOM ni objet Three.js (seule la constante d'obliquité de `core/frames.ts` en vient).
  *
  * C'est un espace À PART de la scène solaire : aucune de ses unités ne passe par `ScaleService`
  * (1 UA = 35 unités de scène en Exploration). **1 unité de l'espace stellaire = 1 parsec**, et rien
@@ -24,6 +24,7 @@
  * potentiel galactique, les orbites des doubles et surtout l'incertitude sur les vitesses radiales
  * manquantes dominent ; ce n'est plus une prévision mais un tracé.
  */
+import { OBLIQUITY_RAD } from './frames';
 import { EQUATORIAL_TO_GALACTIC } from './galactic';
 import { LIGHT_YEARS_PER_PARSEC } from './exoplanets';
 import type { NeighbourRow } from './neighbours';
@@ -85,6 +86,23 @@ export function equatorialToGalactic(v: Readonly<Vec3>): Vec3 {
 /** Galactique (x, y, z) → repère de Three.js (Y vers le haut, direct) : X = x, Y = z, Z = −y. */
 export function galacticToScene(v: Readonly<Vec3>): Vec3 {
   return [v[0], v[2], -v[1]];
+}
+
+/**
+ * Un vecteur de la scène SOLAIRE (Three.js : plan XZ = écliptique J2000, +Y = nord écliptique,
+ * `core/frames.ts`) dans le repère de la scène STELLAIRE (galactique, `galacticToScene`). Les deux
+ * scènes ont le Soleil à l'origine : c'est une rotation pure, valable pour une direction comme pour
+ * un vecteur, sans échelle. Elle sert à garder le regard (le morceau de ciel que l'on regarde) et à
+ * poser les cercles de l'écliptique dans l'espace stellaire.
+ */
+export function solarSceneToStellar(v: Readonly<Vec3>): Vec3 {
+  const c = Math.cos(OBLIQUITY_RAD);
+  const s = Math.sin(OBLIQUITY_RAD);
+  // Inverse de `equatorialToScene` : scène (X, Y, Z) = (ex, ez, −ey).
+  const ey = -v[2];
+  const ez = v[1];
+  const equatorial: Vec3 = [v[0], ey * c - ez * s, ey * s + ez * c];
+  return galacticToScene(equatorialToGalactic(equatorial));
 }
 
 /**

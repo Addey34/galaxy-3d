@@ -526,7 +526,17 @@ function wireChrome(): {
       coordinator: overlayCoordinator,
       simulationDate: () => orbitalMechanics.simulationDate,
       centering: cameraSystem,
-      stellar: { animation: animationSystem, renderer: cameraSystem.renderer },
+      stellar: {
+        animation: animationSystem,
+        renderer: cameraSystem.renderer,
+        // Le regard de la caméra solaire, pour arriver en regardant le même côté du ciel.
+        gaze: () => {
+          const g = cameraSystem.controls.target
+            .clone()
+            .sub(cameraSystem.camera.position);
+          return g.lengthSq() > 0 ? [g.x, g.y, g.z] : null;
+        },
+      },
     });
     // Les satellites d'après le service de données : `earth` et la règle de position sont ceux des
     // sondes en orbite (`placeInstrument`), la couche elle-même n'est chargée qu'à l'activation.

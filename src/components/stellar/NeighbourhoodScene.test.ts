@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import type { NeighbourFile } from '@/core/neighbours';
+import { auToParsecs, ECLIPTIC_RINGS_AU } from '@/core/scaleTransition';
 import { distanceFromSunPc } from '@/core/stellarSpace';
 import { NeighbourhoodScene, spectralColour } from './NeighbourhoodScene';
 
@@ -58,7 +59,7 @@ describe('la scène du voisinage solaire', () => {
   it('ses cercles d’échelle valent 1 pc, 2 pc… dans le plan galactique (Y = 0)', () => {
     const scene = new NeighbourhoodScene(file.stars);
     const rings = scene.scene.children.filter(
-      (c) => c instanceof THREE.LineLoop
+      (c) => c instanceof THREE.LineLoop && c.name !== 'ecliptic-ring'
     ) as THREE.LineLoop[];
     expect(rings.length).toBeGreaterThanOrEqual(5);
     rings.forEach((ring, i) => {
@@ -98,6 +99,63 @@ describe('la scène du voisinage solaire', () => {
     expect(scene.pick(2, 2, 1280, 800, 4)).toBe(-1);
     scene.setSelected(target);
     expect(scene.selectedIndex).toBe(target);
+    scene.dispose();
+  });
+
+  it('pose les cercles de l’écliptique (1 UA à 100 000 UA) dans le plan incliné de 60,2° sur la Galaxie', () => {
+    const scene = new NeighbourhoodScene(file.stars);
+    const rings = scene.scene.children.filter(
+      (c) => c.name === 'ecliptic-ring'
+    ) as THREE.LineLoop[];
+    expect(rings).toHaveLength(ECLIPTIC_RINGS_AU.length);
+    rings.forEach((ring, i) => {
+      const radius = auToParsecs(ECLIPTIC_RINGS_AU[i]!);
+      const p = ring.geometry.getAttribute('position');
+      let top = 0;
+      for (let k = 0; k < p.count; k++) {
+        // Float32 : 1e-7 de précision relative.
+        expect(
+          Math.hypot(p.getX(k), p.getY(k), p.getZ(k)) / radius
+        ).toBeCloseTo(1, 5);
+        top = Math.max(top, p.getY(k));
+      }
+      expect(top / radius).toBeCloseTo(Math.sin((60.19 * Math.PI) / 180), 2);
+    });
+    expect(scene.eclipticAnchors.map((a) => a.au)).toEqual([
+      ...ECLIPTIC_RINGS_AU,
+    ]);
+    scene.dispose();
+  });
+
+  it('les plans de découpe suivent la distance : le Soleil à 70 UA n’est pas coupé par le plan proche', () => {
+    const scene = new NeighbourhoodScene(file.stars);
+    scene.fitClipping(auToParsecs(70));
+    expect(scene.camera.near).toBeLessThan(auToParsecs(70) / 100);
+    scene.fitClipping(30);
+    expect(scene.camera.near).toBe(0.02);
+    scene.dispose();
+  });
+
+  it('les repères du plan galactique se cachent en UA ; les étoiles et les cercles de l’écliptique restent', () => {
+    const scene = new NeighbourhoodScene(file.stars);
+    const hidden = (): string[] =>
+      scene.scene.children
+        .filter((c) => !c.visible)
+        .map((c) => c.type + ':' + c.name);
+    // La sélection et le trait de distance sont cachés tant que rien n'est choisi.
+    const baseline = hidden();
+    scene.setGuidesVisible(false);
+    const off = scene.scene.children.filter((c) => !c.visible);
+    // 5+ cercles de parsecs, l'axe, les traits vers le plan : cachés ; étoiles, Soleil, écliptique : visibles.
+    expect(off.length).toBeGreaterThanOrEqual(baseline.length + 7);
+    expect(
+      scene.scene.children.filter(
+        (c) => c.name === 'ecliptic-ring' && !c.visible
+      )
+    ).toHaveLength(0);
+    expect(scene.scene.getObjectByName('sun')!.visible).toBe(true);
+    scene.setGuidesVisible(true);
+    expect(hidden()).toEqual(baseline);
     scene.dispose();
   });
 

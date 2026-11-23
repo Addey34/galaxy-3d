@@ -107,6 +107,18 @@ export const cardEn = {
   'st.selectedAnnounce': '{name}, {ly} light-years from the Sun.',
   'st.unavailable':
     'The 3D view is not available: the graphics context is not responding.',
+  'st.fieldAu': 'Field width at the Sun: {au} AU',
+  'st.fieldLy': 'Field width at the Sun: {ly} ly ({pc} pc)',
+  'st.ringAu': '{au} AU',
+  'st.stageAu':
+    'Inside the Solar System: the unit is the astronomical unit (AU), the mean Earth–Sun distance, {km} million km. Orange circles: 1, 10, 100… AU, in the plane of the planets.',
+  'st.stageLy':
+    'Between the stars: the unit is the light-year (1 parsec = {ly} light-years = {au} AU). Blue circles: one per parsec, in the galactic plane.',
+  'st.stageNote':
+    'A change of scale, not a journey: the Sun stays at the centre and only the field widens, in a single galactic frame. No speed is implied.',
+  'st.skip': 'Skip the transition',
+  'st.transitionStart':
+    'Changing scale: from the Solar System, in astronomical units, to the neighbourhood, in light-years.',
   'exo.card.unknown': 'not published',
   'exo.card.period': 'Orbital period',
   'exo.card.radius': 'Radius',
