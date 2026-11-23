@@ -49,11 +49,20 @@ import {
   transitionDistancePc,
   transitionProgress,
 } from '@/core/scaleTransition';
+import {
+  parseStellarAddress,
+  resolveStar,
+  serializeStellarAddress,
+  snapYears,
+  solarIdentity,
+  starSlug,
+} from '@/core/stellarPermalink';
 import { loadDeferredMessages } from '@/i18n/deferredMessages';
 import { getLocale, onLocaleChange, t } from '@/i18n';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
 import Logger from '@/utils/Logger';
 import { getAnnouncer } from './announcer';
+import { claimHistory } from './permalink';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import {
   maskElements,
@@ -88,8 +97,13 @@ export interface StellarHost {
 }
 
 export interface StellarView {
-  /** Ouvre la vue ; `focus` (un nom d'étoile) sélectionne le système qui le porte. */
-  open(focus?: string): void;
+  /**
+   * Ouvre la vue ; `focus` (un nom d'étoile) sélectionne le système qui le porte.
+   * `fromAddress` : l'ADRESSE demande la vue (lien partagé, Suivant du navigateur) ; l'étoile et le
+   * décalage de temps s'y lisent, et aucune entrée d'historique n'est ajoutée (l'adresse est déjà
+   * la bonne).
+   */
+  open(focus?: string, fromAddress?: boolean): void;
   close(): void;
   readonly isOpen: boolean;
 }
@@ -146,6 +160,48 @@ export async function setupStellarView(
 
   let opened: Session | null = null;
 
+  // ---- l'adresse de l'observation (GAL-UNIVERSE-004, `core/stellarPermalink`)
+  /** L'identité du Système solaire à la dernière ouverture (`solarIdentity` : sans la vue, la date ni le cadrage). */
+  let baseAddress: string | null = null;
+  /** Vrai quand CETTE ouverture a ajouté son entrée d'historique : fermer la retire par « Retour ». */
+  let pushed = false;
+  const here = (search = window.location.search): string =>
+    `${window.location.pathname}${search}${window.location.hash}`;
+  const solarNow = (): string =>
+    solarIdentity(window.location.pathname, window.location.search);
+  const writeAddress = (
+    address: { star?: string | null; years?: number } | null,
+    how: 'push' | 'replace'
+  ): void => {
+    const next = here(serializeStellarAddress(window.location.search, address));
+    if (next === here()) return;
+    window.history[how === 'push' ? 'pushState' : 'replaceState'](
+      null,
+      '',
+      next
+    );
+  };
+  /**
+   * Un Retour ou un Suivant du navigateur : la vue se ferme quand l'adresse ne la demande plus, et
+   * s'ouvre quand elle la redemande. Rend `true` quand le mouvement ne change QUE la vue (même
+   * identité solaire : `solarIdentity`, donc hors date et cadrage) : le permalien solaire ne le
+   * traite alors pas (`claimHistory`), parce qu'il reselectionnerait le corps et ferait perdre le
+   * cadrage du Système solaire.
+   */
+  claimHistory((): boolean => {
+    const address = parseStellarAddress(window.location.search);
+    const viewOnly = baseAddress !== null && solarNow() === baseAddress;
+    if (opened && !address) opened.close(true);
+    else if (!opened && address) {
+      open(undefined, true);
+      // Suivant ramène l'entrée que l'ouverture avait ajoutée : elle a un prédécesseur solaire, que
+      // fermer par le bouton doit retrouver par un « Retour » (sinon un doublon de l'adresse
+      // solaire resterait dans l'historique, et le Retour suivant rappellerait le permalien solaire).
+      if (viewOnly && opened) pushed = true;
+    }
+    return viewOnly;
+  });
+
   /** Tout ce que possède une ouverture : scène, contrôles, DOM, écouteurs, éléments rendus inertes. */
   interface Session {
     scene: NeighbourhoodScene;
@@ -154,16 +210,25 @@ export async function setupStellarView(
     cleanups: Array<() => void>;
     inert: MaskedElement[];
     opener: HTMLElement | null;
-    close(): void;
+    close(viaHistory?: boolean): void;
   }
 
-  function open(focus?: string): void {
+  function open(focus?: string, fromAddress = false): void {
     if (opened) return;
+    // Une adresse qui demande la vue sans pouvoir l'obtenir la perd : sinon un rechargement la rejouerait.
+    const refuse = (): void => {
+      if (fromAddress && parseStellarAddress(window.location.search))
+        writeAddress(null, 'replace');
+    };
     // Pas en session VR : la scène solaire y est rendue par le casque, pas par la boucle bureau.
-    if (host.renderer.xr.isPresenting) return;
+    if (host.renderer.xr.isPresenting) {
+      refuse();
+      return;
+    }
     const gl = host.renderer.getContext();
     if (gl.isContextLost()) {
       getAnnouncer().announce(t('st.unavailable'));
+      refuse();
       return;
     }
     // Le déclencheur se lit AVANT de fermer les surfaces : `closeAll` déplace le focus.
@@ -521,6 +586,19 @@ export async function setupStellarView(
       }
     };
 
+    // ---- l'adresse suit l'observation (étoile choisie, décalage de temps), une fois l'entrée posée
+    let addressLive = false;
+    const syncAddress = (): void => {
+      if (!addressLive) return;
+      writeAddress(
+        {
+          star: current >= 0 ? starSlug(names[current]!) : undefined,
+          years: offsetYears,
+        },
+        'replace'
+      );
+    };
+
     // ---- le temps : position à la date de la scène, déplacée en ligne droite
     const yearsNow = (): number => timeWindow.base + offsetYears;
     function renderTime(): void {
@@ -543,6 +621,7 @@ export async function setupStellarView(
       scene.setYears(yearsNow());
       renderTime();
       renderCard();
+      syncAddress();
     });
 
     // ---- la fiche de l'étoile choisie
@@ -626,6 +705,7 @@ export async function setupStellarView(
       renderCard();
       // La hauteur du volet change avec la fiche : la zone libre aussi.
       layout();
+      syncAddress();
       if (announce && index >= 0) {
         const primary = systemPrimary(systems[index]!);
         getAnnouncer().announce(
@@ -797,9 +877,10 @@ export async function setupStellarView(
       cleanups,
       inert,
       opener,
-      close() {
+      close(viaHistory = false) {
         if (opened !== session) return;
         opened = null;
+        addressLive = false;
         // D'abord rendre la boucle à la scène solaire : plus rien ne dessine la scène stellaire.
         host.animation.setRenderOverride(null);
         for (const cleanup of cleanups) cleanup();
@@ -811,6 +892,15 @@ export async function setupStellarView(
         getAnnouncer().announce(t('st.closed'));
         // Le focus revient où il était ; à défaut, au canevas de la scène solaire.
         (opener && document.contains(opener) ? opener : canvas).focus?.();
+        // L'adresse revient au Système solaire. Fermée PAR l'historique (Retour du navigateur), elle y
+        // est déjà. Sinon : l'entrée que l'ouverture avait ajoutée est retirée par un « Retour » (le
+        // Suivant du navigateur rouvre la vue) ; une adresse arrivée par un lien, qui n'a pas d'entrée
+        // à elle, est simplement réécrite.
+        if (viaHistory) pushed = false;
+        else if (pushed) {
+          pushed = false;
+          window.history.back();
+        } else writeAddress(null, 'replace');
       },
     };
     opened = session;
@@ -831,7 +921,45 @@ export async function setupStellarView(
         )
       : -1;
     if (wanted >= 0) select(wanted, false);
+    // L'observation que l'adresse décrit : le décalage de temps d'abord (la fiche le lit), puis l'étoile.
+    const requested = fromAddress
+      ? parseStellarAddress(window.location.search)
+      : null;
+    let unknownStar = false;
+    if (requested) {
+      if (requested.years !== undefined) {
+        offsetYears = snapYears(requested.years, timeWindow, TIME_STEP_YEARS);
+        time.value = String(offsetYears);
+        scene.setYears(yearsNow());
+        renderTime();
+        renderCard();
+      }
+      if (requested.star !== undefined) {
+        const index =
+          requested.star === null
+            ? -1
+            : resolveStar(requested.star, systems.map(namesOf));
+        if (index >= 0) select(index, false);
+        else unknownStar = true;
+      }
+    }
+    // L'entrée d'historique : un lien (ou Suivant) arrive déjà sur l'adresse de la vue, on la remet
+    // seulement au propre (une étoile inconnue en est retirée) ; un geste ajoute une entrée.
+    baseAddress = solarNow();
+    const observation = {
+      star: current >= 0 ? starSlug(names[current]!) : undefined,
+      years: offsetYears,
+    };
+    if (requested) {
+      pushed = false;
+      writeAddress(observation, 'replace');
+    } else {
+      pushed = true;
+      writeAddress(observation, 'push');
+    }
+    addressLive = true;
     getAnnouncer().announce(t('st.opened', { n: String(systems.length) }));
+    if (unknownStar) getAnnouncer().announce(t('st.unknownStar'));
     if (transition) getAnnouncer().announce(t('st.transitionStart'));
     renderField(true);
     back.focus();
@@ -844,4 +972,19 @@ export async function setupStellarView(
       return opened !== null;
     },
   };
+}
+
+/**
+ * L'adresse demandait la vue et elle ne peut pas s'ouvrir (fichier des étoiles illisible) : on le
+ * dit, et la demande est retirée de l'adresse pour qu'un rechargement ne la rejoue pas.
+ */
+export async function abandonStellarAddress(): Promise<void> {
+  await loadDeferredMessages();
+  getAnnouncer().announce(t('st.dataUnavailable'));
+  if (parseStellarAddress(window.location.search))
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${serializeStellarAddress(window.location.search, null)}${window.location.hash}`
+    );
 }

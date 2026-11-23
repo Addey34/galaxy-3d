@@ -100,6 +100,10 @@ export const cardEs: Record<CardMessageKey, string> = {
   'st.selectedAnnounce': '{name}, a {ly} años luz del Sol.',
   'st.unavailable':
     'La vista 3D no está disponible: el contexto gráfico no responde.',
+  'st.unknownStar':
+    'El enlace indica una estrella que no está entre las estrellas cercanas. La vista se abre sin estrella seleccionada.',
+  'st.dataUnavailable':
+    'La vista 3D no está disponible: no se pudo leer el archivo de estrellas cercanas.',
   'st.fieldAu': 'Ancho del campo a la altura del Sol: {au} UA',
   'st.fieldLy': 'Ancho del campo a la altura del Sol: {ly} al ({pc} pc)',
   'st.ringAu': '{au} UA',

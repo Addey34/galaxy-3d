@@ -118,6 +118,9 @@ export async function loadWithComplement(
   signal: AbortSignal | undefined,
   options: ComplementOptions
 ): Promise<THREE.Texture> {
+  // Chaque chargement repart de zéro : un comblement d'un chargement précédent de la même adresse ne
+  // doit jamais étiqueter une image chargée seule ensuite (provenance périmée).
+  done.delete(url);
   // Les deux images se téléchargent EN PARALLÈLE : le complément n'ajoute pas sa latence à celle de
   // l'image. Son échec est avalé ici (jamais une promesse rejetée sans écouteur) et relu plus bas.
   const siblingUrl = modisSiblingUrl(url);
