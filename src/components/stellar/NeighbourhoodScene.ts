@@ -199,6 +199,7 @@ export class NeighbourhoodScene {
       )
     );
     drops.frustumCulled = false;
+    this.guides.push(drops);
     this.scene.add(drops);
 
     // Un cercle par parsec dans le plan galactique.
@@ -222,6 +223,7 @@ export class NeighbourhoodScene {
       const ring = new THREE.LineLoop(geo, ringMaterial);
       ring.frustumCulled = false;
       this.ringObjects.push(ring);
+      this.guides.push(ring);
       this.scene.add(ring);
     }
 
@@ -241,6 +243,7 @@ export class NeighbourhoodScene {
       )
     );
     this.axis.frustumCulled = false;
+    this.guides.push(this.axis);
     this.scene.add(this.axis);
 
     // Les cercles de l'ÉCLIPTIQUE (plan des planètes), une décade d'UA chacun : le pont vers le Système
@@ -476,6 +479,17 @@ export class NeighbourhoodScene {
     renderer.render(this.scene, this.camera);
   }
 
+  private readonly guides: THREE.Object3D[] = [];
+
+  /**
+   * Les repères du plan galactique (cercles d'un parsec, axe, traits vers le plan) ne se montrent que
+   * quand le champ se lit en années-lumière : à 70 UA du Soleil, on est DEDANS, ils traverseraient
+   * l'écran sans rien dire. Les étoiles, elles, sont toujours là : ce sont les vraies directions du ciel.
+   */
+  setGuidesVisible(visible: boolean): void {
+    for (const guide of this.guides) guide.visible = visible;
+  }
+
   /** Libère TOUTES les ressources GPU de la scène : géométries et matériaux. */
   dispose(): void {
     this.scene.traverse((object) => {
@@ -486,6 +500,7 @@ export class NeighbourhoodScene {
     for (const material of this.materials) material.dispose();
     this.materials.length = 0;
     this.ringObjects.length = 0;
+    this.guides.length = 0;
     this.scene.clear();
   }
 }

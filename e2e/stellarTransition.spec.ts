@@ -96,13 +96,15 @@ test.describe('the change of scale', () => {
     await expect(page.locator('#stellar-field')).toContainText(/ly \(/);
     const texts = await recorded(page);
     const first = texts[0]!;
-    expect(first).toMatch(/^Field width: [\d.,]+ AU$/);
+    expect(first).toMatch(/^Field width at the Sun: [\d.,]+ AU$/);
     const startAu = number(/([\d.,]+) AU/.exec(first)![1]!);
     // 70 UA de distance, champ de 50° sur un écran de 1280 × 800 : de l'ordre de 100 UA.
     expect(startAu).toBeGreaterThan(60);
     expect(startAu).toBeLessThan(160);
     const last = texts.at(-1)!;
-    const end = /^Field width: ([\d.,]+) ly \(([\d.,]+) pc\)$/.exec(last);
+    const end = /^Field width at the Sun: ([\d.,]+) ly \(([\d.,]+) pc\)$/.exec(
+      last
+    );
     expect(end, last).not.toBeNull();
     // Les deux unités du même champ sont cohérentes : 1 pc = 3,26 al.
     // (trois chiffres significatifs affichés : à 3 % près)

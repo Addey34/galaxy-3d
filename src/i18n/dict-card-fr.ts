@@ -101,8 +101,8 @@ export const cardFr: Record<CardMessageKey, string> = {
   'st.selectedAnnounce': '{name}, à {ly} années-lumière du Soleil.',
   'st.unavailable':
     'La vue 3D n’est pas disponible : le contexte graphique ne répond pas.',
-  'st.fieldAu': 'Largeur du champ : {au} UA',
-  'st.fieldLy': 'Largeur du champ : {ly} al ({pc} pc)',
+  'st.fieldAu': 'Largeur du champ au niveau du Soleil : {au} UA',
+  'st.fieldLy': 'Largeur du champ au niveau du Soleil : {ly} al ({pc} pc)',
   'st.ringAu': '{au} UA',
   'st.stageAu':
     'Dans le Système solaire : l’unité est l’unité astronomique (UA), la distance moyenne Terre-Soleil, {km} millions de km. Cercles orangés : 1, 10, 100… UA, dans le plan des planètes.',

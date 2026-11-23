@@ -372,6 +372,8 @@ export async function setupStellarView(
       priority: number;
       point(): THREE.Vector3;
       width: number;
+      /** Un repère du plan galactique : caché tant que le champ se lit en UA. */
+      guide: boolean;
     }
     let labelItems: Label[] = [];
     const buildLabels = (sunText: string): void => {
@@ -381,13 +383,14 @@ export async function setupStellarView(
         text: string,
         className: string,
         priority: number,
-        point: () => THREE.Vector3
+        point: () => THREE.Vector3,
+        guide = false
       ): void => {
         const node = el('span', `sv-label ${className}`);
         node.textContent = text;
         node.style.display = 'none';
         labels.append(node);
-        labelItems.push({ el: node, priority, point, width: 0 });
+        labelItems.push({ el: node, priority, point, width: 0, guide });
       };
       add(
         sunText,
@@ -399,7 +402,8 @@ export async function setupStellarView(
         t('st.centre'),
         'sv-label--axis',
         AXIS_LABEL_PRIORITY,
-        () => new THREE.Vector3(scene.extentPc + 0.6, 0, 0)
+        () => new THREE.Vector3(scene.extentPc + 0.6, 0, 0),
+        true
       );
       for (const r of scaleRingsPc(scene.extentPc))
         add(
@@ -409,7 +413,8 @@ export async function setupStellarView(
           }),
           'sv-label--ring',
           parsecRingLabelPriority(r),
-          () => new THREE.Vector3(0, 0, r)
+          () => new THREE.Vector3(0, 0, r),
+          true
         );
       // Les repères de l'écliptique : sous les étoiles dans la priorité des noms (core/stellarLabels).
       scene.eclipticAnchors.forEach(({ au, point }, k) =>
@@ -435,6 +440,7 @@ export async function setupStellarView(
     // n'est réécrit que s'il change, et pas plus de dix fois par seconde.
     let fieldText = '';
     let stageUnit = '';
+    let guidesVisible = true;
     let fieldAt = 0;
     const renderField = (force = false): void => {
       const now = performance.now();
@@ -458,6 +464,11 @@ export async function setupStellarView(
         fieldText = text;
         field.textContent = text;
       }
+      const guides = reading.unit === 'ly';
+      if (guides !== guidesVisible) {
+        guidesVisible = guides;
+        scene.setGuidesVisible(guides);
+      }
       if (transition && reading.unit !== stageUnit) {
         stageUnit = reading.unit;
         stageText.textContent =
@@ -477,7 +488,14 @@ export async function setupStellarView(
       for (const item of labelItems) {
         const s = scene.projectVector(item.point(), width, height);
         let visible = false;
-        if (s && s.x > 0 && s.x < width && s.y > 60 && s.y < height) {
+        if (
+          s &&
+          !(item.guide && !guidesVisible) &&
+          s.x > 0 &&
+          s.x < width &&
+          s.y > 60 &&
+          s.y < height
+        ) {
           // Un élément en `display: none` mesure 0 : on l'affiche avant de le mesurer.
           if (item.el.style.display === 'none') item.el.style.display = '';
           if (item.width === 0) item.width = item.el.offsetWidth || 90;

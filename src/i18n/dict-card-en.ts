@@ -107,8 +107,8 @@ export const cardEn = {
   'st.selectedAnnounce': '{name}, {ly} light-years from the Sun.',
   'st.unavailable':
     'The 3D view is not available: the graphics context is not responding.',
-  'st.fieldAu': 'Field width: {au} AU',
-  'st.fieldLy': 'Field width: {ly} ly ({pc} pc)',
+  'st.fieldAu': 'Field width at the Sun: {au} AU',
+  'st.fieldLy': 'Field width at the Sun: {ly} ly ({pc} pc)',
   'st.ringAu': '{au} AU',
   'st.stageAu':
     'Inside the Solar System: the unit is the astronomical unit (AU), the mean Earth–Sun distance, {km} million km. Orange circles: 1, 10, 100… AU, in the plane of the planets.',

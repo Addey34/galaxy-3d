@@ -136,6 +136,29 @@ describe('la scène du voisinage solaire', () => {
     scene.dispose();
   });
 
+  it('les repères du plan galactique se cachent en UA ; les étoiles et les cercles de l’écliptique restent', () => {
+    const scene = new NeighbourhoodScene(file.stars);
+    const hidden = (): string[] =>
+      scene.scene.children
+        .filter((c) => !c.visible)
+        .map((c) => c.type + ':' + c.name);
+    // La sélection et le trait de distance sont cachés tant que rien n'est choisi.
+    const baseline = hidden();
+    scene.setGuidesVisible(false);
+    const off = scene.scene.children.filter((c) => !c.visible);
+    // 5+ cercles de parsecs, l'axe, les traits vers le plan : cachés ; étoiles, Soleil, écliptique : visibles.
+    expect(off.length).toBeGreaterThanOrEqual(baseline.length + 7);
+    expect(
+      scene.scene.children.filter(
+        (c) => c.name === 'ecliptic-ring' && !c.visible
+      )
+    ).toHaveLength(0);
+    expect(scene.scene.getObjectByName('sun')!.visible).toBe(true);
+    scene.setGuidesVisible(true);
+    expect(hidden()).toEqual(baseline);
+    scene.dispose();
+  });
+
   it('libère TOUTES ses ressources GPU (géométries et matériaux), une fois', () => {
     const scene = new NeighbourhoodScene(file.stars);
     const tracker = trackDisposals(scene);

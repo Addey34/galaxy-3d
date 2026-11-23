@@ -100,8 +100,8 @@ export const cardEs: Record<CardMessageKey, string> = {
   'st.selectedAnnounce': '{name}, a {ly} años luz del Sol.',
   'st.unavailable':
     'La vista 3D no está disponible: el contexto gráfico no responde.',
-  'st.fieldAu': 'Ancho del campo: {au} UA',
-  'st.fieldLy': 'Ancho del campo: {ly} al ({pc} pc)',
+  'st.fieldAu': 'Ancho del campo a la altura del Sol: {au} UA',
+  'st.fieldLy': 'Ancho del campo a la altura del Sol: {ly} al ({pc} pc)',
   'st.ringAu': '{au} UA',
   'st.stageAu':
     'En el Sistema Solar: la unidad es la unidad astronómica (UA), la distancia media Tierra-Sol, {km} millones de km. Círculos naranjas: 1, 10, 100… UA, en el plano de los planetas.',
