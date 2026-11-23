@@ -8119,9 +8119,58 @@ n'était pas rendu ; la liste tombait à 0 px dans le volet du téléphone (`fle
 Soleil (cadrage de la zone libre).
 
 **Limites.** 61 étoiles (celles du catalogue à 5 pc : pas de nouveau catalogue) ; pas de vol animé entre la
-scène solaire et la vue (une bascule, pas un voyage) ; pas de WebXR (la vue refuse de s'ouvrir en session VR) ;
+scène solaire et la vue (SUPERSEDED 2026-11-23 : un recul expliqué, voir § « Le changement d'échelle ») ; pas de WebXR (la vue refuse de s'ouvrir en session VR) ;
 pas de lien profond (`?view=`) ; aucune mesure sur appareil réel ; le choix d'une étoile très proche d'une
 autre peut demander la liste ; les positions du futur lointain des étoiles sans vitesse radiale sont
 latérales seulement. Repli si WebGL ne répond pas : un contexte perdu ne laisse pas la vue s'ouvrir,
 l'annonce `st.unavailable` le dit, et la fiche texte de chaque étoile (couche « Étoiles voisines »)
 donne les distances sans la scène. (Si WebGL est absent dès le départ, l'application elle-même ne démarre pas.)
+
+### Le changement d'échelle entre le Système solaire et le voisinage (GAL-UNIVERSE-003, 2026-11-23)
+
+SUPERSEDED 2026-11-23 : « pas de vol animé entre la scène solaire et la vue (une bascule, pas un voyage) » (limite de
+GAL-UNIVERSE-002 ci-dessus). L'ouverture de la vue est maintenant un RECUL de la caméra de 2,6 s, expliqué, et
+interruptible. Ce n'est toujours PAS un voyage.
+
+**Contrat scientifique (`core/scaleTransition.ts`, pur, testé).**
+- **Un seul repère métrique.** Le Soleil est l'origine des deux scènes. La transition vit entièrement dans la scène stellaire
+  (galactique, 1 unité = 1 parsec) : la distance de la caméra au Soleil passe de **70 UA** (`START_DISTANCE_AU`,
+  environ 3,4e-4 pc) à la vue d'ensemble (`2,1 × l'étoile la plus lointaine`, ~10 pc), soit plus de quatre ordres de grandeur. La
+  scène SOLAIRE n'est jamais interpolée avec la scène stellaire : elles ne partagent ni unité ni contenu, et on ne les mélange pas.
+- **Progression géométrique** : `distance = début × (fin / début)^ease(p)`, `ease` cubique (départ et arrivée adoucis). Même
+  rapport de distances à chaque instant : c'est ce qui rend lisibles quatre ordres et demi de grandeur. Extrémités EXACTES (testé).
+- **Chaque image dit son échelle** : la largeur du champ de vue à la distance du Soleil, `2 d tan(fov / 2) × aspect`, lue en UA
+  sous 0,05 pc puis en années-lumière (avec les parsecs), à chaque image (réécrite au plus dix fois par seconde, et seulement si
+  le texte change). 1 pc = 648 000 / π UA = 206 264,8 UA (définition exacte de l'IAU), 1 UA = 149 597 870,7 km (IAU 2012).
+- **Aucune vitesse de voyage** n'est affichée ni supposée : la vue le dit (`st.stageNote` : « un changement d'échelle, pas un
+  voyage : le Soleil reste au centre et seul le champ s'élargit »). La durée de 2,6 s est un choix de lisibilité, pas une donnée.
+- **Le pont avec le Système solaire** : des cercles d'1, 10, 100… 100 000 UA (`ECLIPTIC_RINGS_AU`) dans le plan de
+  l'ÉCLIPTIQUE, c'est-à-dire des repères d'instrument (pas des orbites), orientés par la rotation réelle
+  `solarSceneToStellar` (`core/stellarSpace.ts`) : le plan des planètes est incliné de **60,2°** sur le plan galactique
+  (testé), le pôle nord écliptique tombe à l ≈ 96,38°, b ≈ +29,81° (valeur publiée), et la direction du centre galactique sur +X.
+- **Le regard est gardé** (`homeDirection`) : le CAP du regard de la caméra solaire (azimut autour de l'axe galactique) donne le
+  côté du ciel par lequel on arrive. L'élévation reste celle d'ouverture (un regard rasant le plan galactique rendrait les cercles
+  illisibles) et le roulis n'est pas conservé : le haut de l'écran est le nord galactique. Dit ici, pas affiché.
+- **Priorité des noms** (`core/stellarLabels.ts`, testé) : Soleil, axe, puis les étoiles de la plus proche à la plus lointaine,
+  puis les cercles de parsecs, puis ceux d'UA. Un repère ne masque jamais un nom d'étoile (défaut vu sur les polices larges de
+  Linux en CI de GAL-UNIVERSE-002).
+
+**Architecture.** Aucune boucle, aucun renderer, aucune scène de plus : la transition est un état local de
+`ui/stellarView.ts` (`transition: { t0 }`), avancé dans le MÊME rendu de remplacement (`AnimationSystem.setRenderOverride`) à
+l'horloge murale (`performance.now`, comme les tweens de la caméra solaire). Elle est donc supprimée avec le rendu à la
+fermeture : aucun minuteur à défaire, aucune ressource à libérer en plus (les six cercles d'UA sont des géométries de la scène,
+libérées avec elle, testé). Pendant la transition : contrôles désactivés, `minDistance` abaissée, plans de découpe suivant
+la distance (`fitClipping` : à 70 UA le plan proche de la vue d'ensemble, 0,02 pc, couperait le Soleil).
+**Interruptions** : « Passer la transition » (`#stellar-skip`), un geste sur la scène, la molette ou une touche la terminent
+(arrivée exacte, sans autre effet : le geste n'est pas rejoué, il ne choisit pas une étoile) ; « Retour » et Échap ferment la
+vue sur-le-champ, transition en cours ; le focus d'un bouton qui disparaît revient à « Retour ». **Mouvement réduit** :
+arrivée directe, sans animation (le champ affiché dit la même chose). Le retour au Système solaire n'est pas animé : « revenir
+immédiatement » prime.
+**Contexte solaire** : la transition ne touche pas à la scène solaire (corps suivi, date, caméra, préférences : aucune écriture) ;
+`gaze` n'est qu'une LECTURE du regard de la caméra à l'ouverture. L'étoile choisie (entrée par sa fiche) est choisie dès
+l'ouverture et gardée.
+**Coût** : le démarrage ne grossit que de 118 octets (la lecture du regard), le morceau `stellarView` passe de 17,7 à 20,9 ko
+(3 ko de CSS à part), `neighbours.json` reste demandé à la première ouverture. GPU : six cercles de 160 sommets (≈ 11 Ko) et un
+matériau de plus, aucune texture ; mémoire GPU réelle NON mesurée.
+**Limites** : retour non animé ; l'azimut seul du regard est gardé ; la direction du regard est celle de la caméra, pas celle
+d'un corps ; les cercles d'UA sont dans l'écliptique J2000 ; aucune mesure sur appareil réel.
