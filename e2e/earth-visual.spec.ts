@@ -85,7 +85,7 @@ test('mobile boot defers hidden Earth weather imagery', async ({ page }) => {
     const url = request.url();
     if (
       url.includes('MERRA2_2m_Air_Temperature_Monthly') ||
-      url.includes('VIIRS_SNPP_CorrectedReflectance_TrueColor') ||
+      /VIIRS_(SNPP|NOAA20|NOAA21)_CorrectedReflectance_TrueColor/.test(url) ||
       url.includes('MODIS_Aqua_Cloud_Fraction_Day') ||
       url.includes('MODIS_Aqua_Cloud_Fraction_Night') ||
       url.includes('IMERG_Precipitation_Rate_30min')

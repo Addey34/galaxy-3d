@@ -19,7 +19,7 @@ import {
   modisSiblingUrl,
   type CompositeOptions,
 } from '@/core/cloudComposite';
-import { EmptyTileError, isLikelyEmptyBySize } from '@/core/tileContent';
+import { fetchImageBlob } from '@/core/tileContent';
 import { hasDebugFlag } from '@/utils/debugFlags';
 import Logger from '@/utils/Logger';
 
@@ -52,17 +52,12 @@ export function complementInfoFor(url: string): ComplementInfo | undefined {
   return done.get(url);
 }
 
-async function fetchBlob(
+function fetchBlob(
   url: string,
   minBytes: number,
   signal?: AbortSignal
 ): Promise<Blob> {
-  const res = signal ? await fetch(url, { signal }) : await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} : ${url}`);
-  const blob = await res.blob();
-  if (isLikelyEmptyBySize(blob.size, minBytes))
-    throw new EmptyTileError(url, blob.size, minBytes);
-  return blob;
+  return fetchImageBlob(url, { minBytes, signal });
 }
 
 /** La texture d'une image déjà décodée (même réglages que `core/tileContent`). */

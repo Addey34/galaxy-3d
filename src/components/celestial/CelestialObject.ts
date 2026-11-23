@@ -223,6 +223,8 @@ export default class CelestialObject {
   // cloud map statique par-dessus l'image satellite à chaque changement de distance
   // caméra — c'était la cause de « nuages statiques / absents »).
   private _realCloudsActive = false;
+  /** Le comblement par le modèle a-t-il été demandé pour l'image de nuages posée ? Faux = vide honnête. */
+  private _syntheticFill = false;
   // Carte statique complète, conservée comme secours uniquement pour les pixels polaires sans donnée NASA.
   private _staticCloudTexture: THREE.Texture | null = null;
 
@@ -440,6 +442,7 @@ export default class CelestialObject {
     if (!clouds || Array.isArray(clouds.material)) return;
     // À partir d'ici, le LOD de textures ne doit plus écraser la couche nuages.
     this._realCloudsActive = true;
+    this._syntheticFill = options.syntheticFill === true;
     // La carte statique n’est plus utilisée dès qu’une observation GIBS est appliquée.
     // On la retire du cache GPU : elle ne sert qu’au fallback hors ligne avant résolution.
     const staticCloudTexture = this._staticCloudTexture;
@@ -554,7 +557,9 @@ export default class CelestialObject {
     texture.minFilter = THREE.LinearFilter;
     texture.colorSpace = THREE.NoColorSpace;
     uniforms.modelMap.value = texture;
-    uniforms.hasModelMap.value = 1;
+    // Le secours ne s'allume que si l'image de nuages l'a demandé : sinon il comblerait en silence,
+    // avec une grille d'une autre heure, les trous d'une couche étiquetée « observée ».
+    uniforms.hasModelMap.value = this._syntheticFill ? 1 : 0;
   }
   setRealCloudsNightFallbackTexture(texture: THREE.Texture): void {
     const clouds = this.layers.get('clouds');

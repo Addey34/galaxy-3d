@@ -106,11 +106,10 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
       lumHigh: settings.cloudLuminanceHigh,
       satMax: settings.cloudSaturationMax,
       supplementalMaps: !DEBUG_CLOUDS_RAW,
-      // Comblement des TROUS de fauchée VIIRS (bande polaire Sud « en marches ») par le modèle
-      // Open-Meteo, chargé en arrière-plan. Le shader ne l'applique QUE là où le satellite est
-      // absent (`modelAlpha * (1 - satelliteCoverage)`) : le VIIRS détaillé prime partout où il
-      // existe, le modèle ne bouche que les vides. Pas en mode diagnostic brut (True Color pur).
-      syntheticFill: !DEBUG_CLOUDS_RAW,
+      // PAS de comblement par le modèle Open-Meteo (GAL-CLOUD-SOURCES-002) : un vide d'observation reste
+      // un vide honnête, et la couche « Nuages (modèle) » est le seul endroit où le modèle se montre,
+      // étiqueté comme tel. Les trous de fauchée se comblent par de l'observation (`cloudComplement`).
+      syntheticFill: false,
     });
   };
 

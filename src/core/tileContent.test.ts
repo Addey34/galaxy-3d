@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import {
   EmptyTileError,
+  ServiceMessageError,
+  fetchImageBlob,
+  isNonImageContentType,
   fetchTileWithContentCheck,
   isLikelyEmptyBySize,
   DEFAULT_MIN_TILE_BYTES,
@@ -122,5 +125,79 @@ describe('fetchTileWithContentCheck', () => {
         makeTexture,
       })
     ).rejects.toBeInstanceOf(EmptyTileError);
+  });
+});
+
+/** Réponse avec un type de contenu, pour distinguer un message d'erreur d'une vraie image. */
+function typed(bytes: number, contentType: string): Response {
+  return {
+    ok: true,
+    status: 200,
+    headers: new Headers({ 'content-type': contentType }),
+    blob: async () => ({ size: bytes }) as Blob,
+  } as unknown as Response;
+}
+
+describe('message d’erreur du service (GIBS, 167 o en text/html)', () => {
+  it('reconnaît ce qui n’est pas une image, et ne conclut rien sans en-tête', () => {
+    expect(isNonImageContentType('text/html; charset=UTF-8')).toBe(true);
+    expect(isNonImageContentType('image/jpeg')).toBe(false);
+    expect(isNonImageContentType('IMAGE/PNG')).toBe(false);
+    expect(isNonImageContentType(null)).toBe(false);
+  });
+
+  it('rejoue la requête jusqu’à obtenir l’image', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(typed(167, 'text/html; charset=UTF-8'))
+      .mockResolvedValueOnce(typed(167, 'text/html; charset=UTF-8'))
+      .mockResolvedValueOnce(typed(500_000, 'image/jpeg'));
+    const blob = await fetchImageBlob('u', {
+      minBytes: 20_000,
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      retryMs: 0,
+    });
+    expect(blob.size).toBe(500_000);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it('abandonne après les essais en ServiceMessageError, qui n’est PAS une tuile vide', async () => {
+    const fetchImpl = vi.fn(async () => typed(167, 'text/html'));
+    const error = await fetchImageBlob('u', {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      retryMs: 0,
+      attempts: 3,
+    }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ServiceMessageError);
+    expect(error).not.toBeInstanceOf(EmptyTileError);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it('une vraie image légère reste une tuile vide, sans réessai', async () => {
+    const fetchImpl = vi.fn(async () => typed(12_572, 'image/jpeg'));
+    await expect(
+      fetchImageBlob('u', {
+        minBytes: 20_000,
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        retryMs: 0,
+      })
+    ).rejects.toBeInstanceOf(EmptyTileError);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('une annulation pendant la pause n’est pas réessayée', async () => {
+    const controller = new AbortController();
+    const fetchImpl = vi.fn(async () => {
+      queueMicrotask(() => controller.abort());
+      return typed(167, 'text/html');
+    });
+    await expect(
+      fetchImageBlob('u', {
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        signal: controller.signal,
+        retryMs: 10_000,
+      })
+    ).rejects.toMatchObject({ name: 'AbortError' });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 });

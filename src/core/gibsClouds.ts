@@ -27,6 +27,27 @@ export const GIBS_WMS_ENDPOINT =
 export const GIBS_DEFAULT_LAYER = 'VIIRS_SNPP_CorrectedReflectance_TrueColor';
 
 /**
+ * VIIRS à bord de NOAA-20 et NOAA-21 (GAL-CLOUD-SOURCES-002, 2026-11-23). Même produit, même service, même
+ * projection, même grille de 250 m que SNPP : seule la couche change. Premiers jours publiés lus dans
+ * les capacités WMTS de GIBS le 2026-11-23. `GIBS_SNPP_LAST_DATE` est le DERNIER jour publié de SNPP
+ * (la NOAA a cessé sa distribution le 2026-11-02, le jour même est partiel : 80 859 o, 49,6 % de la
+ * bande |latitude| <= 60 sans donnée ; ensuite GIBS rend une image noire de 12 572 o).
+ */
+export const GIBS_NOAA20_LAYER = 'VIIRS_NOAA20_CorrectedReflectance_TrueColor';
+export const GIBS_NOAA21_LAYER = 'VIIRS_NOAA21_CorrectedReflectance_TrueColor';
+export const GIBS_NOAA20_MIN_DATE = '2018-01-05';
+export const GIBS_NOAA21_MIN_DATE = '2023-02-10';
+export const GIBS_SNPP_LAST_DATE = '2026-11-02';
+/**
+ * Dernier jour où SNPP est mesuré SAIN. Relevé du 2026-11-23 (images réelles, bande |latitude| <= 60,
+ * pourcentage de pixels sans donnée) : 0,02 à 0,03 % sur chacune des 6 dates du 2026-08-15 au
+ * 2026-10-01 ; à partir du 2026-10-03, 7 jours sur 13 mesurés sont dégradés (4,7 %, 42,5 %, 10,8 %,
+ * 2,9 %, 4,0 %, 5,7 %, 49,6 %) alors que NOAA-20 reste à 0,08-0,12 %. Une image dégradée pèse 80 à
+ * 500 ko : la taille ne la distingue PAS d'une bonne, d'où une règle sur la DATE.
+ */
+export const GIBS_SNPP_LAST_HEALTHY_DATE = '2026-10-02';
+
+/**
  * Couches nuages de FALLBACK pour les dates antérieures à VIIRS (~fin 2015) : MODIS Terra
  * (depuis 2000) puis MODIS Aqua (depuis 2002). Même endpoint WMS que VIIRS, seul `LAYERS`
  * change. Fauchée plus étroite que VIIRS (plus de bandes) mais couvre 15 ans d'archive

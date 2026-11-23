@@ -5,6 +5,7 @@ import {
   scenarioEmptyAqua,
   scenarioFill,
   scenarioNoAqua,
+  scenarioServiceMessage,
   scenarioViirsAlone,
 } from './cloudComplementScenarios';
 
@@ -50,4 +51,11 @@ test('VIIRS n’est pas complété : aucune requête MODIS, badge VIIRS', async 
 }) => {
   test.setTimeout(180_000);
   await scenarioViirsAlone(page);
+});
+
+test('NOAA-21 répond par un message d’erreur : rejoué, puis NOAA-20, sans MODIS', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await scenarioServiceMessage(page);
 });
