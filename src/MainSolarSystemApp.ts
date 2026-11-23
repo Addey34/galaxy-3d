@@ -520,7 +520,7 @@ function wireChrome(): {
     );
     gazetteerOverlay.mount();
     setupGazetteerToggle(gazetteerOverlay);
-    setupSkyLayerToggles(sceneSystem.starfield, {
+    const stellarAddress = setupSkyLayerToggles(sceneSystem.starfield, {
       camera: cameraSystem.camera,
       canvas: cameraSystem.renderer.domElement,
       coordinator: overlayCoordinator,
@@ -937,9 +937,31 @@ function wireChrome(): {
     if (requestedTour !== undefined) permalink.sync();
     // Le préréglage est une ouverture lui aussi : l'adresse qui suit ne doit plus le porter.
     else if (requestedPreset !== undefined) permalink.sync();
-    if (!(
-      requestedTour !== undefined && (await tourPlayer.start(requestedTour))
-    ))
+    // Un lien d'observation du voisinage solaire (`?view=neighbourhood`) ouvre la vue (GAL-UNIVERSE-004).
+    // Elle lit la date de la scène à l'ouverture : un saut de date qui attend ses octets (lot 17C) doit
+    // être appliqué avant, sinon le curseur de temps compterait depuis une autre date.
+    const requestedStellar =
+      new URLSearchParams(window.location.search).get('view') ===
+      'neighbourhood';
+    if (requestedStellar) {
+      if (orbitalMechanics.pendingJumpDate === null)
+        stellarAddress.openFromAddress();
+      else {
+        let opened = false;
+        orbitalMechanics.onDateSettled(() => {
+          if (opened) return;
+          opened = true;
+          stellarAddress.openFromAddress();
+        });
+      }
+    }
+    // La découverte de premier passage se superposerait à la vue que le lien demande.
+    if (
+      !(
+        requestedTour !== undefined && (await tourPlayer.start(requestedTour))
+      ) &&
+      !requestedStellar
+    )
       guidedTour.startIfFirstVisit();
   } catch (err) {
     showError(err instanceof Error ? err : new Error(String(err)));

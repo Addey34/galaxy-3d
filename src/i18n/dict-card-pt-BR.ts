@@ -100,6 +100,10 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'st.selectedAnnounce': '{name}, a {ly} anos-luz do Sol.',
   'st.unavailable':
     'A vista 3D não está disponível: o contexto gráfico não responde.',
+  'st.unknownStar':
+    'O link indica uma estrela que não está entre as estrelas próximas. A vista abre sem estrela selecionada.',
+  'st.dataUnavailable':
+    'A vista 3D não está disponível: não foi possível ler o arquivo das estrelas próximas.',
   'st.fieldAu': 'Largura do campo na altura do Sol: {au} UA',
   'st.fieldLy': 'Largura do campo na altura do Sol: {ly} al ({pc} pc)',
   'st.ringAu': '{au} UA',

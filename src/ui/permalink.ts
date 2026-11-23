@@ -59,6 +59,21 @@ export interface PermalinkEclipseHooks {
   lookAtPlace?: (body: string, place: string) => void;
 }
 
+/**
+ * Un module chargé à la demande qui possède une entrée d'historique à lui (la vue du voisinage
+ * solaire, GAL-UNIVERSE-004) la déclare ici : il reçoit chaque Retour ou Suivant AVANT le permalien
+ * solaire et répond `true` quand le mouvement n'était que le sien. Le permalien solaire n'y touche
+ * alors pas : son gestionnaire reselectionne le corps, ce qui relance le vol de la caméra et ferait
+ * perdre le cadrage du Système solaire. L'ordre ne se règle pas avec les phases d'écoute (capture ou
+ * non) : Chromium appelle les écouteurs d'une même cible dans l'ordre où ils ont été ajoutés, et un
+ * module chargé plus tard passe donc toujours après celui-ci.
+ */
+let historyOwner: ((event: PopStateEvent) => boolean) | null = null;
+
+export function claimHistory(owner: (event: PopStateEvent) => boolean): void {
+  historyOwner = owner;
+}
+
 export function setupPermalinks(
   om: OrbitalMechanics,
   navigation: PlanetNavigation,
@@ -258,7 +273,9 @@ export function setupPermalinks(
   };
   onLocaleChange(alignLocalePath);
 
-  window.addEventListener('popstate', () => applyInitialState(true));
+  window.addEventListener('popstate', (event) => {
+    if (!historyOwner?.(event)) applyInitialState(true);
+  });
   return {
     applyInitialState,
     sync,

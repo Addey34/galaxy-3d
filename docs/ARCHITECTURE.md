@@ -8120,7 +8120,7 @@ Soleil (cadrage de la zone libre).
 
 **Limites.** 61 étoiles (celles du catalogue à 5 pc : pas de nouveau catalogue) ; pas de vol animé entre la
 scène solaire et la vue (SUPERSEDED 2026-11-23 : un recul expliqué, voir § « Le changement d'échelle ») ; pas de WebXR (la vue refuse de s'ouvrir en session VR) ;
-pas de lien profond (`?view=`) ; aucune mesure sur appareil réel ; le choix d'une étoile très proche d'une
+pas de lien profond (`?view=`, SUPERSEDED 2026-11-23 : voir § « L'adresse d'une observation du voisinage solaire ») ; aucune mesure sur appareil réel ; le choix d'une étoile très proche d'une
 autre peut demander la liste ; les positions du futur lointain des étoiles sans vitesse radiale sont
 latérales seulement. Repli si WebGL ne répond pas : un contexte perdu ne laisse pas la vue s'ouvrir,
 l'annonce `st.unavailable` le dit, et la fiche texte de chaque étoile (couche « Étoiles voisines »)
@@ -8174,3 +8174,71 @@ l'ouverture et gardée.
 matériau de plus, aucune texture ; mémoire GPU réelle NON mesurée.
 **Limites** : retour non animé ; l'azimut seul du regard est gardé ; la direction du regard est celle de la caméra, pas celle
 d'un corps ; les cercles d'UA sont dans l'écliptique J2000 ; aucune mesure sur appareil réel.
+
+
+### L'adresse d'une observation du voisinage solaire (GAL-UNIVERSE-004, 2026-11-23)
+
+SUPERSEDED 2026-11-23 : « pas de lien profond (`?view=`) » (limite de GAL-UNIVERSE-002 ci-dessus). Une observation du
+voisinage se partage par un lien qui l'ouvre d'une nouvelle session, sur la bonne étoile et au bon moment.
+
+**Le contrat (`core/stellarPermalink.ts`, pur, testé).** Trois clés, et seulement trois :
+- `view=neighbourhood` : la vue 3D du voisinage est ouverte. Sans elle, `star` et `t` ne signifient rien et sont ignorés : un lien
+  ancien ne rouvre pas la vue.
+- `star=<identifiant>` : l'étoile ou le système choisi, identifié par son NOM normalisé (`starSlug` : sans accents, en minuscules,
+  apostrophes retirées, le reste en tirets), jamais par son rang dans la liste. Les étoiles du catalogue donnent des identifiants
+  tous distincts et bien formés (garde de test, lue dans `public/assets/sky/neighbours.json`). L'adresse d'une étoile compagne
+  ouvre le système qui la porte, comme le bouton de la fiche.
+- `t=<années>` : le décalage du curseur de temps, en années depuis la date de la scène (`date=`, déjà portée par le permalien
+  solaire). Absent = « à la date de la scène » ; un décalage nul n'est pas écrit. Arrondi à l'année à l'écriture, ramené au pas du
+  curseur et borné à sa fenêtre à la lecture (`snapYears` : `t=137` tombe sur 100).
+
+**Ce qui n'y est PAS, volontairement** : la caméra, la transition d'ouverture, la langue. Le cadrage dépend de la taille d'écran
+et du volet du téléphone, et le regard à l'arrivée vient de la scène solaire : un lien qui le figerait décrirait un état qu'un
+autre appareil ne retrouverait pas. Les autres clés (`date`, `mode`, couches) sont celles du permalien solaire, que ce module ne
+réécrit jamais.
+
+**Ouvrir depuis un lien.** Le démarrage ne lit qu'une clé (`view`, dans `ui/skyLayerToggles`) : le morceau `stellarView` et le
+fichier des étoiles ne se chargent que pour un lien qui les demande. `MainSolarSystemApp` attend un saut de date encore en
+attente (un saut peut attendre ses octets, lot 17C) avant d'ouvrir, parce que la vue lit la date de la scène à l'ouverture, et ne
+lance pas la découverte de première visite par-dessus.
+- **Étoile inconnue ou mal formée** : la vue s'ouvre SANS sélection, le dit (`st.unknownStar`, annonce du lecteur d'écran) et
+  retire l'identifiant de l'adresse. Rien n'est ignoré en silence.
+- **Fichier des étoiles illisible** : la vue ne s'ouvre pas, le dit (`st.dataUnavailable`) et retire la demande de l'adresse
+  (`abandonStellarAddress`), sinon un rechargement la rejouerait. **Contexte WebGL perdu ou session VR** : même retrait de la
+  demande, avec `st.unavailable` pour le contexte perdu.
+- L'adresse suit ensuite l'observation (étoile choisie, curseur) par `replaceState`, sans ajouter d'entrée.
+
+**L'historique et le retour.** Ouvrir par un geste ajoute UNE entrée (`pushState`) ; un lien (ou le rechargement) arrive déjà sur
+l'adresse de la vue et n'en ajoute aucune.
+- Fermer (bouton « Retour au Système solaire », Échap) retire l'entrée ajoutée par un `history.back()` ; une vue arrivée par un
+  lien n'a pas d'entrée à elle, l'adresse est réécrite. « Suivant » rouvre la même observation, et l'entrée ramenée a alors un
+  prédécesseur solaire (fermer la retire de la même façon).
+- Le Retour du navigateur ferme la vue (`close(true)` : l'adresse y est déjà).
+- **Le piège, mesuré.** Le gestionnaire `popstate` du permalien solaire reselectionne le corps (`selectBody`), ce qui relance
+  `CameraSystem.setTarget` et **ramène la distance de la caméra à sa valeur par défaut** (relevé par « Partager » : 0,0350 revient
+  à 0,0521442, l'azimut et la polaire sont gardés). Un Retour depuis la vue faisait donc perdre le cadrage du Système solaire.
+  Le module chargé à la demande ne peut pas passer devant ce gestionnaire : Chromium appelle les écouteurs d'une même cible dans
+  l'ORDRE D'ENREGISTREMENT, quelle que soit la phase (mesuré : un écouteur ajouté plus tard en capture passe après un écouteur
+  ordinaire). `ui/permalink.ts` expose donc `claimHistory` : la vue y déclare un propriétaire d'historique que le permalien solaire
+  consulte d'abord, et qui répond `true` quand le mouvement ne change que la vue (le permalien solaire n'y touche alors pas).
+- **Ce qui est « que la vue » (`solarIdentity`)** : même chemin, même mode, mêmes couches, SANS la date ni le cadrage. La date de
+  l'entrée solaire est réécrite à chaque synchronisation du permalien (mesuré : `11:00:00` devenu `11:00:04` ou `11:00:07` entre
+  l'ouverture et le retour) ; comparer l'adresse entière faisait échouer la reconnaissance dès qu'une action du Système solaire
+  avait eu lieu entre deux passages.
+
+**Coût.** Mesuré par la garde du budget, sur le même build, `main` seul puis ce lot : le démarrage passe de 1 279 145 o à
+1 279 728 o (+583 o : la lecture de `view` et l'ouverture dans `ui/skyLayerToggles`, l'attente du saut de date dans `MainSolarSystemApp`, le point d'accroche d'historique ; les phrases des quatre langues sont dans les dictionnaires chargés à la demande), marge restante 26 272 o ; le
+morceau `stellarView` passe de 21 243 o à 23 658 o (+2 415 o), chargé à la demande.
+
+**Preuves.** `core/stellarPermalink.test.ts` (lecture, écriture, boucle sans perte, identifiants du catalogue, identité solaire) ;
+`e2e/stellarPermalink.spec.ts` (Chromium, bureau et téléphone, quatre langues, mouvement non réduit, axe sur la vue ouverte par un
+lien) ; `e2e/device-stellarPermalink.spec.ts` (Pixel 7 et iPhone 15 émulés, hors CI). Le scénario de retour relève la pose de la
+caméra solaire par « Partager » avant l'ouverture puis après chaque retour (bouton, Échap, Retour et Suivant du navigateur) et
+l'exige identique ; **falsifié** : en faisant répondre `false` au point d'accroche, il échoue avec `0.0521442` au lieu de `0.035`.
+
+**Limites.** Les identifiants viennent des NOMS du catalogue : si une régénération en renomme une, un ancien lien ouvre la vue
+sans sélection et le dit (il ne casse pas). Un `t` sans `date=` compte depuis la date de la scène, donc depuis maintenant. Un lien
+rechargé sur l'adresse de la vue n'a plus de mémoire de l'entrée précédente : fermer réécrit l'entrée au lieu de la retirer, ce qui
+peut laisser deux entrées solaires identiques. Aucune mesure sur appareil réel ; WebXR refuse toujours d'ouvrir la vue. Le test
+`e2e/stellarTransition.spec.ts` « accessible while it runs » échoue au hasard sur cette machine (2 fois sur 4, avec ou sans ce
+lot ; le bouton « Passer » est déjà masqué au moment du clic, cause probable : l'analyse axe plus longue que la transition de 2,6 s, NON démontrée) ; non corrigé ici.

@@ -85,11 +85,17 @@ export interface SkyLayerEnvironment {
   stellar?: Pick<StellarHost, 'animation' | 'renderer' | 'gaze'>;
 }
 
+/** Ce que l'application garde du câblage : rouvrir la vue que l'adresse demande. */
+export interface StellarAddressOpener {
+  openFromAddress(): void;
+}
+
 export function setupSkyLayerToggles(
   starfield: Starfield | null,
   environment: SkyLayerEnvironment
-): void {
-  if (!starfield) return;
+): StellarAddressOpener {
+  const noOpener: StellarAddressOpener = { openFromAddress: () => undefined };
+  if (!starfield) return noOpener;
   // La fiche n'existe pas au démarrage : elle se charge à la première activation de la couche.
   let card: Promise<ExoplanetCard> | null = null;
   let wanted = false;
@@ -100,7 +106,7 @@ export function setupSkyLayerToggles(
   let neighbourCard: Promise<NeighbourCard | null> | null = null;
   // La vue 3D du voisinage solaire : chargée au premier appel, jamais au démarrage.
   let stellar: Promise<StellarView | null> | null = null;
-  const openStellar = (focus?: string): void => {
+  const openStellar = (focus?: string, fromAddress = false): void => {
     const host = environment.stellar;
     if (!host) return;
     void (stellar ??= import('./stellarView').then((m) =>
@@ -110,8 +116,13 @@ export function setupSkyLayerToggles(
         simulationDate: environment.simulationDate,
       })
     )).then((view) => {
-      if (view) view.open(focus);
-      else stellar = null;
+      if (view) view.open(focus, fromAddress);
+      else {
+        stellar = null;
+        // Une adresse qui demandait la vue : on dit pourquoi elle ne s'ouvre pas et on la retire.
+        if (fromAddress)
+          void import('./stellarView').then((m) => m.abandonStellarAddress());
+      }
     });
   };
   let meteors: Promise<MeteorLayer | null> | null = null;
@@ -261,4 +272,18 @@ export function setupSkyLayerToggles(
   meteorStatus.hidden = true;
   document.getElementById('meteors-toggle-wrapper')?.after(meteorStatus);
   onLocaleChange(() => showMeteorStatus(meteorLayer, meteorOn));
+  return {
+    // L'adresse décrit une observation du voisinage (`?view=neighbourhood`, GAL-UNIVERSE-004) : la
+    // vue s'ouvre, le morceau ne se charge que pour elle. Une seule clé est lue ici ; le reste du
+    // contrat (étoile, temps) est dans `core/stellarPermalink`, dans le morceau de la vue.
+    openFromAddress: () => {
+      if (!environment.stellar) return;
+      if (
+        new URLSearchParams(window.location.search).get('view') !==
+        'neighbourhood'
+      )
+        return;
+      openStellar(undefined, true);
+    },
+  };
 }

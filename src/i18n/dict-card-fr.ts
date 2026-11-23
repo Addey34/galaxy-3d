@@ -101,6 +101,10 @@ export const cardFr: Record<CardMessageKey, string> = {
   'st.selectedAnnounce': '{name}, à {ly} années-lumière du Soleil.',
   'st.unavailable':
     'La vue 3D n’est pas disponible : le contexte graphique ne répond pas.',
+  'st.unknownStar':
+    'Le lien désigne une étoile qui ne figure pas parmi les étoiles voisines. La vue est ouverte sans étoile choisie.',
+  'st.dataUnavailable':
+    'La vue 3D n’est pas disponible : le fichier des étoiles voisines n’a pas pu être lu.',
   'st.fieldAu': 'Largeur du champ au niveau du Soleil : {au} UA',
   'st.fieldLy': 'Largeur du champ au niveau du Soleil : {ly} al ({pc} pc)',
   'st.ringAu': '{au} UA',
