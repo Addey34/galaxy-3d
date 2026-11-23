@@ -6,6 +6,7 @@ import type { TextureSystem } from '@/components/systems/TextureSystem';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import {
   getOverlaySunUniform,
+  getRealCloudsUniforms,
   hasMagnificationFade,
 } from '@/config/layerConfig';
 
@@ -199,6 +200,30 @@ describe('couches de données — contrat vu par src/ui', () => {
       earth.setRealCloudsModelFallbackTexture(cover);
       earth.setDataOverlay('clouds', cover);
       expect(cover.colorSpace).toBe(THREE.NoColorSpace);
+    });
+
+    describe('secours du modèle sous l’image de nuages (syntheticFill)', () => {
+      const hasModel = (): number =>
+        getRealCloudsUniforms(
+          internals(earth).layers.get('clouds')!.material as THREE.Material
+        )!.hasModelMap.value;
+
+      it('reste ÉTEINT par défaut, quel que soit l’ordre d’arrivée du modèle et de l’image', () => {
+        // Défaut mesuré (GAL-CLOUD-SOURCES-002) : le secours s'allumait sans condition quand le modèle
+        // arrivait APRÈS l'image, donc dès qu'on avait ouvert « Nuages (modèle) » une fois.
+        earth.setRealCloudsTexture(tex(), {});
+        earth.setRealCloudsModelFallbackTexture(tex());
+        expect(hasModel()).toBe(0);
+        earth.setRealCloudsModelFallbackTexture(tex());
+        earth.setRealCloudsTexture(tex(), {});
+        expect(hasModel()).toBe(0);
+      });
+
+      it('ne s’allume que sur demande explicite', () => {
+        earth.setRealCloudsTexture(tex(), { syntheticFill: true });
+        earth.setRealCloudsModelFallbackTexture(tex());
+        expect(hasModel()).toBe(1);
+      });
     });
 
     it('ne laisse la pluie modèle ni muette de près ni sans terminateur', () => {

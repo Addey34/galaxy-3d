@@ -10,6 +10,12 @@
  */
 import {
   GIBS_DEFAULT_LAYER,
+  GIBS_NOAA20_LAYER,
+  GIBS_NOAA20_MIN_DATE,
+  GIBS_NOAA21_LAYER,
+  GIBS_NOAA21_MIN_DATE,
+  GIBS_SNPP_LAST_DATE,
+  GIBS_SNPP_LAST_HEALTHY_DATE,
   GIBS_MIN_DATE,
   GIBS_MODIS_TERRA_LAYER,
   GIBS_MODIS_AQUA_LAYER,
@@ -102,9 +108,15 @@ export interface CloudResolveOptions {
 }
 
 /**
- * NUAGES : VIIRS SNPP (≥ ~2015, préféré) → MODIS Terra (≥2000) → MODIS Aqua (≥2002). Chaque
- * candidat n'est ajouté que si la date demandée est dans son archive. `approx` reste false
- * (même jour, source différente) — la traçabilité passe par `label`.
+ * NUAGES, GAL-CLOUD-SOURCES-002 (2026-11-23). La chaîne dépend de la DATE de l'image, d'après des
+ * images réelles mesurées (voir `GIBS_SNPP_LAST_HEALTHY_DATE`) :
+ * - jusqu'au 2026-10-02 : VIIRS SNPP d'abord (0,02 % sans donnée, et c'est la source qu'ont vue
+ *   jusqu'ici toutes ces dates), puis NOAA-20, NOAA-21 quand SNPP a un jour manquant ;
+ * - à partir du 2026-10-03 : VIIRS NOAA-21 (0,1 à 0,5 %), puis NOAA-20 (0,1 %), SNPP en dernier et
+ *   seulement jusqu'à son arrêt (2026-11-02) : il y est dégradé un jour sur deux, ce que sa taille ne dit pas ;
+ * - toujours à la fin : MODIS Terra puis Aqua (environ 5 % sans donnée, complétés l'un par l'autre).
+ * Chaque candidat n'est ajouté que si la date est dans son archive. `approx` reste false (même jour,
+ * autre satellite) : la traçabilité passe par `label`, qui nomme le satellite.
  *
  * La latence par défaut est 2 jours (image satellite COMPLÈTE, cf. `CloudResolveOptions`). Pour le
  * temps réel sans trou et le futur, préférer la couche MODÉLISÉE (famille B, Open-Meteo).
@@ -116,9 +128,16 @@ export function resolveCloudSources(
 ): SourceCandidate[] {
   const latencyDays = options.latencyDays ?? 2;
   const out: SourceCandidate[] = [];
-  const add = (layer: string, label: string, minDate: string): void => {
+  const add = (
+    layer: string,
+    label: string,
+    minDate: string,
+    lastDate?: string
+  ): void => {
     const date = gibsCloudDateFor(simDate, { now, minDate, latencyDays });
     if (date === null) return;
+    // Une couche arrêtée ne répond plus pour les jours suivants : pas de requête inutile.
+    if (lastDate !== undefined && date > lastDate) return;
     out.push({
       id: `${layer}:${date}`,
       label,
@@ -128,7 +147,26 @@ export function resolveCloudSources(
       product: dailyMeasurement(date),
     });
   };
-  add(GIBS_DEFAULT_LAYER, 'VIIRS', GIBS_MIN_DATE);
+  const snpp = (): void =>
+    add(GIBS_DEFAULT_LAYER, 'VIIRS SNPP', GIBS_MIN_DATE, GIBS_SNPP_LAST_DATE);
+  const noaa20 = (): void =>
+    add(GIBS_NOAA20_LAYER, 'VIIRS NOAA-20', GIBS_NOAA20_MIN_DATE);
+  const noaa21 = (): void =>
+    add(GIBS_NOAA21_LAYER, 'VIIRS NOAA-21', GIBS_NOAA21_MIN_DATE);
+  const day = gibsCloudDateFor(simDate, {
+    now,
+    minDate: '1900-01-01',
+    latencyDays,
+  });
+  if (day !== null && day > GIBS_SNPP_LAST_HEALTHY_DATE) {
+    noaa21();
+    noaa20();
+    snpp();
+  } else {
+    snpp();
+    noaa20();
+    noaa21();
+  }
   add(GIBS_MODIS_TERRA_LAYER, 'MODIS Terra', GIBS_MODIS_TERRA_MIN_DATE);
   add(GIBS_MODIS_AQUA_LAYER, 'MODIS Aqua', GIBS_MODIS_AQUA_MIN_DATE);
   return out;

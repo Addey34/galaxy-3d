@@ -19,7 +19,7 @@ describe('sourceBadgeText', () => {
     const [viirs] = resolveCloudSources(now, now);
     expect(viirs.realDate).toBe('2026-09-15');
     expect(sourceBadgeText(viirs, now, now, t)).toBe(
-      'weather.source.prefix VIIRS · 2026-09-15 · time.category.observed · time.offset.scene(2026-09-17)'
+      'weather.source.prefix VIIRS SNPP · 2026-09-15 · time.category.observed · time.offset.scene(2026-09-17)'
     );
   });
 

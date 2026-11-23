@@ -48,7 +48,10 @@ export async function emptyDay(): Promise<Buffer> {
 }
 
 export interface Behaviour {
+  /** Les trois VIIRS (SNPP, NOAA-20, NOAA-21) rendent la même chose, sauf `noaa21` s'il est donné. */
   viirs: Buffer | 'fail';
+  /** `'html'` : le message d'erreur de GIBS (167 octets en `text/html`, mesuré le 2026-11-23). */
+  noaa21?: Buffer | 'fail' | 'html';
   terra: Buffer | 'fail';
   aqua: Buffer | 'fail';
 }
@@ -62,14 +65,24 @@ export async function serveGibs(
     const layers = new URL(route.request().url()).searchParams.get('LAYERS');
     seen.push(layers ?? '?');
     const pick =
-      layers === 'VIIRS_SNPP_CorrectedReflectance_TrueColor'
-        ? behaviour.viirs
-        : layers === 'MODIS_Terra_CorrectedReflectance_TrueColor'
-          ? behaviour.terra
-          : layers === 'MODIS_Aqua_CorrectedReflectance_TrueColor'
-            ? behaviour.aqua
-            : 'fail';
+      layers === 'VIIRS_NOAA21_CorrectedReflectance_TrueColor'
+        ? (behaviour.noaa21 ?? behaviour.viirs)
+        : layers === 'VIIRS_SNPP_CorrectedReflectance_TrueColor' ||
+            layers === 'VIIRS_NOAA20_CorrectedReflectance_TrueColor'
+          ? behaviour.viirs
+          : layers === 'MODIS_Terra_CorrectedReflectance_TrueColor'
+            ? behaviour.terra
+            : layers === 'MODIS_Aqua_CorrectedReflectance_TrueColor'
+              ? behaviour.aqua
+              : 'fail';
     if (pick === 'fail') return route.abort();
+    if (pick === 'html')
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/html; charset=UTF-8',
+        headers: { 'access-control-allow-origin': '*' },
+        body: '<HTML><BODY>getInteger(): Symbol definition error.</BODY></HTML>',
+      });
     return route.fulfill({
       status: 200,
       contentType: 'image/jpeg',
@@ -215,7 +228,7 @@ export async function scenarioEmptyAqua(page: Page): Promise<void> {
   expect(run.source()).toContain('label: MODIS Terra,');
 }
 
-/** VIIRS n'est pas complété : aucune requête MODIS, badge VIIRS. */
+/** VIIRS n'est pas complété : aucune requête MODIS, badge VIIRS (NOAA-21 en tête à la date du jour). */
 export async function scenarioViirsAlone(page: Page): Promise<void> {
   const seen: string[] = [];
   await serveGibs(
@@ -229,11 +242,36 @@ export async function scenarioViirsAlone(page: Page): Promise<void> {
   );
   const run = await boot(page);
   expect(run.complement()).toBeUndefined();
-  expect(run.source()).toContain('label: VIIRS');
+  expect(run.source()).toContain('label: VIIRS NOAA-21');
   expect(
     seen.some((l) => l.startsWith('MODIS_Terra_CorrectedReflectance'))
   ).toBe(false);
   expect(
     seen.some((l) => l.startsWith('MODIS_Aqua_CorrectedReflectance'))
+  ).toBe(false);
+}
+
+/**
+ * Le message d'erreur de GIBS (`text/html`, 200) sur NOAA-21 est rejoué puis, toujours là, la chaîne
+ * passe à NOAA-20 : le badge nomme NOAA-20, et MODIS n'est jamais demandé (GAL-CLOUD-SOURCES-002).
+ */
+export async function scenarioServiceMessage(page: Page): Promise<void> {
+  const seen: string[] = [];
+  await serveGibs(
+    page,
+    {
+      viirs: await noisy([100, 119], 11),
+      noaa21: 'html',
+      terra: await noisy(null, 12),
+      aqua: await noisy(null, 13),
+    },
+    seen
+  );
+  const run = await boot(page);
+  expect(run.source()).toContain('label: VIIRS NOAA-20');
+  const noaa21 = seen.filter((l) => l.startsWith('VIIRS_NOAA21')).length;
+  expect(noaa21).toBeGreaterThan(1); // rejoué, pas abandonné au premier message
+  expect(
+    seen.some((l) => /^MODIS_(Terra|Aqua)_CorrectedReflectance/.test(l))
   ).toBe(false);
 }

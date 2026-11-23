@@ -11,17 +11,73 @@ import {
 const NOW = new Date('2026-08-13T12:00:00Z');
 
 describe('resolveCloudSources', () => {
-  it('offers VIIRS first for a recent date', () => {
-    const c = resolveCloudSources(new Date('2026-08-10T00:00:00Z'), NOW);
-    expect(c[0].label).toBe('VIIRS');
-    expect(c.map((x) => x.label)).toContain('MODIS Terra');
-    expect(c.map((x) => x.label)).toContain('MODIS Aqua');
+  const labelsAt = (iso: string, now: Date = NOW): string[] =>
+    resolveCloudSources(new Date(`${iso}T00:00:00Z`), now).map((x) => x.label);
+
+  it('garde SNPP en tête pour tout le passé sain (même source qu’avant), NOAA en repli', () => {
+    expect(labelsAt('2026-08-10')).toEqual([
+      'VIIRS SNPP',
+      'VIIRS NOAA-20',
+      'VIIRS NOAA-21',
+      'MODIS Terra',
+      'MODIS Aqua',
+    ]);
+    // Avant NOAA-21 (2023-02-10) : pas de candidat NOAA-21.
+    expect(labelsAt('2020-06-15')).toEqual([
+      'VIIRS SNPP',
+      'VIIRS NOAA-20',
+      'MODIS Terra',
+      'MODIS Aqua',
+    ]);
+  });
+
+  it('le dernier jour sain de SNPP est le 2026-10-02, NOAA-21 passe devant dès le 2026-10-03', () => {
+    const now = new Date('2026-11-23T12:00:00Z');
+    expect(labelsAt('2026-10-02', now)[0]).toBe('VIIRS SNPP');
+    expect(labelsAt('2026-10-03', now)).toEqual([
+      'VIIRS NOAA-21',
+      'VIIRS NOAA-20',
+      'VIIRS SNPP',
+      'MODIS Terra',
+      'MODIS Aqua',
+    ]);
+  });
+
+  it('SNPP s’arrête avec le 2026-11-02 : plus aucune requête SNPP après', () => {
+    const now = new Date('2026-11-23T12:00:00Z');
+    expect(labelsAt('2026-11-02', now)).toContain('VIIRS SNPP');
+    const after = labelsAt('2026-11-03', now);
+    expect(after).not.toContain('VIIRS SNPP');
+    expect(after[0]).toBe('VIIRS NOAA-21');
+    // « Aujourd’hui » (clampé à J-2) suit la même chaîne : c’est le cas réel du produit.
+    expect(labelsAt('2026-11-23', now)).toEqual([
+      'VIIRS NOAA-21',
+      'VIIRS NOAA-20',
+      'MODIS Terra',
+      'MODIS Aqua',
+    ]);
+  });
+
+  it('chaque candidat vise sa couche, la date réelle clampée, et ne change que la couche', () => {
+    const now = new Date('2026-11-23T12:00:00Z');
+    const c = resolveCloudSources(new Date('2026-11-23T00:00:00Z'), now);
+    expect(c[0].realDate).toBe('2026-11-21');
+    expect(c[0].url).toContain(
+      'LAYERS=VIIRS_NOAA21_CorrectedReflectance_TrueColor'
+    );
+    expect(c[0].id).toBe(
+      'VIIRS_NOAA21_CorrectedReflectance_TrueColor:2026-11-21'
+    );
+    expect(c[1].url).toContain(
+      'LAYERS=VIIRS_NOAA20_CorrectedReflectance_TrueColor'
+    );
+    expect(c[1].url.replace('NOAA20', 'NOAA21')).toBe(c[0].url);
   });
 
   it('drops VIIRS before its archive but keeps MODIS for 2010', () => {
     const c = resolveCloudSources(new Date('2010-06-15T00:00:00Z'), NOW);
     const labels = c.map((x) => x.label);
-    expect(labels).not.toContain('VIIRS'); // avant ~2015
+    expect(labels.some((l) => l.startsWith('VIIRS'))).toBe(false); // avant ~2015
     expect(labels[0]).toBe('MODIS Terra');
     expect(labels).toContain('MODIS Aqua');
   });

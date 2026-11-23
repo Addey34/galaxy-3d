@@ -46,6 +46,8 @@ export interface FetchTileOptions {
   signal?: AbortSignal;
   /** Fabrique de texture depuis un blob (injectable pour les tests hors DOM). */
   makeTexture?: (blob: Blob) => Promise<THREE.Texture>;
+  /** Pause avant le 2e essai face à un message d'erreur du service (ms ; 0 en test). */
+  retryMs?: number;
 }
 
 /**
@@ -73,25 +75,107 @@ async function defaultMakeTexture(blob: Blob): Promise<THREE.Texture> {
 }
 
 /**
+ * Levée quand le service répond 200 avec autre chose qu'une image (message d'erreur HTML). Mesuré
+ * sur GIBS le 2026-11-23 : `getInteger(): Symbol definition error` (167 octets, `text/html`) revient
+ * AU HASARD sur n'importe quelle couche, environ deux requêtes sur trois à cet instant, et la requête
+ * identique rejouée réussit. Ce n'est PAS une tuile vide (qui, elle, est une vraie image légère).
+ */
+export class ServiceMessageError extends Error {
+  constructor(
+    readonly url: string,
+    readonly contentType: string
+  ) {
+    super(`Réponse sans image (${contentType}) : ${url}`);
+    this.name = 'ServiceMessageError';
+  }
+}
+
+/** Essais au total (le premier compris) face à un message d'erreur du service. */
+export const SERVICE_MESSAGE_ATTEMPTS = 4;
+/** Pause avant le 2e essai (ms) ; elle double ensuite. */
+export const SERVICE_MESSAGE_RETRY_MS = 250;
+
+/** Vrai quand l'en-tête annonce autre chose qu'une image. Absent : on ne conclut rien. */
+export function isNonImageContentType(contentType: string | null): boolean {
+  return !!contentType && !/^image\//i.test(contentType.trim());
+}
+
+function pause(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted)
+      return reject(new DOMException('Aborted', 'AbortError'));
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    const onAbort = (): void => {
+      clearTimeout(timer);
+      reject(new DOMException('Aborted', 'AbortError'));
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
+export interface FetchImageBlobOptions {
+  minBytes?: number;
+  fetchImpl?: typeof fetch;
+  signal?: AbortSignal;
+  /** Essais au total face à un message d'erreur du service (défaut `SERVICE_MESSAGE_ATTEMPTS`). */
+  attempts?: number;
+  /** Pause avant le 2e essai, doublée ensuite (défaut `SERVICE_MESSAGE_RETRY_MS`, 0 en test). */
+  retryMs?: number;
+}
+
+/**
+ * Télécharge une image distante. Trois issues distinctes, que la chaîne de sources traite autrement :
+ * une VRAIE image sous le seuil = tuile vide (`EmptyTileError`, pas de réessai : la donnée n'existe pas) ;
+ * un message d'erreur du service (réponse sans image) = réessayé, puis `ServiceMessageError` ; un échec
+ * HTTP ou réseau = erreur telle quelle.
+ */
+export async function fetchImageBlob(
+  url: string,
+  options: FetchImageBlobOptions = {}
+): Promise<Blob> {
+  const minBytes = options.minBytes ?? DEFAULT_MIN_TILE_BYTES;
+  const doFetch = options.fetchImpl ?? fetch;
+  const attempts = Math.max(1, options.attempts ?? SERVICE_MESSAGE_ATTEMPTS);
+  const retryMs = options.retryMs ?? SERVICE_MESSAGE_RETRY_MS;
+  let lastType = '';
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const res = options.signal
+      ? await doFetch(url, { signal: options.signal })
+      : await doFetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} : ${url}`);
+    const contentType = res.headers?.get?.('content-type') ?? null;
+    if (isNonImageContentType(contentType)) {
+      lastType = contentType ?? '';
+      if (attempt < attempts)
+        await pause(retryMs * 2 ** (attempt - 1), options.signal);
+      continue;
+    }
+    const blob = await res.blob();
+    if (isLikelyEmptyBySize(blob.size, minBytes))
+      throw new EmptyTileError(url, blob.size, minBytes);
+    return blob;
+  }
+  throw new ServiceMessageError(url, lastType);
+}
+
+/**
  * Charge une tuile en mesurant sa taille : rejette `EmptyTileError` si sous le seuil (→ le
- * socle passe au candidat de fallback suivant), sinon renvoie la texture. Rejette aussi sur
- * échec réseau/HTTP (comme le chargement direct).
+ * socle passe au candidat de fallback suivant), sinon renvoie la texture. Un message d'erreur du
+ * service est réessayé (`fetchImageBlob`) ; un échec réseau/HTTP rejette comme le chargement direct.
  */
 export async function fetchTileWithContentCheck(
   url: string,
   options: FetchTileOptions = {}
 ): Promise<THREE.Texture> {
-  const minBytes = options.minBytes ?? DEFAULT_MIN_TILE_BYTES;
-  const doFetch = options.fetchImpl ?? fetch;
   const makeTexture = options.makeTexture ?? defaultMakeTexture;
-
-  const res = options.signal
-    ? await doFetch(url, { signal: options.signal })
-    : await doFetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} : ${url}`);
-  const blob = await res.blob();
-  if (isLikelyEmptyBySize(blob.size, minBytes)) {
-    throw new EmptyTileError(url, blob.size, minBytes);
-  }
+  const blob = await fetchImageBlob(url, {
+    minBytes: options.minBytes,
+    fetchImpl: options.fetchImpl,
+    signal: options.signal,
+    retryMs: options.retryMs,
+  });
   return makeTexture(blob);
 }
