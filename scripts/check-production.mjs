@@ -20,7 +20,9 @@
  *      (`/fr/moon/?place=Mare%20Imbrium`) s'ouvre sur son corps, tournée vers la formation, garde
  *      sa langue et perd `place` ; et aucune erreur de console ni d'exécution au démarrage.
  *   5. LES TUILES CUITES (lot 68) : pour chaque jeu de `public/assets/imagery/`, la première et la
- *      dernière tuile de la pyramide, lues à l'ADRESSE de la fiche (donc au service de données, pas
+ *      dernière tuile de la pyramide (d'un jeu RÉGIONAL : la tuile du centre de sa région, au plus
+ *      petit et au plus grand niveau publiés, car le niveau 0 et le coin de la grille n'existent pas,
+ *      cf. `bakedTileProbes`), lues à l'ADRESSE de la fiche (donc au service de données, pas
  *      à Firebase), avec l'`Origin` de la page : 200, `image/jpeg`, CORS vers cette origine, cache
  *      immuable. Un TÉMOIN : la même tuile sous un hachage qui n'a jamais existé doit répondre 404,
  *      sans quoi un 200 ne prouverait rien. Un téléversement oublié ou partiel (404 sans CORS, que le
@@ -161,9 +163,35 @@ export function judgeConsole(errors) {
 }
 
 /**
- * Les adresses à sonder pour un jeu de tuiles cuit : la première (niveau 0) et la dernière tuile
- * du dernier niveau, et la même première tuile sous un hachage qui n'a jamais existé (le témoin).
- * L'adresse se DÉRIVE du gabarit de la fiche : le hachage et l'hôte ne sont écrits nulle part ici.
+ * La tuile qui contient un point, à un niveau : la formule du cuiseur (`bake-imagery-tiles.mjs`,
+ * `(90 - latitude) / pas` et `(longitude + 180) / pas`), écrite pour la matrice de la fiche.
+ */
+function tileAtPoint(level, latitude, longitude, matrix) {
+  const rows = matrix.rowsAtLevelZero * 2 ** level;
+  const cols = matrix.columnsAtLevelZero * 2 ** level;
+  const clamp = (value, count) =>
+    Math.min(count - 1, Math.max(0, Math.floor(value)));
+  return {
+    row: clamp(((90 - latitude) / 180) * rows, rows),
+    col: clamp(((longitude + 180) / 360) * cols, cols),
+  };
+}
+
+/**
+ * Les adresses à sonder pour un jeu de tuiles cuit, et la même première tuile sous un hachage qui
+ * n'a jamais existé (le témoin). L'adresse se DÉRIVE du gabarit de la fiche : le hachage et l'hôte
+ * ne sont écrits nulle part ici.
+ *
+ * - **Jeu global** (couvre tout le corps) : la première tuile (niveau 0) et la dernière du dernier
+ *   niveau, qui existent toutes les deux.
+ * - **Jeu régional** (le manifeste porte une `region`, GAL-PRODUCTION-PROBE-001) : le niveau 0 et le
+ *   coin de la grille du dernier niveau n'existent PAS, et les sonder déclarait « production non
+ *   saine » (issue #554) alors que les tuiles publiées étaient servies. On sonde donc la tuile qui
+ *   contient le CENTRE de la région, au plus petit et au plus grand niveau publiés : le centre est
+ *   dans l'image source, donc la tuile est écrite. La grille de la boîte englobante, elle, ne l'est
+ *   pas (mesuré sur Apollo 11 : 36, 110 et 396 tuiles de grille pour 10, 50 et 274 publiées).
+ *   Le témoin reprend alors CETTE tuile réelle sous le hachage fantôme : son 404 prouve que c'est le
+ *   hachage qui est refusé, et non une tuile qui n'aurait jamais existé.
  */
 export function bakedTileProbes({
   id,
@@ -172,6 +200,7 @@ export function bakedTileProbes({
   tileMatrixSet,
   matrix,
   maxLevel,
+  region,
 }) {
   const at = (url, level, row, col) =>
     url
@@ -184,6 +213,38 @@ export function bakedTileProbes({
   const cols = matrix.columnsAtLevelZero * 2 ** maxLevel;
   const hash = /\/([0-9a-f]{12})\/\{Style\}/.exec(template)?.[1];
   if (!hash) throw new Error(`${id} : pas de hachage dans le gabarit`);
+  if (region) {
+    const { bbox, levels } = region;
+    if (
+      !Array.isArray(bbox) ||
+      bbox.length !== 4 ||
+      !bbox.every(Number.isFinite) ||
+      !Array.isArray(levels) ||
+      levels.length === 0
+    )
+      throw new Error(`${id} : région illisible dans le manifeste`);
+    const [west, south, east, north] = bbox;
+    const latitude = (south + north) / 2;
+    const longitude = (west + east) / 2;
+    const lowest = Math.min(...levels);
+    const highest = Math.max(...levels);
+    const first = tileAtPoint(lowest, latitude, longitude, matrix);
+    const last = tileAtPoint(highest, latitude, longitude, matrix);
+    return [
+      { id, kind: 'première', url: at(template, lowest, first.row, first.col) },
+      { id, kind: 'dernière', url: at(template, highest, last.row, last.col) },
+      {
+        id,
+        kind: 'témoin',
+        url: at(
+          template.replace(hash, '0'.repeat(12)),
+          lowest,
+          first.row,
+          first.col
+        ),
+      },
+    ];
+  }
   return [
     { id, kind: 'première', url: at(template, 0, 0, 0) },
     { id, kind: 'dernière', url: at(template, maxLevel, rows - 1, cols - 1) },
@@ -252,7 +313,14 @@ function bakedTilesets() {
       );
       const { template, style, tileMatrixSet, matrix, maxLevel } =
         fiche.service;
-      return { id, template, style, tileMatrixSet, matrix, maxLevel };
+      // Un jeu RÉGIONAL se reconnaît à la `region` de son manifeste : ses tuiles ne couvrent pas le corps.
+      const manifest = JSON.parse(
+        readFileSync(resolve(imagery, id, 'manifest.json'), 'utf8')
+      );
+      const region = manifest.region
+        ? { bbox: manifest.region.bbox, levels: manifest.region.levels }
+        : undefined;
+      return { id, template, style, tileMatrixSet, matrix, maxLevel, region };
     });
 }
 
