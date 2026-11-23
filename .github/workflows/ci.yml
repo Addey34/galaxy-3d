@@ -21,7 +21,22 @@ jobs:
     name: Verify and build
     runs-on: ubuntu-24.04
     # Ce gate conditionne le deploiement : un blocage ne doit jamais l'immobiliser des heures.
-    timeout-minutes: 15
+    #
+    # ENVELOPPE MESUREE, 15 -> 25 MIN (GAL-CI-ROBUST-001, 2026-11-23). Sur les 60 derniers runs de ce
+    # job (`gh run view --json jobs`, durees des etapes) : 51 verts de 9,2 a 14,2 min, mediane 10,9
+    # (install 0, verify 2,1, build 0,8, pages 7,2) ; et CINQ coupes a 15,3 min par cette limite, dont
+    # un run de `main` (donc un deploiement perdu), toujours dans l'etape des pages generees, a
+    # 148 tests sur 151, sans un seul echec. Ces cinq-la sont sur les runners lents : `pnpm verify`
+    # y prend 3,0 a 3,3 min au lieu de 2,1 (x1,5), donc les pages 10,5 min au lieu de 7,2 et un total
+    # extrapole de 16 a 17 min. A 15 min la marge sur le runner ordinaire n'etait que de 38 %, et
+    # nulle sur le lent. La suite des pages a grandi de 2,4 min (lot 41) a 7 min (`built-*`, 151
+    # scenarios) et ne se recupere pas en la parallelisant : 827 s de tests sont deja sur deux workers
+    # (trois n'y gagnent que 5 %, voir `playwright.pages.config.ts`) et un job de plus ne ferait que
+    # deplacer le deploiement dans un troisieme job avec un artefact a transporter. 25 min = 1,5 fois
+    # le pire extrapole ; ce qui reste borne un blocage est le `timeout-minutes` PROPRE de l'etape des
+    # pages (15 min, au-dela du pire mesure x2) et celui de l'etape de verification de la production
+    # (4 min). `src/config/verifyGate.test.ts` garde l'ordre et la nature bloquante des etapes.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
         with:
@@ -85,8 +100,9 @@ jobs:
       #
       # ELLES TOURNENT ICI, ET PAS DANS LE JOB e2e, POUR UNE RAISON DE COUT MESUREE : le job
       # e2e est shard sur ONZE machines qui ne construisent pas, donc il faudrait onze
-      # `pnpm build`. Ce job-ci construit deja, et n'utilise que 2,4 min de ses 15 ; la suite
-      # ajoute 11 scenarios en 16 s en local, plus l'installation de Chromium.
+      # `pnpm build`. Ce job-ci construit deja. (Lot 41 : 11 scenarios, 2,4 min du job. Mesure du
+      # 2026-11-23 : 151 scenarios, 6 a 7,5 min sur un runner ordinaire, jusqu'a 10,6 sur un lent ;
+      # c'est pourquoi l'enveloppe du job est de 25 min et l'etape porte son propre garde-fou.)
       #
       # Bloquant, parce qu'une page publiee illisible est un defaut visible par un visiteur.
       # SANS `--with-deps` depuis le 2026-10-22. Mesure sur les journaux : le navigateur se
@@ -98,6 +114,10 @@ jobs:
       # refuserait de demarrer, ce qui se voit tout de suite (voir la PR qui a fait ce retrait).
       - run: pnpm exec playwright install chromium
       - name: Check the generated pages in a browser
+        # Garde-fou PROPRE de l'etape : 7,2 min en mediane, 10,6 au pire mesure sur un runner lent.
+        # Un blocage (le navigateur qui ne rend plus la main) est coupe ici, et l'etape reste
+        # BLOQUANTE : un echec ou une coupure arrete le job avant toute etape de deploiement.
+        timeout-minutes: 15
         run: pnpm test:pages
 
       # Informational measurement of the actual deploy payload after firebase.json exclusions,

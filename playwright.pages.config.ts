@@ -12,7 +12,8 @@ import { defineConfig, devices } from '@playwright/test';
  * DEUX CONFIGS PLUTÔT QU'UNE, et la raison est un COÛT mesuré. Une seconde entrée `webServer`
  * dans la config principale serait démarrée à CHAQUE lancement, y compris par les six shards du
  * job e2e, qui ne construisent pas : il faudrait donc six `pnpm build`. Ici, ces scénarios sont
- * joués par le job `verify`, **qui construit déjà** et n'utilise que 2,4 min de ses 15.
+ * joués par le job `verify`, **qui construit déjà** (au lot 41 : 11 scénarios, 2,4 min du job ; mesuré le
+ * 2026-11-23 : 151 scénarios, 6 à 7,5 min, jusqu'à 10,6 sur un runner lent, d'où l'enveloppe de 25 min).
  *
  * Le partage se fait par MOTIF de nom : la config principale ignore `built-*.spec.ts`, celle-ci
  * ne prend que lui. Le fichier reste dans `e2e/`, donc dans le périmètre de `pnpm format` et
