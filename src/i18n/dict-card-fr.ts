@@ -101,6 +101,18 @@ export const cardFr: Record<CardMessageKey, string> = {
   'st.selectedAnnounce': '{name}, à {ly} années-lumière du Soleil.',
   'st.unavailable':
     'La vue 3D n’est pas disponible : le contexte graphique ne répond pas.',
+  'st.fieldAu': 'Largeur du champ : {au} UA',
+  'st.fieldLy': 'Largeur du champ : {ly} al ({pc} pc)',
+  'st.ringAu': '{au} UA',
+  'st.stageAu':
+    'Dans le Système solaire : l’unité est l’unité astronomique (UA), la distance moyenne Terre-Soleil, {km} millions de km. Cercles orangés : 1, 10, 100… UA, dans le plan des planètes.',
+  'st.stageLy':
+    'Entre les étoiles : l’unité est l’année-lumière (1 parsec = {ly} années-lumière = {au} UA). Cercles bleus : un par parsec, dans le plan galactique.',
+  'st.stageNote':
+    'Un changement d’échelle, pas un voyage : le Soleil reste au centre et seul le champ s’élargit, dans un repère galactique unique. Aucune vitesse n’est supposée.',
+  'st.skip': 'Passer la transition',
+  'st.transitionStart':
+    'Changement d’échelle : du Système solaire, en unités astronomiques, au voisinage, en années-lumière.',
   'exo.card.unknown': 'non publiée',
   'exo.card.period': 'Période orbitale',
   'exo.card.radius': 'Rayon',

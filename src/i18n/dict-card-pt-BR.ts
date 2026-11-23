@@ -100,6 +100,18 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'st.selectedAnnounce': '{name}, a {ly} anos-luz do Sol.',
   'st.unavailable':
     'A vista 3D não está disponível: o contexto gráfico não responde.',
+  'st.fieldAu': 'Largura do campo: {au} UA',
+  'st.fieldLy': 'Largura do campo: {ly} al ({pc} pc)',
+  'st.ringAu': '{au} UA',
+  'st.stageAu':
+    'No Sistema Solar: a unidade é a unidade astronômica (UA), a distância média Terra-Sol, {km} milhões de km. Círculos laranja: 1, 10, 100… UA, no plano dos planetas.',
+  'st.stageLy':
+    'Entre as estrelas: a unidade é o ano-luz (1 parsec = {ly} anos-luz = {au} UA). Círculos azuis: um por parsec, no plano galáctico.',
+  'st.stageNote':
+    'Uma mudança de escala, não uma viagem: o Sol fica no centro e só o campo se alarga, em um único referencial galáctico. Nenhuma velocidade é suposta.',
+  'st.skip': 'Pular a transição',
+  'st.transitionStart':
+    'Mudança de escala: do Sistema Solar, em unidades astronômicas, para a vizinhança, em anos-luz.',
   'exo.card.unknown': 'não publicado',
   'exo.card.period': 'Período orbital',
   'exo.card.radius': 'Raio',

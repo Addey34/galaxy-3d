@@ -82,7 +82,7 @@ export interface SkyLayerEnvironment {
   /** La caméra, que la fiche d'un objet du ciel passe au centrage de l'écran (`SkyCenteringView`). */
   centering?: SkyCenteringHost;
   /** Le renderer et la boucle de l'application : la vue du voisinage solaire n'en crée pas d'autre. */
-  stellar?: Pick<StellarHost, 'animation' | 'renderer'>;
+  stellar?: Pick<StellarHost, 'animation' | 'renderer' | 'gaze'>;
 }
 
 export function setupSkyLayerToggles(

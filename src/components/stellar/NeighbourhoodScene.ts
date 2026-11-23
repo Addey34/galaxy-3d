@@ -21,8 +21,10 @@ import {
   type NeighbourRow,
   type NeighbourSystem,
 } from '@/core/neighbours';
+import { auToParsecs, ECLIPTIC_RINGS_AU } from '@/core/scaleTransition';
 import {
   scaleRingsPc,
+  solarSceneToStellar,
   stellarScenePosition,
   type Vec3,
 } from '@/core/stellarSpace';
@@ -111,6 +113,8 @@ export class NeighbourhoodScene {
   readonly systems: readonly NeighbourSystem[];
   /** Distance (pc) de l'étoile la plus lointaine à J2000 : fixe la taille de la vue d'ensemble. */
   readonly extentPc: number;
+  /** Cercles de l'écliptique (UA) : leur point d'ancrage dans le repère stellaire, pour les noms. */
+  readonly eclipticAnchors: ReadonlyArray<{ au: number; point: Vec3 }>;
 
   private readonly primaries: readonly NeighbourRow[];
   private readonly starGeometry = new THREE.BufferGeometry();
@@ -238,6 +242,47 @@ export class NeighbourhoodScene {
     );
     this.axis.frustumCulled = false;
     this.scene.add(this.axis);
+
+    // Les cercles de l'ÉCLIPTIQUE (plan des planètes), une décade d'UA chacun : le pont vers le Système
+    // solaire. Ils sont dans le repère galactique par la rotation réelle (`solarSceneToStellar`) : le
+    // plan des planètes est incliné de 60,2° sur celui de la Galaxie. Repères d'instrument, pas des orbites.
+    const eclipticMaterial = this.track(
+      new THREE.LineBasicMaterial({
+        color: 0xd9a35f,
+        transparent: true,
+        opacity: 0.5,
+        depthWrite: false,
+      })
+    );
+    const anchors: Array<{ au: number; point: Vec3 }> = [];
+    for (const au of ECLIPTIC_RINGS_AU) {
+      const radius = auToParsecs(au);
+      const pts: THREE.Vector3[] = [];
+      for (let k = 0; k < 160; k++) {
+        const a = (k / 160) * Math.PI * 2;
+        pts.push(
+          new THREE.Vector3(
+            ...solarSceneToStellar([
+              Math.cos(a) * radius,
+              0,
+              Math.sin(a) * radius,
+            ])
+          )
+        );
+      }
+      const ring = new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        eclipticMaterial
+      );
+      ring.frustumCulled = false;
+      ring.name = 'ecliptic-ring';
+      this.scene.add(ring);
+      anchors.push({
+        au,
+        point: solarSceneToStellar([radius, 0, 0]),
+      });
+    }
+    this.eclipticAnchors = anchors;
 
     // La sélection : un anneau sur l'étoile, et le trait de sa distance depuis le Soleil.
     this.selectionGeometry.setAttribute(
@@ -408,6 +453,17 @@ export class NeighbourhoodScene {
     this.camera.aspect = width / Math.max(1, height);
     if (dx === 0 && dy === 0) this.camera.clearViewOffset();
     else this.camera.setViewOffset(width, height, -dx, -dy, width, height);
+    this.camera.updateProjectionMatrix();
+  }
+
+  /**
+   * Les plans de découpe suivent la distance de la caméra : à 70 UA (3e-4 pc) le plan proche de la vue
+   * d'ensemble (0,02 pc) couperait le Soleil. Le rapport proche/distance reste constant.
+   */
+  fitClipping(distancePc: number): void {
+    const near = Math.min(0.02, Math.max(1e-7, distancePc * 0.002));
+    if (near === this.camera.near) return;
+    this.camera.near = near;
     this.camera.updateProjectionMatrix();
   }
 

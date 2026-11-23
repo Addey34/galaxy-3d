@@ -93,6 +93,22 @@
   line-height: 1.35;
 }
 
+.sv-field {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.sv-stage {
+  display: grid;
+  gap: var(--sp-1);
+}
+.sv-stage[hidden],
+.sv-skip[hidden] {
+  display: none;
+}
+.sv-stage p {
+  margin: 0;
+}
+
 /* La surface des contrôles couvre tout l'écran, sous les boîtes. */
 .sv-surface {
   position: absolute;
@@ -144,6 +160,9 @@
 }
 .sv-label--axis {
   color: rgba(255, 194, 122, 0.9);
+}
+.sv-label--au {
+  color: rgba(244, 190, 120, 0.85);
 }
 .sv-label--ring {
   color: rgba(150, 175, 225, 0.75);
