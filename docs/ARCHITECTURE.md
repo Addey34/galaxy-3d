@@ -7942,8 +7942,8 @@ quoi que ce soit**. À 4,25 années-lumière, Proxima serait à 9,4 millions d'u
 35 unités en Exploration), hors de portée de la caméra du Système solaire : l'invariant du produit
 (aucune taille ni position de scène inventée) interdit de la mettre « à portée » par une échelle
 déformée. La distance est dite par la fiche et par le nom du repère (« Proxima Centauri · 4,2 al »).
-Voyager VERS une étoile (une scène stellaire avec sa propre origine et ses propres échelles) est la
-tranche suivante, pas celle-ci.
+La scène stellaire (origine et échelles propres) est livrée par GAL-UNIVERSE-002 : voir
+§ « Le voisinage solaire en 3D ». SUPERSEDED 2026-11-22 : « la tranche suivante, pas celle-ci ».
 
 **Les données** (`pnpm neighbours:generate`, `scripts/generate-neighbours.mjs`, 7,9 ko). Les 61
 étoiles que HYG v4.4 place à 5 pc ou moins, avec la distance et le mouvement de Gaia DR3 (archive
@@ -8026,3 +8026,102 @@ l'ouverture d'une fiche referme (une seule surface contextuelle) : pour chercher
 on rouvre les Réglages, comme pour les autres fiches du ciel ; un champ dans la fiche serait plus direct. Les étoiles
 sans Gaia (Alpha Centauri : 4,32 al dans HYG) n'ont pas d'incertitude et peuvent différer de
 publications plus récentes ; un `--check` du générateur dira quand le fichier dérive.
+
+## Le voisinage solaire en 3D (GAL-UNIVERSE-002, 2026-11-22)
+
+Une vue À PART de la scène solaire : les 48 repères (61 étoiles) du voisinage à 5 parsecs, à leurs
+positions relatives réelles, autour du Soleil. Entrée par le bouton « Voisinage solaire en 3D » des
+Réglages (section « scène », indépendant de la couche des étoiles voisines) ou par le bouton « Voir
+dans le voisinage solaire » de la fiche d'une étoile (la vue s'ouvre avec cette étoile choisie).
+
+**Une scène, un renderer, une boucle.** `components/stellar/NeighbourhoodScene` est une `THREE.Scene`
+à part avec sa propre caméra, rendue par le renderer de l'application : `AnimationSystem` reçoit un
+point d'accroche, `setRenderOverride(fn)`. Tant qu'il est posé, la boucle (la même, `setAnimationLoop`
+posé une fois) appelle `fn` au lieu de rendre la scène solaire, et passe `delta = 0` à la mise à jour :
+la simulation est FIGÉE, donc la date de la scène ne dérive pas (test navigateur : 6 s passées dans la
+vue, écart de date au retour sous 4 s, alors que sans gel il dépasserait 6 s) et l'horloge se réancre à la reprise par le mécanisme de la pause
+(`OrbitalMechanics.update`, `_prevPaused`). Aucun second moteur, aucun second contexte WebGL.
+`AnimationSystem.test.ts` prouve : une seule boucle, un seul rendu par image, delta nul, reprise.
+Le chunk `stellarView` (17 ko, plus 3,5 ko de CSS) est importé par `ui/skyLayerToggles` au premier
+clic ; **le démarrage ne grossit que de 906 octets** (le bouton, une clé de langue ; marge de budget
+26 973 o) et le fichier `neighbours.json` n'est demandé qu'alors (mesuré par un test).
+
+**Le contrat de coordonnées (`core/stellarSpace.ts`, pur, 17 tests).**
+- **1 unité = 1 parsec**, le Soleil à l'origine, et rien d'autre : aucun facteur de la scène solaire
+  (`ScaleService`, 1 UA = 35 unités) n'intervient, aucune compression de distance.
+- Les positions publiées sont équatoriales ICRS/J2000 (α, δ, distance) ; elles sont tournées dans le
+  repère GALACTIQUE (IAU 1958, matrice d'Hipparcos de `core/galactic.ts`) : x vers le centre galactique,
+  y dans le sens de la rotation, z vers le pôle galactique nord. Le plan galactique est horizontal.
+  Pour Three.js (Y en haut, repère direct) : X = x, Y = z, Z = −y (déterminant +1, testé).
+- Le mouvement est RECTILIGNE UNIFORME : position J2000 + vitesse × durée, la vitesse venant du mouvement
+  propre (mas/an, α déjà × cos δ), de la distance et de la vitesse radiale publiées. **Sans vitesse
+  radiale publiée (HYG seul), la composante le long de la ligne de visée est nulle** et la fiche le dit
+  quand on déplace le temps (`st.noRadial`) ; les incertitudes de distance de Gaia sont conservées, celles
+  de HYG ne sont pas inventées (« non publiée »).
+- **Fenêtre de temps bornée à ±10 000 ans** (`STELLAR_MOTION_LIMIT_YEARS`, curseur de la vue et borne
+  du calcul) : Barnard, la plus rapide (~90 km/s tangentiels et −110 km/s radiaux, soit ~142 km/s),
+  parcourt environ 1,5 pc en 10 000 ans, un tiers du volume. Au-delà, le potentiel galactique, les
+  orbites des doubles et surtout les vitesses radiales manquantes dominent : ce serait un tracé, pas une
+  position. La vue donne l'année absolue et rappelle la limite. Le curseur compte des années
+  depuis la date de la scène, la limite est comptée depuis J2000 : `motionWindow` (`core/stellarSpace.ts`) borne le curseur
+  pour que curseur, année affichée et calcul décrivent le même instant (une scène de 2026 s'arrête à +9 900 ans, année 11 927,
+  au lieu d'afficher 12 026 pour un calcul resté à 12 000 ; qualifié 2026-11-22).
+
+**Garanties d'exactitude, tenues par des tests.** (1) Chaque étoile est à sa distance publiée du Soleil
+(norme de ses trois coordonnées, à 1e-9 pc près) ; (2) **la direction (l, b) de Proxima et de Barnard à
+J2016,0 est celle que l'archive Gaia calcule elle-même, à 0,002°** (témoin indépendant : colonnes `l`, `b`
+de `gaiadr3.gaia_source`, lues le 2026-11-22) ; (3) le pôle galactique nord de l'IAU tombe sur +z ; (4) la
+vitesse spatiale retrouvée par différence de positions est tangentielle 4,74047·μ·d et radiale publiées,
+à 2e-4 (constante arrondie) ; (5) Proxima à 4,2465 al, Alpha Centauri à 4,32, Barnard à 5,963 ; (6) de
+bout en bout, dans le navigateur, la norme des trois coordonnées affichées pour Proxima est 1,30 pc.
+La matrice d'Hipparcos est donnée à 10 décimales : orthonormale à 1e-10, pas à 1e-12.
+
+**Ce qui est SYMBOLIQUE, et dit comme tel** (`st.symbolic`, affiché dans la vue) : les étoiles sont des
+points lumineux de taille ÉCRAN constante (10 px), jamais des sphères ni des rayons ; leur couleur suit le
+type spectral (indicative) ; les cercles du plan galactique (un par parsec, étiquetés en pc et en al), le
+trait de chaque étoile vers ce plan (lecture de la hauteur), le trait Soleil-étoile choisie et l'axe vers
+le centre galactique (une DIRECTION : la Galaxie n'est pas à l'échelle) sont des repères d'instrument. Ce
+qui est mesuré : les trois coordonnées, la distance, le mouvement.
+
+**Le parcours.** La vue prend tout l'écran : les éléments de la scène solaire (barres d'outils, surfaces,
+noms des couches) reçoivent `data-stellar-hidden` et `inert`, et la vue les rétablit à la fermeture, sans
+jamais les retirer du DOM : leur état est celui qu'on retrouve. Les contrôles (rotation, déplacement, zoom,
+`OrbitControls`) sont sur une SURFACE posée au-dessus du canevas : les écouteurs de la scène solaire
+(sélecteur de corps, fiches du ciel) sont sur le canevas et ne reçoivent rien. Un clic ou un tap choisit
+l'étoile la plus proche dans 22 px (à égalité de proximité visuelle, la liste offre les voisines : α Cen est
+à 0,055 pc, soit 0,18 al, de Proxima) ; la fiche donne distance publiée (± si Gaia), distance à la date, position x, y, z,
+type spectral, magnitude, provenance. **Retour** : bouton « Retour au Système solaire » ou Échap ; la
+vue retire son rendu EN PREMIER (la boucle reprend la scène solaire), libère sa scène (géométries,
+matériaux : testé), ses contrôles, son DOM, puis le focus revient au bouton des Réglages qui y menait.
+Sur téléphone, un volet bas porte la fiche, la liste et le temps, et le cadrage (`setViewOffset`, comme
+`core/skyCentering` pour les fiches du ciel) place le Soleil au milieu de la zone libre.
+
+**Accessibilité.** Clavier complet : flèches (tourner), + et − (zoom), Origine (recentrer), Échap (retour),
+Tab vers la liste des étoiles (des boutons, `aria-pressed`) qui donne le même accès que le clic ; le texte
+de la scène (noms 2D) est `aria-hidden`, l'information est dans la liste et la fiche ; `prefers-reduced-motion` :
+pas d'amortissement des contrôles ; annonces par l'`aria-live` unique (ouverture, étoile choisie, retour) ;
+axe sans violation sur la vue.
+
+**Restauration du DOM et vol de caméra en cours (qualifié 2026-11-22).** Chaque élément masqué mémorise son état `inert`
+initial (`ui/stellarMask.ts`) et le retrouve à la fermeture : un élément déjà inerte le reste, les autres redeviennent
+interactifs (tests unitaire et navigateur). Les noms 2D se disputent la place par priorité (Soleil, axe, puis étoiles de la plus proche à la plus lointaine, puis
+cercles d'échelle) : un repère d'échelle ne masque jamais un nom d'étoile (la campagne complète a montré le contraire sur
+polices larges de Linux : « 2 pc · 6,5 al » cachait « Proxima Centauri »).
+Ouvrir la vue PENDANT un vol de la caméra solaire : le tween appartient à
+`CameraSystem` et avance à l'horloge murale (`tweenGroup.update(performance.now())`), la vue n'y touche pas. Le test navigateur
+(`stellarView.spec.ts`, mouvement réel, ouverture constatée `data-scene-moving="1"`) montre que le vol se termine derrière la
+vue, que le corps choisi est conservé et qu'au retour la scène est calme et répond à un glissement : aucun défaut reproduit,
+`AnimationSystem` inchangé.
+
+**Défauts trouvés par les tests navigateur, corrigés.** La surface plein écran passait AU-DESSUS du bouton
+« Retour » (empilement : `z-index` explicites) ; le focus se lisait après la fermeture des Réglages donc
+n'était pas rendu ; la liste tombait à 0 px dans le volet du téléphone (`flex-shrink`) ; le volet masquait le
+Soleil (cadrage de la zone libre).
+
+**Limites.** 61 étoiles (celles du catalogue à 5 pc : pas de nouveau catalogue) ; pas de vol animé entre la
+scène solaire et la vue (une bascule, pas un voyage) ; pas de WebXR (la vue refuse de s'ouvrir en session VR) ;
+pas de lien profond (`?view=`) ; aucune mesure sur appareil réel ; le choix d'une étoile très proche d'une
+autre peut demander la liste ; les positions du futur lointain des étoiles sans vitesse radiale sont
+latérales seulement. Repli si WebGL ne répond pas : un contexte perdu ne laisse pas la vue s'ouvrir,
+l'annonce `st.unavailable` le dit, et la fiche texte de chaque étoile (couche « Étoiles voisines »)
+donne les distances sans la scène. (Si WebGL est absent dès le départ, l'application elle-même ne démarre pas.)

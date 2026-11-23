@@ -64,6 +64,43 @@ export const cardFr: Record<CardMessageKey, string> = {
   'nb.unit.ly': 'al',
   'nb.search.label': 'Trouver une étoile voisine',
   'nb.search.placeholder': 'Proxima, Sirius, étoile de Barnard',
+  'st.title': 'Voisinage solaire en 3D',
+  'st.back': 'Retour au Système solaire',
+  'st.reset': 'Recentrer la vue',
+  'st.open': 'Voir dans le voisinage solaire',
+  'st.scale':
+    '1 unité = 1 parsec = 3,26 années-lumière. Un cercle par parsec autour du Soleil, dans le plan galactique.',
+  'st.ring': '{pc} pc · {ly} al',
+  'st.sun': 'Soleil',
+  'st.centre': 'Centre galactique (direction)',
+  'st.symbolic':
+    'Les points sont des symboles de taille constante : la taille réelle d’une étoile n’est pas dessinée. La couleur suit le type spectral.',
+  'st.frame':
+    'Repère galactique : x vers le centre galactique, z vers le pôle galactique nord. Les positions sont celles de la date de la scène, déplacées en ligne droite depuis les valeurs du catalogue à J2000.',
+  'st.help':
+    'Glisser pour tourner, molette ou pincement pour zoomer, clic droit ou deux doigts pour déplacer. Clavier : les flèches tournent, plus et moins zooment, Origine recentre, Échap revient.',
+  'st.list': 'Étoiles du voisinage',
+  'st.listItem': '{name}, {ly} années-lumière',
+  'st.selected': 'Étoile choisie',
+  'st.noSelection':
+    'Choisissez une étoile pour voir sa distance et sa position.',
+  'st.distSun': 'Distance au Soleil (publiée)',
+  'st.distAtDate': 'Distance au Soleil à cette date',
+  'st.position': 'Coordonnées (x, y, z)',
+  'st.positionValue': '{x} ; {y} ; {z} pc',
+  'st.timeLabel': 'Années depuis la date de la scène',
+  'st.timeNow': 'La date de la scène',
+  'st.timeValue': '{years} ans, année {year}',
+  'st.timeLimit':
+    'Mouvement rectiligne, limité à 10 000 ans de part et d’autre de J2000 : au-delà l’approximation n’est pas défendable.',
+  'st.noRadial':
+    'Aucune vitesse radiale n’est publiée pour cette étoile : son rapprochement ou son éloignement du Soleil n’est pas pris en compte.',
+  'st.opened':
+    'Voisinage solaire en 3D. {n} systèmes d’étoiles autour du Soleil.',
+  'st.closed': 'Retour au Système solaire.',
+  'st.selectedAnnounce': '{name}, à {ly} années-lumière du Soleil.',
+  'st.unavailable':
+    'La vue 3D n’est pas disponible : le contexte graphique ne répond pas.',
   'exo.card.unknown': 'non publiée',
   'exo.card.period': 'Période orbitale',
   'exo.card.radius': 'Rayon',

@@ -53,6 +53,8 @@ interface Options {
   /** La caméra, pour centrer l'écran sur l'étoile ouverte (`SkyCenteringView`, chargé à la première ouverture). */
   centering?: SkyCenteringHost;
   coordinator: OverlayCoordinator;
+  /** Ouvre le voisinage solaire en 3D sur cette étoile (absent : pas de bouton). */
+  openStellar?: (focus: string) => void;
 }
 
 function number(value: number, digits: number): string {
@@ -104,7 +106,8 @@ function radialText(row: NeighbourRow): string {
 export async function setupNeighbourCard(
   options: Options
 ): Promise<NeighbourCard> {
-  const { markers, file, camera, canvas, coordinator, centering } = options;
+  const { markers, file, camera, canvas, coordinator, centering, openStellar } =
+    options;
   const centerOn = createCardCentering(centering);
   // Les phrases de la fiche sont hors démarrage : `t()` rendrait les clés brutes sans elles.
   await loadDeferredMessages();
@@ -154,7 +157,12 @@ export async function setupNeighbourCard(
   source.className = 'exo-source';
   const acknowledgement = document.createElement('p');
   acknowledgement.className = 'exo-source';
-  body.append(facts, hint, origin, source, acknowledgement);
+  const stellarButton = document.createElement('button');
+  stellarButton.type = 'button';
+  stellarButton.className = 'settings-button';
+  stellarButton.id = 'neighbour-card-stellar';
+  stellarButton.hidden = !openStellar;
+  body.append(facts, stellarButton, hint, origin, source, acknowledgement);
   card.append(header, body);
   document.body.append(card);
 
@@ -192,6 +200,7 @@ export async function setupNeighbourCard(
     searchLabel.textContent = t('nb.search.label');
     search.placeholder = t('nb.search.placeholder');
     closeButton.setAttribute('aria-label', t('surface.close'));
+    stellarButton.textContent = t('st.open');
     if (!current) return;
     const primary = systemPrimary(current);
     const unknown = t('nb.card.unknown');
@@ -282,6 +291,12 @@ export async function setupNeighbourCard(
     }
   });
 
+  stellarButton.addEventListener('click', () => {
+    const system = current;
+    if (!system || !openStellar) return;
+    close();
+    openStellar(systemName(system));
+  });
   closeButton.addEventListener('click', close);
   card.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {

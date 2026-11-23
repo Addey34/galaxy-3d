@@ -72,6 +72,41 @@ export const cardEn = {
   'nb.unit.ly': 'ly',
   'nb.search.label': 'Find a nearby star',
   'nb.search.placeholder': 'Proxima, Sirius, Barnard',
+  'st.title': 'Solar neighbourhood in 3D',
+  'st.back': 'Back to the Solar System',
+  'st.reset': 'Reset the view',
+  'st.open': 'See in the solar neighbourhood',
+  'st.scale':
+    '1 unit = 1 parsec = 3.26 light-years. One circle per parsec around the Sun, in the galactic plane.',
+  'st.ring': '{pc} pc · {ly} ly',
+  'st.sun': 'Sun',
+  'st.centre': 'Galactic centre (direction)',
+  'st.symbolic':
+    'Points are symbols of a constant size: the real size of a star is not drawn. The colour follows the spectral type.',
+  'st.frame':
+    'Galactic frame: x toward the galactic centre, z toward the north galactic pole. Positions are those of the scene date, moved in a straight line from the J2000 catalogue values.',
+  'st.help':
+    'Drag to rotate, scroll or pinch to zoom, right-drag or two fingers to move. Keyboard: arrow keys rotate, plus and minus zoom, Home resets, Escape goes back.',
+  'st.list': 'Stars of the neighbourhood',
+  'st.listItem': '{name}, {ly} light-years',
+  'st.selected': 'Selected star',
+  'st.noSelection': 'Select a star to see its distance and its position.',
+  'st.distSun': 'Distance from the Sun (published)',
+  'st.distAtDate': 'Distance from the Sun at this date',
+  'st.position': 'Position (x, y, z)',
+  'st.positionValue': '{x}, {y}, {z} pc',
+  'st.timeLabel': 'Years from the scene date',
+  'st.timeNow': 'The scene date',
+  'st.timeValue': '{years} years, year {year}',
+  'st.timeLimit':
+    'Straight-line motion, limited to 10,000 years either side of J2000: beyond that the approximation is not defensible.',
+  'st.noRadial':
+    'No radial velocity is published for this star: its motion toward or away from the Sun is not included.',
+  'st.opened': 'Solar neighbourhood in 3D. {n} star systems around the Sun.',
+  'st.closed': 'Back to the Solar System.',
+  'st.selectedAnnounce': '{name}, {ly} light-years from the Sun.',
+  'st.unavailable':
+    'The 3D view is not available: the graphics context is not responding.',
   'exo.card.unknown': 'not published',
   'exo.card.period': 'Orbital period',
   'exo.card.radius': 'Radius',

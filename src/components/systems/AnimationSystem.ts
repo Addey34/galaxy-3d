@@ -186,9 +186,14 @@ export class AnimationSystem {
     // laisser le RAF dicter le rythme évite les sauts de frame du throttle manuel.
     this.tweenGroup.update(now);
 
-    const delta = this.isPaused ? 0 : rawDelta;
+    // Une vue qui prend la main (voisinage solaire) fige la simulation (delta 0 : la date ne dérive
+    // pas, l'horloge se réancre à la reprise) et rend à la place de la scène solaire, avec le MÊME
+    // renderer et la MÊME boucle.
+    const override = this.renderOverride;
+    const delta = this.isPaused || override ? 0 : rawDelta;
     this._update(delta, rawDelta);
-    this._render();
+    if (override) override(rawDelta);
+    else this._render();
     this.fpsCounter.update(now);
   }
 
@@ -512,6 +517,17 @@ export class AnimationSystem {
   }
 
   private _starVisibility = 1;
+
+  private renderOverride: ((delta: number) => void) | null = null;
+
+  /**
+   * Remplace le rendu de la scène solaire par `render` (ou le rend, avec `null`) : une seule boucle,
+   * un seul renderer. La simulation est figée tant qu'il est posé ; l'appelant reste propriétaire
+   * de ce qu'il dessine et doit retirer son rendu avant de se libérer.
+   */
+  setRenderOverride(render: ((delta: number) => void) | null): void {
+    this.renderOverride = render;
+  }
 
   private _render(): void {
     // Recentre le champ d'étoiles sur la caméra (décor à l'infini, cf. Starfield).

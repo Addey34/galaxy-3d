@@ -16,6 +16,7 @@ import type { DeepSkyLayer } from './deepSkyLayer';
 import type { DeepSkyCard } from './deepSkyCard';
 import type { NeighbourLayer } from './neighbourLayer';
 import type { NeighbourCard } from './neighbourCard';
+import type { StellarHost, StellarView } from './stellarView';
 import type { MeteorLayer } from './meteorLayer';
 import type { ExoplanetCard } from './exoplanetCard';
 import type { OverlayCoordinator } from './overlayCoordinator';
@@ -80,6 +81,8 @@ export interface SkyLayerEnvironment {
   simulationDate: () => Date;
   /** La caméra, que la fiche d'un objet du ciel passe au centrage de l'écran (`SkyCenteringView`). */
   centering?: SkyCenteringHost;
+  /** Le renderer et la boucle de l'application : la vue du voisinage solaire n'en crée pas d'autre. */
+  stellar?: Pick<StellarHost, 'animation' | 'renderer'>;
 }
 
 export function setupSkyLayerToggles(
@@ -95,6 +98,22 @@ export function setupSkyLayerToggles(
   let deepCard: Promise<DeepSkyCard | null> | null = null;
   let neighbours: Promise<NeighbourLayer | null> | null = null;
   let neighbourCard: Promise<NeighbourCard | null> | null = null;
+  // La vue 3D du voisinage solaire : chargée au premier appel, jamais au démarrage.
+  let stellar: Promise<StellarView | null> | null = null;
+  const openStellar = (focus?: string): void => {
+    const host = environment.stellar;
+    if (!host) return;
+    void (stellar ??= import('./stellarView').then((m) =>
+      m.setupStellarView({
+        ...host,
+        coordinator: environment.coordinator,
+        simulationDate: environment.simulationDate,
+      })
+    )).then((view) => {
+      if (view) view.open(focus);
+      else stellar = null;
+    });
+  };
   let meteors: Promise<MeteorLayer | null> | null = null;
   mount({
     id: 'constellations-toggle',
@@ -165,12 +184,29 @@ export function setupSkyLayerToggles(
                 markers: l.markers,
                 file: l.file,
                 ...environment,
+                openStellar: environment.stellar ? openStellar : undefined,
               })
             );
           void neighbourCard?.then((c) => c?.setActive(on));
         });
     },
   });
+  // Le bouton du voisinage solaire en 3D : indépendant de la couche (un bouton, pas une case).
+  if (environment.stellar) {
+    const button = document.createElement('button');
+    button.id = 'stellar-open';
+    button.type = 'button';
+    button.className = 'settings-button';
+    const host =
+      document.getElementById('settings-section-scene') ?? document.body;
+    host.append(button);
+    const refresh = (): void => {
+      button.textContent = t('settings.stellar');
+    };
+    refresh();
+    onLocaleChange(refresh);
+    button.addEventListener('click', () => openStellar());
+  }
   // Les pluies de météores : la case dit combien de pluies sont actives à la date de la scène.
   // (Il y en a toujours au moins une, gardé par `core/meteors.test.ts` : pas d'état « aucune ».)
   let meteorTimer = 0;

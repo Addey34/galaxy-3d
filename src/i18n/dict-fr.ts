@@ -381,6 +381,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.exoplanets': 'Étoiles à exoplanètes',
   'settings.deepsky': 'Objets du ciel profond',
   'settings.neighbours': 'Étoiles voisines',
+  'settings.stellar': 'Voisinage solaire en 3D',
   'settings.meteors': 'Pluies de météores',
   'settings.meteors.active':
     '{count} pluie(s) de météores active(s) à cette date, radiants de l’IAU Meteor Data Center.',

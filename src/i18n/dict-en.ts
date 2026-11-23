@@ -405,6 +405,7 @@ export const en = {
   'settings.exoplanets': 'Exoplanet host stars',
   'settings.deepsky': 'Deep-sky objects',
   'settings.neighbours': 'Nearby stars',
+  'settings.stellar': 'Solar neighbourhood in 3D',
   'settings.meteors': 'Meteor showers',
   'settings.meteors.active':
     '{count} meteor shower(s) active on this date, radiants from the IAU Meteor Data Center.',
