@@ -51,25 +51,71 @@ async function searchPlace(
   await hit.first().click();
 }
 
+/** Ce que le repère montre à l'instant où il devient visible (photographié DANS la page). */
+interface MarkerSnapshot {
+  text: string;
+  ring: { x: number; y: number; width: number; height: number };
+}
+
+/**
+ * Le repère vit 12 s de TEMPS RÉEL (`LIFETIME_MS`, voulu) à partir de l'instant où
+ * `data-search-focus` est publié. Lire son état par une suite d'actions Playwright (visible,
+ * deux textes, boîte : cinq allers-retours) dépend donc de la vitesse du coureur : à 2-6 s par
+ * action, la lecture dépasse 12 s et trouve `marker: null` alors que `data-search-focus` est
+ * toujours posé (run `44641618452`, shard 6 : deux échecs puis un succès au 3e essai, état de
+ * scène calme, aucune texture en vol). Reproduit en local : repère présent à la publication,
+ * absent 13 s plus tard, `data-search-focus` inchangé. L'observateur est donc posé AVANT le choix
+ * et photographie le repère au moment où il apparaît : plus aucune dépendance à la latence.
+ */
+async function watchFirstVisibleMarker(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as { __markerSnapshot?: MarkerSnapshot };
+    w.__markerSnapshot = undefined;
+    const observer = new MutationObserver(() => {
+      if (w.__markerSnapshot) return;
+      const el = document.querySelector<HTMLElement>('#formation-marker');
+      const ring = el?.querySelector('.formation-marker-ring');
+      if (!el || !ring || el.hidden) return;
+      const r = ring.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return;
+      w.__markerSnapshot = {
+        text: el.textContent ?? '',
+        ring: { x: r.x, y: r.y, width: r.width, height: r.height },
+      };
+      observer.disconnect();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+  });
+}
+
+async function firstVisibleMarker(page: Page): Promise<MarkerSnapshot> {
+  const handle = await page.waitForFunction(
+    () =>
+      (window as unknown as { __markerSnapshot?: MarkerSnapshot })
+        .__markerSnapshot,
+    undefined,
+    { timeout: 60_000 }
+  );
+  return (await handle.jsonValue()) as MarkerSnapshot;
+}
+
 test('after choosing a formation a visible marker names it and its body', async ({
   page,
 }) => {
   await openPalette(page);
+  await watchFirstVisibleMarker(page);
   await searchPlace(page, 'Tycho', 'Tycho');
-  const canvas = page.locator('canvas').first();
-  await expect(canvas).toHaveAttribute('data-search-focus', /^Tycho\|/, {
-    timeout: 60_000,
-  });
-  await expect(marker(page)).toBeVisible();
-  await expect(marker(page)).toContainText('Tycho');
-  await expect(marker(page)).toContainText('Moon');
+  const shown = await firstVisibleMarker(page);
+  expect(shown.text).toContain('Tycho');
+  expect(shown.text).toContain('Moon');
   // Il pose le repère sur le point visé : au centre de l'image, puisque le cadrage l'y amène.
-  const box = await marker(page)
-    .locator('.formation-marker-ring')
-    .boundingBox();
+  const box = shown.ring;
   const view = page.viewportSize();
-  expect(box).not.toBeNull();
-  if (box && view) {
+  if (view) {
     expect(Math.abs(box.x + box.width / 2 - view.width / 2)).toBeLessThan(
       view.width * 0.1
     );
@@ -77,6 +123,11 @@ test('after choosing a formation a visible marker names it and its body', async 
       view.height * 0.15
     );
   }
+  // Le point visé est bien celui que la page annonce : même formation que le repère.
+  await expect(page.locator('canvas').first()).toHaveAttribute(
+    'data-search-focus',
+    /^Tycho\|/
+  );
 });
 
 test('the marker is announced once, with the formation and its body', async ({
