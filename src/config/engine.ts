@@ -501,6 +501,17 @@ export const REALTIME_CLOUDS_SETTINGS = {
   // Étape B — seuil d'octets sous lequel une tuile GIBS est jugée VIDE (→ fallback MODIS).
   // Mesuré : tuile vide 2–8 Ko, réelle 80–180 Ko. 20 Ko sépare largement les deux.
   minTileBytes: 20_000,
+  // Comblement des COINS NOIRS de fauchée d'une image MODIS par l'autre instrument MODIS du même jour
+  // (observation réelle, jamais un modèle) : voir `core/cloudComposite`. Mesuré le 2026-11-21, bande
+  // |latitude| <= 60 : 4,43 % sans donnée pour Terra, dont 76 % observés par Aqua. VIIRS, qui n'en a
+  // presque pas, ne publie plus depuis le 2026-11-03 : la chaîne retombe sur MODIS.
+  complementEnabled: true,
+  // Plus grand octet sRGB d'un pixel SANS donnée (l'absence tient à 0-3, l'océan observé commence vers 24).
+  complementNoDataMax: 8,
+  // Marge (pixels) autour d'un trou et du bord du complément : la frange sombre d'une fauchée.
+  complementGrowPx: 2,
+  // Rayon (pixels) du fondu du raccord.
+  complementFeatherPx: 2,
 };
 
 /** Grille commune des modèles Open-Meteo : forecast plus fin, archive ERA5 plus grossière. */

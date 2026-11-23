@@ -8174,3 +8174,67 @@ l'ouverture et gardée.
 matériau de plus, aucune texture ; mémoire GPU réelle NON mesurée.
 **Limites** : retour non animé ; l'azimut seul du regard est gardé ; la direction du regard est celle de la caméra, pas celle
 d'un corps ; les cercles d'UA sont dans l'écliptique J2000 ; aucune mesure sur appareil réel.
+
+
+### Combler les coins noirs de fauchée des nuages (GAL-CLOUD-VISUAL-001, 2026-11-23)
+
+**Le défaut, reproduit dans le produit.** Le 2026-11-23, la Terre à la date courante montrait des FENTES rectilignes sans nuage,
+verticales, qui coupaient le champ nuageux sur plusieurs milliers de kilomètres (Pacifique, Caraïbes, Amazonie) et s'arrêtaient net
+sur le bord des nuages. Elles correspondent une à une aux coins noirs de la source.
+- **Pourquoi la source est MODIS ce jour-là.** La chaîne est VIIRS puis MODIS Terra puis MODIS Aqua (`resolveCloudSources`), et la
+  première image non vide gagne. Lu sur GIBS le 2026-11-23 : VIIRS SNPP rend une image noire de 3 356 o (à 1 024 x 512) à partir du
+  2026-11-03 (80 859 o le 2026-11-02, image partielle, contre 151 516 o le 2026-11-01), alors que MODIS Terra et Aqua publient toujours (150 à 160 ko). La tuile noire est sous
+  `minTileBytes`, donc la chaîne retombe sur Terra (journal `[cloud-debug] true-color source` : `MODIS_Terra_CorrectedReflectance_TrueColor:2026-11-21`).
+- **Pourquoi MODIS laisse des trous.** Une image « True Color » MODIS du jour est une mosaïque de fauchées orbitales ; entre deux
+  fauchées, vers l'équateur, il n'y a aucune donnée (pixel noir). Mappée sur la sphère, chaque coin devient une fente.
+
+**Ce qui était déjà tenu, et qu'on n'a pas retouché.** Le moteur préfère « un vide honnête plutôt qu'une invention étirée » : là où le
+satellite n'a pas vu, aucun nuage n'est inventé. Les masques MODIS Cloud Fraction Day et Night, la nuit polaire, les seuils
+d'extraction du shader et la couche modélisée (Open-Meteo) sont inchangés. On ne mélange toujours pas observation et modèle.
+
+**La correction : de l'observation réelle d'un autre instrument.** `core/cloudComposite.ts` (pur) et `ui/cloudComplement.ts`
+(morceau `cloudComplement`, chargé à la demande) complètent une image MODIS, là où elle n'a aucune donnée, par l'AUTRE instrument
+MODIS du même jour et de la même taille (`modisSiblingUrl` : seule la couche de la requête change).
+- **Mesuré sur les deux images réelles du 2026-11-21 (2048 x 1024, bande |latitude| ≤ 60°)** : Terra n'a aucune donnée sur 4,43 % des
+  pixels, Aqua sur 11,48 %, les deux sur 1,07 %. **76 % des trous de Terra sont donc observés par Aqua.** Dans le produit, le
+  comblement a rempli 46 956 pixels (journal `[cloud-debug] complement`), ce qui recoupe la mesure hors ligne.
+- **Règle** : un pixel est sans donnée quand son plus grand octet sRGB est au plus `complementNoDataMax` (8 : l'absence de donnée
+  tient à 0-3, l'océan observé commence vers 24, cf. `REALTIME_CLOUDS_SETTINGS`). Le trou est agrandi de `complementGrowPx` (2) et le
+  complément écarté de son propre bord de `complementGrowPx` : le bord d'une fauchée est une frange sombre de compression, ni noire ni
+  observée. Le raccord est adouci sur `complementFeatherPx` (2). Jamais de complément là où il n'a pas observé, fondu compris.
+- **Honnêteté** : ce que NI Terra NI Aqua n'ont vu reste sans donnée et le moteur le traite comme avant. Le badge de traçabilité dit
+  « MODIS Terra + MODIS Aqua » quand le comblement a eu lieu. Les deux instruments passent à des heures différentes : au raccord, les
+  nuages ne sont pas exactement ceux de l'image principale (une observation décalée, pas une erreur de placement).
+- **Repli, toujours** : si l'autre instrument est absent, vide, de taille différente, illisible, ou si le comblement échoue, l'image est
+  servie SEULE, comme avant ; un échec du complément n'est jamais un échec de la couche. VIIRS (quand il publie) n'est pas complété
+  (mesuré sur la date 2026-10-22 : badge « VIIRS », aucun comblement).
+
+**Avant et après, mêmes données NASA, même cadrage** (captures d'écran du poste de développement, non versionnées) : les fentes des Caraïbes et de l'Amazonie ont disparu. Il reste une trace fine dans le Pacifique, là où aucun des
+deux instruments n'a vu (la part de 24 % non comblée).
+
+**Coût, mesuré.**
+- Démarrage : 1 279 145 o à 1 279 638 o (+493 o, les réglages et le câblage), marge restante 26 362 o ; le morceau `cloudComplement`
+  pèse 4 394 o et n'est chargé qu'à la première image de nuages.
+- Exécution, une fois par image (fil principal) : 77 ms sans frein, 351 ms sous un frein CPU de 4, 516 ms à 6 (une première version, en
+  O(pixels x rayon), coûtait 133, 635 et 980 ms ; les sommes glissantes rendent exactement le même résultat, garde de test contre la
+  définition naïve). Le reste est le décodage et la copie des pixels : le comblement n'a pas été déplacé dans un Worker.
+- Réseau : une requête GIBS de plus par image MODIS (l'autre instrument), lancée EN PARALLÈLE de la première. `e2e/time-travel-clouds.spec.ts`
+  (qui compte les requêtes GIBS) reste vert.
+- **Navigateurs sans `OffscreenCanvas`** : mesuré sur le WebKit émulé de l'iPhone 15, il n'existe pas (comme sur les iPhone d'avant
+  iOS 16.4) ; un `<canvas>` ordinaire prend le relais (la première version, qui exigeait `OffscreenCanvas`, laissait ces appareils sans
+  comblement).
+
+**Preuves.** `core/cloudComposite.test.ts` (comblement, frange, complément écarté de son bord, longitude enroulée, fondu,
+entrées jamais modifiées, tailles différentes, équivalence avec la définition naïve) ; `e2e/cloudComplement.spec.ts` (Chromium, GIBS
+simulé : comblement et badge, trou commun, Aqua absente, Aqua vide, VIIRS non complété) ; `e2e/device-cloudComplement.spec.ts`
+(Pixel 7 et iPhone 15 émulés). **Falsifié deux fois** : en neutralisant le comblement, 6 tests unitaires échouent ; et l'e2e a d'abord
+RESTÉ VERT sous cette falsification, parce que le compte `filled` était calculé à part des poids appliqués : un comblement qui
+n'avait pas eu lieu se déclarait fait. `filled` compte maintenant les pixels réellement remplacés, et l'e2e échoue sans comblement.
+
+**Limites, dites.** (1) 24 % des trous de Terra restent (les deux instruments n'ont rien vu) et la bande de nuit polaire n'est pas
+concernée. (2) Les raccords entre fauchées d'une même image MODIS (nuages pris à des instants différents) sont dans la donnée, on ne
+les efface pas. (3) La texture de nuages reste à 2 048 x 1 024 (environ 20 km par pixel à l'équateur) : le grain visible de très près
+n'est pas traité ici. (4) Le comblement par le modèle Open-Meteo que `realtimeClouds` active (`syntheticFill`) ne comble pas ces
+fentes dans les captures ; sa cause n'a PAS été investiguée. (5) Le coût d'exécution (351 ms sous frein de 4) est un bloc unique sur
+le fil principal ; mesuré sur ordinateur freiné, pas sur un vrai téléphone. (6) La position géographique des fentes recoupe celle des
+coins de la source à l'œil (longitude des Caraïbes) ; elle n'a pas été mesurée numériquement.

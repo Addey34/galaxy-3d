@@ -120,6 +120,8 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
   let lastNightMaskSource: MeteoLayerDiagnostics['source'];
   let satelliteVisible = false;
 
+  // Le morceau du comblement (chargé au premier chargement d'image) : le badge lui demande ce qu'il a fait.
+  let complement: typeof import('./cloudComplement') | null = null;
   let disposeSatellite: () => void = () => {};
   let disposeDayMask: () => void = () => {};
   let disposeNightFallback: () => void = () => {};
@@ -138,6 +140,21 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
           latencyDays: settings.latencyDays,
         }),
       minTileBytes: settings.minTileBytes,
+      // Une image MODIS est complétée, là où elle n'a aucune donnée, par l'autre instrument MODIS du
+      // même jour (observation réelle). Sans effet pour VIIRS, et jamais bloquant : voir `cloudComplement`.
+      loadTexture: settings.complementEnabled
+        ? async (url, signal) => {
+            complement = await import('./cloudComplement');
+            return complement.loadWithComplement(url, signal, {
+              minTileBytes: settings.minTileBytes,
+              composite: {
+                noDataMax: settings.complementNoDataMax,
+                growPx: settings.complementGrowPx,
+                featherPx: settings.complementFeatherPx,
+              },
+            });
+          }
+        : undefined,
       onStateChange: (next) => {
         phase = next;
         loadState.push(next);
@@ -150,10 +167,18 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
         }
       },
       onResolved: (candidate) => {
-        lastSource = candidate;
+        // Une image comblée le dit : « MODIS Terra + MODIS Aqua », jamais « MODIS Terra » seul.
+        const filled = complement?.complementInfoFor(candidate.url);
+        const shown = filled
+          ? {
+              ...candidate,
+              label: `${candidate.label} + ${filled.complementLabel}`,
+            }
+          : candidate;
+        lastSource = shown;
         if (DEBUG_CLOUDS)
-          console.info('[cloud-debug] true-color source', candidate);
-        relay.push(candidate);
+          console.info('[cloud-debug] true-color source', shown);
+        relay.push(shown);
       },
     });
 
