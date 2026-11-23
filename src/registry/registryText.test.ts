@@ -31,6 +31,7 @@ const DIRS = [
   'interstellar',
   'providers',
   'tours',
+  'craft',
   'presets',
 ];
 

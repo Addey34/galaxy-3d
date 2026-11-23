@@ -1,0 +1,224 @@
+{
+  "$comment": "Modèles 3D d'engins pour l'inspection (GAL-OBJECT-IMMERSION-001). Un modèle = un fichier de public/assets/models/craft/ dont l'empreinte est dans files.json ; `targets` = ids du registre des sondes, ou `iss`. `parts` = pièces nommées du fichier NASA (noeuds), libellés des quatre langues : seules les pièces dont le nom du noeud est sans ambiguïté sont listées.",
+  "models": [
+    {
+      "id": "iss-b",
+      "targets": [
+        "iss"
+      ],
+      "name": {
+        "en": "International Space Station",
+        "fr": "Station spatiale internationale",
+        "es": "Estación Espacial Internacional",
+        "pt-BR": "Estação Espacial Internacional"
+      },
+      "parts": []
+    },
+    {
+      "id": "jwst-b",
+      "targets": [
+        "jwst"
+      ],
+      "name": {
+        "en": "James Webb Space Telescope",
+        "fr": "Télescope spatial James Webb",
+        "es": "Telescopio Espacial James Webb",
+        "pt-BR": "Telescópio Espacial James Webb"
+      },
+      "parts": []
+    },
+    {
+      "id": "juno-b",
+      "targets": [
+        "juno"
+      ],
+      "name": {
+        "en": "Juno",
+        "fr": "Juno",
+        "es": "Juno",
+        "pt-BR": "Juno"
+      },
+      "parts": []
+    },
+    {
+      "id": "voyager-a",
+      "targets": [
+        "voyager1",
+        "voyager2"
+      ],
+      "name": {
+        "en": "Voyager probe",
+        "fr": "Sonde Voyager",
+        "es": "Sonda Voyager",
+        "pt-BR": "Sonda Voyager"
+      },
+      "parts": []
+    },
+    {
+      "id": "cassini-huygens-a",
+      "targets": [
+        "cassini"
+      ],
+      "name": {
+        "en": "Cassini–Huygens",
+        "fr": "Cassini–Huygens",
+        "es": "Cassini–Huygens",
+        "pt-BR": "Cassini–Huygens"
+      },
+      "parts": [
+        {
+          "nodes": [
+            "dish"
+          ],
+          "label": {
+            "en": "Antenna dish",
+            "fr": "Antenne parabolique",
+            "es": "Antena parabólica",
+            "pt-BR": "Antena parabólica"
+          }
+        }
+      ]
+    },
+    {
+      "id": "parker-solar-probe",
+      "targets": [
+        "parker-solar-probe"
+      ],
+      "name": {
+        "en": "Parker Solar Probe",
+        "fr": "Parker Solar Probe",
+        "es": "Parker Solar Probe",
+        "pt-BR": "Parker Solar Probe"
+      },
+      "parts": [
+        {
+          "nodes": [
+            "BUS"
+          ],
+          "label": {
+            "en": "Spacecraft bus",
+            "fr": "Plateforme de la sonde",
+            "es": "Plataforma de la sonda",
+            "pt-BR": "Plataforma da sonda"
+          }
+        },
+        {
+          "nodes": [
+            "HGA"
+          ],
+          "label": {
+            "en": "High-gain antenna",
+            "fr": "Antenne à grand gain",
+            "es": "Antena de alta ganancia",
+            "pt-BR": "Antena de alto ganho"
+          }
+        },
+        {
+          "nodes": [
+            "magnetometers"
+          ],
+          "label": {
+            "en": "Magnetometers",
+            "fr": "Magnétomètres",
+            "es": "Magnetómetros",
+            "pt-BR": "Magnetômetros"
+          }
+        },
+        {
+          "nodes": [
+            "electricAntennas"
+          ],
+          "label": {
+            "en": "Electric-field antennas",
+            "fr": "Antennes de champ électrique",
+            "es": "Antenas de campo eléctrico",
+            "pt-BR": "Antenas de campo elétrico"
+          }
+        },
+        {
+          "nodes": [
+            "Instruments"
+          ],
+          "label": {
+            "en": "Instruments",
+            "fr": "Instruments",
+            "es": "Instrumentos",
+            "pt-BR": "Instrumentos"
+          }
+        },
+        {
+          "nodes": [
+            "CoolingSystem"
+          ],
+          "label": {
+            "en": "Cooling system",
+            "fr": "Système de refroidissement",
+            "es": "Sistema de refrigeración",
+            "pt-BR": "Sistema de resfriamento"
+          }
+        },
+        {
+          "nodes": [
+            "solarArray_arms"
+          ],
+          "label": {
+            "en": "Solar array arms",
+            "fr": "Bras des panneaux solaires",
+            "es": "Brazos de los paneles solares",
+            "pt-BR": "Braços dos painéis solares"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rosetta",
+      "targets": [
+        "rosetta"
+      ],
+      "name": {
+        "en": "Rosetta",
+        "fr": "Rosetta",
+        "es": "Rosetta",
+        "pt-BR": "Rosetta"
+      },
+      "parts": [
+        {
+          "nodes": [
+            "dish"
+          ],
+          "label": {
+            "en": "Antenna dish",
+            "fr": "Antenne parabolique",
+            "es": "Antena parabólica",
+            "pt-BR": "Antena parabólica"
+          }
+        },
+        {
+          "nodes": [
+            "lander",
+            "lander.001"
+          ],
+          "label": {
+            "en": "Lander (Philae)",
+            "fr": "Atterrisseur (Philae)",
+            "es": "Módulo de aterrizaje (Philae)",
+            "pt-BR": "Módulo de pouso (Philae)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "osiris-rex",
+      "targets": [
+        "osiris-rex"
+      ],
+      "name": {
+        "en": "OSIRIS-REx",
+        "fr": "OSIRIS-REx",
+        "es": "OSIRIS-REx",
+        "pt-BR": "OSIRIS-REx"
+      },
+      "parts": []
+    }
+  ]
+}

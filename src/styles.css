@@ -1120,6 +1120,10 @@ button {
   #body-info.is-compact .bi-body > :not(.bi-live) {
     display: none;
   }
+  /* « Inspecter en 3D » reste atteignable fiche repliée : c'est l'action principale d'une sonde. */
+  #body-info.is-compact .bi-body > .bi-craft:not([hidden]) {
+    display: grid;
+  }
   #body-info.is-compact.has-hero .bi-header {
     padding-bottom: var(--sp-2);
   }
@@ -1381,6 +1385,36 @@ button {
   color: rgba(235, 244, 255, 0.95);
 }
 .bi-discovery-note {
+  color: var(--ink-faint);
+}
+/* « Inspecter en 3D » (GAL-OBJECT-IMMERSION-001) : un bouton, ou la raison de son absence. */
+.bi-craft {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0;
+}
+.bi-craft[hidden],
+.bi-craft-button[hidden],
+.bi-craft-note[hidden] {
+  display: none;
+}
+.bi-craft-button {
+  justify-self: start;
+  min-height: var(--control-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface-solid);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.bi-craft-button:hover,
+.bi-craft-button:focus-visible {
+  background: var(--control-bg-hover);
+}
+.bi-craft-note {
+  margin: 0;
   color: var(--ink-faint);
 }
 /* Missions déclarées sur ce corps : même typographie que le bloc des sources, dont il est le

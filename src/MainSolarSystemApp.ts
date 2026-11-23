@@ -64,6 +64,7 @@ import { GazetteerOverlay } from './ui/gazetteerOverlay';
 import { setupGazetteerToggle } from './ui/gazetteerToggle';
 import { setupSkyLayerToggles } from './ui/skyLayerToggles';
 import { setupSatelliteToggle } from './ui/satelliteToggle';
+import type { CraftInspector, CraftOpener } from './ui/craftAccess';
 import { setupKeepAppearanceToggle } from './ui/keepAppearanceToggle';
 import gazetteerIndex from './config/gazetteerIndex.json';
 import { EARTH_NAMES_BODY } from './core/earthNames';
@@ -339,6 +340,23 @@ function wireChrome(): {
 
     void debugProbes?.then((m) => m.setupMeteoDebug(api, weatherLayers));
 
+    // L'inspection 3D d'un engin (GAL-OBJECT-IMMERSION-001) : chargée au premier bouton, jamais au démarrage.
+    let craft: Promise<CraftInspector> | null = null;
+    const openCraft: CraftOpener = (id, opener) => {
+      void (craft ??= import('./ui/craftInspector')
+        .then((m) =>
+          m.setupCraftInspector({
+            animation: api.animationSystem,
+            renderer: api.cameraSystem.renderer,
+            coordinator: overlayCoordinator,
+          })
+        )
+        .catch((error: unknown) => {
+          craft = null;
+          throw error;
+        })).then((view) => view.open(id, opener));
+    };
+
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
     let syncPermalink = (): void => undefined;
@@ -358,7 +376,7 @@ function wireChrome(): {
       // afficherait des clés brutes.
       void Promise.all([import('./ui/cardBlocks'), loadDeferredMessages()])
         .then(([module]) => {
-          module.setupCardBlocks(api, bodyInfo);
+          module.setupCardBlocks(api, bodyInfo, openCraft);
           cardBlocks = 'ready';
         })
         .catch((error: unknown) => {
@@ -546,6 +564,7 @@ function wireChrome(): {
           earth: earthConfig,
           earthHelioAU: (date) =>
             orbitalMechanics.heliocentricAU('earth', date),
+          openCraft,
         })
       : null;
     setupKeepAppearanceToggle();

@@ -1,0 +1,106 @@
+{
+  "repository": "nasa/NASA-3D-Resources",
+  "commit": "11ebb4ee043715aefbba6aeec8a61746fad67fa7",
+  "files": {
+    "iss-b": {
+      "sourceUrl": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/International%20Space%20Station%20(ISS)%20(B)/International%20Space%20Station%20(ISS)%20(B).glb",
+      "bytes": 476992,
+      "sha256": "2ba4427413b0dd89a33d2acaf962dea8a96a3b1d8dceda05cc7aad547ffd3d16",
+      "triangles": 174440,
+      "meshes": 10,
+      "materials": 19,
+      "images": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression",
+        "KHR_materials_specular"
+      ]
+    },
+    "jwst-b": {
+      "sourceUrl": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/James%20Webb%20Space%20Telescope%20(B)/James%20Webb%20Space%20Telescope%20(B).glb",
+      "bytes": 1004248,
+      "sha256": "4958e61e5a564f2efcc32cd516b9d36ea0b9bc644f64dbcfe182ce8a422ae526",
+      "triangles": 99239,
+      "meshes": 1,
+      "materials": 36,
+      "images": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression"
+      ]
+    },
+    "juno-b": {
+      "sourceUrl": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Juno%20(B)/Juno%20(B).glb",
+      "bytes": 262360,
+      "sha256": "8a410b5eaf99660a339cf86398d61534a89bc84a2c43e3c103ad22fb31d7ef93",
+      "triangles": 29856,
+      "meshes": 1,
+      "materials": 24,
+      "images": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression"
+      ]
+    },
+    "voyager-a": {
+      "sourceUrl": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Voyager%20Probe%20(A)/Voyager%20Probe%20(A).glb",
+      "bytes": 285936,
+      "sha256": "7cf8eefb5a0fca9e4e1b0d1e51c37433124169183e5dbfd2d8034af902311821",
+      "triangles": 29911,
+      "meshes": 1,
+      "materials": 16,
+      "images": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression"
+      ]
+    },
+    "cassini-huygens-a": {
+      "sourceUrl": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Cassini-Huygens%20(A)/Cassini-Huygens%20(A).glb",
+      "bytes": 1660492,
+      "sha256": "f8bc110e23821021e99b88634843449cc8e98d86d0d8561c612c1cf0404e64e7",
+      "triangles": 25736,
+      "meshes": 11,
+      "materials": 8,
+      "images": 6,
+      "extensions": [
+        "KHR_draco_mesh_compression",
+        "EXT_texture_webp"
+      ]
+    },
+    "parker-solar-probe": {
+      "sourceUrl": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Parker%20Solar%20Probe/Parker%20Solar%20Probe.glb",
+      "bytes": 443572,
+      "sha256": "4d26e84efd29a78c5d07e474f6272bb111668b58da5a7555e305a65c72ddb1c5",
+      "triangles": 39257,
+      "meshes": 14,
+      "materials": 6,
+      "images": 4,
+      "extensions": [
+        "KHR_draco_mesh_compression",
+        "EXT_texture_webp"
+      ]
+    },
+    "rosetta": {
+      "sourceUrl": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Rosetta/Rosetta.glb",
+      "bytes": 2262728,
+      "sha256": "92b3a6a2a24b4fce0ea1ba1ecc9b47d699a396422d096ef9e21b9ba97a5125c4",
+      "triangles": 17432,
+      "meshes": 12,
+      "materials": 10,
+      "images": 10,
+      "extensions": [
+        "KHR_draco_mesh_compression",
+        "EXT_texture_webp"
+      ]
+    },
+    "osiris-rex": {
+      "sourceUrl": "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/11ebb4ee043715aefbba6aeec8a61746fad67fa7/3D%20Models/Origins%2C%20Spectral%20Interpretation%2C%20Resource%20Identification%2C%20and%20Security%20-%20Regolith%20Explorer%20(OSIRIS-REx)/OSIRIS-REx.glb",
+      "bytes": 1281308,
+      "sha256": "ef8e0429ee4dd8e918908923d5efdc6d3576b9216cc8e16533b50dd28c196bca",
+      "triangles": 184407,
+      "meshes": 1,
+      "materials": 41,
+      "images": 0,
+      "extensions": [
+        "KHR_draco_mesh_compression"
+      ]
+    }
+  }
+}

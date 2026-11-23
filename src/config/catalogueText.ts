@@ -44,9 +44,13 @@ export const TEXT_ROOTS: readonly unknown[] = [
  * (GAL-TOUR-SCALE-001). Une visite porte ses quatre langues dans sa propre fiche, téléchargée à
  * l'ouverture de cette visite seulement : la reposer depuis la carte du catalogue l'aurait fait
  * payer à tout visiteur de langue non anglaise, ouverte ou non. `catalogueText.test.ts` tient la
- * frontière dans les deux sens.
+ * frontière dans les deux sens. Les modèles d'engins (`craft`, GAL-OBJECT-IMMERSION-001) suivent la
+ * même règle : leurs noms et leurs pièces voyagent avec le morceau de l'inspection.
  */
-export const SELF_CONTAINED_REGISTRY_DIRS: readonly string[] = ['tours'];
+export const SELF_CONTAINED_REGISTRY_DIRS: readonly string[] = [
+  'tours',
+  'craft',
+];
 
 /**
  * Un `import()` littéral par langue : Vite n'analyse pas un spécificateur calculé, et

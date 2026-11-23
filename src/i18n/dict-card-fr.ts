@@ -353,4 +353,38 @@ export const cardFr: Record<CardMessageKey, string> = {
   'inspect.meta.offset': '{h} h par rapport à l’heure demandée',
   'inspect.meta.grid': 'Grille',
   'inspect.meta.gridValue': 'grille de {step}°, interpolée',
+  'craft.button': 'Inspecter en 3D',
+  'craft.issButton': 'Inspecter l’ISS en 3D',
+  'craft.noModel':
+    'Aucun modèle 3D fiable de cette sonde n’est disponible ici : rien n’est dessiné plutôt qu’une forme inventée.',
+  'craft.title': '{name} : inspection en 3D',
+  'craft.close': 'Fermer l’inspection',
+  'craft.reset': 'Réinitialiser la vue',
+  'craft.loading': 'Chargement du modèle 3D…',
+  'craft.failed':
+    'Le modèle 3D n’a pas pu être chargé. La scène est inchangée.',
+  'craft.unavailable':
+    'L’inspection en 3D n’est pas disponible : le contexte graphique ne répond pas.',
+  'craft.help':
+    'Glissez ou utilisez les flèches pour tourner le modèle. Molette, pincement ou touches + et - pour zoomer. Origine réinitialise la vue, Échap la ferme.',
+  'craft.scale':
+    'Échelle de présentation : l’engin est montré agrandi ici pour pouvoir être inspecté. Dans la scène astronomique, il n’est jamais agrandi.',
+  'craft.fidelity':
+    'Modèle représentatif de la collection 3D Resources de la NASA. Ses proportions et ses détails sont ceux du fichier : ce projet ne les a pas vérifiés sur des plans d’ingénierie.',
+  'craft.rights':
+    'La NASA indique que les contenus servant à rendre des modèles 3D ne sont généralement pas soumis au droit d’auteur aux États-Unis (NASA Images and Media Usage Guidelines, lu le 2026-11-23). Aucun soutien de la NASA n’est suggéré.',
+  'craft.parts': 'Pièces nommées dans le fichier',
+  'craft.partsNone':
+    'Ce modèle est un seul bloc : son fichier ne nomme pas de pièces séparées.',
+  'craft.instruments': 'Instruments déclarés dans l’archive PDS',
+  'craft.instrumentsNote':
+    'La liste vient du registre de contexte du PDS, pas du modèle 3D : le modèle ne dit pas où se trouve chaque instrument.',
+  'craft.provenance': 'Provenance',
+  'craft.source': 'Fichier source',
+  'craft.credit': 'Crédit : {credit}',
+  'craft.file': '{kb} ko, {tris} triangles, SHA-256 {hash}…',
+  'craft.opened': 'Inspection de {name} en 3D.',
+  'craft.closed': 'Retour à la vue précédente.',
+  'craft.partOn': '{part} mise en évidence.',
+  'craft.partOff': 'Mise en évidence retirée.',
 };

@@ -352,4 +352,38 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'inspect.meta.offset': '{h} h em relação à hora pedida',
   'inspect.meta.grid': 'Grade',
   'inspect.meta.gridValue': 'grade de {step}°, interpolada',
+  'craft.button': 'Inspecionar em 3D',
+  'craft.issButton': 'Inspecionar a ISS em 3D',
+  'craft.noModel':
+    'Não há aqui um modelo 3D confiável desta sonda: nada é desenhado em vez de uma forma inventada.',
+  'craft.title': '{name}: inspeção em 3D',
+  'craft.close': 'Fechar a inspeção',
+  'craft.reset': 'Redefinir a vista',
+  'craft.loading': 'Carregando o modelo 3D…',
+  'craft.failed':
+    'Não foi possível carregar o modelo 3D. A cena não foi alterada.',
+  'craft.unavailable':
+    'A inspeção em 3D não está disponível: o contexto gráfico não responde.',
+  'craft.help':
+    'Arraste ou use as setas para girar o modelo. Roda, pinça ou teclas + e - para ampliar. Home redefine a vista, Escape a fecha.',
+  'craft.scale':
+    'Escala de apresentação: aqui a nave é mostrada ampliada para poder ser inspecionada. Na cena astronômica ela nunca é ampliada.',
+  'craft.fidelity':
+    'Modelo representativo da coleção 3D Resources da NASA. Suas proporções e detalhes são os do arquivo: este projeto não os conferiu com desenhos de engenharia.',
+  'craft.rights':
+    'A NASA indica que o conteúdo usado para renderizar modelos 3D geralmente não está sujeito a direitos autorais nos Estados Unidos (NASA Images and Media Usage Guidelines, lido em 2026-11-23). Nenhum apoio da NASA é sugerido.',
+  'craft.parts': 'Peças nomeadas no arquivo',
+  'craft.partsNone':
+    'Este modelo é um único bloco: seu arquivo não nomeia peças separadas.',
+  'craft.instruments': 'Instrumentos declarados no arquivo do PDS',
+  'craft.instrumentsNote':
+    'A lista vem do registro de contexto do PDS, não do modelo 3D: o modelo não diz onde fica cada instrumento.',
+  'craft.provenance': 'Procedência',
+  'craft.source': 'Arquivo de origem',
+  'craft.credit': 'Crédito: {credit}',
+  'craft.file': '{kb} KB, {tris} triângulos, SHA-256 {hash}…',
+  'craft.opened': 'Inspecionando {name} em 3D.',
+  'craft.closed': 'De volta à vista anterior.',
+  'craft.partOn': '{part} destacada.',
+  'craft.partOff': 'Destaque removido.',
 };

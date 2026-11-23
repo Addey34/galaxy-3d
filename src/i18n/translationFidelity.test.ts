@@ -74,6 +74,8 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   // « Constellation » s’écrit pareil en anglais et en français.
   'deep.card.constellation':
     '« constellation » s’écrit pareil en anglais et en français',
+  // « Provenance » s’écrit pareil en anglais et en français.
+  'craft.provenance': '« provenance » s’écrit pareil en anglais et en français',
   // Intitulé de crédit : « satellites » s’écrit pareil en anglais et en français.
   'credits.satellites':
     '« Satellites » s’écrit pareil en anglais et en français',

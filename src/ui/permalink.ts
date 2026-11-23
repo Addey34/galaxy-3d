@@ -68,10 +68,11 @@ export interface PermalinkEclipseHooks {
  * non) : Chromium appelle les écouteurs d'une même cible dans l'ordre où ils ont été ajoutés, et un
  * module chargé plus tard passe donc toujours après celui-ci.
  */
-let historyOwner: ((event: PopStateEvent) => boolean) | null = null;
+/** Plusieurs modules peuvent en avoir une (la vue stellaire, l'inspection d'un engin) : chacun répond pour lui. */
+const historyOwners = new Set<(event: PopStateEvent) => boolean>();
 
 export function claimHistory(owner: (event: PopStateEvent) => boolean): void {
-  historyOwner = owner;
+  historyOwners.add(owner);
 }
 
 export function setupPermalinks(
@@ -274,7 +275,9 @@ export function setupPermalinks(
   onLocaleChange(alignLocalePath);
 
   window.addEventListener('popstate', (event) => {
-    if (!historyOwner?.(event)) applyInitialState(true);
+    let owned = false;
+    for (const owner of historyOwners) owned = owner(event) || owned;
+    if (!owned) applyInitialState(true);
   });
   return {
     applyInitialState,

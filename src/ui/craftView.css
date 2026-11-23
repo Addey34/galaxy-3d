@@ -1,0 +1,200 @@
+/*
+ * L'inspection 3D d'un engin (`ui/craftInspector.ts`). Feuille EXTERNE : la CSP de production est
+ * `style-src 'self'`, un <style> injecté est refusé. Vite la sort avec le morceau `craftInspector`.
+ *
+ * Tant que l'inspection est ouverte, les éléments de la scène portent `data-craft-hidden` (posé puis
+ * retiré par le module, avec `inert`) : invisibles, hors de l'ordre de tabulation, jamais retirés du
+ * DOM, donc leur état est exactement celui qu'on retrouve au retour.
+ */
+[data-craft-hidden] {
+  visibility: hidden !important;
+}
+
+.craft-view {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-loader);
+  /* Le canevas du renderer est derrière : l'inspection le laisse voir, ses boîtes sont les seules opaques. */
+  pointer-events: none;
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+.craft-view > * {
+  pointer-events: auto;
+}
+.cv-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  touch-action: none;
+  cursor: grab;
+  outline: none;
+}
+.cv-surface:active {
+  cursor: grabbing;
+}
+.cv-surface:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(var(--accent), 0.7);
+}
+.cv-head,
+.cv-help,
+.cv-side {
+  z-index: 2;
+}
+.cv-head {
+  position: absolute;
+  top: var(--edge);
+  left: var(--edge-x);
+  right: var(--edge-x);
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: start;
+  pointer-events: none;
+}
+.cv-head > * {
+  pointer-events: auto;
+}
+.cv-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+}
+.cv-title {
+  margin: 0 auto 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.cv-button {
+  min-height: var(--control-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface-solid);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.cv-button:hover,
+.cv-button:focus-visible {
+  background: var(--control-bg-hover);
+}
+.cv-close {
+  border-color: rgba(var(--accent), 0.55);
+}
+.cv-note {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+.cv-scale,
+.cv-status {
+  max-width: min(26rem, calc(100vw - 2 * var(--edge)));
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.cv-status[hidden] {
+  display: none;
+}
+.cv-help {
+  position: absolute;
+  left: var(--edge-x);
+  bottom: var(--edge-b);
+  max-width: min(34rem, calc(100vw - 2 * var(--edge)));
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  pointer-events: none;
+}
+.cv-side {
+  position: absolute;
+  top: calc(var(--edge) + var(--control-h) + var(--sp-2));
+  right: var(--edge-x);
+  bottom: var(--edge-b);
+  width: min(21rem, calc(100vw - 2 * var(--edge)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  overflow-y: auto;
+  padding: var(--sp-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow);
+}
+.cv-side > * {
+  flex-shrink: 0;
+}
+.cv-heading {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.cv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.cv-part {
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-1) var(--sp-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.cv-part:hover,
+.cv-part:focus-visible {
+  background: var(--control-bg-hover);
+}
+.cv-part[aria-pressed='true'] {
+  background: rgba(var(--accent), 0.2);
+  color: rgb(var(--accent));
+}
+/* Une liste, pas une `dl` : il n'y a pas de terme à nommer, et une `dl` sans `dt` est une erreur d'accessibilité (axe). */
+.cv-facts {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  overflow-wrap: anywhere;
+}
+.cv-link {
+  color: rgb(var(--accent));
+}
+
+/* Téléphone : les informations passent dans un volet bas, et le modèle garde le haut de l'écran. */
+@media (max-width: 640px) {
+  .cv-side {
+    top: auto;
+    left: var(--edge-x);
+    width: auto;
+    max-height: 38vh;
+  }
+  .cv-help {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cv-button,
+  .cv-part {
+    transition: none;
+  }
+}

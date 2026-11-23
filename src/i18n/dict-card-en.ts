@@ -372,6 +372,39 @@ export const cardEn = {
   'inspect.meta.offset': '{h} h from the requested hour',
   'inspect.meta.grid': 'Grid',
   'inspect.meta.gridValue': '{step}° grid, interpolated',
+  'craft.button': 'Inspect in 3D',
+  'craft.issButton': 'Inspect the ISS in 3D',
+  'craft.noModel':
+    'No reliable 3D model of this probe is available here: nothing is drawn rather than an invented shape.',
+  'craft.title': '{name}: 3D inspection',
+  'craft.close': 'Close the inspection',
+  'craft.reset': 'Reset the view',
+  'craft.loading': 'Loading the 3D model…',
+  'craft.failed': 'The 3D model could not be loaded. The scene is unchanged.',
+  'craft.unavailable':
+    'The 3D inspection is not available: the graphics context is not responding.',
+  'craft.help':
+    'Drag or use the arrow keys to turn the model. Scroll, pinch, or use + and - to zoom. Home resets the view, Escape closes it.',
+  'craft.scale':
+    'Presentation scale: the craft is shown enlarged here so it can be inspected. In the astronomical scene it is never enlarged.',
+  'craft.fidelity':
+    'Representative model from NASA’s 3D Resources collection. Its proportions and details are those of the file: this project has not checked them against engineering drawings.',
+  'craft.rights':
+    'NASA states that content used to render 3D models is generally not subject to copyright in the United States (NASA Images and Media Usage Guidelines, read on 2026-11-23). No endorsement by NASA is implied.',
+  'craft.parts': 'Parts named in the file',
+  'craft.partsNone':
+    'This model is a single block: its file does not name separate parts.',
+  'craft.instruments': 'Instruments declared in the PDS archive',
+  'craft.instrumentsNote':
+    'The list comes from the PDS context registry, not from the 3D model: the model does not say where each instrument sits.',
+  'craft.provenance': 'Provenance',
+  'craft.source': 'Source file',
+  'craft.credit': 'Credit: {credit}',
+  'craft.file': '{kb} KB, {tris} triangles, SHA-256 {hash}…',
+  'craft.opened': 'Inspecting {name} in 3D.',
+  'craft.closed': 'Back to the previous view.',
+  'craft.partOn': '{part} highlighted.',
+  'craft.partOff': 'Highlight removed.',
 };
 
 export type CardMessageKey = keyof typeof cardEn;

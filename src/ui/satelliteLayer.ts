@@ -38,6 +38,9 @@ import {
 } from '@/core/satellites';
 import type { SatelliteElements } from '@/core/satellites';
 import type { CelestialBodyConfig } from '@/types';
+import { loadDeferredMessages } from '@/i18n/deferredMessages';
+import { onLocaleChange, t } from '@/i18n';
+import type { CraftOpener } from './craftAccess';
 import Logger from '@/utils/Logger';
 import './satelliteLayer.css';
 
@@ -48,6 +51,8 @@ export interface SatelliteLayerEnvironment {
   earth: CelestialBodyConfig;
   /** Position héliocentrique de la Terre (UA, repère scène), la règle même qui la dessine. */
   earthHelioAU(date: Date): THREE.Vector3 | null;
+  /** Ouvre l'inspection 3D d'un modèle d'engin (ici l'ISS) ; absent : pas de bouton. */
+  openCraft?: CraftOpener;
 }
 
 export interface SatelliteStatus {
@@ -118,6 +123,29 @@ export async function setupSatelliteLayer(
   resize();
   window.addEventListener('resize', resize, { passive: true });
 
+  // L'ISS a un modèle 3D (GAL-OBJECT-IMMERSION-001) : un bouton, visible tant que la couche l'est, l'ouvre.
+  // Les points de la couche sont un décor de canvas sans clic ni clavier : l'accès se fait par ce bouton.
+  const ISS_NORAD_ID = 25544;
+  // La phrase du bouton est hors démarrage : `t()` rendrait la clé brute sans elle.
+  if (env.openCraft) await loadDeferredMessages();
+  let craftButton: HTMLButtonElement | null = null;
+  if (env.openCraft && entries.some((e) => e.elements.id === ISS_NORAD_ID)) {
+    const open = env.openCraft;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = 'satellites-craft';
+    button.className = 'settings-hint satellites-craft';
+    button.hidden = true;
+    const label = (): void => {
+      button.textContent = t('craft.issButton');
+    };
+    label();
+    onLocaleChange(label);
+    button.addEventListener('click', () => open('iss-b', button));
+    (document.getElementById('satellites-status') ?? canvas).after(button);
+    craftButton = button;
+  }
+
   let active = false;
   const p = new THREE.Vector3();
   const helio = new THREE.Vector3();
@@ -130,6 +158,7 @@ export async function setupSatelliteLayer(
     setActive(on) {
       active = on;
       canvas.hidden = !on;
+      if (craftButton) craftButton.hidden = !on;
       if (!on) {
         clear();
         canvas.dataset['markers'] = '0';
