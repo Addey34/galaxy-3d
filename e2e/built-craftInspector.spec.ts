@@ -55,6 +55,23 @@ async function boot(
       });
     }
   );
+  // Le build de la CI porte `VITE_STATIC_ORIGIN` : les modèles se demandent à l'origine des gros fichiers,
+  // que `blockExternalNetwork` coupe. On les sert depuis le build servi (ce que fera cette origine une
+  // fois les fichiers publiés), faute de quoi le modèle ne se charge jamais et le test attend dans le vide.
+  await page.route(
+    '**galaxy-static.galaxy-3d.workers.dev/assets/models/**',
+    async (route) => {
+      const path = new URL(route.request().url()).pathname;
+      const response = await route.fetch({ url: new URL(path, origin).href });
+      await route.fulfill({
+        response,
+        headers: {
+          ...response.headers(),
+          'access-control-allow-origin': '*',
+        },
+      });
+    }
+  );
   await page.route('**/satellites/elements.json', (route) =>
     route.fulfill({
       status: 200,
