@@ -40,6 +40,11 @@ async function boot(
     for (const [key, value] of Object.entries(entries))
       localStorage.setItem(key, value);
   }, storage);
+  // L'horloge du navigateur est FIGÉE au lendemain de la date de la scène : la source d'une donnée météo dépend
+  // de son âge (au-delà de 5 jours, l'archive ERA5 ; en deçà, Open-Meteo). Sans cela, la date épinglée du
+  // 2026-11-19 12:00 passait de l'un à l'autre le 2026-11-24 à 12:00 UTC et ce fichier devenait rouge à
+  // heure fixe (run `main` 45394112985, trois échecs sur trois ; reproduit en local le même jour).
+  await page.clock.setFixedTime(new Date('2026-11-20T12:00:00Z'));
   await page.goto(options.query ?? '/?body=earth&date=2026-11-19T12:00:00Z');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
   await waitForCalmMainThread(page);
