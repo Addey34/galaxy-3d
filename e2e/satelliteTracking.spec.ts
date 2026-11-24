@@ -206,8 +206,9 @@ test('suivi : sortir de la validité des éléments arrête le suivi sans garder
   });
   await page.locator('#satellite-card-follow').click();
   await expect(canvas).toHaveAttribute('data-following', String(ISS));
-  await page.locator('#body-search-trigger').click();
-  await page.locator('#orbit-moon').click();
+  await arrived(page);
+  await clickWhenCalm(page, page.locator('#body-search-trigger'));
+  await clickWhenCalm(page, page.locator('#orbit-moon'));
   await expect(canvas).toHaveAttribute('data-following', '', {
     timeout: 20_000,
   });

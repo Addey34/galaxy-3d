@@ -235,6 +235,14 @@ for (const [label, viewport, hasTouch] of [
         return candidates.length;
       });
       expect(marked).toBeGreaterThan(1);
+      // Le panneau d'imagerie de surface s'ajoute au corps de la page à l'ouverture des réglages
+      // (`ui/surfacePanelOnDemand`) : on le monte AVANT de compter, la mesure porte sur la vue stellaire.
+      await page.locator('#settings-trigger').dispatchEvent('click');
+      await expect(page.locator('#surface-imagery')).toBeAttached({
+        timeout: 30_000,
+      });
+      await page.locator('#settings-trigger').dispatchEvent('click');
+      await expect(page.locator('#orbit-options')).toBeHidden();
       const interactiveBefore = await page
         .locator('body > :not([inert])')
         .count();
