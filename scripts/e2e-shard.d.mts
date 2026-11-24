@@ -15,9 +15,17 @@ export function assignShards(
   total: number
 ): Shard[];
 
+/** Les specs sans durée enregistrée (mesurée ou estimée). */
+export function unmeasuredFiles(
+  files: readonly string[],
+  seconds: Readonly<Record<string, number>>
+): string[];
+
 export function readDurations(path?: string): {
   unit: string;
   runs: number[];
   cpuFactors: Record<string, number>;
   seconds: Record<string, number>;
+  /** Les entrées qui ne sont qu'une estimation, à remplacer par une mesure. */
+  estimated?: string[];
 };

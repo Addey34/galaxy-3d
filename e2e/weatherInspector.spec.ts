@@ -24,6 +24,18 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: join(SHOTS, `${name}.png`) });
 }
 
+/**
+ * LA DATE DE LA SCÈNE, CALCULÉE : la veille à 12:00 UTC, jamais une date écrite. La source d'une donnée météo
+ * dépend de son ÂGE (`core/meteoTimeTravel` : au-delà de 5 jours, l'archive ERA5 ; en deçà, Open-Meteo). Une date
+ * épinglée au 2026-11-19 12:00 est passée de l'un à l'autre le 2026-11-24 à 12:00 UTC : le fichier est devenu
+ * rouge à heure fixe, sans commit en cause (run `main` 45394112985, trois échecs sur trois, reproduit en local).
+ * Entre un et deux jours d'âge, la source est toujours Open-Meteo. On ne fige PAS l'horloge du navigateur :
+ * l'horloge de simulation en dépend.
+ */
+const SCENE_DAY = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+const SCENE_DATE = `${SCENE_DAY}T12:00:00Z`;
+const SCENE_DATE_TEXT = `${SCENE_DAY} 12:00 UTC`;
+
 async function boot(
   page: Page,
   options: { query?: string; storage?: Record<string, string> } = {}
@@ -40,7 +52,7 @@ async function boot(
     for (const [key, value] of Object.entries(entries))
       localStorage.setItem(key, value);
   }, storage);
-  await page.goto(options.query ?? '/?body=earth&date=2026-11-19T12:00:00Z');
+  await page.goto(options.query ?? `/?body=earth&date=${SCENE_DATE}`);
   await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
   await waitForCalmMainThread(page);
   return mock;
@@ -162,7 +174,7 @@ test('reads the layers that are on, never turns one on, never calls the network'
   const meta = row(page, 'temperature').locator('.wi-meta');
   await meta.locator('summary').click();
   await expect(meta).toContainText('Open-Meteo');
-  await expect(meta).toContainText('2026-11-19 12:00 UTC');
+  await expect(meta).toContainText(SCENE_DATE_TEXT);
   await expect(meta).toContainText('° grid, interpolated');
   await shot(page, 'desktop-4-meta');
 
