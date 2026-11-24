@@ -8384,8 +8384,8 @@ SUPERSEDED 2026-11-24 : « les quinze corps irréguliers chargent leur maillage 
 
 | | avant (`main` 0b6a9d23) | après |
 |---|---|---|
-| JavaScript du démarrage | 1 282 298 o, marge 23 702 o | 1 238 773 o, marge 67 227 o |
-| pire cas cumulé hors visite (premier passage, adresse d'un corps modélisé, VR) | 1 303 767 o, marge 2 233 o | 1 293 615 o, marge 12 385 o |
+| JavaScript du démarrage | 1 282 298 o, marge 23 702 o | 1 239 089 o, marge 66 911 o |
+| pire cas cumulé hors visite (premier passage, adresse d'un corps modélisé, VR) | 1 303 767 o, marge 2 233 o | 1 293 931 o, marge 12 069 o |
 | octets reçus, `/`, 5 s après le chargeur | 12,33 Mio, 220 requêtes, 27 maillages | 10,43 Mio, 192 requêtes, 0 maillage |
 | triangles, vue d'ensemble | 973 905 (mesuré le 2026-10-28) | 832 081 |
 | triangles, `saturn-explo`, `earth-explo` | 56 913, 349 533 | 51 121, 326 417 |
