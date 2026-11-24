@@ -80,6 +80,10 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'credits.satellites':
     '« Satellites » s’écrit pareil en anglais et en français',
   'weather.humidityModel.lo': 'nombre + unité SI',
+  // Fiche d’un satellite : un nombre et une unité du SI, rien à traduire.
+  'sat.minutes': 'nombre + unité (min), identique dans les quatre langues',
+  'sat.km': 'nombre + unité SI',
+  'sat.kmPerS': 'nombre + unité SI',
   // Inspecteur météo : abréviations et noms qui s'écrivent pareil dans la langue.
   'inspect.lat': '« Latitude » s’écrit pareil en anglais et en français',
   'inspect.lon': '« Longitude » s’écrit pareil en anglais et en portugais',

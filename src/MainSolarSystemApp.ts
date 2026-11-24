@@ -129,6 +129,7 @@ const CONTEXTUAL_SURFACE_ANCHORS: Partial<
   'exoplanet-card': { trigger: '#info-trigger', panel: '#exoplanet-card' },
   'deepsky-card': { trigger: '#info-trigger', panel: '#deepsky-card' },
   'neighbour-card': { trigger: '#info-trigger', panel: '#neighbour-card' },
+  'satellite-card': { trigger: '#info-trigger', panel: '#satellite-card' },
 };
 
 function positionContextualSurface(id: SecondaryOverlayId): void {
@@ -565,6 +566,7 @@ function wireChrome(): {
           earthHelioAU: (date) =>
             orbitalMechanics.heliocentricAU('earth', date),
           openCraft,
+          coordinator: overlayCoordinator,
         })
       : null;
     setupKeepAppearanceToggle();
@@ -693,7 +695,9 @@ function wireChrome(): {
         (x, y) => interstellarOverlay.markerAt(x, y),
       ],
       (x, y) => {
-        // Le mode d'inspection prend le clic qui touche la Terre ; sinon le lieu nommé, puis le corps.
+        // Un satellite peint par-dessus la Terre prend le clic avant elle ; puis le mode d'inspection,
+        // qui prend le clic qui touche la Terre ; sinon le lieu nommé, puis le corps.
+        if (satellites?.claim(x, y)) return true;
         if (inspector?.claim(x, y)) return true;
         const place = gazetteerOverlay.placeAt(x, y);
         return place ? placeDive.dive(place) : false;

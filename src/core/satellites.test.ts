@@ -7,9 +7,12 @@ import {
   EARTH_RADIUS_KM,
   anyWithinValidity,
   epochMs,
+  nearestMarker,
+  orbitSummary,
   parseSatelliteFile,
   rotate,
   toOmm,
+  validityWindow,
   withinValidity,
   type SatelliteElements,
 } from './satellites';
@@ -172,5 +175,44 @@ describe('TEME vers J2000', () => {
       [0, 0, 1],
     ];
     expect(rotate(id, 1, 2, 3)).toEqual([1, 2, 3]);
+  });
+});
+
+describe('orbitSummary, validityWindow, nearestMarker (GAL-SATELLITE-SELECTION-001)', () => {
+  const iss = ISS;
+
+  it('retrouve une orbite d’ISS : période de 93 minutes, altitudes de 400 km environ', () => {
+    const s = orbitSummary(iss);
+    expect(s.periodMinutes).toBeCloseTo(92.96, 1);
+    // Témoin physique : la station tourne à 400-430 km, et le périgée est sous l'apogée.
+    expect(s.perigeeKm).toBeGreaterThan(380);
+    expect(s.apogeeKm).toBeLessThan(450);
+    expect(s.apogeeKm).toBeGreaterThan(s.perigeeKm);
+    expect(s.inclinationDeg).toBeCloseTo(51.63, 2);
+  });
+
+  it('une orbite géostationnaire (1 tour par jour sidéral) est à 35 786 km', () => {
+    const s = orbitSummary({ ...iss, meanMotion: 1.00273791, eccentricity: 0 });
+    expect(s.perigeeKm).toBeGreaterThan(35_700);
+    expect(s.perigeeKm).toBeLessThan(35_900);
+  });
+
+  it('la fenêtre de validité est celle de withinValidity, aux deux bornes', () => {
+    const epoch = Date.UTC(2026, 10, 2);
+    const w = validityWindow(epoch);
+    expect(w.toMs - w.fromMs).toBe(14 * 86_400_000);
+    expect(withinValidity(epoch, w.fromMs)).toBe(true);
+    expect(withinValidity(epoch, w.toMs)).toBe(true);
+    expect(withinValidity(epoch, w.toMs + 1)).toBe(false);
+  });
+
+  it('nearestMarker rend le plus proche dans le rayon, -1 sinon, et ne regarde que `count` repères', () => {
+    const xs = [10, 100, 102, 999];
+    const ys = [10, 100, 100, 999];
+    expect(nearestMarker(xs, ys, 4, 100.4, 100, 5)).toBe(1);
+    expect(nearestMarker(xs, ys, 4, 101.6, 100, 5)).toBe(2);
+    expect(nearestMarker(xs, ys, 4, 300, 300, 20)).toBe(-1);
+    // Le repère 3 existe dans le tableau mais pas dans cette image.
+    expect(nearestMarker(xs, ys, 3, 999, 999, 5)).toBe(-1);
   });
 });

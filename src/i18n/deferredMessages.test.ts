@@ -24,6 +24,7 @@ const DEFERRED_READERS: Record<string, string> = {
   'ui/craftBlock.ts': 'cardBlocks',
   'ui/craftInspector.ts': 'craftInspector',
   'ui/satelliteLayer.ts': 'satelliteLayer',
+  'ui/satelliteCard.ts': 'satelliteLayer',
   'ui/discoveryBlock.ts': 'cardBlocks',
   'ui/instrumentsBlock.ts': 'cardBlocks',
   'ui/missionsBlock.ts': 'cardBlocks',

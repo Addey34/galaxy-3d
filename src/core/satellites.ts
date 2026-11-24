@@ -173,3 +173,69 @@ export function rotate(
     r2[0]! * x + r2[1]! * y + r2[2]! * z,
   ];
 }
+
+/** μ de la Terre pour SGP4 (WGS 72), km³/s². */
+const MU_KM3_S2 = 398_600.8;
+
+/**
+ * Ce que disent les éléments d'un objet, sans le propager : période, altitudes du périgée et de
+ * l'apogée, inclinaison. DÉRIVÉ du mouvement moyen (le « moyen » de SGP4, au sens de Kozai) : la
+ * demi-grand axe qui en sort est exact à quelques kilomètres près, et les altitudes comptent depuis
+ * le rayon équatorial de SGP4 (`EARTH_RADIUS_KM`) : ce sont des repères, pas des mesures.
+ */
+export interface OrbitSummary {
+  periodMinutes: number;
+  perigeeKm: number;
+  apogeeKm: number;
+  inclinationDeg: number;
+  eccentricity: number;
+  revolutionsPerDay: number;
+}
+
+export function orbitSummary(o: SatelliteElements): OrbitSummary {
+  const n = (o.meanMotion * 2 * Math.PI) / 86_400; // rad/s
+  const a = Math.cbrt(MU_KM3_S2 / (n * n));
+  return {
+    periodMinutes: 1440 / o.meanMotion,
+    perigeeKm: a * (1 - o.eccentricity) - EARTH_RADIUS_KM,
+    apogeeKm: a * (1 + o.eccentricity) - EARTH_RADIUS_KM,
+    inclinationDeg: o.inclination,
+    eccentricity: o.eccentricity,
+    revolutionsPerDay: o.meanMotion,
+  };
+}
+
+/** La fenêtre où ces éléments servent : de l'époque moins 7 jours à l'époque plus 7 jours, en ms UTC. */
+export function validityWindow(epochMillis: number): {
+  fromMs: number;
+  toMs: number;
+} {
+  const span = ELEMENT_VALIDITY_DAYS * DAY_MS;
+  return { fromMs: epochMillis - span, toMs: epochMillis + span };
+}
+
+/**
+ * Pixel le plus proche parmi des repères peints : l'indice du plus proche dans `radius`, ou -1.
+ * `xs` et `ys` sont les positions écran (px) de la dernière image ; sans allocation, une fois par clic.
+ */
+export function nearestMarker(
+  xs: ArrayLike<number>,
+  ys: ArrayLike<number>,
+  count: number,
+  x: number,
+  y: number,
+  radius: number
+): number {
+  let best = -1;
+  let bestSq = radius * radius;
+  for (let i = 0; i < count; i++) {
+    const dx = xs[i]! - x;
+    const dy = ys[i]! - y;
+    const sq = dx * dx + dy * dy;
+    if (sq <= bestSq) {
+      bestSq = sq;
+      best = i;
+    }
+  }
+  return best;
+}

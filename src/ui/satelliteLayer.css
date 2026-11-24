@@ -35,3 +35,19 @@ body.is-capturing #satellite-overlay {
 .satellites-craft:focus-visible {
   background: var(--control-bg-hover);
 }
+
+/* La fiche d'un satellite à 390 px : le libellé AU-DESSUS de la valeur, sinon « 1964-053B » ou « 0,00729 » se coupent au milieu. */
+@media (max-width: 640px) {
+  #satellite-card .exo-facts {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  #satellite-card .exo-facts dt {
+    margin-top: var(--sp-2);
+  }
+  #satellite-card .exo-facts dd {
+    margin: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+}
