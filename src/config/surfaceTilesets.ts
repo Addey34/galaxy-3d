@@ -19,6 +19,7 @@ import type { TileService } from '@/core/tileUrl';
 import type { OceanMatch } from '@/core/oceanMatch';
 import type { DatedProduct, TimeInterval } from '@/core/temporal';
 
+import { GIBS_SNPP_LAST_HEALTHY_DATE } from '@/core/gibsClouds';
 import { parseDayDomain, publishedDay, type DayRange } from '@/core/timeDomain';
 import Logger from '@/utils/Logger';
 import regionalCoverage from './regionalCoverage.json';
@@ -134,13 +135,45 @@ export const SURFACE_TILESETS: ReadonlyMap<string, SurfaceTileset> = new Map(
  * réglage active et qui retombe sur la mosaïque de {@link SURFACE_TILESETS} pour tout jour que
  * la couche ne publie pas.
  */
+/**
+ * L'ORDRE des couches datées d'un corps, et la dernière journée où l'une d'elles vaut d'être choisie
+ * (GAL-EARTH-DETAIL-001). La Terre du jour lisait Suomi NPP seul : la NOAA a cessé de le distribuer le
+ * 2026-11-02, et GIBS rend 404 sans CORS pour tout jour absent de sa dimension, donc le réglage retombait
+ * sur Blue Marble pour toute date de la scène à partir de ce jour. La chaîne reprend celle des nuages
+ * (`core/layerSource.resolveCloudSources`) : SNPP jusqu'à son dernier jour SAIN mesuré (au-delà il publie
+ * des images dégradées), puis NOAA-21, puis NOAA-20 ; même grille de 250 m, même projection, seule la couche
+ * de la requête change. Une couche absente de cette table passe en dernier.
+ */
+const DATED_RANK: Readonly<Record<string, { rank: number; lastDay?: string }>> =
+  {
+    'earth-gibs-viirs-snpp-truecolor-250m': {
+      rank: 0,
+      lastDay: GIBS_SNPP_LAST_HEALTHY_DATE,
+    },
+    'earth-gibs-viirs-noaa21-truecolor-250m': { rank: 1 },
+    'earth-gibs-viirs-noaa20-truecolor-250m': { rank: 2 },
+  };
+
+/** Les couches datées d'un corps, DANS L'ORDRE où le sélecteur de jour les essaie. */
+export const DATED_SURFACE_CHAIN: ReadonlyMap<
+  string,
+  readonly SurfaceTileset[]
+> = (() => {
+  const byBody = new Map<string, SurfaceTileset[]>();
+  const rank = (id: string): number => DATED_RANK[id]?.rank ?? 99;
+  for (const fiche of FICHES.filter((candidate) => candidate.service.time)) {
+    const list = byBody.get(fiche.body) ?? [];
+    list.push(toTileset(fiche));
+    byBody.set(fiche.body, list);
+  }
+  for (const list of byBody.values())
+    list.sort((a, b) => rank(a.id) - rank(b.id) || a.id.localeCompare(b.id));
+  return byBody;
+})();
+
+/** La PREMIÈRE couche datée de chaque corps (la plus prioritaire de sa chaîne). */
 export const DATED_SURFACE_TILESETS: ReadonlyMap<string, SurfaceTileset> =
-  new Map(
-    FICHES.filter((fiche) => fiche.service.time).map((fiche) => [
-      fiche.body,
-      toTileset(fiche),
-    ])
-  );
+  new Map([...DATED_SURFACE_CHAIN].map(([body, chain]) => [body, chain[0]!]));
 
 /** Fond de rechange d'un corps (lot 48), au vocabulaire fermé du schéma. */
 export type SurfaceVariant = NonNullable<ImageryTilesetProduct['variant']>;
@@ -289,6 +322,8 @@ export function createDatedChooser(options: {
   warn?: (message: string) => void;
   mosaics?: ReadonlyMap<string, SurfaceTileset>;
   dated?: ReadonlyMap<string, SurfaceTileset>;
+  /** Les couches datées de chaque corps, dans l'ordre d'essai (par défaut {@link DATED_SURFACE_CHAIN}). */
+  chain?: ReadonlyMap<string, readonly SurfaceTileset[]>;
   variants?: ReadonlyMap<
     string,
     ReadonlyMap<SurfaceVariant, readonly SurfaceTileset[]>
@@ -304,15 +339,21 @@ export function createDatedChooser(options: {
     });
   const warn = options.warn ?? ((message: string) => Logger.warn(message));
   const mosaics = options.mosaics ?? SURFACE_TILESETS;
-  const datedSets = options.dated ?? DATED_SURFACE_TILESETS;
+  const chains: ReadonlyMap<string, readonly SurfaceTileset[]> =
+    options.chain ??
+    (options.dated
+      ? new Map([...options.dated].map(([body, tileset]) => [body, [tileset]]))
+      : DATED_SURFACE_CHAIN);
   const variantSets = options.variants ?? SURFACE_VARIANTS;
 
+  // Une dimension par COUCHE (clé : l'identifiant de la fiche), pas par corps : la chaîne en lit plusieurs.
   const domains = new Map<
     string,
     { ranges: DayRange[] | null; at: number; loading: boolean }
   >();
   let chosen: {
     body: string;
+    id: string | null;
     day: string | null;
     at: number;
     tileset: SurfaceTileset | undefined;
@@ -324,37 +365,60 @@ export function createDatedChooser(options: {
       const editions = variantSets.get(body)?.get(choice);
       return (editions && editionFor(editions, options.date())) ?? base;
     }
-    const dated = datedSets.get(body);
-    if (choice !== 'daily' || !base || !dated?.domainsUrl) return base;
+    const chain = (chains.get(body) ?? []).filter((c) => c.domainsUrl);
+    if (choice !== 'daily' || !base || chain.length === 0) return base;
     const t = now();
-    const known = domains.get(body);
-    if (!known?.loading && (!known || t - known.at > DOMAIN_MAX_AGE_MS)) {
-      const entry = { ranges: known?.ranges ?? null, at: t, loading: true };
-      domains.set(body, entry);
-      void fetchText(dated.domainsUrl)
-        .then((xml) => {
-          entry.ranges = parseDayDomain(xml);
-        })
-        .catch((error: unknown) =>
-          warn(`[Surface] jours publiés illisibles : ${String(error)}`)
-        )
-        .finally(() => {
-          entry.loading = false;
-          entry.at = now();
-        });
+    for (const dated of chain) {
+      const known = domains.get(dated.id);
+      if (!known?.loading && (!known || t - known.at > DOMAIN_MAX_AGE_MS)) {
+        const entry = { ranges: known?.ranges ?? null, at: t, loading: true };
+        domains.set(dated.id, entry);
+        void fetchText(dated.domainsUrl!)
+          .then((xml) => {
+            entry.ranges = parseDayDomain(xml);
+          })
+          .catch((error: unknown) =>
+            warn(`[Surface] jours publiés illisibles : ${String(error)}`)
+          )
+          .finally(() => {
+            entry.loading = false;
+            entry.at = now();
+          });
+      }
     }
-    const ranges = domains.get(body)?.ranges;
-    if (!ranges) return base;
     if (chosen?.body === body && t - chosen.at < DATED_RECHECK_MS)
       return chosen.tileset;
-    const day = publishedDay(ranges, options.date());
+    // Le jour de la scène : la première couche de la chaîne qui le publie (et dont ce jour n'est pas au-delà de
+    // sa dernière journée saine). Une couche encore EN LECTURE arrête le choix : descendre à une couche moins
+    // prioritaire ferait changer d'image à l'arrivée de la meilleure. Une lecture ratée est sautée.
+    let pick: { dated: SurfaceTileset; day: string } | null = null;
+    let waiting = false;
+    for (const dated of chain) {
+      const entry = domains.get(dated.id);
+      if (!entry?.ranges) {
+        if (entry?.loading) {
+          waiting = true;
+          break;
+        }
+        continue;
+      }
+      const day = publishedDay(entry.ranges, options.date());
+      const last = DATED_RANK[dated.id]?.lastDay;
+      if (day && !(last && day > last)) {
+        pick = { dated, day };
+        break;
+      }
+    }
+    if (waiting) return base;
+    const id = pick?.dated.id ?? null;
+    const day = pick?.day ?? null;
     const tileset =
-      chosen?.body === body && chosen.day === day
+      chosen?.body === body && chosen.id === id && chosen.day === day
         ? chosen.tileset
-        : day
-          ? tilesetForDay(dated, day)
+        : pick
+          ? tilesetForDay(pick.dated, pick.day)
           : base;
-    chosen = { body, day, at: t, tileset };
+    chosen = { body, id, day, at: t, tileset };
     return tileset;
   };
 }

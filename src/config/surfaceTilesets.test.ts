@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createDatedChooser,
   DATED_RECHECK_MS,
+  DATED_SURFACE_CHAIN,
   DATED_SURFACE_TILESETS,
   DOMAIN_MAX_AGE_MS,
   compareEdition,
@@ -45,7 +46,7 @@ const ROOT = resolve(import.meta.dirname, '../..');
  */
 const ALL_TILESETS: ReadonlyArray<[string, SurfaceTileset]> = [
   ...SURFACE_TILESETS.values(),
-  ...DATED_SURFACE_TILESETS.values(),
+  ...[...DATED_SURFACE_CHAIN.values()].flat(),
   ...[...SURFACE_VARIANTS.values()].flatMap((variants) =>
     [...variants.values()].flat()
   ),
@@ -79,7 +80,7 @@ function shippedSurfaceWidthPx(body: string): number {
  * des fournisseurs, la CSP servie.
  */
 describe('fiches de jeux de tuiles', () => {
-  it('expose exactement les fiches du registre, une mosaïque et au plus une couche datée par corps', () => {
+  it('expose exactement les fiches du registre, une mosaïque et une CHAÎNE de couches datées par corps', () => {
     expect(ALL_TILESETS.length).toBe(TILESET_PRODUCTS.length);
     expect(SURFACE_TILESETS.size).toBeGreaterThan(0);
     for (const product of TILESET_PRODUCTS) {
@@ -91,10 +92,11 @@ describe('fiches de jeux de tuiles', () => {
           ? SURFACE_VARIANTS.get(product.body)
               ?.get(product.variant)
               ?.find((t) => t.edition === product.edition)
-          : (product.service.time
-              ? DATED_SURFACE_TILESETS
-              : SURFACE_TILESETS
-            ).get(product.body);
+          : product.service.time
+            ? DATED_SURFACE_CHAIN.get(product.body)?.find(
+                (t) => t.id === product.id
+              )
+            : SURFACE_TILESETS.get(product.body);
       // Deux fiches au même rôle sur un corps s'écraseraient en silence : une seule gagne.
       expect(found?.id, product.id).toBe(product.id);
     }
@@ -255,13 +257,26 @@ describe('fiches de jeux de tuiles', () => {
     }
   });
 
-  it('une couche datée commence dans le passé et reste EN COURS', () => {
+  it('une couche datée commence dans le passé, et la chaîne d’un corps finit sur une couche EN COURS', () => {
     // STAC : une fin `null` veut dire « en cours ». La fiche ne recopie pas le dernier jour
-    // publié, qui change chaque jour : il se lit à l'exécution (`core/timeDomain.ts`).
-    for (const [body, tileset] of DATED_SURFACE_TILESETS) {
-      expect(tileset.acquired.from, body).toBeLessThan(Date.now());
-      expect(tileset.acquired.to, body).toBe(Number.POSITIVE_INFINITY);
+    // publié, qui change chaque jour : il se lit à l'exécution (`core/timeDomain.ts`). Une couche dont
+    // la source s'est ARRÊTÉE (Suomi NPP, le 2026-11-02) a une fin ; la chaîne, elle, ne peut pas s'arrêter.
+    for (const [body, chain] of DATED_SURFACE_CHAIN) {
+      for (const tileset of chain)
+        expect(tileset.acquired.from, tileset.id).toBeLessThan(Date.now());
+      expect(chain.at(-1)!.acquired.to, body).toBe(Number.POSITIVE_INFINITY);
+      expect(
+        chain.some((t) => t.acquired.to === Number.POSITIVE_INFINITY),
+        body
+      ).toBe(true);
     }
+    // Suomi NPP : la NOAA a cessé de le distribuer le 2026-11-02, la fiche le dit.
+    const snpp = DATED_SURFACE_CHAIN.get('earth')!.find((t) =>
+      t.id.includes('snpp')
+    )!;
+    expect(new Date(snpp.acquired.to).toISOString().slice(0, 10)).toBe(
+      '2026-11-02'
+    );
   });
 });
 
@@ -532,6 +547,10 @@ describe('la couche datée de la Terre', () => {
  * LE CHOIX, IMAGE APRÈS IMAGE (lot 48) : mosaïque ou couche datée, et jamais un jour non lu.
  * Doublures injectées : horloge, date de la scène et réseau.
  */
+const NOAA21 = DATED_SURFACE_CHAIN.get('earth')!.find((t) =>
+  t.id.includes('noaa21')
+)!;
+
 describe('choix entre la mosaïque et la couche datée', () => {
   const DOMAINS =
     '<Domain>2015-11-24/2022-07-27/P1D,2022-08-10/2026-10-12/P1D</Domain>';
@@ -545,6 +564,9 @@ describe('choix entre la mosaïque et la couche datée', () => {
       now: () => t,
       fetchText,
       warn: (m) => warnings.push(m),
+      // Une couche seule (NOAA-21, sans dernière journée) : ces cas décrivent le choix d'UNE couche ; la
+      // chaîne de plusieurs couches a ses propres cas plus bas.
+      chain: new Map([['earth', [NOAA21]]]),
     });
     return {
       choose,
@@ -618,6 +640,144 @@ describe('choix entre la mosaïque et la couche datée', () => {
     await flush();
     advance(DATED_RECHECK_MS + 1);
     expect(choose('earth', 'daily')?.day).toBe('2026-10-11');
+  });
+});
+
+/**
+ * LA CHAÎNE DES COUCHES DATÉES DE LA TERRE (GAL-EARTH-DETAIL-001) : Suomi NPP jusqu'à son dernier jour SAIN, puis
+ * NOAA-21, puis NOAA-20. Les dimensions publiées sont celles que GIBS a rendues le 2026-11-24.
+ */
+describe('la chaîne VIIRS du jour de la Terre', () => {
+  const SNPP =
+    '<Domain>2015-11-24/2022-07-27/P1D,2022-08-10/2026-11-02/P1D</Domain>';
+  const N21 =
+    '<Domain>2023-02-10/2023-02-23/P1D,2023-02-25/2026-11-24/P1D</Domain>';
+  const N20 = '<Domain>2018-01-05/2026-11-24/P1D</Domain>';
+  const flush = () => new Promise((r) => setTimeout(r, 0));
+  const blueMarble = SURFACE_TILESETS.get('earth')!;
+
+  function setup(
+    day: string,
+    answers: Record<string, string | Promise<string>> = {}
+  ) {
+    let t = 0;
+    let date = new Date(`${day}T12:00:00Z`);
+    const choose = createDatedChooser({
+      date: () => date,
+      now: () => t,
+      fetchText: async (url) => {
+        const key = url.includes('NOAA21')
+          ? 'n21'
+          : url.includes('NOAA20')
+            ? 'n20'
+            : 'snpp';
+        const fixed = { snpp: SNPP, n21: N21, n20: N20 }[key];
+        return answers[key] ?? fixed;
+      },
+    });
+    return {
+      choose,
+      setDate: (iso: string) => (date = new Date(`${iso}T12:00:00Z`)),
+      advance: (ms: number) => (t += ms),
+    };
+  }
+
+  it('NOAA-21 prend le relais de Suomi NPP après son arrêt : la Terre du jour ne retombe plus sur Blue Marble', async () => {
+    const { choose } = setup('2026-11-20');
+    expect(choose('earth', 'daily')).toBe(blueMarble);
+    await flush();
+    const picked = choose('earth', 'daily');
+    expect(picked?.id).toBe(
+      'earth-gibs-viirs-noaa21-truecolor-250m@2026-11-20'
+    );
+    expect(picked?.service.template).toContain('VIIRS_NOAA21_');
+    expect(picked?.service.template).toContain('/2026-11-20/');
+  });
+
+  it('Suomi NPP reste la source des jours sains (jusqu’au 2026-10-02), NOAA-21 au-delà même si SNPP publie encore', async () => {
+    const early = setup('2026-10-02');
+    early.choose('earth', 'daily');
+    await flush();
+    expect(early.choose('earth', 'daily')?.id).toBe(
+      'earth-gibs-viirs-snpp-truecolor-250m@2026-10-02'
+    );
+    // Le 2026-10-11 SNPP publie encore, mais dégradé : la chaîne l'écarte.
+    const late = setup('2026-10-11');
+    late.choose('earth', 'daily');
+    await flush();
+    expect(late.choose('earth', 'daily')?.id).toBe(
+      'earth-gibs-viirs-noaa21-truecolor-250m@2026-10-11'
+    );
+  });
+
+  it('NOAA-20 couvre ce que NOAA-21 ne publie pas (avant 2023-02-10, ou un trou)', async () => {
+    const { choose, setDate, advance } = setup('2020-06-15');
+    choose('earth', 'daily');
+    await flush();
+    // 2020 : SNPP publie (jour sain), c'est lui.
+    expect(choose('earth', 'daily')?.id).toContain('snpp');
+    // Un trou de SNPP (2022-08-01) avant NOAA-21 : NOAA-20 le comble.
+    setDate('2022-08-01');
+    advance(1000);
+    expect(choose('earth', 'daily')?.id).toBe(
+      'earth-gibs-viirs-noaa20-truecolor-250m@2022-08-01'
+    );
+    // Un jour publié par personne : la mosaïque, jamais un jour voisin.
+    setDate('2016-01-01');
+    advance(1000);
+    expect(choose('earth', 'daily')?.id).toContain('snpp');
+    setDate('2010-01-01');
+    advance(1000);
+    expect(choose('earth', 'daily')).toBe(blueMarble);
+  });
+
+  it('une couche encore en lecture arrête le choix : jamais une image moins bonne qui change à l’arrivée de la meilleure', async () => {
+    let release!: (xml: string) => void;
+    const slowSnpp = new Promise<string>((resolve) => (release = resolve));
+    const { choose, advance } = setup('2026-09-20', { snpp: slowSnpp });
+    choose('earth', 'daily');
+    await flush();
+    // NOAA-21 et NOAA-20 sont lus, SNPP (prioritaire) non : la mosaïque, pas NOAA-21.
+    expect(choose('earth', 'daily')).toBe(blueMarble);
+    release(SNPP);
+    await flush();
+    advance(1000);
+    expect(choose('earth', 'daily')?.id).toContain('snpp');
+  });
+
+  it('une lecture ratée de la couche prioritaire est sautée : la suivante sert', async () => {
+    let t = 0;
+    const choose = createDatedChooser({
+      date: () => new Date('2026-11-20T12:00:00Z'),
+      now: () => t,
+      warn: () => undefined,
+      fetchText: async (url) => {
+        if (url.includes('SNPP')) throw new Error('réseau');
+        return url.includes('NOAA21') ? N21 : N20;
+      },
+    });
+    choose('earth', 'daily');
+    await flush();
+    t += 1000;
+    expect(choose('earth', 'daily')?.id).toContain('noaa21');
+  });
+
+  it('chaque couche de la chaîne dit son satellite sur le bandeau, sur la même grille de 250 m', () => {
+    const chain = DATED_SURFACE_CHAIN.get('earth')!;
+    expect(chain.map((t) => t.mission)).toEqual([
+      'Suomi NPP',
+      'NOAA-21',
+      'NOAA-20',
+    ]);
+    for (const tileset of chain) {
+      expect(tileset.service.tileMatrixSet).toBe('250m');
+      expect(tileset.maxLevel).toBe(8);
+      expect(tileset.domainsUrl).toContain(
+        tileset.service.template.match(
+          /VIIRS_\w+_CorrectedReflectance_TrueColor/
+        )![0]
+      );
+    }
   });
 });
 
