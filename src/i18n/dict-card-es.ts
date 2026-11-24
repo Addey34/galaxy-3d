@@ -114,6 +114,44 @@ export const cardEs: Record<CardMessageKey, string> = {
   'st.stageNote':
     'Un cambio de escala, no un viaje: el Sol permanece en el centro y solo se ensancha el campo, en un único sistema galáctico. No se supone ninguna velocidad.',
   'st.skip': 'Omitir la transición',
+  'sv.visit.start': 'Visita guiada',
+  'sv.visit.region': 'Visita guiada de las vecinas del Sol',
+  'sv.visit.progress': 'Parada {n} de {total}',
+  'sv.visit.prev': 'Parada anterior',
+  'sv.visit.next': 'Parada siguiente',
+  'sv.visit.finish': 'Terminar la visita',
+  'sv.visit.leave': 'Salir de la visita y explorar libremente',
+  'sv.visit.resume': 'Reanudar la visita (parada {n} de {total})',
+  'sv.visit.end': 'Terminar la visita',
+  'sv.visit.paused':
+    'La visita está en pausa. Las estrellas, el control de tiempo y la cámara son suyos.',
+  'sv.visit.data': 'Esta estrella en los datos',
+  'sv.visit.fact.pm': 'Movimiento propio',
+  'sv.visit.fact.pmValue': '{pm} mas/año',
+  'sv.visit.fact.rv': 'Velocidad radial',
+  'sv.visit.fact.rvValue': '{rv} km/s',
+  'sv.visit.fact.planets': 'Planetas listados por el archivo',
+  'sv.visit.fact.none': 'ninguno',
+  'sv.visit.reading': 'Cómo leer esta parada',
+  'sv.visit.reading.measured':
+    'Medido: la posición, el movimiento propio, la velocidad radial y el tipo espectral (Gaia DR3, o HYG donde Gaia no es seguro).',
+  'sv.visit.reading.catalogued':
+    'Catalogado: los planetas del NASA Exoplanet Archive (instantánea del {date}), con el estado que el archivo les da.',
+  'sv.visit.reading.calculated':
+    'Calculado: la posición en otro año, a partir de un movimiento rectilíneo. No es una medición.',
+  'sv.visit.reading.illustrative':
+    'Ilustrativo: los puntos son símbolos. No se dibuja ningún planeta, textura ni superficie.',
+  'sv.visit.reading.unknown':
+    'Desconocido aquí: el radio, la masa y la edad de estas estrellas no están en los datos de esta vista.',
+  'sv.visit.approaching': 'se acerca al Sol',
+  'sv.visit.receding': 'se aleja del Sol',
+  'sv.visit.unknown': 'Esa visita guiada no existe: la vista se abre sin ella.',
+  'sv.visit.opened': 'Visita guiada iniciada. Parada {n} de {total}: {title}.',
+  'sv.visit.stop': 'Parada {n} de {total}: {title}.',
+  'sv.visit.left': 'Visita en pausa. Puede explorar libremente.',
+  'sv.visit.finished': 'Visita terminada. Puede seguir explorando.',
+  'sv.visit.noArchive':
+    'No se pudo leer el archivo de exoplanetas: no se muestra el número de planetas.',
   'st.transitionStart':
     'Cambio de escala: del Sistema Solar, en unidades astronómicas, al vecindario, en años luz.',
   'exo.card.unknown': 'no publicado',

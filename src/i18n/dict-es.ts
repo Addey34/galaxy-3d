@@ -392,6 +392,7 @@ export const es: Record<MessageKey, string> = {
   'settings.deepsky': 'Objetos del cielo profundo',
   'settings.neighbours': 'Estrellas cercanas',
   'settings.stellar': 'Vecindad solar en 3D',
+  'settings.stellarVisit': 'Visita guiada de la vecindad',
   'settings.meteors': 'Lluvias de meteoros',
   'settings.meteors.active':
     '{count} lluvia(s) de meteoros activa(s) en esta fecha, radiantes del IAU Meteor Data Center.',

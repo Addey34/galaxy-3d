@@ -406,6 +406,7 @@ export const en = {
   'settings.deepsky': 'Deep-sky objects',
   'settings.neighbours': 'Nearby stars',
   'settings.stellar': 'Solar neighbourhood in 3D',
+  'settings.stellarVisit': 'Guided visit of the neighbourhood',
   'settings.meteors': 'Meteor showers',
   'settings.meteors.active':
     '{count} meteor shower(s) active on this date, radiants from the IAU Meteor Data Center.',

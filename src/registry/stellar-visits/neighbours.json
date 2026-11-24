@@ -1,0 +1,136 @@
+{
+  "id": "neighbours",
+  "title": {
+    "en": "Guided visit: the Sun's neighbours",
+    "fr": "Visite guidée : les voisines du Soleil",
+    "es": "Visita guiada: las vecinas del Sol",
+    "pt-BR": "Visita guiada: as vizinhas do Sol"
+  },
+  "summary": {
+    "en": "Seven stops from the Sun to the fastest stars of the catalogue, with what is measured, what is catalogued and what is calculated.",
+    "fr": "Sept étapes du Soleil aux étoiles les plus rapides du catalogue, avec ce qui est mesuré, catalogué ou calculé.",
+    "es": "Siete paradas desde el Sol hasta las estrellas más rápidas del catálogo, con lo medido, lo catalogado y lo calculado.",
+    "pt-BR": "Sete paradas do Sol às estrelas mais rápidas do catálogo, com o que é medido, catalogado e calculado."
+  },
+  "steps": [
+    {
+      "distancePc": 9,
+      "title": {
+        "en": "The Sun and the space between stars",
+        "fr": "Le Soleil et l’espace entre les étoiles",
+        "es": "El Sol y el espacio entre las estrellas",
+        "pt-BR": "O Sol e o espaço entre as estrelas"
+      },
+      "body": {
+        "en": "At the centre, the Sun. At this scale the whole Solar System, every planetary orbit included, fits inside a single point. The nearest star of this catalogue, {nearestName}, is {nearestLy} light-years away, which is {nearestAu} astronomical units: the space between stars is almost empty. Unlike the Solar System view, nothing is compressed here: one unit is one parsec. Each dot is a symbol placed where the measurements put the star.",
+        "fr": "Au centre, le Soleil. À cette échelle, tout le Système solaire, orbites des planètes comprises, tient dans un seul point. L’étoile la plus proche de ce catalogue, {nearestName}, est à {nearestLy} années-lumière, soit {nearestAu} unités astronomiques : l’espace entre les étoiles est presque vide. Contrairement à la vue du Système solaire, rien n’est comprimé ici : une unité vaut un parsec. Chaque point est un symbole posé là où les mesures placent l’étoile.",
+        "es": "En el centro, el Sol. A esta escala todo el Sistema Solar, con las órbitas de los planetas incluidas, cabe en un solo punto. La estrella más cercana de este catálogo, {nearestName}, está a {nearestLy} años luz, es decir {nearestAu} unidades astronómicas: el espacio entre las estrellas está casi vacío. A diferencia de la vista del Sistema Solar, aquí nada está comprimido: una unidad es un parsec. Cada punto es un símbolo colocado donde las mediciones sitúan la estrella.",
+        "pt-BR": "No centro, o Sol. Nesta escala, todo o Sistema Solar, com as órbitas dos planetas, cabe em um único ponto. A estrela mais próxima deste catálogo, {nearestName}, está a {nearestLy} anos-luz, ou seja, {nearestAu} unidades astronômicas: o espaço entre as estrelas é quase vazio. Ao contrário da vista do Sistema Solar, aqui nada é comprimido: uma unidade é um parsec. Cada ponto é um símbolo colocado onde as medições situam a estrela."
+      }
+    },
+    {
+      "star": { "pick": "nearest" },
+      "distancePc": 3,
+      "requires": { "archivePlanets": true },
+      "title": {
+        "en": "The nearest star: {name}",
+        "fr": "L’étoile la plus proche : {name}",
+        "es": "La estrella más cercana: {name}",
+        "pt-BR": "A estrela mais próxima: {name}"
+      },
+      "body": {
+        "en": "{name} is the nearest star to the Sun in this catalogue: {ly} light-years, or {au} astronomical units. Its published spectral type is {spectral}. Its light takes about {ly} years to reach us. The NASA Exoplanet Archive lists {planets} planet(s) for it. They are catalogue entries, not drawings: this view draws no planet.",
+        "fr": "{name} est l’étoile la plus proche du Soleil dans ce catalogue : {ly} années-lumière, soit {au} unités astronomiques. Son type spectral publié est {spectral}. Sa lumière met environ {ly} ans à nous parvenir. La NASA Exoplanet Archive liste {planets} planète(s) pour elle. Ce sont des entrées de catalogue, pas des dessins : cette vue ne dessine aucune planète.",
+        "es": "{name} es la estrella más cercana al Sol de este catálogo: {ly} años luz, es decir {au} unidades astronómicas. Su tipo espectral publicado es {spectral}. Su luz tarda unos {ly} años en llegar hasta nosotros. El NASA Exoplanet Archive lista {planets} planeta(s) para ella. Son entradas de catálogo, no dibujos: esta vista no dibuja ningún planeta.",
+        "pt-BR": "{name} é a estrela mais próxima do Sol neste catálogo: {ly} anos-luz, ou {au} unidades astronômicas. Seu tipo espectral publicado é {spectral}. Sua luz leva cerca de {ly} anos para chegar até nós. O NASA Exoplanet Archive lista {planets} planeta(s) para ela. São entradas de catálogo, não desenhos: esta vista não desenha nenhum planeta."
+      }
+    },
+    {
+      "star": { "pick": "fastestProperMotion" },
+      "years": 6000,
+      "distancePc": 4,
+      "requires": { "radialVelocity": true },
+      "title": {
+        "en": "The star that moves fastest on the sky: {name}",
+        "fr": "L’étoile qui bouge le plus vite sur le ciel : {name}",
+        "es": "La estrella que más se mueve en el cielo: {name}",
+        "pt-BR": "A estrela que mais se move no céu: {name}"
+      },
+      "body": {
+        "en": "{name} has the largest proper motion of the catalogue: {pm} milliarcseconds per year across the sky. Its published radial velocity is {rv} km/s, and it {approach}. The time slider now reads +{years} years (year {year}): that position is CALCULATED by extending the motion in a straight line, it is not a measurement. Move the slider back to compare.",
+        "fr": "{name} a le plus grand mouvement propre du catalogue : {pm} millisecondes d’arc par an sur le ciel. Sa vitesse radiale publiée est de {rv} km/s, et elle {approach}. Le curseur de temps indique maintenant +{years} ans (année {year}) : cette position est CALCULÉE en prolongeant le mouvement en ligne droite, ce n’est pas une mesure. Ramenez le curseur en arrière pour comparer.",
+        "es": "{name} tiene el mayor movimiento propio del catálogo: {pm} milisegundos de arco por año en el cielo. Su velocidad radial publicada es de {rv} km/s, y {approach}. El control de tiempo indica ahora +{years} años (año {year}): esa posición está CALCULADA prolongando el movimiento en línea recta, no es una medición. Devuelva el control hacia atrás para comparar.",
+        "pt-BR": "{name} tem o maior movimento próprio do catálogo: {pm} milissegundos de arco por ano no céu. Sua velocidade radial publicada é de {rv} km/s, e {approach}. O controle de tempo indica agora +{years} anos (ano {year}): essa posição é CALCULADA prolongando o movimento em linha reta, não é uma medição. Volte o controle para comparar."
+      }
+    },
+    {
+      "star": { "pick": "brightest" },
+      "distancePc": 3,
+      "requires": { "memberSpectralPrefix": "D" },
+      "title": {
+        "en": "The brightest star of the catalogue: {name}",
+        "fr": "L’étoile la plus brillante du catalogue : {name}",
+        "es": "La estrella más brillante del catálogo: {name}",
+        "pt-BR": "A estrela mais brilhante do catálogo: {name}"
+      },
+      "body": {
+        "en": "{name} is the brightest star of the catalogue seen from Earth (visual magnitude {vmag}), {ly} light-years away. The catalogue lists {members} star(s) at this marker: {memberList}. A spectral type beginning with D designates a white dwarf, the remnant core of a star. The marker groups stars too close to tell apart on the sky.",
+        "fr": "{name} est l’étoile la plus brillante du catalogue vue de la Terre (magnitude visuelle {vmag}), à {ly} années-lumière. Le catalogue liste {members} étoile(s) à ce repère : {memberList}. Un type spectral qui commence par D désigne une naine blanche, le noyau résiduel d’une étoile. Le repère regroupe des étoiles trop proches pour se distinguer sur le ciel.",
+        "es": "{name} es la estrella más brillante del catálogo vista desde la Tierra (magnitud visual {vmag}), a {ly} años luz. El catálogo lista {members} estrella(s) en este marcador: {memberList}. Un tipo espectral que empieza por D designa una enana blanca, el núcleo residual de una estrella. El marcador agrupa estrellas demasiado cercanas para distinguirlas en el cielo.",
+        "pt-BR": "{name} é a estrela mais brilhante do catálogo vista da Terra (magnitude visual {vmag}), a {ly} anos-luz. O catálogo lista {members} estrela(s) neste marcador: {memberList}. Um tipo espectral que começa por D designa uma anã branca, o núcleo residual de uma estrela. O marcador agrupa estrelas próximas demais para serem distinguidas no céu."
+      }
+    },
+    {
+      "star": { "name": "Ran" },
+      "distancePc": 3,
+      "requires": { "archivePlanets": true },
+      "title": {
+        "en": "A star with a catalogued planet: {name}",
+        "fr": "Une étoile avec une planète cataloguée : {name}",
+        "es": "Una estrella con un planeta catalogado: {name}",
+        "pt-BR": "Uma estrela com um planeta catalogado: {name}"
+      },
+      "body": {
+        "en": "{name} (epsilon Eridani) is {ly} light-years away, spectral type {spectral}. The NASA Exoplanet Archive lists {planets} planet(s) for this star, with the status the archive gives them. They are catalogue entries: this view draws no planet and shows no texture or surface.",
+        "fr": "{name} (epsilon Eridani) est à {ly} années-lumière, type spectral {spectral}. La NASA Exoplanet Archive liste {planets} planète(s) pour cette étoile, avec le statut que l’archive leur donne. Ce sont des entrées de catalogue : cette vue ne dessine aucune planète et ne montre ni texture ni surface.",
+        "es": "{name} (epsilon Eridani) está a {ly} años luz, tipo espectral {spectral}. El NASA Exoplanet Archive lista {planets} planeta(s) para esta estrella, con el estado que el archivo les da. Son entradas de catálogo: esta vista no dibuja ningún planeta ni muestra textura o superficie.",
+        "pt-BR": "{name} (epsilon Eridani) está a {ly} anos-luz, tipo espectral {spectral}. O NASA Exoplanet Archive lista {planets} planeta(s) para esta estrela, com o status que o arquivo lhes dá. São entradas de catálogo: esta vista não desenha nenhum planeta nem mostra textura ou superfície."
+      }
+    },
+    {
+      "star": { "name": "Gl 71" },
+      "distancePc": 3,
+      "requires": { "archivePlanets": true },
+      "title": {
+        "en": "Several catalogued planets: {name}",
+        "fr": "Plusieurs planètes cataloguées : {name}",
+        "es": "Varios planetas catalogados: {name}",
+        "pt-BR": "Vários planetas catalogados: {name}"
+      },
+      "body": {
+        "en": "{name} (tau Ceti) is {ly} light-years away, spectral type {spectral}. The NASA Exoplanet Archive lists {planets} planet(s) for it. Their existence and parameters are those published by the archive, which keeps each one's status: the catalogue is a record of claims, not a map of worlds.",
+        "fr": "{name} (tau Ceti) est à {ly} années-lumière, type spectral {spectral}. La NASA Exoplanet Archive liste {planets} planète(s) pour elle. Leur existence et leurs paramètres sont ceux que publie l’archive, qui garde le statut de chacune : le catalogue est un relevé d’annonces, pas une carte de mondes.",
+        "es": "{name} (tau Ceti) está a {ly} años luz, tipo espectral {spectral}. El NASA Exoplanet Archive lista {planets} planeta(s) para ella. Su existencia y sus parámetros son los que publica el archivo, que conserva el estado de cada uno: el catálogo es un registro de anuncios, no un mapa de mundos.",
+        "pt-BR": "{name} (tau Ceti) está a {ly} anos-luz, tipo espectral {spectral}. O NASA Exoplanet Archive lista {planets} planeta(s) para ela. Sua existência e seus parâmetros são os que o arquivo publica, que guarda o status de cada um: o catálogo é um registro de anúncios, não um mapa de mundos."
+      }
+    },
+    {
+      "star": { "pick": "fastestRadial" },
+      "years": 5000,
+      "distancePc": 5,
+      "requires": { "radialVelocity": true },
+      "title": {
+        "en": "The fastest along the line of sight: {name}",
+        "fr": "La plus rapide selon la ligne de visée : {name}",
+        "es": "La más rápida en la línea de visión: {name}",
+        "pt-BR": "A mais rápida na linha de visada: {name}"
+      },
+      "body": {
+        "en": "{name} has the largest radial velocity of the catalogue: {rv} km/s, and it {approach}. The slider reads +{years} years (year {year}): the place shown is CALCULATED from a straight-line motion, which this view limits to the slider window because the Galaxy's pull and unknown velocities take over beyond it. That is the end of the tour. Explore freely, or resume from this stop.",
+        "fr": "{name} a la plus grande vitesse radiale du catalogue : {rv} km/s, et elle {approach}. Le curseur indique +{years} ans (année {year}) : la place montrée est CALCULÉE à partir d’un mouvement rectiligne, que cette vue limite à la fenêtre du curseur parce que l’attraction de la Galaxie et les vitesses inconnues l’emportent au-delà. C’est la fin de la visite. Explorez librement, ou reprenez depuis cette étape.",
+        "es": "{name} tiene la mayor velocidad radial del catálogo: {rv} km/s, y {approach}. El control indica +{years} años (año {year}): el lugar mostrado está CALCULADO a partir de un movimiento rectilíneo, que esta vista limita a la ventana del control porque, más allá, la atracción de la Galaxia y las velocidades desconocidas dominan. Es el final de la visita. Explore libremente, o reanude desde esta parada.",
+        "pt-BR": "{name} tem a maior velocidade radial do catálogo: {rv} km/s, e {approach}. O controle indica +{years} anos (ano {year}): o lugar mostrado é CALCULADO a partir de um movimento retilíneo, que esta vista limita à janela do controle porque, além dela, a atração da Galáxia e as velocidades desconhecidas dominam. É o fim da visita. Explore livremente, ou retome a partir desta parada."
+      }
+    }
+  ]
+}

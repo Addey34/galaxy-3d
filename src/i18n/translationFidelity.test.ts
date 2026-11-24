@@ -84,6 +84,8 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'sat.minutes': 'nombre + unité (min), identique dans les quatre langues',
   'sat.km': 'nombre + unité SI',
   'sat.kmPerS': 'nombre + unité SI',
+  // Visite du voisinage : un nombre et une unité du SI, rien à traduire.
+  'sv.visit.fact.rvValue': 'nombre + unité SI',
   // Inspecteur météo : abréviations et noms qui s'écrivent pareil dans la langue.
   'inspect.lat': '« Latitude » s’écrit pareil en anglais et en français',
   'inspect.lon': '« Longitude » s’écrit pareil en anglais et en portugais',

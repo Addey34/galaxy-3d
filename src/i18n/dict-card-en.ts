@@ -121,6 +121,45 @@ export const cardEn = {
   'st.stageNote':
     'A change of scale, not a journey: the Sun stays at the centre and only the field widens, in a single galactic frame. No speed is implied.',
   'st.skip': 'Skip the transition',
+  'sv.visit.start': 'Guided visit',
+  'sv.visit.region': 'Guided visit of the Sun’s neighbours',
+  'sv.visit.progress': 'Stop {n} of {total}',
+  'sv.visit.prev': 'Previous stop',
+  'sv.visit.next': 'Next stop',
+  'sv.visit.finish': 'Finish the visit',
+  'sv.visit.leave': 'Leave the visit and explore freely',
+  'sv.visit.resume': 'Resume the visit (stop {n} of {total})',
+  'sv.visit.end': 'End the visit',
+  'sv.visit.paused':
+    'The visit is paused. The stars, the time slider and the camera are yours.',
+  'sv.visit.data': 'This star in the data',
+  'sv.visit.fact.pm': 'Proper motion',
+  'sv.visit.fact.pmValue': '{pm} mas/yr',
+  'sv.visit.fact.rv': 'Radial velocity',
+  'sv.visit.fact.rvValue': '{rv} km/s',
+  'sv.visit.fact.planets': 'Planets listed by the archive',
+  'sv.visit.fact.none': 'none',
+  'sv.visit.reading': 'How to read this stop',
+  'sv.visit.reading.measured':
+    'Measured: position, proper motion, radial velocity and spectral type (Gaia DR3, or HYG where Gaia is unsure).',
+  'sv.visit.reading.catalogued':
+    'Catalogued: the planets of the NASA Exoplanet Archive (snapshot of {date}), with the status the archive gives them.',
+  'sv.visit.reading.calculated':
+    'Calculated: the position at another year, from a straight-line motion. It is not a measurement.',
+  'sv.visit.reading.illustrative':
+    'Illustrative: the dots are symbols. No planet, texture or surface is drawn.',
+  'sv.visit.reading.unknown':
+    'Unknown here: the radius, mass and age of these stars are not in this view’s data.',
+  'sv.visit.approaching': 'is approaching the Sun',
+  'sv.visit.receding': 'is moving away from the Sun',
+  'sv.visit.unknown':
+    'That guided visit does not exist: the view opens without it.',
+  'sv.visit.opened': 'Guided visit started. Stop {n} of {total}: {title}.',
+  'sv.visit.stop': 'Stop {n} of {total}: {title}.',
+  'sv.visit.left': 'Visit paused. You can explore freely.',
+  'sv.visit.finished': 'Visit finished. You can keep exploring.',
+  'sv.visit.noArchive':
+    'The exoplanet archive could not be read: planet counts are not shown.',
   'st.transitionStart':
     'Changing scale: from the Solar System, in astronomical units, to the neighbourhood, in light-years.',
   'exo.card.unknown': 'not published',
