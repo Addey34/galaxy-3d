@@ -115,6 +115,56 @@ export const cardFr: Record<CardMessageKey, string> = {
   'st.stageNote':
     'Un changement d’échelle, pas un voyage : le Soleil reste au centre et seul le champ s’élargit, dans un repère galactique unique. Aucune vitesse n’est supposée.',
   'st.skip': 'Passer la transition',
+  'sv.visit.start': 'Visite guidée',
+  'sv.visit.region': 'Visite guidée des voisines du Soleil',
+  'sv.visit.progress': 'Étape {n} sur {total}',
+  'sv.visit.prev': 'Étape précédente',
+  'sv.visit.next': 'Étape suivante',
+  'sv.visit.finish': 'Terminer la visite',
+  'sv.visit.leave': 'Quitter la visite et explorer librement',
+  'sv.visit.resume': 'Reprendre la visite (étape {n} sur {total})',
+  'sv.visit.end': 'Mettre fin à la visite',
+  'sv.visit.paused':
+    'La visite est en pause. Les étoiles, le curseur de temps et la caméra sont à vous.',
+  'sv.visit.data': 'Cette étoile dans les données',
+  'sv.visit.fact.pm': 'Mouvement propre',
+  'sv.visit.fact.pmValue': '{pm} mas/an',
+  'sv.visit.fact.rv': 'Vitesse radiale',
+  'sv.visit.fact.rvValue': '{rv} km/s',
+  'sv.visit.fact.planets': 'Planètes listées par l’archive',
+  'sv.visit.fact.none': 'aucune',
+  'sv.visit.reading': 'Comment lire cette étape',
+  'sv.visit.reading.measured':
+    'Mesuré : la position, le mouvement propre, la vitesse radiale et le type spectral (Gaia DR3, ou HYG là où Gaia n’est pas sûr).',
+  'sv.visit.reading.catalogued':
+    'Catalogué : les planètes de la NASA Exoplanet Archive (instantané du {date}), avec le statut que l’archive leur donne.',
+  'sv.visit.reading.calculated':
+    'Calculé : la position à une autre année, d’après un mouvement rectiligne. Ce n’est pas une mesure.',
+  'sv.visit.reading.illustrative':
+    'Illustratif : les points sont des symboles. Aucune planète, texture ni surface n’est dessinée.',
+  'sv.visit.reading.unknown':
+    'Inconnu ici : le rayon, la masse et l’âge de ces étoiles ne sont pas dans les données de cette vue.',
+  'sv.visit.approaching': 's’approche du Soleil',
+  'sv.visit.receding': 's’éloigne du Soleil',
+  'sv.visit.unknown':
+    'Cette visite guidée n’existe pas : la vue s’ouvre sans elle.',
+  'sv.visit.opened':
+    'Visite guidée commencée. Étape {n} sur {total} : {title}.',
+  'sv.visit.stop': 'Étape {n} sur {total} : {title}.',
+  'sv.visit.left': 'Visite en pause. Vous pouvez explorer librement.',
+  'sv.visit.finished': 'Visite terminée. Vous pouvez continuer à explorer.',
+  'sv.visit.noArchive':
+    'L’archive d’exoplanètes n’a pas pu être lue : le nombre de planètes n’est pas affiché.',
+  'sv.visit.archive.none':
+    'La NASA Exoplanet Archive ne liste aucune planète pour cette étoile.',
+  'sv.visit.archive.one':
+    'La NASA Exoplanet Archive liste {n} planète pour cette étoile, avec le statut que l’archive lui donne.',
+  'sv.visit.archive.many':
+    'La NASA Exoplanet Archive liste {n} planètes pour cette étoile, avec le statut que l’archive leur donne.',
+  'sv.visit.archive.loading':
+    'Le nombre de planètes de la NASA Exoplanet Archive est encore en cours de chargement.',
+  'sv.visit.archive.unavailable':
+    'La NASA Exoplanet Archive n’a pas pu être lue : aucun nombre de planètes n’est donné ici, et un nombre absent ne veut pas dire zéro planète.',
   'st.transitionStart':
     'Changement d’échelle : du Système solaire, en unités astronomiques, au voisinage, en années-lumière.',
   'exo.card.unknown': 'non publiée',

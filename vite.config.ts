@@ -181,7 +181,9 @@ function deriveRegistryText() {
     !/[\\/]registry[\\/]tours[\\/]/.test(id) &&
     // GAL-OBJECT-IMMERSION-001 : les modèles d'engins (noms, pièces) voyagent dans le morceau de
     // l'inspection avec leurs quatre langues ; réduits à l'anglais, ils n'auraient pas de texte français.
-    !/[\\/]registry[\\/]craft[\\/]/.test(id);
+    !/[\\/]registry[\\/]craft[\\/]/.test(id) &&
+    // GAL-UNIVERSE-005 : une visite du voisinage voyage dans son morceau avec ses quatre langues.
+    !/[\\/]registry[\\/]stellar-visits[\\/]/.test(id);
   const defersText = (id: string): boolean => {
     const dir = /[\\/]registry[\\/]([^\\/]+)[\\/]/.exec(id)?.[1];
     return dir !== undefined && DEFERRING_DIRS.includes(dir);

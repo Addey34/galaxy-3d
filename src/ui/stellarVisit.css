@@ -1,0 +1,85 @@
+/*
+ * La visite guidée du voisinage solaire (GAL-UNIVERSE-005). Feuille EXTERNE, importée par
+ * `stellarVisit.ts` (la CSP de production est `style-src 'self'`). Le panneau se pose en tête du volet de
+ * la vue ; pendant la visite la liste des étoiles est masquée (la visite choisit l'étoile), la fiche et le
+ * curseur de temps restent.
+ */
+.sv-visit {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-md);
+  background: rgba(var(--accent), 0.08);
+}
+.sv-visit-running,
+.sv-visit-paused {
+  display: grid;
+  gap: var(--sp-2);
+}
+.sv-visit-running[hidden],
+.sv-visit-paused[hidden],
+.sv-visit-data[hidden] {
+  display: none;
+}
+.sv-visit-progress {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.sv-visit-title {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.sv-visit-body {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.sv-visit-sub {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--ink-dim);
+}
+.sv-visit-reading summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+.sv-visit-reading-list {
+  margin: var(--sp-1) 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: var(--sp-1);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+.sv-visit-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.sv-visit-nav .sv-button[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+.sv-button--primary {
+  border-color: rgba(var(--accent), 0.7);
+}
+.sv-visit-start {
+  white-space: nowrap;
+}
+.sv-visiting #stellar-list-title,
+.sv-visiting .sv-list {
+  display: none;
+}
+@media (max-width: 640px) {
+  .sv-visit {
+    order: -2;
+  }
+}

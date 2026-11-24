@@ -119,6 +119,79 @@ describe('serializeStellarAddress', () => {
   });
 });
 
+describe('la visite guidée dans l’adresse (GAL-UNIVERSE-005)', () => {
+  it('lit la visite et son étape, et ne les lit pas sans la vue', () => {
+    expect(
+      parseStellarAddress('?view=neighbourhood&visit=neighbours&step=3')
+    ).toEqual({ visit: 'neighbours', step: 3 });
+    expect(parseStellarAddress('?visit=neighbours&step=3')).toBeNull();
+    // Sans visite, une étape seule ne signifie rien : elle n'est pas lue.
+    expect(parseStellarAddress('?view=neighbourhood&step=3')).toEqual({});
+  });
+
+  it('distingue une visite ABSENTE (undefined) d’une visite MAL FORMÉE (null), et ignore une étape illisible', () => {
+    expect(parseStellarAddress('?view=neighbourhood')?.visit).toBeUndefined();
+    for (const bad of ['../x', 'A B', '', 'x'.repeat(65)])
+      expect(
+        parseStellarAddress(
+          `?view=neighbourhood&visit=${encodeURIComponent(bad)}`
+        )?.visit,
+        bad
+      ).toBeNull();
+    for (const bad of ['-1', '1.5', 'abc', '100', '1e1', ''])
+      expect(
+        parseStellarAddress(`?view=neighbourhood&visit=v&step=${bad}`)?.step,
+        bad
+      ).toBeUndefined();
+  });
+
+  it('écrit la visite avec son étape (0 par défaut), jamais une étape seule, et `null` les retire', () => {
+    expect(
+      serializeStellarAddress('?date=2026-01-01', {
+        visit: 'neighbours',
+        step: 2,
+      })
+    ).toBe('?date=2026-01-01&view=neighbourhood&visit=neighbours&step=2');
+    expect(serializeStellarAddress('', { visit: 'neighbours' })).toBe(
+      '?view=neighbourhood&visit=neighbours&step=0'
+    );
+    expect(serializeStellarAddress('', { step: 4 })).toBe(
+      '?view=neighbourhood'
+    );
+    expect(
+      serializeStellarAddress(
+        '?mode=educ&view=neighbourhood&visit=neighbours&step=2&date=2026-01-01',
+        null
+      )
+    ).toBe('?mode=educ&date=2026-01-01');
+  });
+
+  it('boucle sans perte', () => {
+    for (const step of [0, 1, 6, 99]) {
+      const read = parseStellarAddress(
+        serializeStellarAddress('', {
+          visit: 'neighbours',
+          step,
+          star: 'sirius',
+          years: 500,
+        })
+      );
+      expect(read).toEqual({
+        visit: 'neighbours',
+        step,
+        star: 'sirius',
+        years: 500,
+      });
+    }
+  });
+
+  it('l’identité solaire ne retient ni la visite ni l’étape', () => {
+    expect(
+      solarIdentity('/neptune/', '?view=neighbourhood&visit=v&step=2&mode=educ')
+    ).toBe(solarIdentity('/neptune/', '?mode=educ'));
+  });
+});
+
 describe('resolveStar', () => {
   const systems = [
     ['Rigil Kentaurus', 'Toliman', 'Proxima Centauri'],

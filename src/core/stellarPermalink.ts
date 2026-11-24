@@ -5,13 +5,18 @@
  * `stellarView` (chargé au premier usage) : le démarrage ne porte que la lecture d'une clé
  * (`ui/skyLayerToggles`), pas ce contrat.
  *
- * Trois clés, et seulement trois :
+ * Cinq clés, et seulement cinq (les deux dernières, `visit` et `step`, sont celles de la visite guidée,
+ * GAL-UNIVERSE-005) :
  *
  *   - `view=neighbourhood` : la vue 3D du voisinage est ouverte ;
  *   - `star=<identifiant>` : l'étoile (ou le système) choisie, identifiée par son NOM normalisé
  *     (`starSlug`), jamais par son rang dans la liste, qui change avec le catalogue ;
  *   - `t=<années>` : le déplacement dans le temps du curseur de la vue, en années depuis la date de
  *     la scène (`date=`, déjà portée par le permalien solaire). Absent = « à la date de la scène ».
+ *   - `visit=<identifiant>` et `step=<rang>` : la visite guidée en cours et son étape (rang à partir de 0).
+ *     La visite fixe ELLE-MÊME l'étoile, le décalage de temps et le cadrage de chaque étape : à
+ *     l'ouverture, `visit` l'emporte sur `star` et `t` ; ils reprennent leur sens dès que la visite est
+ *     quittée.
  *
  * CE QUI N'Y EST PAS, volontairement : la caméra (azimut, distance), la transition d'ouverture, la
  * langue, la liste filtrée. La caméra est un état transitoire que rien ne décrit comme une
@@ -26,13 +31,16 @@
 export const STELLAR_VIEW_VALUE = 'neighbourhood';
 
 /** Les clés que ce module possède (et qu'il est seul à effacer). */
-export const STELLAR_KEYS = ['view', 'star', 't'] as const;
+export const STELLAR_KEYS = ['view', 'star', 't', 'visit', 'step'] as const;
 
 /** Longueur maximale d'un identifiant lu dans l'adresse : le plus long du catalogue en a 16. */
 const MAX_STAR_LENGTH = 64;
 
 /** Le décalage maximal qu'une adresse peut demander : la fenêtre de la vue (`core/stellarSpace`). */
 const MAX_YEARS = 10_000;
+
+/** Le rang d'étape le plus grand qu'une adresse peut demander : une visite n'en a jamais autant. */
+const MAX_STEP = 99;
 
 export interface StellarAddress {
   /**
@@ -43,6 +51,13 @@ export interface StellarAddress {
   star?: string | null;
   /** Le déplacement demandé, en années, jamais hors de ±10 000. `undefined` : aucun. */
   years?: number;
+  /**
+   * La visite demandée telle qu'elle est écrite. `undefined` : l'adresse n'en porte pas ; `null` : elle
+   * en porte une qui n'a pas la FORME d'un identifiant (l'appelant le dit, comme pour `star`).
+   */
+  visit?: string | null;
+  /** Le rang de l'étape (0 à 99), ou `undefined` s'il manque ou n'est pas un entier : la visite commence alors à 0. */
+  step?: number;
 }
 
 /**
@@ -86,6 +101,21 @@ export function parseStellarAddress(search: string): StellarAddress | null {
     if (Number.isFinite(years) && Math.abs(years) <= MAX_YEARS)
       address.years = years;
   }
+  const visit = params.get('visit');
+  if (visit !== null) {
+    const wanted = visit.trim().toLowerCase();
+    address.visit =
+      wanted.length > 0 &&
+      wanted.length <= MAX_STAR_LENGTH &&
+      SLUG_SHAPE.test(wanted)
+        ? wanted
+        : null;
+    const step = params.get('step');
+    if (step !== null && /^\d{1,2}$/.test(step.trim())) {
+      const rank = Number(step);
+      if (rank <= MAX_STEP) address.step = rank;
+    }
+  }
   return address;
 }
 
@@ -96,7 +126,12 @@ export function parseStellarAddress(search: string): StellarAddress | null {
  */
 export function serializeStellarAddress(
   search: string,
-  address: { star?: string | null; years?: number } | null
+  address: {
+    star?: string | null;
+    years?: number;
+    visit?: string | null;
+    step?: number;
+  } | null
 ): string {
   const params = new URLSearchParams(search);
   for (const key of STELLAR_KEYS) params.delete(key);
@@ -105,6 +140,11 @@ export function serializeStellarAddress(
     if (address.star) params.set('star', address.star);
     const years = Math.round(address.years ?? 0);
     if (years !== 0) params.set('t', String(years));
+    // `step` n'a de sens qu'avec `visit` : une étape seule n'est jamais écrite.
+    if (address.visit) {
+      params.set('visit', address.visit);
+      params.set('step', String(Math.max(0, Math.round(address.step ?? 0))));
+    }
   }
   const query = params.toString();
   return query ? `?${query}` : '';

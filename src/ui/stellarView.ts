@@ -22,7 +22,9 @@ import {
   systemName,
   systemPrimary,
   type NeighbourFile,
+  type NeighbourSystem,
 } from '@/core/neighbours';
+import type { ExoplanetFile } from '@/core/exoplanets';
 import {
   distanceFromSunPc,
   motionWindow,
@@ -96,14 +98,44 @@ export interface StellarHost {
   gaze?: () => readonly [number, number, number] | null;
 }
 
+/**
+ * Ce que la visite guidée (`ui/stellarVisit`, un morceau à part) peut faire de la vue, et rien de plus :
+ * choisir une étoile, déplacer le curseur de temps, cadrer la caméra, écrire son étape dans l'adresse.
+ * Elle n'a ni la scène ni le renderer : une seule boucle, un seul rendu de remplacement.
+ */
+export interface VisitController {
+  readonly systems: readonly NeighbourSystem[];
+  /** La vue (pour y poser le panneau de la visite) et son volet latéral. */
+  readonly root: HTMLElement;
+  readonly side: HTMLElement;
+  /** Choisit un système (rang), ou aucun (-1) : la fiche et la liste suivent. */
+  select(index: number): void;
+  /** Place le curseur de temps à ce décalage (années depuis la date de la scène), ramené à son pas et à sa fenêtre. */
+  setYears(years: number): void;
+  /** Décalage courant du curseur, et l'année absolue qu'il désigne. */
+  years(): number;
+  absoluteYear(): number;
+  /**
+   * Cadre la caméra : le centre est le système `index` (ou le Soleil si -1), à `distancePc` parsecs, en
+   * gardant l'azimut. Glissement de 1,1 s, immédiat sous mouvement réduit ; un geste du visiteur l'interrompt.
+   */
+  frameOn(index: number, distancePc: number): void;
+  /** La date de lecture de l'archive d'exoplanètes et ses systèmes, lus à la demande (`null` : illisible). */
+  exoplanets(): Promise<ExoplanetFile | null>;
+  /** Écrit (ou retire, avec `null`) la visite et son étape dans l'adresse. */
+  setAddress(visit: { id: string; step: number } | null): void;
+  /** Appelée une fois, quand la vue se ferme : la visite se défait avec elle. */
+  onClose(callback: () => void): void;
+}
+
 export interface StellarView {
   /**
    * Ouvre la vue ; `focus` (un nom d'étoile) sélectionne le système qui le porte.
    * `fromAddress` : l'ADRESSE demande la vue (lien partagé, Suivant du navigateur) ; l'étoile et le
    * décalage de temps s'y lisent, et aucune entrée d'historique n'est ajoutée (l'adresse est déjà
-   * la bonne).
+   * la bonne). `visit` : commence la visite guidée du voisinage à son premier arrêt (GAL-UNIVERSE-005).
    */
-  open(focus?: string, fromAddress?: boolean): void;
+  open(focus?: string, fromAddress?: boolean, visit?: boolean): void;
   close(): void;
   readonly isOpen: boolean;
 }
@@ -170,7 +202,12 @@ export async function setupStellarView(
   const solarNow = (): string =>
     solarIdentity(window.location.pathname, window.location.search);
   const writeAddress = (
-    address: { star?: string | null; years?: number } | null,
+    address: {
+      star?: string | null;
+      years?: number;
+      visit?: string | null;
+      step?: number;
+    } | null,
     how: 'push' | 'replace'
   ): void => {
     const next = here(serializeStellarAddress(window.location.search, address));
@@ -213,7 +250,7 @@ export async function setupStellarView(
     close(viaHistory?: boolean): void;
   }
 
-  function open(focus?: string, fromAddress = false): void {
+  function open(focus?: string, fromAddress = false, visit = false): void {
     if (opened) return;
     // Une adresse qui demande la vue sans pouvoir l'obtenir la perd : sinon un rechargement la rejouerait.
     const refuse = (): void => {
@@ -275,6 +312,13 @@ export async function setupStellarView(
     skip.type = 'button';
     skip.hidden = true;
     top.append(skip);
+    const visitStart = el(
+      'button',
+      'sv-button sv-visit-start',
+      'stellar-visit-start'
+    );
+    visitStart.type = 'button';
+    top.append(visitStart);
     const head = el('div', 'sv-head');
     const scale = el('p', 'sv-scale', 'stellar-scale');
     // La largeur du champ de vue, en UA puis en années-lumière : l'échelle LUE, à chaque image.
@@ -361,6 +405,14 @@ export async function setupStellarView(
     // échelle géométrique (voir core/scaleTransition). Elle vit dans la boucle de rendu : la fermer la
     // supprime avec elle, aucun minuteur à défaire.
     let transition: { t0: number } | null = null;
+    // Le glissement d'une étape de visite : la caméra va d'un cadrage à un autre, dans la boucle de rendu
+    // (aucun minuteur à défaire à la fermeture). Un geste du visiteur l'arrête là où il est.
+    let glide: {
+      t0: number;
+      from: { position: THREE.Vector3; target: THREE.Vector3 };
+      to: { position: THREE.Vector3; target: THREE.Vector3 };
+    } | null = null;
+    const GLIDE_MS = 1100;
     const placeCamera = (distance: number): void => {
       scene.camera.position.set(
         homeDir[0] * distance,
@@ -398,6 +450,7 @@ export async function setupStellarView(
       reset.textContent = t('st.reset');
       scale.textContent = t('st.scale');
       skip.textContent = t('st.skip');
+      visitStart.textContent = t('sv.visit.start');
       stageNote.textContent = t('st.stageNote');
       fieldText = '';
       stageUnit = '';
@@ -588,12 +641,16 @@ export async function setupStellarView(
 
     // ---- l'adresse suit l'observation (étoile choisie, décalage de temps), une fois l'entrée posée
     let addressLive = false;
+    let visitAddress: { id: string; step: number } | null = null;
     const syncAddress = (): void => {
       if (!addressLive) return;
       writeAddress(
         {
           star: current >= 0 ? starSlug(names[current]!) : undefined,
           years: offsetYears,
+          ...(visitAddress
+            ? { visit: visitAddress.id, step: visitAddress.step }
+            : {}),
         },
         'replace'
       );
@@ -864,10 +921,120 @@ export async function setupStellarView(
         const p = transitionProgress(performance.now() - transition.t0);
         if (p >= 1) endTransition();
         else placeCamera(transitionDistancePc(p, startDistance, homeDistance));
-      } else controls.update();
+      } else {
+        stepGlide();
+        controls.update();
+      }
       renderField();
       scene.render(host.renderer);
       updateLabels();
+    });
+
+    // ---- la visite guidée : un morceau à part, chargé au premier usage, qui ne touche la vue que par ce contrôleur
+    const closers: Array<() => void> = [];
+    let archive: Promise<ExoplanetFile | null> | null = null;
+    const frameOn = (index: number, distancePc: number): void => {
+      endTransition();
+      const target = new THREE.Vector3(
+        ...(index >= 0 ? scene.positionOf(index) : [0, 0, 0])
+      );
+      const offset = scene.camera.position.clone().sub(controls.target);
+      if (offset.lengthSq() < 1e-12) offset.set(...homeDir);
+      offset.setLength(distancePc);
+      const position = target.clone().add(offset);
+      if (reduced) {
+        glide = null;
+        controls.target.copy(target);
+        scene.camera.position.copy(position);
+        scene.fitClipping(distancePc);
+        controls.update();
+        return;
+      }
+      glide = {
+        t0: performance.now(),
+        from: {
+          position: scene.camera.position.clone(),
+          target: controls.target.clone(),
+        },
+        to: { position, target },
+      };
+    };
+    const stepGlide = (): void => {
+      if (!glide) return;
+      const p = Math.min(1, (performance.now() - glide.t0) / GLIDE_MS);
+      const e = p * p * (3 - 2 * p);
+      controls.target.lerpVectors(glide.from.target, glide.to.target, e);
+      scene.camera.position.lerpVectors(
+        glide.from.position,
+        glide.to.position,
+        e
+      );
+      scene.fitClipping(scene.camera.position.distanceTo(controls.target));
+      if (p >= 1) glide = null;
+    };
+    const controller: VisitController = {
+      systems,
+      root,
+      side,
+      select: (index) => select(index, false),
+      setYears: (years) => {
+        offsetYears = snapYears(years, timeWindow, TIME_STEP_YEARS);
+        time.value = String(offsetYears);
+        scene.setYears(yearsNow());
+        renderTime();
+        renderCard();
+        syncAddress();
+      },
+      years: () => offsetYears,
+      absoluteYear: () => 2000 + yearsNow(),
+      frameOn,
+      exoplanets: () =>
+        (archive ??= fetchImpl('/assets/sky/exoplanets.json')
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json() as Promise<ExoplanetFile>;
+          })
+          .catch((error: unknown) => {
+            Logger.warn(
+              '[stellarView] archive des exoplanètes illisible',
+              error
+            );
+            return null;
+          })),
+      setAddress: (visit) => {
+        visitAddress = visit;
+        syncAddress();
+      },
+      onClose: (callback) => closers.push(callback),
+    };
+    let visitModule: Promise<typeof import('./stellarVisit')> | null = null;
+    const beginVisit = (id: string | null, step = 0): void => {
+      void (visitModule ??= import('./stellarVisit').catch((error: unknown) => {
+        visitModule = null;
+        throw error;
+      }))
+        .then((module) => {
+          if (opened !== session) return;
+          if (!module.begin(controller, id, step)) {
+            getAnnouncer().announce(t('sv.visit.unknown'));
+            visitAddress = null;
+            syncAddress();
+          }
+        })
+        .catch((error: unknown) =>
+          Logger.warn('[stellarView] visite guidée indisponible', error)
+        );
+    };
+    visitStart.addEventListener('click', () => beginVisit(null));
+    // Un geste du visiteur interrompt le glissement : la caméra reste où il l'a prise.
+    const stopGlide = (): void => {
+      glide = null;
+    };
+    surface.addEventListener('pointerdown', stopGlide);
+    surface.addEventListener('wheel', stopGlide, { passive: true });
+    cleanups.push(() => {
+      surface.removeEventListener('pointerdown', stopGlide);
+      surface.removeEventListener('wheel', stopGlide);
     });
 
     const session: Session = {
@@ -883,6 +1050,7 @@ export async function setupStellarView(
         addressLive = false;
         // D'abord rendre la boucle à la scène solaire : plus rien ne dessine la scène stellaire.
         host.animation.setRenderOverride(null);
+        for (const closer of closers) closer();
         for (const cleanup of cleanups) cleanup();
         controls.dispose();
         scene.dispose();
@@ -959,6 +1127,14 @@ export async function setupStellarView(
     }
     addressLive = true;
     getAnnouncer().announce(t('st.opened', { n: String(systems.length) }));
+    // La visite demandée par l'adresse (`visit=` et `step=`) ou par le bouton des réglages : elle fixe l'étoile
+    // et le temps de chaque étape, donc elle passe après la mise en place de l'adresse.
+    if (requested?.visit !== undefined && requested.visit !== null)
+      beginVisit(requested.visit, requested.step ?? 0);
+    else if (requested?.visit === null) {
+      getAnnouncer().announce(t('sv.visit.unknown'));
+      syncAddress();
+    } else if (visit) beginVisit(null);
     if (unknownStar) getAnnouncer().announce(t('st.unknownStar'));
     if (transition) getAnnouncer().announce(t('st.transitionStart'));
     renderField(true);

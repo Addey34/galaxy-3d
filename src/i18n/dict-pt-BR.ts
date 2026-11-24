@@ -388,6 +388,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.deepsky': 'Objetos do céu profundo',
   'settings.neighbours': 'Estrelas próximas',
   'settings.stellar': 'Vizinhança solar em 3D',
+  'settings.stellarVisit': 'Visita guiada da vizinhança',
   'settings.meteors': 'Chuvas de meteoros',
   'settings.meteors.active':
     '{count} chuva(s) de meteoros ativa(s) nesta data, radiantes do IAU Meteor Data Center.',

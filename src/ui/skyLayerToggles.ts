@@ -106,7 +106,11 @@ export function setupSkyLayerToggles(
   let neighbourCard: Promise<NeighbourCard | null> | null = null;
   // La vue 3D du voisinage solaire : chargée au premier appel, jamais au démarrage.
   let stellar: Promise<StellarView | null> | null = null;
-  const openStellar = (focus?: string, fromAddress = false): void => {
+  const openStellar = (
+    focus?: string,
+    fromAddress = false,
+    visit = false
+  ): void => {
     const host = environment.stellar;
     if (!host) return;
     void (stellar ??= import('./stellarView').then((m) =>
@@ -116,7 +120,7 @@ export function setupSkyLayerToggles(
         simulationDate: environment.simulationDate,
       })
     )).then((view) => {
-      if (view) view.open(focus, fromAddress);
+      if (view) view.open(focus, fromAddress, visit);
       else {
         stellar = null;
         // Une adresse qui demandait la vue : on dit pourquoi elle ne s'ouvre pas et on la retire.
@@ -211,12 +215,22 @@ export function setupSkyLayerToggles(
     const host =
       document.getElementById('settings-section-scene') ?? document.body;
     host.append(button);
+    // La visite guidée du voisinage (GAL-UNIVERSE-005) : la même vue, ouverte sur son premier arrêt.
+    const visitButton = document.createElement('button');
+    visitButton.id = 'stellar-visit-open';
+    visitButton.type = 'button';
+    visitButton.className = 'settings-button';
+    host.append(visitButton);
     const refresh = (): void => {
       button.textContent = t('settings.stellar');
+      visitButton.textContent = t('settings.stellarVisit');
     };
     refresh();
     onLocaleChange(refresh);
     button.addEventListener('click', () => openStellar());
+    visitButton.addEventListener('click', () =>
+      openStellar(undefined, false, true)
+    );
   }
   // Les pluies de météores : la case dit combien de pluies sont actives à la date de la scène.
   // (Il y en a toujours au moins une, gardé par `core/meteors.test.ts` : pas d'état « aucune ».)
