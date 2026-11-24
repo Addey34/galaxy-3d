@@ -79,6 +79,10 @@ const MODEL_LAYERS = [
 test('reads the layers that are on, never turns one on, never calls the network', async ({
   page,
 }) => {
+  // Le plus lourd du fichier (démarrage, six couches de modèle allumées, captures) : 72 s à un worker,
+  // et 120 s tombés à deux workers sur un runner partagé (GAL-ENGINE-HEADROOM-001, run 45335126736,
+  // vert au réessai en 1,8 min). Le budget suit la durée MESURÉE, comme celui des autres scénarios lourds.
+  test.setTimeout(240_000);
   const pageErrors: string[] = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
   const mock = await boot(page);
