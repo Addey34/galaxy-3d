@@ -13,6 +13,7 @@ import {
   altitudeRotationFactor,
 } from '@/core/altitudeZoom';
 import { horizonTiltRad } from '@/core/horizonTilt';
+import { warmShapeLoader } from '@/components/celestial/shapeModelLoader';
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import {
@@ -37,6 +38,8 @@ export interface CameraTarget {
   group: THREE.Group;
   cameraDistance?: CameraDistance;
   getFrameRadius?(mode: 'educ' | 'explo'): number;
+  /** Le corps vient d'être ciblé : il peut commencer à charger ce qu'il lui faudra à l'arrivée. */
+  prepareForApproach?(): void;
   getClearanceRadius?(mode: 'educ' | 'explo', toward?: THREE.Vector3): number;
   /**
    * Plancher d'approche propre à cette cible, en multiples de son rayon, ou rien si elle
@@ -229,6 +232,15 @@ export class CameraSystem {
   }
 
   /**
+   * Le visiteur s'intéresse à ce corps (survol d'une entrée de la palette) ou ouvre la palette (`null`) :
+   * le chargeur de maillages est chauffé, et le maillage du corps pressenti part, sans rien cibler.
+   */
+  anticipate(bodyName: string | null): void {
+    if (bodyName === null) warmShapeLoader();
+    else this._target(bodyName)?.prepareForApproach?.();
+  }
+
+  /**
    * Cible un corps : calcule une distance de visite confortable (selon son rayon et le
    * mode) et lance un vol animé de la caméra vers lui. Le corps sera ensuite suivi.
    */
@@ -253,6 +265,8 @@ export class CameraSystem {
       return;
     }
 
+    // Le maillage du corps ciblé part pendant le vol, avant qu'il se distingue d'une sphère.
+    this._target(bodyName)?.prepareForApproach?.();
     this._setFov(
       this._scaleMode === 'explo' ? this._opticalFov : CAMERA_SETTINGS.focusFov
     );

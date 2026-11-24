@@ -54,7 +54,9 @@ export function setupPlanetControls(
   // (au clic / à la frappe), donc l'ordre d'initialisation est sûr.
   const palette: BodyPalette = setupBodyPalette(
     (name) => selectBody(name),
-    coordinator
+    coordinator,
+    // Survol, focus ou ouverture de la palette : le maillage du corps pressenti part avant le clic.
+    (name) => camera.anticipate(name)
   );
   palette.setActive('overview');
 

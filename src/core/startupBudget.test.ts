@@ -262,7 +262,21 @@ describe('les démarrages conditionnels', () => {
       'first-visit',
       'tour-link',
       'immersive-vr',
+      'body-link',
+      'worst-case-body',
       'worst-case',
     ]);
+  });
+
+  it('le chargeur glTF n’est PLUS au démarrage ordinaire, mais l’adresse d’un corps modélisé le paie (rien n’est caché)', () => {
+    expect(BOOT_DYNAMIC_CHUNKS.map((c) => c.chunk)).not.toContain('GLTFLoader');
+    expect(NON_BOOT_CHUNKS.map((c) => c.chunk)).toContain('GLTFLoader');
+    const body = CONDITIONAL_START_PROFILES.find((p) => p.id === 'body-link');
+    expect(body?.chunks).toEqual(['GLTFLoader']);
+    // Le pire cas cumulé hors visite le compte aussi : le gain ne se lit pas en l'omettant.
+    const worst = CONDITIONAL_START_PROFILES.find(
+      (p) => p.id === 'worst-case-body'
+    );
+    expect(worst?.chunks).toContain('GLTFLoader');
   });
 });
