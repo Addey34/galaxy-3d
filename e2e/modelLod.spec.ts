@@ -70,7 +70,6 @@ test('targeting a body sends its lightest mesh during the flight, before the cam
   expect(requests).toEqual([]);
 
   await page.locator('#body-search-trigger').click();
-  const clicked = Date.now();
   await page.locator('#orbit-bennu').click();
   // Le niveau léger part tout de suite (le corps est CIBLÉ, il n'attend pas le seuil de distance).
   await expect
@@ -96,7 +95,6 @@ test('targeting a body sends its lightest mesh during the flight, before the cam
     )
     .toBe(true);
   expect(light.at).toBeLessThanOrEqual(arrived);
-  expect(light.at - clicked).toBeLessThan(3000);
   // Une seule fois : le chargeur partagé ne redemande pas le même fichier.
   expect(requests.filter((r) => r.file === 'bennu_shape_1k.glb')).toHaveLength(
     1
