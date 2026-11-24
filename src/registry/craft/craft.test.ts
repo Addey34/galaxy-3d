@@ -30,19 +30,33 @@ function nodeNames(bytes: Buffer): Set<string> {
 
 describe('registre des modèles d’engins', () => {
   it('chaque fichier servi a l’empreinte, la taille et la source que le registre déclare', () => {
-    expect(CRAFT_MODELS.length).toBeGreaterThanOrEqual(7);
+    expect(CRAFT_MODELS.length).toBeGreaterThanOrEqual(10);
     for (const model of CRAFT_MODELS) {
       const bytes = readFileSync(glbPath(model.id));
       expect(createHash('sha256').update(bytes).digest('hex'), model.id).toBe(
         model.sha256
       );
       expect(bytes.length, model.id).toBe(model.bytes);
-      // Une source épinglée à un commit (40 hexadécimaux), jamais à une branche.
-      expect(model.sourceUrl, model.id).toMatch(
-        /^https:\/\/raw\.githubusercontent\.com\/nasa\/NASA-3D-Resources\/[0-9a-f]{40}\/3D%20Models\//
-      );
-      expect(model.sourceUrl, model.id).toContain(model.commit);
-      expect(model.repository).toBe('nasa/NASA-3D-Resources');
+      if (model.commit) {
+        // Une source épinglée à un commit (40 hexadécimaux), jamais à une branche.
+        expect(model.sourceUrl, model.id).toMatch(
+          /^https:\/\/raw\.githubusercontent\.com\/nasa\/NASA-3D-Resources\/[0-9a-f]{40}\/3D%20Models\//
+        );
+        expect(model.sourceUrl, model.id).toContain(model.commit);
+        expect(model.repository).toBe('nasa/NASA-3D-Resources');
+      } else {
+        // Un fichier de science.nasa.gov : pas de commit, donc la page, le crédit et la date de lecture
+        // sont obligatoires, et l'empreinte (vérifiée plus haut) tient lieu d'épingle.
+        expect(model.sourceUrl, model.id).toMatch(
+          /^https:\/\/assets\.science\.nasa\.gov\/content\/dam\/science\//
+        );
+        expect(model.sourcePage, model.id).toMatch(
+          /^https:\/\/science\.nasa\.gov\/resource\//
+        );
+        expect(model.repository).toBe('science.nasa.gov/3d-resources');
+        expect(model.credit, model.id).toContain('NASA');
+        expect(model.retrieved, model.id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      }
     }
   });
 
