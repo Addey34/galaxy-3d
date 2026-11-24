@@ -220,6 +220,14 @@ export const MODEL_OVERLAY_IS_COLOR_PALETTE: Record<string, boolean> = {
 // 128 pour les anneaux de Saturne : la géométrie RingGeometry est plate, mais ses
 // subdivisions radiales déterminent la précision des UVs corrigés (_correctRingUVs).
 const GEOMETRY_SEGMENTS = 64;
+/**
+ * Segments de la sphère d'un corps qui a un MODÈLE DE FORME (GAL-ENGINE-HEADROOM-001) : elle ne tient
+ * lieu de corps que de loin (quelques pixels, parfois moins d'un) et jusqu'à l'arrivée du maillage, qui
+ * la remplace. 24 segments font ~1 100 triangles contre ~8 000 : sans ce plafond, retirer le maillage
+ * léger (~4 000 triangles) du démarrage AJOUTAIT ~220 000 triangles à la vue d'ensemble (mesuré en CI :
+ * 1 194 001 contre 973 905, sur un plafond de 1 120 000).
+ */
+export const SHAPE_PROXY_SEGMENTS = 24;
 // Segments haute densité pour le displacement (relief géométrique) : une carte de
 // hauteur n'est visible qu'avec assez de vertices. Réservé au corps proche/
 // sélectionné (cf. CelestialObject) — trop coûteux pour tous les corps en continu.

@@ -181,6 +181,8 @@ export default class CelestialObject {
   private _modelQuality: ModelQuality | null = null;
   private _modelLoading: ModelQuality | null = null;
   private readonly _modelNdc = new THREE.Vector3();
+  /** La sphère ordinaire a remplacé la sphère légère d'un corps modélisé (le maillage n'est pas venu). */
+  private _fullSphere = false;
   private readonly _ringWorldPos = new THREE.Vector3();
   // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
   // une lueur diffuse selon la position réelle de la Lune (réflecteur).
@@ -1769,6 +1771,21 @@ export default class CelestialObject {
     if (first) void this._loadShapeModel(first, true);
   }
 
+  /** Rend à la surface la sphère ordinaire : le maillage n'est pas venu, la sphère légère ne suffit plus. */
+  private _restoreFullSphere(): void {
+    const surface = this.layers.get('surface');
+    if (!surface || !this.config.model || this._fullSphere) return;
+    this._fullSphere = true;
+    const light = surface.geometry;
+    surface.geometry = createSphereGeometry(
+      this.config.radius,
+      'surface',
+      undefined,
+      this.figure
+    );
+    light.dispose();
+  }
+
   private async _loadShapeModel(
     quality: ModelQuality,
     urgent = false
@@ -1859,7 +1876,9 @@ export default class CelestialObject {
         `[CelestialObject] Shape model ${quality} loaded for "${this.name}" (${meshes.length} mesh(es))`
       );
     } catch (error) {
-      // Volontairement non fatal : la sphère (ou le niveau précédent) reste affichée.
+      // Volontairement non fatal : la sphère (ou le niveau précédent) reste affichée. Si c'est la sphère
+      // légère d'un corps modélisé, elle devient la sphère ordinaire : c'est elle qui le représentera.
+      if (this._modelQuality === null) this._restoreFullSphere();
       Logger.warn(
         `[CelestialObject] Shape model ${quality} failed for "${this.name}", keeping what is shown: ${String(error)}`
       );

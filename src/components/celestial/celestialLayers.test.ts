@@ -106,3 +106,38 @@ describe('couche atmosphère = occulteur qui réfracte', () => {
     }
   });
 });
+
+describe('la sphère d’un corps à modèle de forme (GAL-ENGINE-HEADROOM-001)', () => {
+  const triangles = (
+    config: (typeof CELESTIAL_CONFIG.bodies)[string],
+    name: string
+  ): number => {
+    const geometry = (buildLayers(config, name).get('surface') as THREE.Mesh)
+      .geometry;
+    return (
+      (geometry.index
+        ? geometry.index.count
+        : geometry.getAttribute('position').count) / 3
+    );
+  };
+
+  it('est une sphère légère : retirer le maillage du démarrage ne doit pas faire monter le nombre de triangles', () => {
+    // Mesuré en CI : sans cette sphère légère, la vue d'ensemble passait de 973 905 à 1 194 001 triangles.
+    for (const [name, config] of Object.entries(CELESTIAL_CONFIG.bodies)) {
+      if (!config.model) continue;
+      expect(triangles(config, name), name).toBeLessThan(1500);
+    }
+  });
+
+  it('un corps sans modèle garde la sphère ordinaire (les planètes ne sont pas dégradées)', () => {
+    expect(triangles(CELESTIAL_CONFIG.bodies.earth, 'earth')).toBeGreaterThan(
+      7000
+    );
+  });
+
+  it('au moins un corps a un modèle (la garde ne porte pas sur un ensemble vide)', () => {
+    expect(
+      Object.values(CELESTIAL_CONFIG.bodies).filter((c) => c.model).length
+    ).toBeGreaterThan(10);
+  });
+});

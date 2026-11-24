@@ -12,6 +12,7 @@ import {
   createPrecipMaterial,
   createRingMaterial,
   createSphereGeometry,
+  SHAPE_PROXY_SEGMENTS,
   createSurfaceMaterial,
   createThermalMaterial,
   RING_SEGMENTS,
@@ -122,7 +123,7 @@ function createSurfaceLayer(
     createSphereGeometry(
       config.radius,
       'surface',
-      undefined,
+      config.model ? SHAPE_PROXY_SEGMENTS : undefined,
       layerFigure(config, name)
     ),
     material
