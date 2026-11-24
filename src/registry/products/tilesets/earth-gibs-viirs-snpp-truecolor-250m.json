@@ -27,7 +27,7 @@
   },
   "publishedPixelsPerDegree": 296.5,
   "acquired": {
-    "interval": [["2015-11-24T00:00:00Z", null]]
+    "interval": [["2015-11-24T00:00:00Z", "2026-11-02T23:59:59Z"]]
   },
   "license": "other",
   "rights": "public-domain",
@@ -60,5 +60,5 @@
       "roles": ["producer"]
     }
   ],
-  "verified": "2026-10-12"
+  "verified": "2026-11-24"
 }

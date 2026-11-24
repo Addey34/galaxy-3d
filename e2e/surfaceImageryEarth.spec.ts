@@ -55,7 +55,9 @@ test('paints the Earth from NASA GIBS, never below its reference level', async (
 
   const viirsSeen: string[] = [];
   await page.route(
-    '**gibs.earthdata.nasa.gov/wmts/**VIIRS_SNPP_**',
+    (url) =>
+      url.hostname === 'gibs.earthdata.nasa.gov' &&
+      /VIIRS_(SNPP|NOAA21|NOAA20)_CorrectedReflectance/.test(url.pathname),
     (route) => {
       viirsSeen.push(route.request().url());
       return route.abort();
@@ -224,6 +226,18 @@ const VIIRS_DOMAINS =
   '<ows:Identifier>time</ows:Identifier><Domain>2015-11-24/2022-07-27/P1D,' +
   '2022-08-10/2026-10-12/P1D</Domain><Size>2</Size></DimensionDomain></Domains>';
 
+/** NOAA-21 et NOAA-20 (GAL-EARTH-DETAIL-001) : Suomi NPP a cessé le 2026-11-02, ces deux couches publient encore. */
+const NOAA21_DOMAINS =
+  "<Domains xmlns:ows='http://www.opengis.net/ows/1.1'><DimensionDomain>" +
+  '<ows:Identifier>time</ows:Identifier><Domain>2023-02-10/2026-11-24/P1D' +
+  '</Domain><Size>1</Size></DimensionDomain></Domains>';
+/** Le même trou que Suomi NPP autour du 2022-08-01 : ce monde simulé n'a PAS ce jour-là, dans aucune couche. */
+const NOAA20_DOMAINS =
+  "<Domains xmlns:ows='http://www.opengis.net/ows/1.1'><DimensionDomain>" +
+  '<ows:Identifier>time</ows:Identifier><Domain>2018-01-05/2022-07-27/P1D,' +
+  '2022-08-10/2026-11-24/P1D</Domain><Size>2</Size></DimensionDomain></Domains>';
+const VIIRS_LAYER = /VIIRS_(SNPP|NOAA21|NOAA20)_CorrectedReflectance_TrueColor/;
+
 async function serveViirs(page: Page): Promise<{
   domains: string[];
   viirs: string[];
@@ -244,20 +258,32 @@ async function serveViirs(page: Page): Promise<{
         body: TILE_JPEG,
       });
     };
+  const domainsByLayer: Record<string, string> = {
+    SNPP: VIIRS_DOMAINS,
+    NOAA21: NOAA21_DOMAINS,
+    NOAA20: NOAA20_DOMAINS,
+  };
   await page.route(
-    '**gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/VIIRS_SNPP_CorrectedReflectance_TrueColor/**',
+    (url) =>
+      url.hostname === 'gibs.earthdata.nasa.gov' &&
+      url.pathname.includes('/1.0.0/') &&
+      VIIRS_LAYER.test(url.pathname),
     (route) => {
       seen.domains.push(route.request().url());
+      const layer = VIIRS_LAYER.exec(route.request().url())![1]!;
       return route.fulfill({
         status: 200,
         contentType: 'text/xml',
         headers: { 'access-control-allow-origin': '*' },
-        body: VIIRS_DOMAINS,
+        body: domainsByLayer[layer]!,
       });
     }
   );
   await page.route(
-    '**gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/**',
+    (url) =>
+      url.hostname === 'gibs.earthdata.nasa.gov' &&
+      !url.pathname.includes('/1.0.0/') &&
+      VIIRS_LAYER.test(url.pathname),
     tile(seen.viirs)
   );
   await page.route(
@@ -597,7 +623,7 @@ test.describe('the Earth’s alternate grounds', () => {
       const viirs: string[] = [];
       await page.route('**gibs.earthdata.nasa.gov/wmts/**', (route) => {
         const url = route.request().url();
-        if (url.includes('VIIRS_SNPP_')) viirs.push(url);
+        if (/VIIRS_(SNPP|NOAA21|NOAA20)_Corrected/.test(url)) viirs.push(url);
         if (url.includes(`/${layer}/`)) asked.push(url);
         return route.fulfill({
           status: 200,
@@ -673,7 +699,7 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
 
   await boot(
     page,
-    '?debug-surface&mode=explo&body=earth&date=2026-10-11T12:00:00Z'
+    '?debug-surface&mode=explo&body=earth&date=2026-09-20T12:00:00Z'
   );
   await expect(page.locator('#surface-probe')).toContainText('earth', {
     timeout: 30_000,
@@ -710,7 +736,7 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
   await expect
     .poll(() => seen.viirs.length, { timeout: 60_000 })
     .toBeGreaterThan(0);
-  await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
+  await expect(badge).toHaveAttribute('data-day', '2026-09-20', {
     timeout: 60_000,
   });
   await expect
@@ -725,7 +751,7 @@ test('shows the day’s VIIRS from afar while the setting still says Sentinel-2'
     { timeout: 60_000 }
   );
   await zoomIn(page, -250);
-  await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
+  await expect(badge).toHaveAttribute('data-day', '2026-09-20', {
     timeout: 60_000,
   });
   // Au rayon final aussi, le fond du jour est PEINT, pas seulement nommé : le bandeau publie le
@@ -763,7 +789,7 @@ test('paints the Earth of the scene’s day from VIIRS, and names that day', asy
 
   await boot(
     page,
-    '?debug-surface&mode=explo&body=earth&date=2026-10-11T12:00:00Z'
+    '?debug-surface&mode=explo&body=earth&date=2026-09-20T12:00:00Z'
   );
   await expect(page.locator('#surface-probe')).toContainText('earth', {
     timeout: 30_000,
@@ -772,7 +798,7 @@ test('paints the Earth of the scene’s day from VIIRS, and names that day', asy
   await zoomIn(page);
 
   const badge = page.locator('#surface-imagery');
-  await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
+  await expect(badge).toHaveAttribute('data-day', '2026-09-20', {
     timeout: 30_000,
   });
   expect(seen.domains.length, 'jours publiés jamais lus').toBeGreaterThan(0);
@@ -780,10 +806,46 @@ test('paints the Earth of the scene’s day from VIIRS, and names that day', asy
   expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
   for (const url of seen.viirs)
     expect(url).toMatch(
-      /\/VIIRS_SNPP_CorrectedReflectance_TrueColor\/default\/2026-10-11\/250m\/\d+\/\d+\/\d+\.jpeg$/
+      /\/VIIRS_SNPP_CorrectedReflectance_TrueColor\/default\/2026-09-20\/250m\/\d+\/\d+\/\d+\.jpeg$/
     );
-  await expect(badge).toContainText('October 11, 2026');
+  await expect(badge).toContainText('September 20, 2026');
   await expect(badge.locator('.si-credit')).toContainText('Suomi NPP VIIRS');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+test('after Suomi NPP stopped, NOAA-21 paints the Earth of the scene’s day and the badge names it', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const seen = await serveViirs(page);
+
+  // Le 2026-11-20, Suomi NPP ne publie plus (sa dimension s'arrête au 2026-11-02) : avant GAL-EARTH-DETAIL-001,
+  // le réglage « Terre du jour » retombait ici sur Blue Marble sans le dire.
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=earth&date=2026-11-20T12:00:00Z'
+  );
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await enableDailyEarth(page);
+  await zoomIn(page);
+
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toHaveAttribute('data-day', '2026-11-20', {
+    timeout: 30_000,
+  });
+  expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
+  for (const url of seen.viirs)
+    expect(url).toMatch(
+      /\/VIIRS_NOAA21_CorrectedReflectance_TrueColor\/default\/2026-11-20\/250m\/\d+\/\d+\/\d+\.jpeg$/
+    );
+  await expect(badge).toContainText('November 20, 2026');
+  await expect(badge.locator('.si-credit')).toContainText('NOAA-21 VIIRS');
+  // Les trois dimensions ont été lues, la plus prioritaire d'abord : la chaîne ne devine pas.
+  expect(seen.domains.some((u) => u.includes('VIIRS_SNPP_'))).toBe(true);
+  expect(seen.domains.some((u) => u.includes('VIIRS_NOAA21_'))).toBe(true);
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
 
