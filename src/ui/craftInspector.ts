@@ -471,9 +471,15 @@ function renderFacts(list: HTMLElement, model: CraftModel): void {
     li.append(value);
     list.append(li);
   };
-  row(t('craft.credit', { credit: `NASA, ${model.repository}` }));
+  row(
+    t('craft.credit', {
+      credit: model.credit
+        ? `NASA, ${model.credit}, ${model.repository}`
+        : `NASA, ${model.repository}`,
+    })
+  );
   const link = el('a', 'cv-link');
-  link.href = model.sourceUrl;
+  link.href = model.sourcePage ?? model.sourceUrl;
   link.rel = 'noopener noreferrer';
   link.target = '_blank';
   link.textContent = t('craft.source');

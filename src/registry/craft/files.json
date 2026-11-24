@@ -101,6 +101,36 @@
       "extensions": [
         "KHR_draco_mesh_compression"
       ]
+    },
+    "new-horizons": {
+      "sourceUrl": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/n/New_Horizons.glb",
+      "repository": "science.nasa.gov/3d-resources",
+      "sourcePage": "https://science.nasa.gov/resource/new-horizons-3d-model/",
+      "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+      "retrieved": "2026-11-24",
+      "bytes": 3293532,
+      "sha256": "cf152d8cea17c4a83711041cb0d29ca1d980bfafa084ada2656569ea92cdd73f",
+      "triangles": 8280,
+      "meshes": 6,
+      "materials": 6,
+      "images": 6,
+      "extensions": []
+    },
+    "exomars-tgo": {
+      "sourceUrl": "https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/t/TGO.glb",
+      "repository": "science.nasa.gov/3d-resources",
+      "sourcePage": "https://science.nasa.gov/resource/trace-gas-orbiter-3d-model/",
+      "credit": "NASA Visualization Technology Applications and Development (VTAD)",
+      "retrieved": "2026-11-24",
+      "bytes": 5911208,
+      "sha256": "8d65a22cdbf29b9192506a7c31eafbdc25676db163849251e30683b45aaf536f",
+      "triangles": 10179,
+      "meshes": 16,
+      "materials": 11,
+      "images": 12,
+      "extensions": [
+        "KHR_texture_transform"
+      ]
     }
   }
 }

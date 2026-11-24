@@ -44,6 +44,28 @@ const TARGETS = {
   ],
 };
 
+/**
+ * Les modèles qui ne sont PAS dans le dépôt GitHub (GAL-OBJECT-IMMERSION-002) : ceux que la NASA publie sur
+ * `science.nasa.gov/3d-resources` (crédit « NASA Visualization Technology Applications and Development »,
+ * la même collection). Pas de commit à épingler : la source est le fichier de `assets.science.nasa.gov`, lu
+ * à la date `retrieved` et SCELLÉ par son empreinte (une empreinte différente à la relecture = refus).
+ * Un engin sans entrée ici ni dans `TARGETS` n'a PAS de modèle libre de droits établi : la fiche le dit.
+ */
+const RETRIEVED = '2026-11-24';
+const EXTERNAL = {
+  'new-horizons': {
+    url: 'https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/n/New_Horizons.glb',
+    page: 'https://science.nasa.gov/resource/new-horizons-3d-model/',
+    credit: 'NASA Visualization Technology Applications and Development (VTAD)',
+  },
+  'exomars-tgo': {
+    url: 'https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/t/TGO.glb',
+    page: 'https://science.nasa.gov/resource/trace-gas-orbiter-3d-model/',
+    credit: 'NASA Visualization Technology Applications and Development (VTAD)',
+  },
+};
+const EXTERNAL_REPOSITORY = 'science.nasa.gov/3d-resources';
+
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 function sourceUrl(target) {
@@ -60,7 +82,10 @@ function describe(bytes) {
   let triangles = 0;
   for (const mesh of json.meshes ?? [])
     for (const prim of mesh.primitives)
-      triangles += json.accessors[prim.indices].count / 3;
+      triangles +=
+        (prim.indices !== undefined
+          ? json.accessors[prim.indices].count
+          : json.accessors[prim.attributes.POSITION].count) / 3;
   return {
     triangles,
     meshes: json.meshes?.length ?? 0,
@@ -109,6 +134,27 @@ async function main() {
     };
     console.log(
       `${id}: ${source.length} o, ${manifest[id].triangles} triangles`
+    );
+  }
+  for (const [id, source] of Object.entries(EXTERNAL)) {
+    const res = await fetch(source.url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} : ${source.url}`);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    if (known?.files[id] && known.files[id].sha256 !== sha256(bytes))
+      throw new Error(`${id} : l'empreinte du fichier scellé a changé`);
+    fs.writeFileSync(path.join(OUT_DIR, `${id}.glb`), bytes);
+    manifest[id] = {
+      sourceUrl: source.url,
+      repository: EXTERNAL_REPOSITORY,
+      sourcePage: source.page,
+      credit: source.credit,
+      retrieved: known?.files[id]?.retrieved ?? RETRIEVED,
+      bytes: bytes.length,
+      sha256: sha256(bytes),
+      ...describe(bytes),
+    };
+    console.log(
+      `${id}: ${bytes.length} o, ${manifest[id].triangles} triangles`
     );
   }
   fs.mkdirSync(path.dirname(MANIFEST), { recursive: true });

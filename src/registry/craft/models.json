@@ -219,6 +219,79 @@
         "pt-BR": "OSIRIS-REx"
       },
       "parts": []
+    },
+    {
+      "id": "new-horizons",
+      "targets": [
+        "new-horizons"
+      ],
+      "name": {
+        "en": "New Horizons",
+        "fr": "New Horizons",
+        "es": "New Horizons",
+        "pt-BR": "New Horizons"
+      },
+      "parts": []
+    },
+    {
+      "id": "exomars-tgo",
+      "targets": [
+        "exomars-tgo"
+      ],
+      "name": {
+        "en": "ExoMars Trace Gas Orbiter",
+        "fr": "ExoMars Trace Gas Orbiter",
+        "es": "ExoMars Trace Gas Orbiter",
+        "pt-BR": "ExoMars Trace Gas Orbiter"
+      },
+      "parts": [
+        {
+          "nodes": [
+            "left_array_1",
+            "right_array_1"
+          ],
+          "label": {
+            "en": "Solar arrays",
+            "fr": "Panneaux solaires",
+            "es": "Paneles solares",
+            "pt-BR": "Painéis solares"
+          }
+        },
+        {
+          "nodes": [
+            "HGA",
+            "HGA_pivot"
+          ],
+          "label": {
+            "en": "High-gain antenna",
+            "fr": "Antenne à grand gain",
+            "es": "Antena de alta ganancia",
+            "pt-BR": "Antena de alto ganho"
+          }
+        },
+        {
+          "nodes": [
+            "instruments"
+          ],
+          "label": {
+            "en": "Instruments (grouped in the file)",
+            "fr": "Instruments (regroupés dans le fichier)",
+            "es": "Instrumentos (agrupados en el archivo)",
+            "pt-BR": "Instrumentos (agrupados no arquivo)"
+          }
+        },
+        {
+          "nodes": [
+            "schiaparelli mounting"
+          ],
+          "label": {
+            "en": "Schiaparelli lander mounting",
+            "fr": "Support de l’atterrisseur Schiaparelli",
+            "es": "Soporte del módulo de aterrizaje Schiaparelli",
+            "pt-BR": "Suporte do módulo de pouso Schiaparelli"
+          }
+        }
+      ]
     }
   ]
 }

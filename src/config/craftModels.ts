@@ -29,7 +29,14 @@ export interface CraftModel {
   url: string;
   sourceUrl: string;
   repository: string;
+  /** Le commit épinglé (dépôt GitHub de la NASA), ou `''` pour un fichier de `science.nasa.gov` scellé par son empreinte. */
   commit: string;
+  /** La page de la NASA qui publie le fichier (`science.nasa.gov`), absente pour le dépôt GitHub. */
+  sourcePage?: string;
+  /** Le crédit de la page source, tel que la NASA le donne. */
+  credit?: string;
+  /** Date de lecture du fichier (`science.nasa.gov`), ISO 8601. */
+  retrieved?: string;
   sha256: string;
   bytes: number;
   triangles: number;
@@ -37,6 +44,10 @@ export interface CraftModel {
 
 interface FileEntry {
   sourceUrl: string;
+  repository?: string;
+  sourcePage?: string;
+  credit?: string;
+  retrieved?: string;
   bytes: number;
   sha256: string;
   triangles: number;
@@ -74,8 +85,12 @@ export function buildCraftModels(
       parts: model.parts as CraftPart[],
       url: heavyAssetUrl(`${CRAFT_MODEL_DIR}/${model.id}.glb`),
       sourceUrl: file.sourceUrl,
-      repository: files.repository,
-      commit: files.commit,
+      repository: file.repository ?? files.repository,
+      // Un fichier qui a sa propre source (page de science.nasa.gov) n'a pas de commit : son empreinte le scelle.
+      commit: file.repository ? '' : files.commit,
+      ...(file.sourcePage ? { sourcePage: file.sourcePage } : {}),
+      ...(file.credit ? { credit: file.credit } : {}),
+      ...(file.retrieved ? { retrieved: file.retrieved } : {}),
       sha256: file.sha256,
       bytes: file.bytes,
       triangles: file.triangles,
