@@ -80,7 +80,7 @@ import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
 import { setupReadingLightToggle } from './ui/readingLightToggle';
 import { setupSettingsTabs } from './ui/settingsTabs';
-import { setupSurfacePanel } from './ui/surfacePanel';
+import { setupSurfacePanelOnDemand } from './ui/surfacePanelOnDemand';
 import { setupUnitsToggle } from './ui/unitsToggle';
 import { setupOfflineDataOnDemand } from './ui/offlineDataLauncher';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
@@ -567,6 +567,8 @@ function wireChrome(): {
             orbitalMechanics.heliocentricAU('earth', date),
           openCraft,
           coordinator: overlayCoordinator,
+          scene: sceneSystem.scene,
+          camera: cameraSystem,
         })
       : null;
     setupKeepAppearanceToggle();
@@ -590,8 +592,9 @@ function wireChrome(): {
 
     // Imagerie de surface streamée (lot 9, phase 9C) : une bascule de réglage, un bandeau de
     // provenance, et un `import()` dynamique du moteur à l'approche. Rien n'est demandé au
-    // démarrage, ni tant qu'aucun corps n'est approché de près.
-    const surfacePanel = setupSurfacePanel(api);
+    // démarrage, ni tant qu'aucun corps n'est approché de près : le panneau lui-même n'est monté
+    // qu'à l'approche d'un corps, à l'ouverture des réglages ou au choix d'un fond par une visite.
+    const surfacePanel = setupSurfacePanelOnDemand(api);
 
     // Ancres invisibles des sondes et des interstellaires : ce qui les rend CIBLABLES par la
     // commande de navigation partagée, sans leur donner le moindre pixel (cf.

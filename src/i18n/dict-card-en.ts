@@ -436,6 +436,19 @@ export const cardEn = {
   'sat.opened': '{name}: satellite card opened.',
   'sat.search.label': 'Find a satellite',
   'sat.search.placeholder': 'Type a name, e.g. ISS',
+  'sat.follow': 'Follow this object',
+  'sat.unfollow': 'Stop following',
+  'sat.following':
+    '{name}: the camera follows the object. Turn, zoom, or stop following at any time.',
+  'sat.followChip': 'Following {name}',
+  'sat.followEnded': '{name}: following stopped.',
+  'sat.followEndedOutside':
+    '{name}: following stopped, the elements are out of validity at this date.',
+  'sat.followEndedNoSolution':
+    '{name}: following stopped, SGP4 has no position for this date.',
+  'sat.path':
+    'Orbit path: one period ahead of the scene date, computed by SGP4 from the elements. It is not measured, and no past path is drawn. The arrows show the direction of travel.',
+  'sat.pathTruncated': 'The path stops where the elements stop being valid.',
 };
 
 export type CardMessageKey = keyof typeof cardEn;

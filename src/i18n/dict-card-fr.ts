@@ -418,4 +418,18 @@ export const cardFr: Record<CardMessageKey, string> = {
   'sat.opened': '{name} : fiche du satellite ouverte.',
   'sat.search.label': 'Trouver un satellite',
   'sat.search.placeholder': 'Saisir un nom, par exemple ISS',
+  'sat.follow': 'Suivre cet objet',
+  'sat.unfollow': 'Arrêter le suivi',
+  'sat.following':
+    "{name} : la caméra suit l'objet. Tournez, zoomez ou arrêtez le suivi à tout moment.",
+  'sat.followChip': 'Suivi de {name}',
+  'sat.followEnded': '{name} : suivi arrêté.',
+  'sat.followEndedOutside':
+    '{name} : suivi arrêté, les éléments ne sont plus valables à cette date.',
+  'sat.followEndedNoSolution':
+    "{name} : suivi arrêté, SGP4 n'a pas de position pour cette date.",
+  'sat.path':
+    "Trace de l'orbite : une période en avant de la date de la scène, calculée par SGP4 à partir des éléments. Elle n'est pas mesurée, et aucune trace du passé n'est dessinée. Les flèches montrent le sens du déplacement.",
+  'sat.pathTruncated':
+    "La trace s'arrête là où les éléments cessent d'être valables.",
 };

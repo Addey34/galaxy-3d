@@ -39,6 +39,8 @@ export interface SatelliteInfo {
   } | null;
   /** Instant où le service de données a lu CelesTrak, ISO 8601 UTC. */
   fetchedAt: string;
+  /** La trace de l'orbite s'arrête avant la fin de la période : les éléments cessent de valoir. */
+  pathTruncated?: boolean;
 }
 
 export interface SatelliteCard {
@@ -46,6 +48,8 @@ export interface SatelliteCard {
   close(): void;
   /** À appeler à chaque image : met à jour les valeurs vivantes, deux fois par seconde au plus. */
   tick(): void;
+  /** Relit tout de suite l'état vivant (le suivi vient de commencer ou de finir ailleurs que sur la fiche). */
+  refresh(): void;
   readonly selected: number | null;
 }
 
@@ -57,6 +61,12 @@ interface Options {
   /** La sélection a changé (pour peindre l'anneau). */
   onSelect: (id: number | null) => void;
   openCraft?: CraftOpener;
+  /** Le suivi caméra (GAL-SATELLITE-TRACKING-001) : qui est suivi, et comment commencer ou finir. */
+  follow: {
+    active(): number | null;
+    start(id: number): void;
+    stop(): void;
+  };
 }
 
 function format(value: number, digits: number): string {
@@ -89,7 +99,7 @@ function degrees(value: number, positive: string, negative: string): string {
 export async function setupSatelliteCard(
   options: Options
 ): Promise<SatelliteCard> {
-  const { coordinator, canvas, info, onSelect, openCraft } = options;
+  const { coordinator, canvas, info, onSelect, openCraft, follow } = options;
   // Les phrases de la fiche sont hors démarrage : `t()` rendrait les clés brutes sans elles.
   await loadDeferredMessages();
 
@@ -134,6 +144,12 @@ export async function setupSatelliteCard(
   live.className = 'exo-facts sat-live';
   const facts = document.createElement('dl');
   facts.className = 'exo-facts';
+  const followButton = document.createElement('button');
+  followButton.type = 'button';
+  followButton.className = 'settings-button';
+  followButton.id = 'satellite-card-follow';
+  const pathNote = document.createElement('p');
+  pathNote.className = 'exo-source sat-path-note';
   const inspect = document.createElement('button');
   inspect.type = 'button';
   inspect.className = 'settings-button';
@@ -142,7 +158,16 @@ export async function setupSatelliteCard(
   model.className = 'exo-source';
   const source = document.createElement('p');
   source.className = 'exo-source';
-  body.append(status, live, facts, inspect, model, source);
+  body.append(
+    status,
+    live,
+    facts,
+    followButton,
+    pathNote,
+    inspect,
+    model,
+    source
+  );
   card.append(header, body);
   document.body.append(card);
 
@@ -219,6 +244,16 @@ export async function setupSatelliteCard(
         : [])
     );
     live.hidden = !n;
+    // Le suivi : possible tant qu'une position SGP4 existe ; un suivi déjà en cours reste arrêtable à tout moment.
+    const following = follow.active() === current;
+    followButton.textContent = following ? t('sat.unfollow') : t('sat.follow');
+    followButton.setAttribute('aria-pressed', String(following));
+    followButton.disabled = !following && !n;
+    // La trace est dessinée pour l'objet choisi tant que ses éléments valent : la fiche dit ce qu'elle est.
+    pathNote.textContent = n
+      ? `${t('sat.path')}${data.pathTruncated ? ` ${t('sat.pathTruncated')}` : ''}`
+      : '';
+    pathNote.hidden = !n;
   }
 
   function render(): void {
@@ -279,6 +314,13 @@ export async function setupSatelliteCard(
       close();
     }
   });
+  followButton.addEventListener('click', () => {
+    if (current === null) return;
+    if (follow.active() === current) follow.stop();
+    else follow.start(current);
+    const data = info(current);
+    if (data) renderLive(data);
+  });
   inspect.addEventListener('click', () => {
     if (current === ISS_NORAD_ID) openCraft?.('iss-b', inspect);
   });
@@ -302,6 +344,11 @@ export async function setupSatelliteCard(
       if (!data) return close();
       if (renderedKey !== `${current}:${getLocale()}`) renderStatic(data);
       renderLive(data);
+    },
+    refresh() {
+      if (card.hidden || current === null) return;
+      const data = info(current);
+      if (data) renderLive(data);
     },
     get selected(): number | null {
       return current;

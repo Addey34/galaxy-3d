@@ -36,6 +36,51 @@ body.is-capturing #satellite-overlay {
   background: var(--control-bg-hover);
 }
 
+/* Le suivi caméra (GAL-SATELLITE-TRACKING-001) : un bandeau, tant qu'il dure, avec l'arrêt toujours à portée. */
+.satellite-follow-chip {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--sp-4) + env(safe-area-inset-bottom, 0px) + 72px);
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: calc(100vw - 2 * var(--sp-4));
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface-bg, rgba(12, 16, 28, 0.88));
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+.satellite-follow-chip[hidden] {
+  display: none;
+}
+body.is-capturing .satellite-follow-chip {
+  display: none;
+}
+.satellite-follow-chip-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.satellite-follow-stop {
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.satellite-follow-stop:hover,
+.satellite-follow-stop:focus-visible {
+  background: var(--control-bg-hover);
+}
+
 /* La fiche d'un satellite à 390 px : le libellé AU-DESSUS de la valeur, sinon « 1964-053B » ou « 0,00729 » se coupent au milieu. */
 @media (max-width: 640px) {
   #satellite-card .exo-facts {

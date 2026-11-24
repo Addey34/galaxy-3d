@@ -289,6 +289,17 @@ test.describe('mobile scripted tour', () => {
     await openPicker(page);
     await page.locator('.stour-picker-item').nth(0).click();
     await expect(page.locator('.stour-card')).toBeVisible();
+    // Le panneau d'imagerie n'est monté qu'à l'ouverture des réglages ou à l'approche d'un corps
+    // (`ui/surfacePanelOnDemand`) : on le monte par les réglages, comme le ferait le visiteur.
+    await page.evaluate(() =>
+      document.getElementById('settings-trigger')?.click()
+    );
+    await expect(page.locator('#surface-imagery')).toBeAttached({
+      timeout: 30_000,
+    });
+    await page.evaluate(() =>
+      document.getElementById('settings-trigger')?.click()
+    );
     await page.evaluate(() => {
       const badge = document.querySelector<HTMLElement>('#surface-imagery')!;
       badge.hidden = false;
