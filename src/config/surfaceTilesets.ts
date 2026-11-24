@@ -255,6 +255,29 @@ export function tilesetForDay(
 }
 
 /**
+ * La couche datée de la Terre qui correspond à un candidat de la couche de nuages (GAL-EARTH-CLOUD-REGIONAL-001),
+ * FIGÉE sur le jour que cette couche a posé. `sourceId` est son identifiant `couche:jour` (par exemple
+ * `VIIRS_NOAA21_CorrectedReflectance_TrueColor:2026-11-20`). Rend `undefined` pour une couche qui n'a pas de fiche
+ * de tuiles à 250 m (MODIS) : la couche régionale reste alors éteinte, plutôt que de poser une image voisine, d'un
+ * autre satellite ou d'un autre jour.
+ */
+export function cloudTilesetForSource(
+  body: string,
+  sourceId: string,
+  chain: ReadonlyMap<string, readonly SurfaceTileset[]> = DATED_SURFACE_CHAIN
+): SurfaceTileset | undefined {
+  const at = sourceId.lastIndexOf(':');
+  if (at <= 0) return undefined;
+  const layer = sourceId.slice(0, at);
+  const day = sourceId.slice(at + 1);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return undefined;
+  const dated = (chain.get(body) ?? []).find((entry) =>
+    entry.service.template.includes(`/${layer}/`)
+  );
+  return dated ? tilesetForDay(dated, day) : undefined;
+}
+
+/**
  * L'ÉDITION COMPARÉE du rideau avant/après (lot 50, pas 2) : celle de l'année demandée, quand le
  * fond choisi est une série d'éditions qui la publie, et qu'elle n'est pas déjà celle qu'on
  * montre. Sinon `null` : pas de rideau, plutôt qu'un rideau entre deux images identiques.

@@ -35,6 +35,7 @@ const STEPS = Number(flag('--steps', '24'));
 const WHEEL = Number(flag('--wheel', '-1200'));
 const SETTLE = Number(flag('--settle', '2500'));
 const BASE = flag('--base', null);
+const QUERY = flag('--query', '');
 const DATE = flag('--date', '2026-11-20T16:30:00Z');
 const OUT = resolve(flag('--out', 'reports/cloud-descent/run'));
 const SOFTWARE = args.includes('--software');
@@ -83,7 +84,7 @@ page.on('response', (r) => {
 });
 
 await page.goto(
-  `${ORIGIN}/?debug-surface&mode=${MODE}&body=earth&date=${DATE}`,
+  `${ORIGIN}/?debug-surface${QUERY}&mode=${MODE}&body=earth&date=${DATE}`,
   {
     timeout: 180_000,
   }
@@ -160,9 +161,12 @@ for (let i = 0; i <= STEPS; i += 1) {
       .waitForFunction(
         () =>
           document.querySelector('canvas')?.dataset['sceneMoving'] !== '1' &&
-          document.querySelector('canvas')?.dataset['texturesLoading'] === '0',
+          document.querySelector('canvas')?.dataset['texturesLoading'] ===
+            '0' &&
+          (document.querySelector('canvas')?.dataset['surfaceBusy'] ?? '0') ===
+            '0',
         null,
-        { timeout: 20_000 }
+        { timeout: 30_000 }
       )
       .catch(() => {});
   }
@@ -175,11 +179,15 @@ for (let i = 0; i <= STEPS; i += 1) {
       .join(' ');
     return Number(/fps ([0-9.]+)/.exec(t)?.[1] ?? NaN);
   });
+  const shell = await page.evaluate(
+    () => document.querySelector('canvas')?.dataset['cloudShell'] ?? null
+  );
   frames.push({
     i,
     altKm: alt,
     file: name,
     fps,
+    shell,
     net: JSON.parse(JSON.stringify(net)),
   });
   console.log(name);

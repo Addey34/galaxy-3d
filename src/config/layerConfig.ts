@@ -54,7 +54,7 @@ const SHADOW_AWARE_UNIFORM_KEY = '__lightAttenuationUniform';
  * un second patch shader écraserait silencieusement le premier). Le hook existant
  * s'exécute d'abord, puis le nouveau.
  */
-function chainOnBeforeCompile(
+export function chainOnBeforeCompile(
   material: THREE.Material,
   fn: NonNullable<THREE.Material['onBeforeCompile']>
 ): void {
@@ -535,7 +535,7 @@ const CLOUD_FRACTION_BILINEAR_GLSL = `
           return vec2( n / max( w, 0.001 ), w );
         }`;
 
-const REAL_CLOUDS_PARS_GLSL = `
+export const REAL_CLOUDS_PARS_GLSL = `
         // Sous USE_MAP : sans image posée, map n'est pas déclaré et ces fonctions ne
         // compileraient pas (mesuré : l'erreur de shader du matériau nuages au démarrage).
         #ifdef USE_MAP
@@ -1579,7 +1579,7 @@ export interface MoonlightUniforms {
   color: { value: THREE.Color };
 }
 
-function createShadowAwareStandardMaterial(
+export function createShadowAwareStandardMaterial(
   params: THREE.MeshStandardMaterialParameters,
   options: {
     invertRoughnessMap?: boolean;

@@ -642,6 +642,21 @@ export default class CelestialObject {
     );
   }
 
+  /** La carte d'eau (canal r de la carte `spec` de la surface), ou `null` : les nuages en tirent leur seuil. */
+  getOceanMask(): THREE.Texture | null {
+    const surface = this.layers.get('surface');
+    return surface && !Array.isArray(surface.material)
+      ? ((surface.material as THREE.MeshStandardMaterial).roughnessMap ?? null)
+      : null;
+  }
+
+  /** Prend en charge un matériau de recouvrement posé par un autre moteur : éclairage et éclipse. */
+  adoptOverlayMaterial(material: THREE.Material): void {
+    this._overlayMaterials.add(material);
+    setMaterialLightAttenuation(material, this._lightAttenuation);
+    this._syncOverlayEclipse(material);
+  }
+
   createSurfaceOverlayMaterial(oceanMatch?: OceanMatch): THREE.Material {
     const material = createSurfaceLayerMaterial(this.config, this.name);
     // L'océan de la mosaïque ramené à celui de la base, par le masque d'eau de la base (la carte
