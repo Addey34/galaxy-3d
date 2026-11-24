@@ -103,6 +103,7 @@
     "e2e/stellarPermalink.spec.ts": 198,
     "e2e/stellarTransition.spec.ts": 217,
     "e2e/stellarView.spec.ts": 321,
+    "e2e/stellarVisit.spec.ts": 190,
     "e2e/subsolar.spec.ts": 107,
     "e2e/surfaceApproach.spec.ts": 40,
     "e2e/surfaceImagery.spec.ts": 684,
@@ -126,5 +127,8 @@
     "e2e/weatherInspector.spec.ts": 476,
     "e2e/webxr.spec.ts": 38,
     "e2e/wind.spec.ts": 72
-  }
+  },
+  "estimated": [
+    "e2e/stellarVisit.spec.ts"
+  ]
 }
