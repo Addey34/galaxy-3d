@@ -567,6 +567,8 @@ function wireChrome(): {
             orbitalMechanics.heliocentricAU('earth', date),
           openCraft,
           coordinator: overlayCoordinator,
+          scene: sceneSystem.scene,
+          camera: cameraSystem,
         })
       : null;
     setupKeepAppearanceToggle();

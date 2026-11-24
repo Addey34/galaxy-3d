@@ -417,4 +417,18 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'sat.opened': '{name}: ficha do satélite aberta.',
   'sat.search.label': 'Encontrar um satélite',
   'sat.search.placeholder': 'Digite um nome, por exemplo ISS',
+  'sat.follow': 'Seguir este objeto',
+  'sat.unfollow': 'Parar de seguir',
+  'sat.following':
+    '{name}: a câmera segue o objeto. Gire, aproxime ou pare de seguir a qualquer momento.',
+  'sat.followChip': 'Seguindo {name}',
+  'sat.followEnded': '{name}: acompanhamento encerrado.',
+  'sat.followEndedOutside':
+    '{name}: acompanhamento encerrado, os elementos não são válidos nesta data.',
+  'sat.followEndedNoSolution':
+    '{name}: acompanhamento encerrado, o SGP4 não tem posição para esta data.',
+  'sat.path':
+    'Traçado da órbita: um período à frente da data da cena, calculado pelo SGP4 a partir dos elementos. Não é uma medição, e nenhum traçado do passado é desenhado. As setas mostram o sentido do movimento.',
+  'sat.pathTruncated':
+    'O traçado termina onde os elementos deixam de ser válidos.',
 };
