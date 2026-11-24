@@ -44,6 +44,7 @@ import {
   oversamplingFactor,
   pyramidWidthPx,
   tileBounds,
+  type TileBounds,
   tileIndexAt,
   tileMatrix,
   type TileIndex,
@@ -350,6 +351,16 @@ const defaultHeightFetcher: HeightFetcher = async (url, signal) => {
 /** Délai entre deux relèvements du plancher d'approche à la sortie d'une couverture régionale. */
 const FLOOR_DECAY_MS = 600;
 
+/**
+ * Durée maximale pendant laquelle les carreaux d'une AUTRE GRILLE restent sous la nouvelle génération
+ * (GAL-EARTH-CLOUD-IMMERSION-001). Pour un changement de jour sur la même grille, l'ancienne image
+ * ressemble à la nouvelle et peut attendre aussi longtemps qu'il faut. Entre deux sources (l'image du
+ * jour VIIRS, puis la mosaïque annuelle Sentinel-2), elle ne lui ressemble pas : quelques carreaux
+ * lointains qui ne se posent jamais (un échec du service) la laissaient en grandes plaques blanches de
+ * nuages sur le sol net, mesuré à 19 et 11,7 km au-dessus du Brésil.
+ */
+const STALE_CROSS_GRID_MS = 2500;
+
 /** Carreaux en échec gardés en mémoire (le plus ancien est oublié au-delà) : borne la Map. */
 const MAX_TRACKED_FAILURES = 2048;
 
@@ -392,6 +403,8 @@ export class PlanetarySurfaceEngine {
   private _generation = 0;
   /** Jeu des carreaux de la génération précédente encore peints, ou `null`. */
   private _staleTileset: SurfaceTileset | null = null;
+  /** Instant (`performance.now`) après lequel la génération précédente est jetée, ou `Infinity`. */
+  private _staleDeadlineMs = Number.POSITIVE_INFINITY;
   /**
    * Édition COMPARÉE (rideau avant/après, lot 50) : chaque carreau porte aussi son image, sur la
    * même grille. Elle fait partie de la génération : la changer en ouvre une nouvelle.
@@ -568,14 +581,36 @@ export class PlanetarySurfaceEngine {
       this._heights?.set === heights?.set
     )
       return;
-    // Même corps, même relief, autre jeu : on CHANGE de jeu sans détacher. Un détachement
-    // remettrait la finesse déclarée à zéro, donc le plancher d'approche à celui de la texture
-    // livrée, et la caméra remonterait toute seule à chaque changement de jour.
-    if (
-      this._host === host &&
-      this._tileset !== null &&
-      this._heights?.set === heights?.set
-    ) {
+    // Même corps, autre jeu : on CHANGE de jeu sans détacher. Un détachement remettrait la
+    // finesse déclarée à zéro, donc le plancher d'approche à celui de la texture livrée, et la
+    // caméra remonterait toute seule à chaque changement de jour.
+    //
+    // Cela vaut AUSSI quand le relief change (GAL-EARTH-CLOUD-IMMERSION-001) : le relief est cuit
+    // sur la grille de l'imagerie, donc passer de l'image du jour (VIIRS, grille de 512 px) à la
+    // mosaïque annuelle (Sentinel-2, 256 px) change de relief. Cette condition-là détachait tout,
+    // et la caméra, repoussée au plancher de la texture livrée (1,073 rayon, mesuré 464 km,
+    // journal de bascule 2026-11-24 : r 1,0118 puis 1,0728 seize millisecondes plus tard),
+    // oscillait de part et d'autre de la bascule. C'est pour l'éviter que la bascule du fond de loin
+    // restait à 1,3 rayon, très au-dessus de ce plancher.
+    if (this._host === host && this._tileset !== null) {
+      if (this._heights?.set !== heights?.set) {
+        if (heights && !sameGrid(heights.manifest.matrix, tileset.matrix)) {
+          Logger.warn(
+            `[Surface] relief ${heights.set.id} ignoré : sa grille n'est pas celle de ${tileset.id}`
+          );
+          heights = null;
+        }
+        // Les carreaux de hauteur sont indexés par leur indice sur la grille DU RELIEF : ceux de
+        // l'ancien relief ne valent rien pour le nouveau. Les carreaux d'imagerie déjà peints gardent
+        // leur géométrie (ils la portent), et partent avec la génération précédente.
+        this._heightAbort?.abort();
+        this._heights = heights;
+        this._heightAbort = heights ? new AbortController() : null;
+        this._heightTiles.clear();
+        this._heightPending.clear();
+        this._heightFailed.clear();
+        this._measuredGroundKm = null;
+      }
       this._swapTileset(tileset, compare);
       return;
     }
@@ -634,6 +669,15 @@ export class PlanetarySurfaceEngine {
       this._staleTileset = this._tileset;
       this._staleCompare = this._compare;
     }
+    // Le délai dépend de la grille RÉELLEMENT conservée (`_staleTileset`), pas du jeu qui vient de
+    // s'achever : A (grille 1), B (grille 2) puis C (grille 2) garde A, incompatible avec C, et ne doit
+    // pas devenir infini ; A, B (grille 2) puis C (grille 1) garde A, compatible avec C. Un délai déjà
+    // lancé pour la même ancienne génération n'est jamais prolongé.
+    const kept = this._staleTileset;
+    if (!kept || sameGrid(kept.matrix, tileset.matrix))
+      this._staleDeadlineMs = Number.POSITIVE_INFINITY;
+    else if (!hasStale || !Number.isFinite(this._staleDeadlineMs))
+      this._staleDeadlineMs = performance.now() + STALE_CROSS_GRID_MS;
     this._generation += 1;
     this._tileset = tileset;
     this._compare = compare;
@@ -911,13 +955,42 @@ export class PlanetarySurfaceEngine {
     const complete = missing.length === 0;
     this._missing = missing.length;
     const current = this._prefix();
+    // Une tuile d'une génération PRÉCÉDENTE ne reste que là où une tuile voulue n'est pas encore
+    // franche (absente, ou en fondu : l'ancienne image sert de fond au fondu). Avant, une seule
+    // tuile manquante gardait TOUTE l'ancienne génération, et sur une bascule entre deux grilles
+    // (l'image du jour, puis la mosaïque annuelle) des plaques de l'ancienne image restaient
+    // posées sur la nouvelle, loin de toute tuile manquante (GAL-EARTH-CLOUD-IMMERSION-001). Les
+    // emprises se comparent en degrés : les deux générations n'ont pas la même grille.
+    let uncoveredBounds: TileBounds[] | null = null;
+    const staleMatrix = this._staleTileset?.matrix ?? this._tileset?.matrix;
+    const staleStillCovers = (key: string): boolean => {
+      if (performance.now() >= this._staleDeadlineMs) return false;
+      const staleIndex = indexOfKey(key);
+      if (staleIndex === null || !staleMatrix || !this._tileset) return true;
+      uncoveredBounds ??= tiles
+        .filter((index) => {
+          const painted = this._tiles.get(this._key(index));
+          return !painted || painted.fading;
+        })
+        .map((index) => tileBounds(index, this._tileset!.matrix));
+      const own = tileBounds(staleIndex, staleMatrix);
+      return uncoveredBounds.some(
+        (b) =>
+          b.west < own.east - 1e-9 &&
+          b.east > own.west + 1e-9 &&
+          b.south < own.north - 1e-9 &&
+          b.north > own.south + 1e-9
+      );
+    };
     for (const [key, tile] of this._tiles) {
       if (wanted.has(key)) continue;
       const stale = !key.startsWith(current);
       const index = stale ? null : indexOfKey(key);
       const needed =
         !complete &&
-        (stale || (index !== null && missing.some((m) => overlaps(m, index))));
+        (stale
+          ? staleStillCovers(key)
+          : index !== null && missing.some((m) => overlaps(m, index)));
       if (!needed) {
         this._held.delete(tile);
         this._tiles.delete(key);
@@ -943,6 +1016,7 @@ export class PlanetarySurfaceEngine {
     if (complete) {
       this._staleTileset = null;
       this._staleCompare = null;
+      this._staleDeadlineMs = Number.POSITIVE_INFINITY;
     }
     this._queue.length = 0;
     for (const index of tiles) {
@@ -1375,6 +1449,7 @@ export class PlanetarySurfaceEngine {
     this._relief.clear();
     this._staleTileset = null;
     this._staleCompare = null;
+    this._staleDeadlineMs = Number.POSITIVE_INFINITY;
     // Plus un seul carreau de relief : la sphère livrée reprend sa taille, sinon le corps
     // resterait rétréci de son altitude minimale une fois les carreaux partis.
     if (this._shellScaled) {
@@ -1605,21 +1680,27 @@ export class PlanetarySurfaceEngine {
   private async _heightTile(index: TileIndex): Promise<HeightTile | null> {
     const heights = this._heights;
     if (!heights) return null;
+    // Le JETON de cet attachement de relief : le contrôleur d'annulation, remplacé à chaque changement
+    // de relief et au détachement. Une réponse qui revient après un changement n'appartient plus à
+    // ce relief : elle ne nourrit pas le cache du nouveau et ne marque pas une clé en échec.
+    const token = this._heightAbort;
     const key = tileKey(index);
     const cached = this._heightTiles.get(key);
     if (cached) return cached;
     if (this._heightFailed.has(key)) return null;
     let pending = this._heightPending.get(key);
     if (!pending) {
-      const signal = this._heightAbort!.signal;
+      const signal = token!.signal;
       const url = heightTilePath(heights.manifest, index);
       pending = this._fetchHeights(url, signal).then((bytes) =>
         decodeHeightTile(bytes, index)
       );
       this._heightPending.set(key, pending);
     }
+    const mine = pending;
     try {
-      const tile = await pending;
+      const tile = await mine;
+      if (this._heightAbort !== token) return null;
       // Cache BORNÉ : une descente n'emploie qu'une poignée de tuiles, mais une session qui
       // approche le même corps vingt fois de suite finirait par garder le socle entier en
       // mémoire (512 tuiles de 132 Ko sur la Lune). La plus anciennement posée s'en va.
@@ -1630,7 +1711,10 @@ export class PlanetarySurfaceEngine {
       this._heightTiles.set(key, tile);
       return tile;
     } catch (error) {
-      if ((error as Error)?.name !== 'AbortError') {
+      if (
+        (error as Error)?.name !== 'AbortError' &&
+        this._heightAbort === token
+      ) {
         this._heightFailed.add(key);
         Logger.warn(
           `[Surface] hauteurs non chargées : ${(error as Error)?.message}`
@@ -1638,7 +1722,9 @@ export class PlanetarySurfaceEngine {
       }
       return null;
     } finally {
-      this._heightPending.delete(key);
+      // Seulement SA propre entrée : celle d'un relief plus récent, de même clé, reste.
+      if (this._heightPending.get(key) === mine)
+        this._heightPending.delete(key);
     }
   }
 

@@ -29,6 +29,25 @@ export const FAR_BASE_LEAVE_RADII = 1.3;
  * un invariant du dépôt, un scénario e2e du démarrage mobile l'a fait respecter.
  */
 export const FAR_BASE_CEILING_RADII = 1.8;
+/**
+ * LES NUAGES RÉELS À L'ÉCRAN (GAL-EARTH-CLOUD-IMMERSION-001, 2026-11-24). Les nuages de la couche
+ * « Nuages (NASA) » sont une image MONDIALE de 2 048 px (~20 km par texel) : ils s'effacent
+ * (`core/dataMagnification.ts`) vers 2 500 km d'altitude. Le seul endroit où les nuages RÉELS du jour
+ * survivent plus bas est l'image du jour elle-même (VIIRS, 250 m, nuages compris). Mesuré sur une
+ * descente réelle (NOAA-21, 2026-11-20, îles Kerguelen, 92 % de nuages dans la source) : un cyclone
+ * de nuages à 3 189 km, un océan sans un nuage à 1 264 km, parce que le fond quittait le jour à 1,3
+ * rayon pour la mosaïque Sentinel-2, sans nuage par construction.
+ *
+ * Tant que la couche est visible et a posé une image, le fond du jour reste donc jusqu'à ce que 250 m
+ * devienne plus gros que le pixel d'écran (~1,5 pixel par texel à 127 km d'altitude), où Sentinel-2
+ * reprend. Le plancher de la caméra sur le jeu du jour (mesuré à 30 km) reste SOUS cette sortie, comme
+ * l'exige la règle ci-dessus. Sentinel-2 ne montre aucun nuage : sous ce seuil le sol est celui de
+ * l'année, et le bandeau de source le dit.
+ */
+export const FAR_BASE_CLOUDS_ENTER_RADII = 1.04;
+/** Sortie vers le fond fin quand les nuages réels sont à l'écran (~127 km d'altitude). */
+export const FAR_BASE_CLOUDS_LEAVE_RADII = 1.02;
+
 /** Hystérésis du plafond : une fois dans la bande, on n'en sort qu'un peu plus haut. */
 export const FAR_BASE_CEILING_EXIT_RADII = 1.9;
 
@@ -38,10 +57,17 @@ export const FAR_BASE_CEILING_EXIT_RADII = 1.9;
  */
 export function showsFarBase(
   distanceInRadii: number,
-  wasFar: boolean
+  wasFar: boolean,
+  keepsClouds = false
 ): boolean {
   if (!Number.isFinite(distanceInRadii)) return wasFar;
-  const floor = wasFar ? FAR_BASE_LEAVE_RADII : FAR_BASE_ENTER_RADII;
+  const leave = keepsClouds
+    ? FAR_BASE_CLOUDS_LEAVE_RADII
+    : FAR_BASE_LEAVE_RADII;
+  const enter = keepsClouds
+    ? FAR_BASE_CLOUDS_ENTER_RADII
+    : FAR_BASE_ENTER_RADII;
+  const floor = wasFar ? leave : enter;
   const ceiling = wasFar ? FAR_BASE_CEILING_EXIT_RADII : FAR_BASE_CEILING_RADII;
   return distanceInRadii > floor && distanceInRadii < ceiling;
 }

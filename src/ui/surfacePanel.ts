@@ -13,6 +13,7 @@
  * Une mosaïque ne décrit pas la date de la scène mais la surface : elle est servie telle quelle
  * quelle que soit la date, et c'est cela qu'il faut lire, pas un écart à combler.
  */
+import { cloudsOnScreen } from '@/core/cloudsOnScreen';
 import { showsFarBase } from '@/core/farBase';
 import type { PublicAPI } from '@/SolarSystemApp';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
@@ -587,7 +588,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     // du visiteur reste celui qu'affiche le réglage.
     farBase =
       choice === 'sentinel-2' &&
-      showsFarBase(distance / renderedRadius, farBase);
+      showsFarBase(distance / renderedRadius, farBase, cloudsOnScreen.value);
     const effective: SurfaceChoiceId = farBase ? 'daily' : choice;
     const tileset = chooseTileset?.(name, effective);
     if (!tileset) {
