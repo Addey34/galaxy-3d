@@ -235,7 +235,12 @@ function check(runs, observations, recorded) {
 }
 
 function refresh(runs, observations, recorded) {
-  const factors = cpuFactors(observations);
+  // Un seul run ne suffit pas à ajuster les facteurs (aucun fichier n'y est vu sur deux processeurs, tous
+  // vaudraient 1) : ceux déjà écrits servent, comme pour `--check`. Deux runs ou plus : ajustement.
+  const factors =
+    runs.length > 1 || !recorded.cpuFactors
+      ? cpuFactors(observations)
+      : recorded.cpuFactors;
   const seconds = { ...normalisedSeconds(observations, factors) };
   // Un spec ajouté APRÈS ces runs garde son entrée (mesurée ou estimée) tant qu'il existe.
   const estimated = [];
