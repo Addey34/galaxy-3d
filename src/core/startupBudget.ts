@@ -413,6 +413,16 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'tourClearance',
+    reason:
+      "l'espace que la visite guidée prend en bas de l'écran (2026-11-24, GAL-SATELLITE-TRACKING-001) : un petit module partagé par le lecteur de visites et le panneau d'imagerie de surface, tous deux chargés à la demande, donc sorti du démarrage avec eux.",
+  },
+  {
+    chunk: 'surfacePanel',
+    reason:
+      "le panneau d'imagerie de surface (2026-11-24, GAL-SATELLITE-TRACKING-001) : réglages, bandeau de provenance et pilotage du moteur de tuiles, importé par `ui/surfacePanelOnDemand` quand la caméra passe sous `SURFACE_PANEL_LOAD_RADII` rayons d'un corps, à l'ouverture des réglages ou au choix d'un fond par une visite. Il ne faisait rien au-dessus de ce seuil, et ses données (jeux de tuiles, relief) étaient déjà des morceaux à part.",
+  },
+  {
     chunk: 'earthEventsModule',
     reason:
       "les événements terrestres (2026-11-17, GAL-PERF-001B-02) : couches USGS et NASA EONET, canvas d'instrument, panneau et réglage des étiquettes, importés par `ui/earthEventsLauncher` au premier survol, focus ou clic sur `#earth-events-trigger`. Le survol ne charge que le fichier : rien n'est monté, aucune requête scientifique ne part avant qu'une couche soit cochée.",
