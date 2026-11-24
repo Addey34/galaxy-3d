@@ -669,10 +669,15 @@ export class PlanetarySurfaceEngine {
       this._staleTileset = this._tileset;
       this._staleCompare = this._compare;
     }
-    this._staleDeadlineMs =
-      this._tileset && !sameGrid(this._tileset.matrix, tileset.matrix)
-        ? performance.now() + STALE_CROSS_GRID_MS
-        : Number.POSITIVE_INFINITY;
+    // Le délai dépend de la grille RÉELLEMENT conservée (`_staleTileset`), pas du jeu qui vient de
+    // s'achever : A (grille 1), B (grille 2) puis C (grille 2) garde A, incompatible avec C, et ne doit
+    // pas devenir infini ; A, B (grille 2) puis C (grille 1) garde A, compatible avec C. Un délai déjà
+    // lancé pour la même ancienne génération n'est jamais prolongé.
+    const kept = this._staleTileset;
+    if (!kept || sameGrid(kept.matrix, tileset.matrix))
+      this._staleDeadlineMs = Number.POSITIVE_INFINITY;
+    else if (!hasStale || !Number.isFinite(this._staleDeadlineMs))
+      this._staleDeadlineMs = performance.now() + STALE_CROSS_GRID_MS;
     this._generation += 1;
     this._tileset = tileset;
     this._compare = compare;
@@ -1011,6 +1016,7 @@ export class PlanetarySurfaceEngine {
     if (complete) {
       this._staleTileset = null;
       this._staleCompare = null;
+      this._staleDeadlineMs = Number.POSITIVE_INFINITY;
     }
     this._queue.length = 0;
     for (const index of tiles) {
@@ -1443,6 +1449,7 @@ export class PlanetarySurfaceEngine {
     this._relief.clear();
     this._staleTileset = null;
     this._staleCompare = null;
+    this._staleDeadlineMs = Number.POSITIVE_INFINITY;
     // Plus un seul carreau de relief : la sphère livrée reprend sa taille, sinon le corps
     // resterait rétréci de son altitude minimale une fois les carreaux partis.
     if (this._shellScaled) {
@@ -1673,21 +1680,27 @@ export class PlanetarySurfaceEngine {
   private async _heightTile(index: TileIndex): Promise<HeightTile | null> {
     const heights = this._heights;
     if (!heights) return null;
+    // Le JETON de cet attachement de relief : le contrôleur d'annulation, remplacé à chaque changement
+    // de relief et au détachement. Une réponse qui revient après un changement n'appartient plus à
+    // ce relief : elle ne nourrit pas le cache du nouveau et ne marque pas une clé en échec.
+    const token = this._heightAbort;
     const key = tileKey(index);
     const cached = this._heightTiles.get(key);
     if (cached) return cached;
     if (this._heightFailed.has(key)) return null;
     let pending = this._heightPending.get(key);
     if (!pending) {
-      const signal = this._heightAbort!.signal;
+      const signal = token!.signal;
       const url = heightTilePath(heights.manifest, index);
       pending = this._fetchHeights(url, signal).then((bytes) =>
         decodeHeightTile(bytes, index)
       );
       this._heightPending.set(key, pending);
     }
+    const mine = pending;
     try {
-      const tile = await pending;
+      const tile = await mine;
+      if (this._heightAbort !== token) return null;
       // Cache BORNÉ : une descente n'emploie qu'une poignée de tuiles, mais une session qui
       // approche le même corps vingt fois de suite finirait par garder le socle entier en
       // mémoire (512 tuiles de 132 Ko sur la Lune). La plus anciennement posée s'en va.
@@ -1698,7 +1711,10 @@ export class PlanetarySurfaceEngine {
       this._heightTiles.set(key, tile);
       return tile;
     } catch (error) {
-      if ((error as Error)?.name !== 'AbortError') {
+      if (
+        (error as Error)?.name !== 'AbortError' &&
+        this._heightAbort === token
+      ) {
         this._heightFailed.add(key);
         Logger.warn(
           `[Surface] hauteurs non chargées : ${(error as Error)?.message}`
@@ -1706,7 +1722,9 @@ export class PlanetarySurfaceEngine {
       }
       return null;
     } finally {
-      this._heightPending.delete(key);
+      // Seulement SA propre entrée : celle d'un relief plus récent, de même clé, reste.
+      if (this._heightPending.get(key) === mine)
+        this._heightPending.delete(key);
     }
   }
 

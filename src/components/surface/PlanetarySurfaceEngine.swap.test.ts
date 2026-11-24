@@ -253,4 +253,149 @@ describe('changer de jeu en changeant de relief', () => {
     expect(stale()).toBe(0);
     engine.dispose();
   });
+
+  describe('délai de l’ancienne génération, jeux successifs', () => {
+    const grilleB = {
+      columnsAtLevelZero: 10,
+      rowsAtLevelZero: 5,
+      tileSizePx: 512,
+      referenceLevel: 3,
+    };
+    const jeu = (id: string, autre: boolean): SurfaceTileset => {
+      const t = tileset(id);
+      if (autre) {
+        t.matrix = grilleB;
+        t.service = { ...t.service, matrix: grilleB };
+      }
+      return t;
+    };
+    const deadline = (engine: PlanetarySurfaceEngine): number =>
+      (engine as unknown as { _staleDeadlineMs: number })._staleDeadlineMs;
+
+    async function peint(): Promise<{
+      engine: PlanetarySurfaceEngine;
+      host: ReturnType<typeof makeHost>;
+    }> {
+      const engine = new PlanetarySurfaceEngine({
+        budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+        fetchTile: async () => bitmap(),
+      });
+      const host = makeHost();
+      const camera = cameraAt(300);
+      engine.attach(host, jeu('a', false), RADIUS_KM);
+      await vi.waitFor(() => {
+        engine.update(camera, 800);
+        expect(host.declared.at(-1) ?? 0).toBeGreaterThan(0);
+      });
+      return { engine, host };
+    }
+
+    it('A (grille 1), B (grille 2), C (grille 2) : A reste incompatible, le délai reste fini et n’est pas prolongé', async () => {
+      const { engine, host } = await peint();
+      engine.attach(host, jeu('b', true), RADIUS_KM);
+      const premier = deadline(engine);
+      expect(Number.isFinite(premier)).toBe(true);
+      // Un changement de plus, même grille que B : l'ancienne génération A est TOUJOURS celle de la grille 1.
+      engine.attach(host, jeu('c', true), RADIUS_KM);
+      expect(Number.isFinite(deadline(engine))).toBe(true);
+      expect(deadline(engine)).toBe(premier);
+      engine.dispose();
+    });
+
+    it('A (grille 1), B (grille 2), C (grille 1) : A est compatible avec C, aucun délai', async () => {
+      const { engine, host } = await peint();
+      engine.attach(host, jeu('b', true), RADIUS_KM);
+      expect(Number.isFinite(deadline(engine))).toBe(true);
+      engine.attach(host, jeu('c', false), RADIUS_KM);
+      expect(deadline(engine)).toBe(Number.POSITIVE_INFINITY);
+      engine.dispose();
+    });
+  });
+
+  describe('requêtes de relief asynchrones', () => {
+    const hauteurs = (metres: number): ArrayBuffer => {
+      const buffer = new ArrayBuffer(32 + 257 * 257 * 2);
+      const view = new DataView(buffer);
+      for (let i = 0; i < 4; i += 1) view.setUint8(i, 'GXHT'.charCodeAt(i));
+      view.setUint16(4, 1, true);
+      view.setUint16(6, 32, true);
+      view.setUint16(8, 4, true);
+      view.setUint16(14, 257, true);
+      view.setFloat64(16, 0.5, true);
+      view.setFloat64(24, 0, true);
+      new Int16Array(buffer, 32).fill(Math.round(metres / 0.5));
+      return buffer;
+    };
+
+    it('une ancienne réponse ne nourrit pas le cache du nouveau relief et ne supprime pas sa requête en vol', async () => {
+      const resolvers: Array<(bytes: ArrayBuffer) => void> = [];
+      const engine = new PlanetarySurfaceEngine({
+        budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+        fetchTile: async () => bitmap(),
+        fetchHeights: () =>
+          new Promise<ArrayBuffer>((resolve) => resolvers.push(resolve)),
+      });
+      const host = makeHost();
+      const E = engine as unknown as {
+        _heightTile(i: {
+          level: number;
+          row: number;
+          column: number;
+        }): Promise<unknown>;
+        _heightTiles: Map<string, unknown>;
+        _heightPending: Map<string, Promise<unknown>>;
+        _heightFailed: Set<string>;
+      };
+      const index = { level: 4, row: 0, column: 0 };
+
+      engine.attach(host, tileset('jour'), RADIUS_KM, relief('relief-a'));
+      const ancienne = E._heightTile(index);
+      expect(resolvers).toHaveLength(1);
+
+      // Un AUTRE relief sur le même corps, avant que l'ancienne réponse ne revienne.
+      engine.attach(host, tileset('jour'), RADIUS_KM, relief('relief-b'));
+      const nouvelle = E._heightTile(index);
+      expect(resolvers).toHaveLength(2);
+      const enVol = E._heightPending.get('4/0/0');
+      expect(enVol).toBeDefined();
+
+      // L'ancienne réponse revient : rien dans le cache, la requête du nouveau relief reste en vol.
+      resolvers[0]!(hauteurs(100));
+      expect(await ancienne).toBeNull();
+      expect(E._heightTiles.size).toBe(0);
+      expect(E._heightPending.get('4/0/0')).toBe(enVol);
+
+      resolvers[1]!(hauteurs(200));
+      expect(await nouvelle).not.toBeNull();
+      expect(E._heightTiles.size).toBe(1);
+      engine.dispose();
+    });
+
+    it('une ancienne ÉCHEC ne marque pas la clé du nouveau relief en échec', async () => {
+      const rejecters: Array<(e: Error) => void> = [];
+      const engine = new PlanetarySurfaceEngine({
+        budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+        fetchTile: async () => bitmap(),
+        fetchHeights: () =>
+          new Promise<ArrayBuffer>((_, reject) => rejecters.push(reject)),
+      });
+      const host = makeHost();
+      const E = engine as unknown as {
+        _heightTile(i: {
+          level: number;
+          row: number;
+          column: number;
+        }): Promise<unknown>;
+        _heightFailed: Set<string>;
+      };
+      const index = { level: 4, row: 0, column: 0 };
+      engine.attach(host, tileset('jour'), RADIUS_KM, relief('relief-a'));
+      const ancienne = E._heightTile(index);
+      engine.attach(host, tileset('jour'), RADIUS_KM, relief('relief-b'));
+      rejecters[0]!(new Error('réseau'));
+      expect(await ancienne).toBeNull();
+      expect(E._heightFailed.size).toBe(0);
+      engine.dispose();
+    });
+  });
 });
