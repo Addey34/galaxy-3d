@@ -8385,12 +8385,14 @@ SUPERSEDED 2026-11-24 : « les quinze corps irréguliers chargent leur maillage 
 | | avant (`main` 0b6a9d23) | après |
 |---|---|---|
 | JavaScript du démarrage | 1 282 298 o, marge 23 702 o | 1 239 089 o, marge 66 911 o |
-| pire cas cumulé hors visite (premier passage, adresse d'un corps modélisé, VR) | 1 303 767 o, marge 2 233 o | 1 293 931 o, marge 12 069 o |
+| pire cas `worst-case` (premier passage, `?tour=` inconnu, VR : le pire cas de ce document avant ce lot) | 1 303 767 o, marge 2 233 o | 1 260 558 o, marge 45 442 o |
+| `worst-case-body` (premier passage, adresse d'un corps modélisé, VR) | 1 292 411 o, marge 13 589 o (calculé : le chargeur était dans le démarrage, aucun profil ne le nommait) | 1 293 931 o, marge 12 069 o (+1 520 o de code) |
+| `worst-case-all` (TOUT cumulé, adresse artificielle `?tour=…&body=bennu` comprise) | 1 303 767 o, marge 2 233 o | 1 305 287 o, marge 713 o |
 | octets reçus, `/`, 5 s après le chargeur | 12,33 Mio, 220 requêtes, 27 maillages | 10,43 Mio, 192 requêtes, 0 maillage |
 | triangles, vue d'ensemble | 973 905 (mesuré le 2026-10-28) | 832 081 |
 | triangles, `saturn-explo`, `earth-explo` | 56 913, 349 533 | 51 121, 326 417 |
 
-Le temps jusqu'au masquage du chargeur ne change pas sur un réseau local (3,4 s médiane des deux côtés) : le gain est en octets, en requêtes et en triangles, pas en secondes. Le profil `body-link` (adresse d'un corps modélisé : `/bennu/`, `?body=`) paie le chargeur comme avant ; il est déclaré dans `CONDITIONAL_START_PROFILES` et compté dans un pire cas (`worst-case-body`), pour que le gain ne se lise pas en l'omettant. Mesuré : `/?body=earth&mode=educ` demande 3 maillages au lieu de 27, `/?body=mars&mode=educ` 2.
+Le temps jusqu'au masquage du chargeur ne change pas sur un réseau local (3,4 s médiane des deux côtés) : le gain est en octets, en requêtes et en triangles, pas en secondes. Le profil `body-link` (adresse d'un corps modélisé : `/bennu/`, `?body=`) paie le chargeur comme avant ; il est déclaré dans `CONDITIONAL_START_PROFILES` et compté dans deux pires cas (`worst-case-body`, `worst-case-all`), pour que le gain ne se lise pas en l'omettant. **Ce que le gain n'est pas** : tout cumulé (une adresse `?tour=…&body=bennu` sur un appareil VR au premier passage), le démarrage garde le chargeur et la marge est de 713 o, soit 1 520 o de moins qu'avant (le code ajouté). Le gain porte sur chaque démarrage ordinaire : accueil, premier passage, VR, visite (+43,2 Kio de marge, 1,9 Mio de moins en réseau). Mesuré : `/?body=earth&mode=educ` demande 3 maillages au lieu de 27, `/?body=mars&mode=educ` 2.
 
 **Le coût de la première approche** (Bennu depuis la vue d'ensemble, build servi, vol de 1,4 à 1,6 s ; `t` = ms après le clic) :
 

@@ -265,6 +265,7 @@ describe('les démarrages conditionnels', () => {
       'body-link',
       'worst-case-body',
       'worst-case',
+      'worst-case-all',
     ]);
   });
 

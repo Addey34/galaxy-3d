@@ -894,6 +894,12 @@ export const CONDITIONAL_START_PROFILES: readonly ConditionalStartProfile[] = [
       'pire cas cumulé : premier passage avec `?tour=` inconnu (repli sur la découverte) sur un appareil VR',
     chunks: ['guidedTour', 'tourPlayer', 'webxr'],
   },
+  {
+    id: 'worst-case-all',
+    label:
+      "TOUT cumulé, adresse artificielle comprise : `?tour=` inconnu ET un corps modélisé dans l'adresse (`?tour=…&body=bennu`), premier passage, appareil VR. Le chargeur glTF était dans le démarrage ordinaire avant GAL-ENGINE-HEADROOM-001 : cette ligne est celle que le gain ne réduit PAS (elle a même perdu le code ajouté pour différer les maillages)",
+    chunks: ['guidedTour', 'tourPlayer', 'webxr', 'GLTFLoader'],
+  },
 ];
 
 export const BOOT_DYNAMIC_CHUNKS: readonly BootDynamicChunk[] = [
