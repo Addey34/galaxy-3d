@@ -405,6 +405,37 @@ export const cardEn = {
   'craft.closed': 'Back to the previous view.',
   'craft.partOn': '{part} highlighted.',
   'craft.partOff': 'Highlight removed.',
+  'sat.kind': 'Object in orbit',
+  'sat.group.stations': 'Group: space stations',
+  'sat.group.visual': 'Group: brightest objects',
+  'sat.unknown': 'not published',
+  'sat.norad': 'NORAD catalogue number',
+  'sat.designator': 'International designator (COSPAR)',
+  'sat.period': 'Orbital period',
+  'sat.minutes': '{n} min',
+  'sat.altitudes': 'Altitude, perigee to apogee',
+  'sat.altitudesValue': '{perigee} to {apogee} km',
+  'sat.inclination': 'Inclination',
+  'sat.eccentricity': 'Eccentricity',
+  'sat.epoch': 'Epoch of the elements',
+  'sat.validity': 'Elements valid',
+  'sat.validityValue': 'from {from} to {to}',
+  'sat.altitude': 'Altitude now (SGP4)',
+  'sat.km': '{n} km',
+  'sat.speed': 'Speed now (SGP4)',
+  'sat.kmPerS': '{n} km/s',
+  'sat.over': 'Over (SGP4)',
+  'sat.outside':
+    'At the date of the scene these elements are out of validity: the object is not drawn rather than drawn in the wrong place.',
+  'sat.model.iss':
+    'The ISS has a 3D model (NASA 3D Resources). It is shown enlarged in the inspection only; in space it stays a point.',
+  'sat.model.none':
+    'No 3D model for this object: it stays a point rather than an invented shape.',
+  'sat.source':
+    'Elements from CelesTrak (18th Space Defense Squadron), read on {date} UTC by the Galaxy data service and propagated with SGP4. The error grows by a few kilometres per day around the epoch. Altitude, speed and position are computed, not measured.',
+  'sat.opened': '{name}: satellite card opened.',
+  'sat.search.label': 'Find a satellite',
+  'sat.search.placeholder': 'Type a name, e.g. ISS',
 };
 
 export type CardMessageKey = keyof typeof cardEn;

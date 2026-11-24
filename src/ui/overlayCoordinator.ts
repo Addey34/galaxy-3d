@@ -8,6 +8,7 @@ export type SecondaryOverlayId =
   | 'exoplanet-card'
   | 'deepsky-card'
   | 'neighbour-card'
+  | 'satellite-card'
   | 'help';
 
 export interface OverlayCoordinator {

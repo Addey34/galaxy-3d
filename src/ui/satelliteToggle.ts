@@ -26,6 +26,8 @@ export interface SatelliteToggle {
     occlusion: ScreenOcclusion | null,
     space: LabelSpace | null
   ): void;
+  /** Un clic tombe-t-il sur un satellite peint ? Sa fiche s'ouvre alors, et le clic est pris. */
+  claim(clientX: number, clientY: number): boolean;
 }
 
 export function setupSatelliteToggle(
@@ -104,6 +106,7 @@ export function setupSatelliteToggle(
   });
 
   return {
+    claim: (clientX, clientY) => loaded?.claim(clientX, clientY) ?? false,
     update(camera, date, morph, occlusion, space) {
       if (!wanted || !loaded) return;
       loaded.update(camera, date, morph, occlusion, space);
