@@ -15,3 +15,23 @@
 body.is-capturing #satellite-overlay {
   display: none;
 }
+
+/* Le bouton qui ouvre l'inspection 3D de l'ISS (GAL-OBJECT-IMMERSION-001) : un bouton, pas un point du canvas. */
+.satellites-craft {
+  display: block;
+  margin: 0 0 var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.satellites-craft[hidden] {
+  display: none;
+}
+.satellites-craft:hover,
+.satellites-craft:focus-visible {
+  background: var(--control-bg-hover);
+}

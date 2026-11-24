@@ -582,3 +582,18 @@ derived numbers (colour ratios) enter the code; no image is shipped.
 Dependencies listed in `package.json` and resolved by `pnpm-lock.yaml` retain their own licenses.
 Their licenses are not replaced by the project license. Review dependency notices before creating a
 redistribution bundle.
+
+## Spacecraft 3D models and the Draco decoder
+
+- **Spacecraft models** under `public/assets/models/craft/` (ISS, James Webb Space Telescope, Juno, Voyager,
+  Cassini-Huygens, Parker Solar Probe, Rosetta, OSIRIS-REx): NASA 3D Resources, repository `nasa/NASA-3D-Resources`
+  at a pinned commit, copied byte for byte. The repository README states the assets are "free and without
+  copyright", and NASA's Images and Media Usage Guidelines (read on 2026-11-23) say content used to render
+  3D models is generally not subject to copyright in the United States. No endorsement by NASA is implied.
+  Source address, SHA-256 and size of each file: [`src/registry/craft/files.json`](src/registry/craft/files.json).
+- **Draco decoder** `public/assets/draco/<hash>/draco_decoder.js`: the JavaScript build of Google Draco shipped with
+  three.js (`three/examples/jsm/libs/draco/gltf`), Apache License 2.0, copied unchanged. The licence text is
+  distributed next to it, as Apache License section 4(a) requires:
+  `public/assets/draco/<hash>/LICENSE` is the `LICENSE` file of `google/draco` copied byte for byte
+  (commit `2225d05ba6ce1a8d161d0b85146fa784bf3d78e9`, read on 2026-11-24). It also carries Draco's notices
+  for files of its documentation site, which are not part of the decoder.

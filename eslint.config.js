@@ -23,6 +23,8 @@ export default tseslint.config(
       '.cache/**',
       // Harnais de capture d'écran jetable (contexte navigateur Playwright).
       'scripts/ui-audit.mjs',
+      // Décodeur Draco de three recopié tel quel (GAL-OBJECT-IMMERSION-001) : du code minifié tiers.
+      'public/assets/draco/**',
     ],
   },
   js.configs.recommended,

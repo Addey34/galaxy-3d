@@ -354,4 +354,37 @@ export const cardEs: Record<CardMessageKey, string> = {
   'inspect.meta.offset': '{h} h respecto a la hora pedida',
   'inspect.meta.grid': 'Malla',
   'inspect.meta.gridValue': 'malla de {step}°, interpolada',
+  'craft.button': 'Inspeccionar en 3D',
+  'craft.issButton': 'Inspeccionar la ISS en 3D',
+  'craft.noModel':
+    'No hay aquí un modelo 3D fiable de esta sonda: no se dibuja nada en lugar de una forma inventada.',
+  'craft.title': '{name}: inspección en 3D',
+  'craft.close': 'Cerrar la inspección',
+  'craft.reset': 'Restablecer la vista',
+  'craft.loading': 'Cargando el modelo 3D…',
+  'craft.failed': 'No se pudo cargar el modelo 3D. La escena no ha cambiado.',
+  'craft.unavailable':
+    'La inspección en 3D no está disponible: el contexto gráfico no responde.',
+  'craft.help':
+    'Arrastre o use las flechas para girar el modelo. Rueda, pellizco o teclas + y - para hacer zoom. Inicio restablece la vista, Escape la cierra.',
+  'craft.scale':
+    'Escala de presentación: aquí la nave se muestra ampliada para poder inspeccionarla. En la escena astronómica nunca se amplía.',
+  'craft.fidelity':
+    'Modelo representativo de la colección 3D Resources de la NASA. Sus proporciones y detalles son los del archivo: este proyecto no los ha comprobado con planos de ingeniería.',
+  'craft.rights':
+    'La NASA indica que el contenido usado para representar modelos 3D en general no está sujeto a derechos de autor en Estados Unidos (NASA Images and Media Usage Guidelines, leído el 2026-11-23). No se sugiere ningún respaldo de la NASA.',
+  'craft.parts': 'Piezas con nombre en el archivo',
+  'craft.partsNone':
+    'Este modelo es un solo bloque: su archivo no nombra piezas separadas.',
+  'craft.instruments': 'Instrumentos declarados en el archivo del PDS',
+  'craft.instrumentsNote':
+    'La lista procede del registro de contexto del PDS, no del modelo 3D: el modelo no indica dónde está cada instrumento.',
+  'craft.provenance': 'Procedencia',
+  'craft.source': 'Archivo de origen',
+  'craft.credit': 'Crédito: {credit}',
+  'craft.file': '{kb} KB, {tris} triángulos, SHA-256 {hash}…',
+  'craft.opened': 'Inspeccionando {name} en 3D.',
+  'craft.closed': 'De vuelta a la vista anterior.',
+  'craft.partOn': '{part} resaltada.',
+  'craft.partOff': 'Resaltado retirado.',
 };
