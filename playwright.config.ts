@@ -34,14 +34,10 @@ export default defineConfig({
    * qui construit déjà. Le partage se fait par motif de nom, jamais par un dossier à part.
    */
   testIgnore: ['**/built-*.spec.ts', '**/device-*.spec.ts'],
-  // Un seul worker en local : toute la suite partage un serveur Vite unique (une seule app WebGL) ;
-  // le parallélisme provoquait des timeouts de chargement sous contention (lot 17).
-  // DEUX en CI (GAL-ENGINE-HEADROOM-001, ESSAI) : la machine a quatre cœurs et un seul worker n'en
-  // occupe qu'un ou deux (WebGL logiciel : le fil principal de la page et les fils de SwiftShader).
-  // Mesuré sur les scénarios des pages générées (`playwright.pages.config.ts`) : 131 s à deux workers
-  // contre 199 s à un (-35 %).
+  // Un seul worker : toute la suite partage un serveur Vite unique (une seule app WebGL) ;
+  // le parallélisme provoquait des timeouts de chargement sous contention.
   fullyParallel: false,
-  workers: process.env.CI ? 2 : 1,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   // Reprises en CI pour absorber l'aléa des machines partagées + décodage texture qui stalle
   // le thread (les scénarios lourds comme titan enchaînent 8 corps × 2 modes). 2 reprises =
