@@ -413,6 +413,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'stellarVisit',
+    reason:
+      "la visite guidée du voisinage solaire (2026-11-24, GAL-UNIVERSE-005) : le panneau, les sept arrêts avec leurs quatre langues et le calcul des nombres depuis `neighbours.json` et `exoplanets.json`, importé par `ui/stellarView` au premier clic sur « Visite guidée » ou à l'ouverture d'une adresse `visit=`. Ni le démarrage ni la vue sans visite ne le chargent.",
+  },
+  {
     chunk: 'tourClearance',
     reason:
       "l'espace que la visite guidée prend en bas de l'écran (2026-11-24, GAL-SATELLITE-TRACKING-001) : un petit module partagé par le lecteur de visites et le panneau d'imagerie de surface, tous deux chargés à la demande, donc sorti du démarrage avec eux.",
