@@ -8367,3 +8367,48 @@ Le badge nomme le satellite (« VIIRS NOAA-21 », « VIIRS SNPP », « MODIS Ter
 
 **Limites, dites.** (1) Pas de caméra qui suit l'objet : la fiche s'ouvre sans déplacer la vue. (2) Les points se touchent quand la caméra est loin (à la distance par défaut de la Terre, ils forment un anneau serré) : le plus proche du doigt gagne, zoomer lève l'ambiguïté. (3) Un vrai doigt n'a pas été essayé (émulation). (4) Les noms sont ceux de CelesTrak (anglais, majuscules).
 
+
+### Marge du démarrage : les maillages des corps irréguliers ne partent plus avant d'être utiles (GAL-ENGINE-HEADROOM-001, 2026-11-24)
+
+SUPERSEDED 2026-11-24 : « les quinze corps irréguliers chargent leur maillage le plus léger dès leur création » (et la ligne « modèles de forme : 828 987 octets, 15 requêtes » du tableau du démarrage de 17E). Ils ne le font plus.
+
+**Le diagnostic.** Le budget JavaScript du démarrage n'avait plus que 23 702 octets de marge, et 2 233 octets au pire cas cumulé. Le chargeur glTF (44 729 o) était dans le démarrage pour une seule raison : chaque corps modélisé demandait son maillage le plus léger à sa création (27 fichiers, 1,9 Mio en vue d'ensemble), vu ou non. Dans la vue d'ensemble du mode Éducatif ces corps sont à 1 846 à 8 960 rayons, soit 0,2 à 1,2 pixel sur une fenêtre de 900 pixels : une sphère suffit.
+
+**La règle** (`core/modelLod`, `CelestialObject._updateModelLOD`) :
+- le corps garde sa sphère tant qu'il est à plus de `MODEL_LOAD_DISTANCE` (1 200 rayons : 1,8 pixel ; sa forme ne se lit qu'au-delà de ~8 pixels, soit 270 rayons, donc le maillage a plus de quatre fois la distance pour arriver) ou hors du champ de la caméra (`isNearView`, marge 1,6 en coordonnées d'écran normalisées) ;
+- le corps CIBLÉ charge tout de suite (`prepareForApproach`, appelé par `CameraSystem.setTarget`), avant le vol ; le survol, le focus ou les flèches d'une entrée de la palette annoncent le corps pressenti (`CameraSystem.anticipate`), et l'ouverture de la palette chauffe le chargeur ;
+- `components/celestial/shapeModelLoader` est l'UNIQUE point de chargement : un seul `import()` du chargeur, une seule instance, deux fichiers en vol au plus, le corps ciblé passe devant. Le cache, la libération (`_disposeShapeModel`) et la mémoire GPU sont ceux d'avant ;
+- la sphère d'un corps à modèle est LÉGÈRE (`SHAPE_PROXY_SEGMENTS`, 24 : ~1 100 triangles au lieu de ~8 000). Sans elle, retirer le maillage (~4 000 triangles) AJOUTAIT ~220 000 triangles à la vue d'ensemble : la CI l'a mesuré (1 194 001 triangles contre un plafond de 1 120 000) avant qu'on le corrige. Si un maillage ne vient pas, la sphère ordinaire est rendue au corps (`_restoreFullSphere`).
+
+**Ce qui est mesuré** (Chromium, build servi, 6 démarrages par cas, service worker bloqué) :
+
+| | avant (`main` 0b6a9d23) | après |
+|---|---|---|
+| JavaScript du démarrage | 1 282 298 o, marge 23 702 o | 1 238 773 o, marge 67 227 o |
+| pire cas cumulé hors visite (premier passage, adresse d'un corps modélisé, VR) | 1 303 767 o, marge 2 233 o | 1 293 615 o, marge 12 385 o |
+| octets reçus, `/`, 5 s après le chargeur | 12,33 Mio, 220 requêtes, 27 maillages | 10,43 Mio, 192 requêtes, 0 maillage |
+| triangles, vue d'ensemble | 973 905 (mesuré le 2026-10-28) | 832 081 |
+| triangles, `saturn-explo`, `earth-explo` | 56 913, 349 533 | 51 121, 326 417 |
+
+Le temps jusqu'au masquage du chargeur ne change pas sur un réseau local (3,4 s médiane des deux côtés) : le gain est en octets, en requêtes et en triangles, pas en secondes. Le profil `body-link` (adresse d'un corps modélisé : `/bennu/`, `?body=`) paie le chargeur comme avant ; il est déclaré dans `CONDITIONAL_START_PROFILES` et compté dans un pire cas (`worst-case-body`), pour que le gain ne se lise pas en l'omettant. Mesuré : `/?body=earth&mode=educ` demande 3 maillages au lieu de 27, `/?body=mars&mode=educ` 2.
+
+**Le coût de la première approche** (Bennu depuis la vue d'ensemble, build servi, vol de 1,4 à 1,6 s ; `t` = ms après le clic) :
+
+| | maillage reçu | fin du vol |
+|---|---|---|
+| clic direct, réseau libre | 262 à 356 | 1 439 à 1 602 |
+| clic direct, Fast 3G (1,6 Mb/s, 150 ms) | 1 470 à 1 703 | 1 510 à 1 653 |
+| 500 ms de survol puis clic, réseau libre | 226 à 348 (depuis le survol) | |
+| 500 ms de survol puis clic, Fast 3G | 771 à 866 (depuis le survol) | 1 500 ms après le clic |
+
+Honnêtement : sur Fast 3G et SANS survol (un tap au doigt n'en a pas), le maillage arrive à peu près à la fin du vol (de 0,04 s avant à 0,05 s après), donc la forme peut apparaître juste à l'arrivée, alors qu'elle était prête dès le démarrage avant ce lot. La contrepartie est de 1,9 Mio de moins à chaque ouverture du site. La sphère légère et la distance de 1 200 rayons gardent ce passage d'une sphère à une forme irrégulière, jamais d'un corps absent.
+
+**Ce qui n'a PAS d'effet, mesuré** : servir le build plutôt que le serveur de développement aux tests e2e ne raccourcit pas leur démarrage (médiane de 3,7 s sur le serveur de développement, 4,4 s sur le build servi).
+
+**Durée de la CI (le travail et ce qui reste ouvert).** `check-ci-health` signalait une « enveloppe presque pleine » à chaque run (24,4 ; 25,1 ; 25,6 ; 26,0 minutes), toujours sur les processeurs les plus lents. Ce qui est mesuré :
+- La répartition était DÉJÀ au plus près de l'optimum : onze machines à 23,4 à 23,6 minutes sur l'EPYC 7763 (écart de 0,2 minute). Rééquilibrer ne gagne rien ; la machine « chanceuse » ou non fait tout.
+- Le travail a grossi : les durées relevées sur les quatre runs récents donnaient 265,2 minutes de tests pour 257,1 dans le fichier livré, soit 24,2 minutes par machine, au-dessus du seuil de la garde (`e2eShards.test.ts`).
+- Ce que ce lot retire, mesuré : le test du repère du ciel profond balayait une grille de clics (341 sur bureau, 120 s en CI) pour retrouver un repère immobile, et essaie d'abord la position que la scène fixe (355 s pour le fichier, 148 s) ; les vérifications des satellites partagent un démarrage (trois scénarios au lieu de quatre, dont celui qui manquait à #570) ; les durées sont relues sur DEUX runs du code final (`pnpm e2e:durations --run A --run B`), car l'outil garde la durée la plus LONGUE de tous les runs fournis et d'anciens échantillons gonflaient le total : 237,9 minutes, soit 21,7 minutes prédites pour la machine la plus chargée sur l'EPYC 7763 (23,5 avant). Sur le Xeon 8370C, le plus lent reçu (facteur 1,17), cela donne 25,4 minutes : la marge n'est PAS acquise sur tous les tirages.
+- **Essai non retenu, mesuré : deux workers Playwright par machine en CI.** Machines de 4 cœurs, WebGL logiciel. Run 45335126736 : machines de 10,5 à 20,0 minutes (contre 13,7 à 24,6 à un worker, run 45331908124), mais un scénario lourd (`weatherInspector`) a dépassé ses 120 s et n'est passé qu'au réessai ; run 45337820963, mêmes réglages et budget du scénario relevé : sur un Xeon 8370C, cinq scénarios lourds (quatre de `buildings`, un de `search`) ont échoué après 26,0 minutes. Les scénarios sont écrits pour un worker (temps d'image, « fil principal calme ») ; sous contention les plus lourds basculent. Retiré (deux commits de retour). C'est le seul levier mesuré qui rend la marge suffisante sur TOUS les tirages, et il demande d'abord de rendre robustes les scénarios lourds : décision à prendre, pas à glisser dans ce lot.
+- Mesuré, sans effet : servir le build au lieu du serveur de développement aux scénarios (démarrage médian de 3,7 s contre 4,4 s).
+- Une durée fixe d'attente n'est pas la cause : les `waitForTimeout` de la suite sommeraient moins de cinq minutes au total.
