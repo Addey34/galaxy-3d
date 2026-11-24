@@ -5,12 +5,14 @@ import {
   assignShards,
   e2eSpecFiles,
   readDurations,
+  unmeasuredFiles,
 } from '../../scripts/e2e-shard.mjs';
 import {
   cpuFactors,
   fileSeconds,
   isMeasurableJob,
   normalisedSeconds,
+  staleEntries,
 } from '../../scripts/e2e-durations.mjs';
 import {
   E2E_ENVELOPE_MINUTES,
@@ -51,6 +53,18 @@ describe('the e2e files, spread over the CI machines', () => {
     for (const shard of shards) expect(shard.files.length).toBeGreaterThan(0);
   });
 
+  it('has a recorded duration for EVERY spec, measured or estimated (a new spec is weighed, never guessed)', () => {
+    // #572 : `satelliteTracking` pesait 384 s et la médiane en donnait ~140 ; la machine 3/11 a fini à 27,7 min.
+    // Un spec neuf s'inscrit avec `pnpm e2e:durations --estimate e2e/x.spec.ts=<secondes>` (repère : 60 s par
+    // scénario), puis se mesure au premier run (`pnpm e2e:durations --run <id>`, ou `--check` pour voir l'écart).
+    expect(
+      unmeasuredFiles(files, durations.seconds),
+      'specs sans durée dans e2e/durations.json'
+    ).toEqual([]);
+    for (const file of durations.estimated ?? [])
+      expect(files, `${file} estimé mais absent`).toContain(file);
+  });
+
   it('measures no file that no longer exists', () => {
     for (const file of Object.keys(durations.seconds))
       expect(files, `${file} mesuré mais absent`).toContain(file);
@@ -89,6 +103,20 @@ describe('assignShards', () => {
       'new',
     ]);
     expect(shards.reduce((sum, s) => sum + s.seconds, 0)).toBe(1 + 5 + 9 + 5);
+  });
+});
+
+describe('stale distribution, read from a CI run', () => {
+  it('names the specs with no record, those on an estimate, and those that moved by more than half and 60 s', () => {
+    const stale = staleEntries(
+      { new: 384, est: 200, same: 100, slow: 400, small: 40 },
+      { est: 60, same: 110, slow: 150, small: 10 },
+      ['est']
+    );
+    expect(stale.unmeasured.map((e) => e.file)).toEqual(['new']);
+    expect(stale.estimated.map((e) => e.file)).toEqual(['est']);
+    // Une petite dérive, ou un petit fichier qui triple de quelques secondes, n'est pas une alerte.
+    expect(stale.moved.map((e) => e.file)).toEqual(['slow']);
   });
 });
 

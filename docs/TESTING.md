@@ -130,6 +130,10 @@ coquille DISTINGUABLE de toutes les pages générées.
 seulement lintés. Sans cela une erreur de type dans un spec n'apparaissait qu'à l'exécution — donc
 après vingt minutes de suite, ou jamais si la branche fautive n'était pas empruntée.
 
+### Ajouter un spec e2e : lui donner sa durée dans la répartition des machines
+
+`src/config/e2eShards.test.ts` (dans `pnpm verify`) refuse un spec sans durée dans `e2e/durations.json`. Pour un spec neuf : `node scripts/e2e-durations.mjs --estimate e2e/x.spec.ts=<secondes>` (repère : 60 s par scénario, plancher : un scénario lourd en pèse trois à six fois plus), puis, après la CI complète de la branche (`gh workflow run ci.yml --ref <branche>`), `node scripts/e2e-durations.mjs --run <id>` dans la même PR. `--check --run <id>` dit, sans rien écrire, quels specs sont sans mesure, estimés ou dont la durée a bougé. Mesures et limites : docs/ARCHITECTURE.md § « Le coût de la suite e2e ».
+
 ## Diagnostic d’un échec e2e
 
 1. Lancer le fichier concerné : `pnpm exec playwright test e2e/smoke.spec.ts --reporter=line`.

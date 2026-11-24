@@ -12,8 +12,8 @@
  *
  * Ce script répartit donc les FICHIERS selon leur durée MESURÉE (`e2e/durations.json`, écrit par
  * `scripts/e2e-durations.mjs` depuis des runs de CI), le plus long d'abord sur la machine la
- * moins chargée. Un fichier sans mesure prend la durée MÉDIANE, pour qu'un spec neuf ne casse
- * rien ; la garde `src/config/e2eShards.test.ts` exige que chaque fichier soit placé une fois et
+ * moins chargée. Un fichier sans mesure prend la durée MÉDIANE (un filet : la garde exige une entrée par spec,
+ * mesurée ou estimée par `pnpm e2e:durations --estimate`) ; la garde `src/config/e2eShards.test.ts` exige que chaque fichier soit placé une fois et
  * une seule. Le parallélisme ne change pas : un worker par machine, le même WebGL logiciel.
  *
  *   node scripts/e2e-shard.mjs <i> <N>   → la liste des fichiers du shard i (1-based) sur N
@@ -65,6 +65,11 @@ export function assignShards(files, seconds, total) {
   }
   for (const shard of shards) shard.files.sort();
   return shards;
+}
+
+/** Les specs sans durée enregistrée (mesurée ou estimée) : la garde de `e2eShards.test.ts` n'en tolère aucun. */
+export function unmeasuredFiles(files, seconds) {
+  return files.filter((f) => !(seconds[f] > 0));
 }
 
 export function readDurations(path = DURATIONS_PATH) {

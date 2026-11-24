@@ -17,11 +17,24 @@
  * se règle sur le pire cas.
  *
  *   pnpm e2e:durations --run <id> [--run <id> …]
+ *
+ * Un spec NEUF n'a pas de mesure avant son premier run, et la médiane qu'on lui prêtait sous-pesait
+ * les scénarios lourds (GAL-CI-EFFICIENCY-001, #572 : `satelliteTracking` pesait 384 s, la médiane en
+ * donnait ~140, et la machine 3/11 a fini à 27,7 min). Deux outils ferment ce trou :
+ *   pnpm e2e:durations --estimate e2e/x.spec.ts=300   écrit une ESTIMATION (marquée `estimated`) ;
+ *       la garde de `src/config/e2eShards.test.ts` EXIGE une entrée par spec, donc `pnpm verify` refuse
+ *       un spec sans durée. Repère : 60 s par scénario (le 90e centile mesuré est 53 s) ;
+ *   pnpm e2e:durations --check --run <id> [--run <id> …]   compare un run à `durations.json` (avec les
+ *       facteurs de processeur déjà écrits) et liste les specs sans mesure, ceux qui ne tiennent que sur
+ *       une estimation, et ceux dont la durée a bougé de plus de 50 % et de 60 s.
  */
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { inspectRun, jobLog, logLines } from './check-ci-health.mjs';
 import { DURATIONS_PATH } from './e2e-shard.mjs';
+
+const ROOT = resolve(import.meta.dirname, '..');
 
 export const REFERENCE_CPU = 'AMD EPYC 7763';
 
@@ -112,14 +125,46 @@ export function normalisedSeconds(observations, factors) {
   );
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
-  const runs = [];
-  for (let i = 2; i < process.argv.length; i += 1)
-    if (process.argv[i] === '--run') runs.push(process.argv[(i += 1)]);
-  if (runs.length === 0) {
-    console.error('usage : pnpm e2e:durations --run <id> [--run <id> …]');
-    process.exit(2);
+/**
+ * Ce que la répartition enregistrée ne dit plus juste, d'après des durées mesurées (déjà normalisées).
+ * Pur : `recorded` = `seconds`, `estimated` = les entrées qui ne sont qu'une estimation.
+ */
+export function staleEntries(measured, recorded, estimated = []) {
+  const out = { unmeasured: [], estimated: [], moved: [] };
+  for (const [file, seconds] of Object.entries(measured)) {
+    const before = recorded[file];
+    if (!(before > 0)) out.unmeasured.push({ file, seconds });
+    else if (estimated.includes(file))
+      out.estimated.push({ file, seconds, before });
+    else if (
+      Math.abs(seconds - before) > 60 &&
+      Math.abs(seconds - before) > before / 2
+    )
+      out.moved.push({ file, seconds, before });
   }
+  return out;
+}
+
+const COMMENT =
+  'Écrit par `pnpm e2e:durations`. Durée de chaque fichier e2e en secondes ramenées à un EPYC 7763, lue par scripts/e2e-shard.mjs pour répartir les machines. Ne pas éditer à la main.';
+
+function readRecorded() {
+  return existsSync(DURATIONS_PATH)
+    ? JSON.parse(readFileSync(DURATIONS_PATH, 'utf8'))
+    : { seconds: {} };
+}
+
+function writeDurations(doc) {
+  writeFileSync(DURATIONS_PATH, JSON.stringify(doc, null, 2) + '\n');
+}
+
+const sorted = (record) =>
+  Object.fromEntries(
+    Object.entries(record).sort(([a], [b]) => a.localeCompare(b))
+  );
+
+/** Les observations d'un ou plusieurs runs de CI : fichier, processeur, secondes brutes. */
+function observe(runs) {
   const observations = [];
   for (const id of runs) {
     const run = inspectRun(id, { readLogs: false });
@@ -133,29 +178,109 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
         observations.push({ file, cpu, seconds, run: id });
     }
   }
-  const factors = cpuFactors(observations);
-  const seconds = normalisedSeconds(observations, factors);
-  const total = Object.values(seconds).reduce((a, b) => a + b, 0);
-  writeFileSync(
-    DURATIONS_PATH,
-    JSON.stringify(
-      {
-        $comment:
-          'Écrit par `pnpm e2e:durations`. Durée de chaque fichier e2e en secondes ramenées à un EPYC 7763, lue par scripts/e2e-shard.mjs pour répartir les machines. Ne pas éditer à la main.',
-        unit: `secondes sur ${REFERENCE_CPU}`,
-        runs: runs.map(Number),
-        cpuFactors: Object.fromEntries(
-          Object.entries(factors)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([k, v]) => [k, Math.round(v * 100) / 100])
-        ),
-        seconds,
-      },
-      null,
-      2
-    ) + '\n'
+  return observations;
+}
+
+function estimate(entries, recorded) {
+  // Une estimation par spec neuf : marquée, pour que `--check` dise de la remplacer par une mesure.
+  const seconds = { ...recorded.seconds };
+  const estimated = new Set(recorded.estimated ?? []);
+  for (const entry of entries) {
+    const [file, value] = entry.split('=');
+    if (!file || !(Number(value) > 0)) {
+      console.error(
+        `estimation illisible : ${entry} (attendu e2e/x.spec.ts=300)`
+      );
+      process.exit(2);
+    }
+    seconds[file] = Number(value);
+    estimated.add(file);
+  }
+  writeDurations({
+    ...recorded,
+    seconds: sorted(seconds),
+    estimated: [...estimated].sort(),
+  });
+  console.log(
+    `${entries.length} estimation(s) écrite(s) dans ${DURATIONS_PATH}`
   );
+}
+
+function check(runs, observations, recorded) {
+  // Un seul run ne suffit pas à ajuster les facteurs : ceux déjà écrits servent.
+  const factors =
+    runs.length > 1 ? cpuFactors(observations) : (recorded.cpuFactors ?? {});
+  const measured = normalisedSeconds(observations, factors);
+  const stale = staleEntries(
+    measured,
+    recorded.seconds,
+    recorded.estimated ?? []
+  );
+  const line = (e) =>
+    `  ${e.file}  ${Math.round(e.seconds)} s${e.before ? ` (enregistré : ${e.before} s)` : ''}`;
+  for (const [title, list] of [
+    ['SANS MESURE enregistrée', stale.unmeasured],
+    ['enregistrés en ESTIMATION seulement', stale.estimated],
+    ['durée bougée de plus de 50 % et 60 s', stale.moved],
+  ])
+    if (list.length) console.log(`${title} :\n${list.map(line).join('\n')}`);
+  const total =
+    stale.unmeasured.length + stale.estimated.length + stale.moved.length;
+  console.log(
+    total
+      ? `\nRépartition à relire : pnpm e2e:durations --run ${runs.join(' --run ')}`
+      : 'Répartition à jour.'
+  );
+  process.exit(total ? 1 : 0);
+}
+
+function refresh(runs, observations, recorded) {
+  const factors = cpuFactors(observations);
+  const seconds = { ...normalisedSeconds(observations, factors) };
+  // Un spec ajouté APRÈS ces runs garde son entrée (mesurée ou estimée) tant qu'il existe.
+  const estimated = [];
+  for (const [file, value] of Object.entries(recorded.seconds))
+    if (!(file in seconds) && existsSync(resolve(ROOT, file))) {
+      seconds[file] = value;
+      if ((recorded.estimated ?? []).includes(file)) estimated.push(file);
+    }
+  const total = Object.values(seconds).reduce((a, b) => a + b, 0);
+  writeDurations({
+    $comment: COMMENT,
+    unit: `secondes sur ${REFERENCE_CPU}`,
+    runs: runs.map(Number),
+    cpuFactors: Object.fromEntries(
+      Object.entries(factors)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([k, v]) => [k, Math.round(v * 100) / 100])
+    ),
+    seconds: sorted(seconds),
+    ...(estimated.length ? { estimated: estimated.sort() } : {}),
+  });
   console.log(
     `${Object.keys(seconds).length} fichiers, ${(total / 60).toFixed(1)} min (${REFERENCE_CPU}) → ${DURATIONS_PATH}`
   );
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  const args = process.argv.slice(2);
+  const runs = [];
+  const estimates = [];
+  for (let i = 0; i < args.length; i += 1) {
+    if (args[i] === '--run') runs.push(args[(i += 1)]);
+    if (args[i] === '--estimate') estimates.push(args[(i += 1)]);
+  }
+  const recorded = readRecorded();
+  if (estimates.length > 0) {
+    estimate(estimates, recorded);
+  } else if (runs.length === 0) {
+    console.error(
+      'usage : pnpm e2e:durations --run <id> [--run <id> …]\n        pnpm e2e:durations --check --run <id> [--run <id> …]\n        pnpm e2e:durations --estimate e2e/x.spec.ts=300'
+    );
+    process.exit(2);
+  } else {
+    const observations = observe(runs);
+    if (args.includes('--check')) check(runs, observations, recorded);
+    else refresh(runs, observations, recorded);
+  }
 }
