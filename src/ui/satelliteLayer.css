@@ -60,6 +60,12 @@ body.is-capturing #satellite-overlay {
 body.is-capturing .satellite-follow-chip {
   display: none;
 }
+.satellite-follow-chip-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .satellite-follow-stop {
   padding: var(--sp-1) var(--sp-3);
   border: 1px solid var(--hairline-strong);
