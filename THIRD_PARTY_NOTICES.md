@@ -592,4 +592,8 @@ redistribution bundle.
   3D models is generally not subject to copyright in the United States. No endorsement by NASA is implied.
   Source address, SHA-256 and size of each file: [`src/registry/craft/files.json`](src/registry/craft/files.json).
 - **Draco decoder** `public/assets/draco/<hash>/draco_decoder.js`: the JavaScript build of Google Draco shipped with
-  three.js (`three/examples/jsm/libs/draco/gltf`), Apache License 2.0, copied unchanged.
+  three.js (`three/examples/jsm/libs/draco/gltf`), Apache License 2.0, copied unchanged. The licence text is
+  distributed next to it, as Apache License section 4(a) requires:
+  `public/assets/draco/<hash>/LICENSE` is the `LICENSE` file of `google/draco` copied byte for byte
+  (commit `2225d05ba6ce1a8d161d0b85146fa784bf3d78e9`, read on 2026-11-24). It also carries Draco's notices
+  for files of its documentation site, which are not part of the decoder.

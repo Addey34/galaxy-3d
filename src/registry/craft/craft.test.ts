@@ -114,4 +114,21 @@ describe('registre des modèles d’engins', () => {
     const hash = createHash('sha256').update(served).digest('hex').slice(0, 10);
     expect(DRACO_DECODER_DIR).toBe(`/assets/draco/${hash}/`);
   });
+
+  it('la licence Apache 2.0 de Draco est redistribuée avec le décodeur (article 4a), et les mentions le disent', () => {
+    const license = readFileSync(
+      resolve(ROOT, `public${DRACO_DECODER_DIR}LICENSE`),
+      'utf8'
+    );
+    expect(license).toContain('Apache License');
+    expect(license).toContain('Version 2.0, January 2004');
+    expect(license).toContain(
+      'TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION'
+    );
+    const notices = readFileSync(
+      resolve(ROOT, 'THIRD_PARTY_NOTICES.md'),
+      'utf8'
+    );
+    expect(notices).toContain('public/assets/draco/<hash>/LICENSE');
+  });
 });
