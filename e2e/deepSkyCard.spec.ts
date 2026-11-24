@@ -36,10 +36,22 @@ async function clickUntilCard(
   page: Page,
   area: { x0: number; y0: number; x1: number; y1: number },
   tap: boolean,
-  maxClicks: number
+  maxClicks: number,
+  /**
+   * Où un repère se trouve à cette date et à ce cadrage (mesuré : la scène est fixe, donc la position
+   * l'est aussi). Essayé AVANT la grille : le balayage coûtait 341 clics sur bureau (120 s en CI) et 165
+   * au toucher pour retrouver ce que la scène fixe déjà. Si le repère a bougé, la grille reprend : la
+   * robustesse est la même, le coût ordinaire passe d'une centaine de secondes à un clic.
+   */
+  hint?: readonly [number, number]
 ): Promise<boolean> {
   const card = page.locator('#deepsky-card');
   let clicks = 0;
+  if (hint) {
+    if (tap) await page.touchscreen.tap(hint[0], hint[1]);
+    else await page.mouse.click(hint[0], hint[1]);
+    if (await card.isVisible()) return true;
+  }
   for (let y = area.y0; y < area.y1; y += 17) {
     for (let x = area.x0; x < area.x1; x += 17) {
       if (clicks++ >= maxClicks) return false;
@@ -51,18 +63,20 @@ async function clickUntilCard(
   return false;
 }
 
-for (const [label, viewport, hasTouch, area] of [
+for (const [label, viewport, hasTouch, area, hint] of [
   [
     'desktop',
     { width: 1280, height: 800 },
     false,
     { x0: 160, y0: 110, x1: 880, y1: 640 },
+    [823, 229],
   ],
   [
     'phone',
     { width: 390, height: 844 },
     true,
     { x0: 14, y0: 130, x1: 330, y1: 690 },
+    [218, 266],
   ],
 ] as const) {
   test.describe(label, () => {
@@ -122,7 +136,7 @@ for (const [label, viewport, hasTouch, area] of [
       await page.locator('#settings-trigger').dispatchEvent('click');
       await expect(page.locator('#orbit-options')).toBeHidden();
 
-      expect(await clickUntilCard(page, area, hasTouch, 1500)).toBe(true);
+      expect(await clickUntilCard(page, area, hasTouch, 1500, hint)).toBe(true);
       const card = page.locator('#deepsky-card');
       await expect(card.locator('#deepsky-card-name')).not.toBeEmpty();
       await expect(card.locator('.exo-facts')).toContainText(/NGC|IC/);

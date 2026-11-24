@@ -280,7 +280,11 @@ export interface ModelFloorInput {
 }
 
 /**
- * Budget des MODÈLES du démarrage : le niveau le plus léger de chaque corps modélisé.
+ * Budget des MODÈLES : le niveau le plus léger de chaque corps modélisé, c'est-à-dire ce que le LOD
+ * charge d'abord. DEPUIS GAL-ENGINE-HEADROOM-001 il ne part PLUS au démarrage de la vue d'ensemble
+ * (`core/modelLod.MODEL_LOAD_DISTANCE`) : il part à l'approche du corps ou à l'adresse d'un corps
+ * modélisé (profil `body-link`). Cette somme reste le COÛT D'UNE VISITE de tous ces corps, pas celui du
+ * démarrage ; `e2e/startupBudget.spec.ts` affirme que la vue d'ensemble n'en demande aucun.
  *
  * Même dérivation que les textures, sur la règle de `core/modelLod` : « on charge d'abord le plus
  * léger ; le plus fin n'est téléchargé que si la caméra s'approche ASSEZ pour qu'il se voie ». Un
@@ -477,6 +481,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
     chunk: 'stellarView',
     reason:
       "le voisinage solaire en 3D (GAL-UNIVERSE-002) : interface, contrôles et scène Three.js des étoiles voisines en parsecs (`NeighbourhoodScene`, `core/stellarSpace`), importée par `ui/skyLayerToggles` au premier clic sur « Voisinage solaire en 3D » ou sur le bouton d'une fiche d'étoile, jamais au démarrage. Une seule boucle et un seul renderer : le rendu de remplacement est posé dans `AnimationSystem`.",
+  },
+  {
+    chunk: 'GLTFLoader',
+    reason:
+      "le chargeur glTF (GAL-ENGINE-HEADROOM-001) : les quinze corps irréguliers gardent leur sphère tant qu'ils sont à plus de `MODEL_LOAD_DISTANCE` rayons, et leur maillage (donc ce chargeur) part quand la caméra franchit ce seuil ou qu'on cible le corps (`CelestialObject.prepareForApproach`, via `components/celestial/shapeModelLoader`, un seul `import()` partagé). Un démarrage SANS corps modélisé dans l'adresse ne le charge plus ; un démarrage sur `/bennu/` ou `?body=` d'un de ces corps le charge : profil `body-link`.",
   },
   {
     chunk: 'craftInspector',
@@ -868,19 +877,32 @@ export const CONDITIONAL_START_PROFILES: readonly ConditionalStartProfile[] = [
     chunks: ['webxr'],
   },
   {
+    id: 'body-link',
+    label:
+      "ouverture directe d'un corps modélisé (`/bennu/`, `?body=`) : le corps est ciblé dès le démarrage, donc son maillage et le chargeur glTF partent tout de suite",
+    chunks: ['GLTFLoader'],
+  },
+  {
+    id: 'worst-case-body',
+    label:
+      "pire cas cumulé hors visite : premier passage sur l'adresse d'un corps modélisé, sur un appareil VR",
+    chunks: ['guidedTour', 'GLTFLoader', 'webxr'],
+  },
+  {
     id: 'worst-case',
     label:
       'pire cas cumulé : premier passage avec `?tour=` inconnu (repli sur la découverte) sur un appareil VR',
     chunks: ['guidedTour', 'tourPlayer', 'webxr'],
   },
+  {
+    id: 'worst-case-all',
+    label:
+      "TOUT cumulé, adresse artificielle comprise : `?tour=` inconnu ET un corps modélisé dans l'adresse (`?tour=…&body=bennu`), premier passage, appareil VR. Le chargeur glTF était dans le démarrage ordinaire avant GAL-ENGINE-HEADROOM-001 : cette ligne est celle que le gain ne réduit PAS (elle a même perdu le code ajouté pour différer les maillages)",
+    chunks: ['guidedTour', 'tourPlayer', 'webxr', 'GLTFLoader'],
+  },
 ];
 
 export const BOOT_DYNAMIC_CHUNKS: readonly BootDynamicChunk[] = [
-  {
-    chunk: 'GLTFLoader',
-    reason:
-      'les quinze corps irréguliers chargent leur maillage le plus léger dès leur création (`CelestialObject`), donc le chargeur glTF arrive au démarrage.',
-  },
   {
     chunk: 'EffectComposer',
     reason:

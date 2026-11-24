@@ -3,7 +3,6 @@ import { blockExternalNetwork } from './netBlock';
 import {
   EPHEMERIS_STARTUP_BUDGET_BYTES,
   FIRST_VIEW_TEXTURE_REFINEMENTS,
-  MODEL_FLOOR_QUALITY,
   TEXTURE_FLOOR_TIER,
   classifyStartupUrl,
 } from '../src/core/startupBudget';
@@ -86,15 +85,13 @@ test('le démarrage ne demande que les paliers planchers, et sa fenêtre tient d
   // listes vides, donc trois assertions vertes qui ne mesurent rien.
   expect(textures.length).toBeGreaterThan(40);
   expect(ephemerisBytes).toBeGreaterThan(0);
-  // LES MAILLAGES S'ATTENDENT, COMME LES RAFFINEMENTS PLUS BAS (2026-10-04). `CelestialObject`
-  // les lance sans les attendre, et la première requête ne part qu'après l'`import()` de
-  // `GLTFLoader` : rien n'ordonne cette requête avant le masquage du chargeur. Run
-  // `37207793663`, shard 8, premier test d'un serveur froid : ZÉRO maillage compté à cet instant,
-  // puis vert au réessai. Un démarrage qui cesserait d'en demander n'arrive jamais, donc le
-  // sondage expire avec la même affirmation.
-  await expect
-    .poll(() => models.length, { timeout: 60_000, intervals: [500] })
-    .toBeGreaterThan(10);
+  // LES MAILLAGES : AUCUN au démarrage de la vue d'ensemble (GAL-ENGINE-HEADROOM-001). Avant, chaque
+  // corps modélisé demandait son niveau léger à sa création (23 fichiers, et le chargeur glTF dans le
+  // démarrage) ; maintenant le maillage part à l'approche ou à la sélection du corps
+  // (`e2e/modelLod.spec.ts` prouve qu'il part). Le LOD se réévalue une image sur cinq : on laisse passer
+  // plusieurs réévaluations avant d'affirmer l'absence, sinon un démarrage qui chargerait encore des
+  // maillages passerait ici sans qu'aucun ne soit parti.
+  await page.waitForTimeout(4000);
 
   // (2) Aucun palier au-dessus du plancher, sauf les raffinements de première vue NOMMÉS.
   const allowed = new Set(
@@ -145,10 +142,10 @@ test('le démarrage ne demande que les paliers planchers, et sa fenêtre tient d
     )
     .toEqual([]);
 
-  // (3) Les maillages : le plus léger, jamais mieux. Le LOD monte à l'approche, pas au boot.
+  // (3) Les maillages : aucun, donc a fortiori aucun au-dessus du niveau le plus léger.
   expect(
-    [...new Set(models)].filter((quality) => quality !== MODEL_FLOOR_QUALITY),
-    `le démarrage doit charger « ${MODEL_FLOOR_QUALITY} » pour chaque corps modélisé`
+    models,
+    `le démarrage de la vue d'ensemble ne doit demander aucun maillage (niveaux vus : ${[...new Set(models)].join(', ')})`
   ).toEqual([]);
 
   // (4) La fenêtre d'éphémérides, confrontée au MÊME plafond que la garde unitaire.

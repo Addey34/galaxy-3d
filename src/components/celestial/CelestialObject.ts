@@ -70,12 +70,15 @@ import {
 } from '@/core/frames';
 import {
   chooseModelQuality,
+  isNearView,
+  shouldLoadShapeModel,
   lightestModelQuality,
   type ModelQuality,
 } from '@/core/modelLod';
 import { textureLodDistance } from '@/core/textureLod';
 import type { CameraDistance, CelestialBodyConfig } from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
+import { loadShapeGltf } from './shapeModelLoader';
 import Logger from '@/utils/Logger';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import { TEXTURE_QUALITY_PIXELS } from '@/components/systems/TextureSystem';
@@ -177,6 +180,9 @@ export default class CelestialObject {
   /** Niveau du modèle affiché, et celui en cours de chargement (un seul à la fois). */
   private _modelQuality: ModelQuality | null = null;
   private _modelLoading: ModelQuality | null = null;
+  private readonly _modelNdc = new THREE.Vector3();
+  /** La sphère ordinaire a remplacé la sphère légère d'un corps modélisé (le maillage n'est pas venu). */
+  private _fullSphere = false;
   private readonly _ringWorldPos = new THREE.Vector3();
   // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
   // une lueur diffuse selon la position réelle de la Lune (réflecteur).
@@ -283,8 +289,7 @@ export default class CelestialObject {
     if (ring && !Array.isArray(ring.material))
       this._ringShadow = getRingShadowUniforms(ring.material);
     if (this.layers.has('ring')) void this._loadRingTexture();
-    // On commence par le niveau le plus léger : un astéroïde qu'on ne visite pas ne coûte que
-    // ~70 Kio. Le LOD (updateLODTextures) monte ensuite le niveau quand la caméra approche.
+    // Le LOD (updateLODTextures) monte le niveau des textures quand la caméra approche.
     // Un corps à ATLAS : sa texture n'a de sens que sur son modèle. La sphère qui le précède (ou
     // le remplace s'il échoue) lit la pastille d'albédo moyen, uniforme, et rien d'autre.
     if (this.config.model?.atlas && surface) {
@@ -295,10 +300,9 @@ export default class CelestialObject {
         uv.needsUpdate = true;
       }
     }
-    const firstModel = this.config.model
-      ? lightestModelQuality(this.config.model.resolutions)
-      : null;
-    if (firstModel) void this._loadShapeModel(firstModel);
+    // Le maillage ne part PLUS à la création (GAL-ENGINE-HEADROOM-001) : la sphère tient lieu de corps
+    // lointain, et `_updateModelLOD` charge le plus léger quand la caméra franchit `MODEL_LOAD_DISTANCE`
+    // (ou `prepareForApproach` quand on cible le corps).
 
     // Les corps sans loadPriority (astéroïdes/comètes du catalogue, hors couche instrument
     // 2D) ne sont pas sur le chemin critique du boot : repousser leur texture après la
@@ -1742,23 +1746,57 @@ export default class CelestialObject {
         this.config.radius * this._scaleFactor,
       1e-12
     );
+    const normalized = camera.position.distanceTo(this._lodWorldPos) / radius;
+    // Trop loin pour qu'il se distingue d'une sphère, et rien n'est encore chargé : on ne charge rien.
+    // Seulement un corps proche ET près du champ : un maillage ne sert à rien derrière la caméra.
+    const ndc = this._modelNdc.copy(this._lodWorldPos).project(camera);
+    const nearView = isNearView(ndc.x, ndc.y, ndc.z);
+    if (!shouldLoadShapeModel(normalized, this._modelQuality, nearView)) return;
     const next = chooseModelQuality(
       model.resolutions,
-      camera.position.distanceTo(this._lodWorldPos) / radius,
+      normalized,
       BOOT_QUALITY_PROFILE.maxModelQuality
     );
     if (next && next !== this._modelQuality) void this._loadShapeModel(next);
   }
 
-  private async _loadShapeModel(quality: ModelQuality): Promise<void> {
+  /**
+   * Le corps vient d'être CIBLÉ (vol de caméra) : son maillage le plus léger part tout de suite, passe
+   * devant les autres chargements, et arrive pendant le vol, bien avant qu'il se distingue d'une sphère.
+   */
+  prepareForApproach(): void {
+    const model = this.config.model;
+    if (!model || this._modelQuality !== null || this._modelLoading) return;
+    const first = lightestModelQuality(model.resolutions);
+    if (first) void this._loadShapeModel(first, true);
+  }
+
+  /** Rend à la surface la sphère ordinaire : le maillage n'est pas venu, la sphère légère ne suffit plus. */
+  private _restoreFullSphere(): void {
+    const surface = this.layers.get('surface');
+    if (!surface || !this.config.model || this._fullSphere) return;
+    this._fullSphere = true;
+    const light = surface.geometry;
+    surface.geometry = createSphereGeometry(
+      this.config.radius,
+      'surface',
+      undefined,
+      this.figure
+    );
+    light.dispose();
+  }
+
+  private async _loadShapeModel(
+    quality: ModelQuality,
+    urgent = false
+  ): Promise<void> {
     const model = this.config.model;
     if (!model || this._modelLoading) return;
     this._modelLoading = quality;
     try {
-      const { GLTFLoader } =
-        await import('three/examples/jsm/loaders/GLTFLoader.js');
-      const gltf = await new GLTFLoader().loadAsync(
-        heavyAssetUrl(modelPath(this.name, quality))
+      const gltf = await loadShapeGltf(
+        heavyAssetUrl(modelPath(this.name, quality)),
+        urgent
       );
       if (this._disposed) return;
 
@@ -1838,7 +1876,9 @@ export default class CelestialObject {
         `[CelestialObject] Shape model ${quality} loaded for "${this.name}" (${meshes.length} mesh(es))`
       );
     } catch (error) {
-      // Volontairement non fatal : la sphère (ou le niveau précédent) reste affichée.
+      // Volontairement non fatal : la sphère (ou le niveau précédent) reste affichée. Si c'est la sphère
+      // légère d'un corps modélisé, elle devient la sphère ordinaire : c'est elle qui le représentera.
+      if (this._modelQuality === null) this._restoreFullSphere();
       Logger.warn(
         `[CelestialObject] Shape model ${quality} failed for "${this.name}", keeping what is shown: ${String(error)}`
       );

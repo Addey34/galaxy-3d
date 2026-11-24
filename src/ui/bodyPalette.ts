@@ -141,7 +141,12 @@ function fillButton(entry: PaletteEntry): void {
 
 export function setupBodyPalette(
   onSelect: (name: string) => void,
-  coordinator?: OverlayCoordinator
+  coordinator?: OverlayCoordinator,
+  /**
+   * Le visiteur s'intéresse à ce corps (survol, focus, flèches) ou ouvre la palette (`null`) : de quoi
+   * préparer son arrivée avant le clic (GAL-ENGINE-HEADROOM-001), sans rien sélectionner.
+   */
+  onHint?: (name: string | null) => void
 ): BodyPalette {
   const panel = document.getElementById('body-palette');
   const trigger = document.getElementById(
@@ -300,6 +305,7 @@ export function setupBodyPalette(
     });
     const active = highlighted >= 0 ? items[highlighted] : undefined;
     if (active) {
+      hint(active.button);
       active.button.scrollIntoView({ block: 'nearest' });
       input.setAttribute('aria-activedescendant', active.button.id);
     } else {
@@ -310,7 +316,10 @@ export function setupBodyPalette(
   const setOpen = (next: boolean): void => {
     if (next === open) return;
     open = next;
-    if (open) coordinator?.requestOpen('body-palette');
+    if (open) {
+      coordinator?.requestOpen('body-palette');
+      onHint?.(null);
+    }
     panel.hidden = !open;
     trigger.setAttribute('aria-expanded', String(open));
     input.setAttribute('aria-expanded', String(open));
@@ -412,6 +421,22 @@ export function setupBodyPalette(
     // Un instrument dont la sonde n'existe pas à cette date se grise comme elle.
     if (typedItems.length) void refreshTyped(input.value);
   };
+
+  // Le survol, le focus et les flèches annoncent le corps qui va probablement être choisi.
+  let hinted = '';
+  function hint(button: HTMLElement): void {
+    const name = button.id.replace('orbit-', '');
+    if (name === hinted || button.classList.contains('palette-hit')) return;
+    hinted = name;
+    onHint?.(name);
+  }
+  for (const type of ['pointerover', 'focusin'])
+    results.addEventListener(type, (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLElement>(
+        '.palette-item'
+      );
+      if (button) hint(button);
+    });
 
   // Clic sur une entrée : commande de navigation partagée.
   results.addEventListener('click', (event) => {

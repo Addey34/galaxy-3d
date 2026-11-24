@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
+import { clickWhenCalm } from './mainThread';
 import { openSettingsTab } from './settingsTab';
 
 /**
@@ -10,6 +11,9 @@ import { openSettingsTab } from './settingsTab';
  * vitesse du moment) ; l'ISS donne accès à son inspection 3D, les autres disent qu'ils n'ont pas de modèle.
  * Le fichier servi est la lecture RÉELLE de CelesTrak du 2026-11-03 (`satellites.fixture.json`), à la date
  * de son époque. `device-satelliteSelection.spec.ts` rejoue le parcours au toucher sur téléphone.
+ *
+ * Trois scénarios et non six : chacun démarre l'application (plusieurs secondes en CI), donc les
+ * vérifications qui partagent un état (la fiche ouverte) partagent un démarrage (GAL-ENGINE-HEADROOM-001).
  */
 const FIXTURE_TEXT = readFileSync(
   new URL('./satellites.fixture.json', import.meta.url),
@@ -64,10 +68,30 @@ async function points(page: Page): Promise<[number, number, number][]> {
   ) as [number, number, number][];
 }
 
-test('clavier : le nom de l’ISS ouvre sa fiche, ses nombres tiennent, l’inspection 3D s’ouvre et se ferme', async ({
+/** La valeur de la ligne de la fiche dont le libellé commence ainsi, ou `null` si la ligne n'existe pas. */
+async function row(page: Page, label: string): Promise<string | null> {
+  const dt = page.locator('#satellite-card dt', { hasText: label });
+  if ((await dt.count()) === 0) return null;
+  return dt.locator('xpath=following-sibling::dd[1]').textContent();
+}
+
+/** Le champ de recherche vit dans les réglages (onglet scène) : une autre surface le masque, on le rouvre. */
+async function searchFor(page: Page, name: string): Promise<void> {
+  if (!(await page.locator('#satellite-search').isVisible())) {
+    await page.locator('#settings-trigger').dispatchEvent('click');
+    await openSettingsTab(page, 'scene');
+  }
+  await page.locator('#satellite-search').fill(name);
+  await page.locator('#satellite-search').press('Enter');
+}
+
+const kilometres = (text: string | null): number =>
+  Number((text ?? '').replace(/[^\d]/g, ''));
+
+test('clavier : le nom de l’ISS ouvre sa fiche, ses nombres tiennent, axe, une seule surface, puis l’inspection 3D', async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   await boot(page);
   const search = page.locator('#satellite-search');
   await expect(search).toBeVisible();
@@ -84,15 +108,25 @@ test('clavier : le nom de l’ISS ouvre sa fiche, ses nombres tiennent, l’insp
   // Période de l'ISS : 92,96 min (jeu d'éléments du 2026-11-02).
   await expect(card).toContainText(/92[.,]9/);
   // Altitude du moment, calculée par SGP4 : une station à 400-430 km.
-  const altitude = await card
-    .locator('dt', { hasText: 'Altitude now' })
-    .locator('xpath=following-sibling::dd[1]')
-    .textContent();
-  const km = Number((altitude ?? '').replace(/[^\d]/g, ''));
+  const km = kilometres(await row(page, 'Altitude now'));
   expect(km).toBeGreaterThan(380);
   expect(km).toBeLessThan(450);
   await expect(card).toContainText('SGP4');
   await expect(card).toContainText('computed, not measured');
+
+  // Aucune violation d'accessibilité sur la fiche.
+  await page.waitForTimeout(500);
+  const axe = await new AxeBuilder({ page })
+    .include('#satellite-card')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(axe.violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([]);
+
+  // Une seule surface contextuelle : ouvrir l'aide referme la fiche.
+  await page.locator('#help-btn').dispatchEvent('click');
+  await expect(card).toBeHidden();
+  await searchFor(page, 'ISS');
+  await expect(card).toBeVisible();
 
   // L'ISS est le seul objet avec un modèle 3D : le bouton ouvre l'inspection, qui se ferme au retour.
   const inspect = page.locator('#satellite-card-inspect');
@@ -112,10 +146,10 @@ test('clavier : le nom de l’ISS ouvre sa fiche, ses nombres tiennent, l’insp
   await expect(page.locator('#satellite-overlay')).toBeVisible();
 });
 
-test('clic : un point de la couche ouvre la fiche de CET objet, sans sélectionner la Terre derrière lui', async ({
+test('clic : un point ouvre la fiche de CET objet (sans la Terre derrière lui), sans modèle inventé ; éteindre la couche referme tout', async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   await boot(page);
   await expect.poll(async () => (await points(page)).length).toBeGreaterThan(3);
   const painted = await points(page);
@@ -137,45 +171,76 @@ test('clic : un point de la couche ouvre la fiche de CET objet, sans sélectionn
   // Pas de modèle inventé : la fiche le dit, et ne propose pas d'inspection.
   await expect(card).toContainText('No 3D model for this object');
   await expect(page.locator('#satellite-card-inspect')).toBeHidden();
-  // La Terre n'a pas été sélectionnée par le même clic : l'adresse garde son corps.
+  // La Terre n'a pas été sélectionnée par le même clic : l'adresse garde son chemin.
   expect(new URL(page.url()).pathname).toBe(new URL(before).pathname);
 
-  // Échap ferme la fiche.
+  // Échap ferme la fiche ; la rouvrir puis éteindre la couche la referme et masque la recherche.
   await page.keyboard.press('Escape');
   await expect(card).toBeHidden();
+  await searchFor(page, NAMES.get(id)!);
+  await expect(card).toBeVisible();
+  await page.locator('#settings-trigger').dispatchEvent('click');
+  await openSettingsTab(page, 'scene');
+  await page.locator('#satellites-toggle').uncheck();
+  await expect(card).toBeHidden();
+  await expect(page.locator('#satellite-search-row')).toBeHidden();
 });
 
-test('la fiche passe axe et une seule surface contextuelle reste ouverte', async ({
+test('la fenêtre SGP4 : la fiche ouverte perd ses valeurs instantanées hors de la validité des éléments, et les retrouve au retour', async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   await boot(page);
   await page.locator('#satellite-search').fill('ISS');
   await page.locator('#satellite-search').press('Enter');
   const card = page.locator('#satellite-card');
   await expect(card).toBeVisible();
-  await page.waitForTimeout(500);
-  const axe = await new AxeBuilder({ page })
-    .include('#satellite-card')
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-    .analyze();
-  expect(axe.violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([]);
-  // Ouvrir une autre surface (l'aide) referme la fiche.
-  await page.locator('#help-btn').dispatchEvent('click');
-  await expect(card).toBeHidden();
-});
 
-test('éteindre la couche referme la fiche et masque la recherche', async ({
-  page,
-}) => {
-  test.setTimeout(240_000);
-  await boot(page);
-  await page.locator('#satellite-search').fill('ISS');
-  await page.locator('#satellite-search').press('Enter');
-  await expect(page.locator('#satellite-card')).toBeVisible();
-  await page.locator('#settings-trigger').dispatchEvent('click');
-  await openSettingsTab(page, 'scene');
-  await page.locator('#satellites-toggle').uncheck();
-  await expect(page.locator('#satellite-card')).toBeHidden();
-  await expect(page.locator('#satellite-search-row')).toBeHidden();
+  // Dans la fenêtre (l'époque de l'ISS est le 2026-11-02, valable jusqu'au 11-09) : les valeurs vivantes sont là.
+  const inside = kilometres(await row(page, 'Altitude now'));
+  expect(inside).toBeGreaterThan(380);
+  expect(inside).toBeLessThan(450);
+  await expect(card.locator('.sat-status')).toBeHidden();
+  await expect(card).toContainText('Speed now (SGP4)');
+  await expect(card).toContainText('Over (SGP4)');
+
+  // La date de la scène sort de la fenêtre : un mois et demi plus tard, SGP4 n'a plus de sens pour ces éléments.
+  await clickWhenCalm(page, page.locator('#time-readout'));
+  const date = page.locator('#date-input');
+  await expect(date).toBeVisible({ timeout: 30_000 });
+  await date.fill('2026-12-20');
+  await date.blur();
+  // La fiche reste ouverte, dit pourquoi, et n'affiche plus AUCUNE valeur instantanée.
+  await expect(card).toBeVisible();
+  await expect(card.locator('.sat-status')).toContainText('out of validity', {
+    timeout: 15_000,
+  });
+  expect(await row(page, 'Altitude now')).toBeNull();
+  expect(await row(page, 'Speed now')).toBeNull();
+  expect(await row(page, 'Over')).toBeNull();
+  // Ce qui ne dépend pas de la date reste : identité, orbite, fenêtre de validité.
+  await expect(card).toContainText('25544');
+  await expect(card).toContainText('2026-11-09');
+  // Et l'objet n'est plus dessiné : hors validité, il n'est ni cerclé ni cliquable.
+  await expect
+    .poll(
+      async () =>
+        Number(
+          await page.locator('#satellite-overlay').getAttribute('data-markers')
+        ),
+      { timeout: 15_000 }
+    )
+    .toBe(0);
+
+  // Retour dans la fenêtre : les valeurs reviennent, sans rouvrir la fiche.
+  await date.fill('2026-11-02');
+  await date.blur();
+  await expect(card.locator('.sat-status')).toBeHidden({ timeout: 15_000 });
+  await expect
+    .poll(async () => kilometres(await row(page, 'Altitude now')), {
+      timeout: 15_000,
+    })
+    .toBeGreaterThan(380);
+  expect(kilometres(await row(page, 'Altitude now'))).toBeLessThan(450);
+  await expect(card).toContainText('Speed now (SGP4)');
 });
