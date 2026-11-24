@@ -15,6 +15,7 @@ import {
   resolveCloudFractionDaySource,
   resolveCloudFractionNightSource,
 } from '@/core/layerSource';
+import { cloudsOnScreen } from '@/core/cloudsOnScreen';
 import { createDatedTextureLayer } from './datedTextureLayer';
 import {
   getEarth,
@@ -91,6 +92,7 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
   // Applique une texture satellite à la couche nuages (extraction shader). Mémorisée pour
   // pouvoir la RÉ-APPLIQUER quand on revient du modèle (la couche modèle a écrasé la map).
   const applySatellite = (texture: THREE.Texture): void => {
+    cloudsOnScreen.value = true;
     if (DEBUG_CLOUDS)
       console.info(
         '[cloud-debug] mode',
@@ -236,6 +238,7 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
     noteKey: 'weather.clouds.note',
     setVisible: (next) => {
       satelliteVisible = next;
+      if (!next) cloudsOnScreen.value = false;
       if (next) startData();
       // Devient visible : la couche modèle a pu écraser la map nuages (extraction OFF, alphaMap).
       // On ré-applique la dernière image satellite pour restaurer l'extraction et la texture.
@@ -271,6 +274,7 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
     onResolved: relay.subscribe,
     onLoadStateChange: loadState.subscribe,
     dispose: () => {
+      cloudsOnScreen.value = false;
       disposeSatellite();
       disposeDayMask();
       disposeNightFallback();

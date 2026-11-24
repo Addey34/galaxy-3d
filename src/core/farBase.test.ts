@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   FAR_BASE_CEILING_EXIT_RADII,
   FAR_BASE_CEILING_RADII,
+  FAR_BASE_CLOUDS_ENTER_RADII,
+  FAR_BASE_CLOUDS_LEAVE_RADII,
   FAR_BASE_ENTER_RADII,
   FAR_BASE_LEAVE_RADII,
   showsFarBase,
@@ -37,5 +39,40 @@ describe('fond de loin', () => {
   it('ignore une distance non finie', () => {
     expect(showsFarBase(NaN, true)).toBe(true);
     expect(showsFarBase(Infinity, false)).toBe(false);
+  });
+
+  describe('nuages réels à l’écran', () => {
+    it('garde le jour sous 1,3 rayon, là où sans nuages le fond fin règne', () => {
+      // 1,15 rayon (~960 km) : sans nuages Sentinel-2 ; avec, le jour (et ses nuages à 250 m).
+      expect(showsFarBase(1.15, true)).toBe(false);
+      expect(showsFarBase(1.15, true, true)).toBe(true);
+      expect(showsFarBase(1.15, false, true)).toBe(true);
+    });
+
+    it('rend la main à Sentinel-2 sous ~127 km, avec hystérésis', () => {
+      expect(FAR_BASE_CLOUDS_LEAVE_RADII).toBeLessThan(
+        FAR_BASE_CLOUDS_ENTER_RADII
+      );
+      expect(
+        showsFarBase(FAR_BASE_CLOUDS_LEAVE_RADII - 0.001, true, true)
+      ).toBe(false);
+      const between =
+        (FAR_BASE_CLOUDS_ENTER_RADII + FAR_BASE_CLOUDS_LEAVE_RADII) / 2;
+      expect(showsFarBase(between, true, true)).toBe(true);
+      expect(showsFarBase(between, false, true)).toBe(false);
+    });
+
+    it('garde la sortie AU-DESSUS du plancher de caméra du jeu du jour (30 km mesuré)', () => {
+      const floorKm = 30.1;
+      const leaveAltitudeKm = (FAR_BASE_CLOUDS_LEAVE_RADII - 1) * 6371;
+      expect(leaveAltitudeKm).toBeGreaterThan(floorKm * 2);
+    });
+
+    it('ne change rien au plafond : rien n’est demandé de loin', () => {
+      expect(showsFarBase(FAR_BASE_CEILING_RADII + 0.01, false, true)).toBe(
+        false
+      );
+      expect(showsFarBase(12, true, true)).toBe(false);
+    });
   });
 });
