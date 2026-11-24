@@ -72,6 +72,14 @@ export class CraftScene {
     this.decoder = draco;
     const loader = new GLTFLoader();
     loader.setDRACOLoader(draco);
+    // Les textures embarquées passent par un `blob:`. L'`ImageBitmapLoader` que three choisit dans Chromium le LIT par
+    // `fetch`, donc par `connect-src`, qui ne déclare pas `blob:` (mesuré sous la politique de production le
+    // 2026-11-24 : six violations pour New Horizons). Le `TextureLoader` le lit par une balise image, donc par
+    // `img-src`, qui l'autorise : c'est ce que three utilise déjà dans Safari et Firefox anciens.
+    loader.register((parser) => {
+      parser.textureLoader = new THREE.TextureLoader(parser.options.manager);
+      return { name: 'GALAXY_blob_texture_loader' };
+    });
     const gltf = await loader.loadAsync(url);
     if (this.disposed) {
       this.disposeObject(gltf.scene);

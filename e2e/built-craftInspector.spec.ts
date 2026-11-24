@@ -135,6 +135,36 @@ for (const csp of [true, false]) {
     expect(violations).toEqual([]);
   });
 
+  // Les deux modèles de science.nasa.gov sont des GLB à textures PNG embarquées : leurs images passent par un
+  // `blob:` décodé par le navigateur, ce que `img-src` doit autoriser (GAL-OBJECT-IMMERSION-002).
+  for (const [body, model] of [
+    ['new-horizons', 'new-horizons'],
+    ['exomars-tgo', 'exomars-tgo'],
+    // Déjà livrées dans #569 avec des textures WebP embarquées, jamais jouées sous la CSP avant ce lot.
+    ['parker-solar-probe', 'parker-solar-probe'],
+    ['rosetta', 'rosetta'],
+  ] as const)
+    test(`${body} (textures PNG) se décode et s’affiche ${label}`, async ({
+      page,
+    }) => {
+      test.setTimeout(240_000);
+      const violations = await boot(page, {
+        csp,
+        url: `/?body=${body}&mode=explo`,
+      });
+      await page.locator('#craft-inspect').click({ timeout: 60_000 });
+      await expect(page.locator('#craft-view')).toHaveAttribute(
+        'data-craft-model',
+        model
+      );
+      await expect(page.locator('#craft-view')).toHaveAttribute(
+        'data-craft-state',
+        'ready',
+        { timeout: 120_000 }
+      );
+      expect(violations).toEqual([]);
+    });
+
   test(`l’ISS, depuis la couche des satellites, s’affiche ${label}`, async ({
     page,
   }) => {
