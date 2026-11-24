@@ -155,6 +155,16 @@ export const cardFr: Record<CardMessageKey, string> = {
   'sv.visit.finished': 'Visite terminée. Vous pouvez continuer à explorer.',
   'sv.visit.noArchive':
     'L’archive d’exoplanètes n’a pas pu être lue : le nombre de planètes n’est pas affiché.',
+  'sv.visit.archive.none':
+    'La NASA Exoplanet Archive ne liste aucune planète pour cette étoile.',
+  'sv.visit.archive.one':
+    'La NASA Exoplanet Archive liste {n} planète pour cette étoile, avec le statut que l’archive lui donne.',
+  'sv.visit.archive.many':
+    'La NASA Exoplanet Archive liste {n} planètes pour cette étoile, avec le statut que l’archive leur donne.',
+  'sv.visit.archive.loading':
+    'Le nombre de planètes de la NASA Exoplanet Archive est encore en cours de chargement.',
+  'sv.visit.archive.unavailable':
+    'La NASA Exoplanet Archive n’a pas pu être lue : aucun nombre de planètes n’est donné ici, et un nombre absent ne veut pas dire zéro planète.',
   'st.transitionStart':
     'Changement d’échelle : du Système solaire, en unités astronomiques, au voisinage, en années-lumière.',
   'exo.card.unknown': 'non publiée',

@@ -146,17 +146,30 @@ function start(
     return l === 'fr' || l === 'es' || l === 'pt-BR' ? l : 'en';
   };
 
+  /**
+   * La phrase de l'archive : un nombre, ou l'aveu qu'il manque. Un nombre ABSENT (archive en chargement ou illisible)
+   * n'est jamais dit « zéro » : seul un nombre lu dans l'archive et égal à 0 dit « aucune planète ».
+   */
+  const archiveSentence = (index: number): string => {
+    if (archive === undefined) return t('sv.visit.archive.loading');
+    if (archive === null) return t('sv.visit.archive.unavailable');
+    const count = archiveCount(systems[index]!, archive) ?? 0;
+    return count === 0
+      ? t('sv.visit.archive.none')
+      : t(count === 1 ? 'sv.visit.archive.one' : 'sv.visit.archive.many', {
+          n: format.number(count, 3),
+        });
+  };
+
   const valuesFor = (n: number): ReturnType<typeof placeholderValues> => {
     const index = indexes[n]!;
-    const planets =
-      index >= 0 && archive ? archiveCount(systems[index]!, archive) : null;
     const years = steps[n]!.years ?? 0;
     return placeholderValues(
       systems,
       index >= 0 ? index : null,
       years,
       format,
-      planets,
+      index >= 0 ? archiveSentence(index) : '',
       controller.absoluteYear(),
       {
         approaching: t('sv.visit.approaching'),

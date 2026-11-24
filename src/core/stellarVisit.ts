@@ -82,7 +82,7 @@ export const PLACEHOLDERS = [
   'spectral',
   'pm',
   'rv',
-  'planets',
+  'archive',
   'vmag',
   'approach',
   'members',
@@ -202,7 +202,7 @@ export function placeholderValues(
   index: number | null,
   years: number,
   format: Formatter,
-  planets: number | null,
+  archiveText: string,
   absoluteYear: number,
   approachWords: { approaching: string; receding: string }
 ): Record<Placeholder, string> {
@@ -239,7 +239,7 @@ export function placeholderValues(
             m[2] ? `${m[0]} (${m[2]})` : m[0]
           ).join(', ')
         : '',
-    planets: planets === null ? '' : String(planets),
+    archive: archiveText,
     nearestName: nearestRow ? nearestRow[0] : '',
     nearestLy: nearestFacts ? format.fixed(nearestFacts.lightYears, 2) : '',
     nearestAu: nearestFacts ? format.number(nearestFacts.au, 3) : '',

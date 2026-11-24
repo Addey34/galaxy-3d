@@ -107,7 +107,7 @@ describe('la visite du voisinage solaire : chaque étape contre les données liv
         index,
         years,
         format,
-        planets,
+        planets === null ? 'ARCHIVE' : `ARCHIVE ${planets}`,
         2026.9 + years,
         WORDS
       );
@@ -122,6 +122,15 @@ describe('la visite du voisinage solaire : chaque étape contre les données liv
             expect(values[name as keyof typeof values], name).not.toBe('');
         }
     });
+  });
+
+  it('aucun texte ne porte un nombre de planètes nu : la phrase de l’archive dit aussi le chargement et l’indisponibilité', () => {
+    for (const step of visit.steps)
+      for (const l of VISIT_LOCALES) {
+        expect(placeholdersOf(step.body[l])).not.toContain('planets');
+        if (step.requires?.archivePlanets)
+          expect(placeholdersOf(step.body[l]), `${l}`).toContain('archive');
+      }
   });
 
   it('les règles désignent ce que les titres annoncent', () => {

@@ -160,6 +160,16 @@ export const cardEn = {
   'sv.visit.finished': 'Visit finished. You can keep exploring.',
   'sv.visit.noArchive':
     'The exoplanet archive could not be read: planet counts are not shown.',
+  'sv.visit.archive.none':
+    'The NASA Exoplanet Archive lists no planet for this star.',
+  'sv.visit.archive.one':
+    'The NASA Exoplanet Archive lists {n} planet for this star, with the status the archive gives it.',
+  'sv.visit.archive.many':
+    'The NASA Exoplanet Archive lists {n} planets for this star, with the status the archive gives them.',
+  'sv.visit.archive.loading':
+    'The planet count from the NASA Exoplanet Archive is still loading.',
+  'sv.visit.archive.unavailable':
+    'The NASA Exoplanet Archive could not be read: no planet count is given here, and a missing count does not mean zero planets.',
   'st.transitionStart':
     'Changing scale: from the Solar System, in astronomical units, to the neighbourhood, in light-years.',
   'exo.card.unknown': 'not published',

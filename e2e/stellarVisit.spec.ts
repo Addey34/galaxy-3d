@@ -122,7 +122,7 @@ test.describe('desktop', () => {
       await page.locator('#stellar-visit-next').click();
       await expect(title(page)).toContainText(star);
       await expect(page.locator('#stellar-visit-body')).toContainText(
-        /planet\(s\)/
+        /lists \d+ planets? for this star/
       );
     }
     await page.locator('#stellar-visit-next').click();
@@ -197,6 +197,56 @@ test.describe('desktop', () => {
     await expect(panel(page)).toHaveCount(0);
     await expect.poll(() => search(page).get('visit')).toBeNull();
     await expect(page.locator('#stellar-visit-start')).toBeVisible();
+  });
+
+  test('l’archive en chargement ou illisible ne dit JAMAIS « aucune planète » : un nombre absent n’est pas zéro', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    // Chargement : la réponse est retenue par une porte, jamais par un délai deviné.
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    await page.route('**/assets/sky/exoplanets.json', async (route) => {
+      await gate;
+      await route.continue();
+    });
+    await load(page, `${SOLAR}&view=neighbourhood&visit=neighbours&step=1`);
+    await expect(panel(page)).toBeVisible({ timeout: 60_000 });
+    const body = page.locator('#stellar-visit-body');
+    await expect(body).toContainText('still loading');
+    await expect(body).not.toContainText(/lists no planet|lists 0/);
+    await expect(
+      page.locator('.sv-visit-facts dt', { hasText: 'Planets listed' })
+    ).toHaveCount(0);
+    release();
+    await expect(body).toContainText(/lists \d+ planets for this star/, {
+      timeout: 30_000,
+    });
+    await expect(body).not.toContainText('still loading');
+    await expect(
+      page.locator('.sv-visit-facts dt', { hasText: 'Planets listed' })
+    ).toBeVisible();
+  });
+
+  test('archive illisible : la phrase le dit, aucune ligne de planètes, rien n’est présenté comme zéro', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    await page.route('**/assets/sky/exoplanets.json', (route) => route.abort());
+    await load(page, `${SOLAR}&view=neighbourhood&visit=neighbours&step=1`);
+    await expect(panel(page)).toBeVisible({ timeout: 60_000 });
+    const body = page.locator('#stellar-visit-body');
+    await expect(body).toContainText('could not be read', { timeout: 30_000 });
+    await expect(body).toContainText('does not mean zero planets');
+    await expect(body).not.toContainText(/lists no planet|still loading/);
+    await expect(
+      page.locator('.sv-visit-facts dt', { hasText: 'Planets listed' })
+    ).toHaveCount(0);
+    // Les arrêts à planètes suivants disent la même chose, dans la langue de la page.
+    for (let i = 0; i < 3; i += 1)
+      await page.locator('#stellar-visit-next').click();
+    await expect(title(page)).toContainText('Ran');
+    await expect(body).toContainText('could not be read');
   });
 
   test('clavier seul, axe, et le texte suit la langue (français)', async ({

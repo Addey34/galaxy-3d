@@ -39,10 +39,10 @@
         "pt-BR": "A estrela mais próxima: {name}"
       },
       "body": {
-        "en": "{name} is the nearest star to the Sun in this catalogue: {ly} light-years, or {au} astronomical units. Its published spectral type is {spectral}. Its light takes about {ly} years to reach us. The NASA Exoplanet Archive lists {planets} planet(s) for it. They are catalogue entries, not drawings: this view draws no planet.",
-        "fr": "{name} est l’étoile la plus proche du Soleil dans ce catalogue : {ly} années-lumière, soit {au} unités astronomiques. Son type spectral publié est {spectral}. Sa lumière met environ {ly} ans à nous parvenir. La NASA Exoplanet Archive liste {planets} planète(s) pour elle. Ce sont des entrées de catalogue, pas des dessins : cette vue ne dessine aucune planète.",
-        "es": "{name} es la estrella más cercana al Sol de este catálogo: {ly} años luz, es decir {au} unidades astronómicas. Su tipo espectral publicado es {spectral}. Su luz tarda unos {ly} años en llegar hasta nosotros. El NASA Exoplanet Archive lista {planets} planeta(s) para ella. Son entradas de catálogo, no dibujos: esta vista no dibuja ningún planeta.",
-        "pt-BR": "{name} é a estrela mais próxima do Sol neste catálogo: {ly} anos-luz, ou {au} unidades astronômicas. Seu tipo espectral publicado é {spectral}. Sua luz leva cerca de {ly} anos para chegar até nós. O NASA Exoplanet Archive lista {planets} planeta(s) para ela. São entradas de catálogo, não desenhos: esta vista não desenha nenhum planeta."
+        "en": "{name} is the nearest star to the Sun in this catalogue: {ly} light-years, or {au} astronomical units. Its published spectral type is {spectral}. Its light takes about {ly} years to reach us. {archive} They are catalogue entries, not drawings: this view draws no planet.",
+        "fr": "{name} est l’étoile la plus proche du Soleil dans ce catalogue : {ly} années-lumière, soit {au} unités astronomiques. Son type spectral publié est {spectral}. Sa lumière met environ {ly} ans à nous parvenir. {archive} Ce sont des entrées de catalogue, pas des dessins : cette vue ne dessine aucune planète.",
+        "es": "{name} es la estrella más cercana al Sol de este catálogo: {ly} años luz, es decir {au} unidades astronómicas. Su tipo espectral publicado es {spectral}. Su luz tarda unos {ly} años en llegar hasta nosotros. {archive} Son entradas de catálogo, no dibujos: esta vista no dibuja ningún planeta.",
+        "pt-BR": "{name} é a estrela mais próxima do Sol neste catálogo: {ly} anos-luz, ou {au} unidades astronômicas. Seu tipo espectral publicado é {spectral}. Sua luz leva cerca de {ly} anos para chegar até nós. {archive} São entradas de catálogo, não desenhos: esta vista não desenha nenhum planeta."
       }
     },
     {
@@ -91,10 +91,10 @@
         "pt-BR": "Uma estrela com um planeta catalogado: {name}"
       },
       "body": {
-        "en": "{name} (epsilon Eridani) is {ly} light-years away, spectral type {spectral}. The NASA Exoplanet Archive lists {planets} planet(s) for this star, with the status the archive gives them. They are catalogue entries: this view draws no planet and shows no texture or surface.",
-        "fr": "{name} (epsilon Eridani) est à {ly} années-lumière, type spectral {spectral}. La NASA Exoplanet Archive liste {planets} planète(s) pour cette étoile, avec le statut que l’archive leur donne. Ce sont des entrées de catalogue : cette vue ne dessine aucune planète et ne montre ni texture ni surface.",
-        "es": "{name} (epsilon Eridani) está a {ly} años luz, tipo espectral {spectral}. El NASA Exoplanet Archive lista {planets} planeta(s) para esta estrella, con el estado que el archivo les da. Son entradas de catálogo: esta vista no dibuja ningún planeta ni muestra textura o superficie.",
-        "pt-BR": "{name} (epsilon Eridani) está a {ly} anos-luz, tipo espectral {spectral}. O NASA Exoplanet Archive lista {planets} planeta(s) para esta estrela, com o status que o arquivo lhes dá. São entradas de catálogo: esta vista não desenha nenhum planeta nem mostra textura ou superfície."
+        "en": "{name} (epsilon Eridani) is {ly} light-years away, spectral type {spectral}. {archive} They are catalogue entries: this view draws no planet and shows no texture or surface.",
+        "fr": "{name} (epsilon Eridani) est à {ly} années-lumière, type spectral {spectral}. {archive} Ce sont des entrées de catalogue : cette vue ne dessine aucune planète et ne montre ni texture ni surface.",
+        "es": "{name} (epsilon Eridani) está a {ly} años luz, tipo espectral {spectral}. {archive} Son entradas de catálogo: esta vista no dibuja ningún planeta ni muestra textura o superficie.",
+        "pt-BR": "{name} (epsilon Eridani) está a {ly} anos-luz, tipo espectral {spectral}. {archive} São entradas de catálogo: esta vista não desenha nenhum planeta nem mostra textura ou superfície."
       }
     },
     {
@@ -108,10 +108,10 @@
         "pt-BR": "Vários planetas catalogados: {name}"
       },
       "body": {
-        "en": "{name} (tau Ceti) is {ly} light-years away, spectral type {spectral}. The NASA Exoplanet Archive lists {planets} planet(s) for it. Their existence and parameters are those published by the archive, which keeps each one's status: the catalogue is a record of claims, not a map of worlds.",
-        "fr": "{name} (tau Ceti) est à {ly} années-lumière, type spectral {spectral}. La NASA Exoplanet Archive liste {planets} planète(s) pour elle. Leur existence et leurs paramètres sont ceux que publie l’archive, qui garde le statut de chacune : le catalogue est un relevé d’annonces, pas une carte de mondes.",
-        "es": "{name} (tau Ceti) está a {ly} años luz, tipo espectral {spectral}. El NASA Exoplanet Archive lista {planets} planeta(s) para ella. Su existencia y sus parámetros son los que publica el archivo, que conserva el estado de cada uno: el catálogo es un registro de anuncios, no un mapa de mundos.",
-        "pt-BR": "{name} (tau Ceti) está a {ly} anos-luz, tipo espectral {spectral}. O NASA Exoplanet Archive lista {planets} planeta(s) para ela. Sua existência e seus parâmetros são os que o arquivo publica, que guarda o status de cada um: o catálogo é um registro de anúncios, não um mapa de mundos."
+        "en": "{name} (tau Ceti) is {ly} light-years away, spectral type {spectral}. {archive} Their existence and parameters are those published by the archive, which keeps each one's status: the catalogue is a record of claims, not a map of worlds.",
+        "fr": "{name} (tau Ceti) est à {ly} années-lumière, type spectral {spectral}. {archive} Leur existence et leurs paramètres sont ceux que publie l’archive, qui garde le statut de chacune : le catalogue est un relevé d’annonces, pas une carte de mondes.",
+        "es": "{name} (tau Ceti) está a {ly} años luz, tipo espectral {spectral}. {archive} Su existencia y sus parámetros son los que publica el archivo, que conserva el estado de cada uno: el catálogo es un registro de anuncios, no un mapa de mundos.",
+        "pt-BR": "{name} (tau Ceti) está a {ly} anos-luz, tipo espectral {spectral}. {archive} Sua existência e seus parâmetros são os que o arquivo publica, que guarda o status de cada um: o catálogo é um registro de anúncios, não um mapa de mundos."
       }
     },
     {
