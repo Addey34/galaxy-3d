@@ -162,6 +162,53 @@ describe('la visite du voisinage solaire : chaque étape contre les données liv
     ).toBeGreaterThan(0);
   });
 
+  it('la correspondance adaptative est sans ambiguïté : un hôte de l’archive n’est reconnu que par UN système', () => {
+    const owners = new Map<string, number[]>();
+    systems.forEach((system, i) => {
+      for (const match of archiveMatches(system, exoplanets.systems))
+        owners.set(match.host, [...(owners.get(match.host) ?? []), i]);
+    });
+    expect(owners.size, 'au moins les hôtes connus').toBeGreaterThanOrEqual(20);
+    for (const [host, ids] of owners)
+      expect(
+        ids,
+        `hôte « ${host} » reconnu par ${ids.length} systèmes`
+      ).toHaveLength(1);
+    // Un système peut en revanche porter plusieurs hôtes (les deux composantes d'un couple, chacune avec ses
+    // planètes) : ils sont comptés ensemble, et jamais deux fois.
+    for (const system of systems) {
+      const hosts = archiveMatches(system, exoplanets.systems).map(
+        (m) => m.host
+      );
+      expect(new Set(hosts).size).toBe(hosts.length);
+    }
+  });
+
+  it('les écarts de distance entre l’archive et le catalogue des voisines sont CONNUS, et nommés', () => {
+    // L'archive donne à ces trois hôtes une distance (`sy_dist`, relue telle quelle dans le CSV de l'instantané du
+    // 2026-11-03 : 5,675773, 5,921535 et 6,84 pc) qui diverge du catalogue des voisines (2,55, 3,79 et 3,52 pc, Gaia DR3).
+    // La visite n'affiche JAMAIS la distance de l'archive ; ce test fait remarquer tout NOUVEL écart.
+    const KNOWN = new Set(['GJ 411', 'GJ 273', 'Gl 725 B']);
+    const unexpected: string[] = [];
+    for (const system of systems)
+      for (const match of archiveMatches(system, exoplanets.systems)) {
+        const host = exoplanets.systems.find((e) => e[0] === match.host)!;
+        const nearest = Math.min(...system.members.map((m) => m[5]));
+        const farthest = Math.max(...system.members.map((m) => m[5]));
+        if (
+          host[3] !== null &&
+          (host[3] < nearest * 0.9 || host[3] > farthest * 1.1) &&
+          !KNOWN.has(match.host)
+        )
+          unexpected.push(`${match.host} : ${host[3]} pc`);
+      }
+    expect(unexpected).toEqual([]);
+    for (const host of KNOWN) {
+      const entry = exoplanets.systems.find((e) => e[0] === host)!;
+      expect(entry[3], host).toBeGreaterThan(5);
+    }
+  });
+
   it('la correspondance avec l’archive ne se fait pas par le nom : même direction et même distance', () => {
     const proxima = systems[pickSystem(systems, { pick: 'nearest' })]!;
     const found = archiveMatches(proxima, exoplanets.systems);
