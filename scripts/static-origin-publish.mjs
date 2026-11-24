@@ -16,7 +16,7 @@
  *                    manque ou change de taille, ou si un fichier craft n'a pas l'empreinte du registre ;
  *   --stage <dossier> assemble le dossier à déployer (copie locale, rien n'est envoyé) et écrit son
  *                    manifeste (chemin, taille) dans `<dossier>/../<nom>.manifest.json` ;
- *   --verify         APRÈS publication : pour chacun des huit modèles, HTTP 200, octets, SHA-256 et CORS
+ *   --verify         APRÈS publication : pour chacun des modèles du registre, HTTP 200, octets, SHA-256 et CORS
  *                    lus sur l'URL réelle, puis le contrôle d'origine complet (`check-asset-origin`) ;
  *   --origin <url>   un autre hôte (essai) ; défaut : VITE_STATIC_ORIGIN, sinon le Worker de production.
  *
@@ -173,11 +173,28 @@ async function preflight() {
     );
   for (const p of existing.different)
     problems.push(`contenu différent sur le Worker (serait remplacé) : ${p}`);
-  // 3. Les fichiers craft ne sont pas encore (ou sont déjà) en ligne : on le dit.
+  // 3. Les fichiers craft ne sont pas encore (ou sont déjà) en ligne : on le dit. PUBLICATION ADDITIVE
+  // (GAL-OBJECT-IMMERSION-002) : un fichier craft DÉJÀ en ligne doit y être octet pour octet (même taille, même
+  // SHA-256), sinon le surensemble le REMPLACERAIT, ce que ce protocole interdit.
   const craftSeen = await pool(craftFiles, (f) => head(f.path));
+  if (craftSeen.some((r) => !r)) {
+    console.error(`Origine injoignable pour un fichier craft : ${origin}`);
+    process.exit(2);
+  }
   const online = craftFiles.filter(
-    (f, i) => craftSeen[i]?.status === 200 && craftSeen[i].size === f.bytes
+    (f, i) =>
+      craftSeen[i]?.status === 200 &&
+      craftSeen[i].size === f.bytes &&
+      craftSeen[i].sha === f.sha256
   );
+  craftFiles.forEach((f, i) => {
+    const r = craftSeen[i];
+    if (r?.status === 200 && (r.size !== f.bytes || r.sha !== f.sha256))
+      problems.push(
+        `craft DÉJÀ en ligne avec un autre contenu (serait remplacé, interdit) : ${f.path}`
+      );
+  });
+  const toAdd = craftFiles.filter((f, i) => craftSeen[i]?.status !== 200);
   const bytesTotal = craftFiles.reduce((n, f) => n + f.bytes, 0);
   console.log(`Origine lue : ${origin}`);
   console.log(
@@ -185,6 +202,9 @@ async function preflight() {
   );
   console.log(
     `Déjà en ligne, octet pour octet (SHA-256) : ${existing.same} sur ${paths.length}. Craft déjà en ligne : ${online.length} sur ${craftFiles.length}.`
+  );
+  console.log(
+    `Craft à AJOUTER (absents du Worker) : ${toAdd.length}${toAdd.length ? ` : ${toAdd.map((f) => `${f.path} (${f.bytes} o)`).join(', ')}` : ''}.`
   );
   if (problems.length) {
     console.error(`${problems.length} écart(s) :\n  ${problems.join('\n  ')}`);

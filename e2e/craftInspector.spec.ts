@@ -152,3 +152,52 @@ test('le nom de l’engin est dans la langue de la page (Voyager en français)',
     'Sonde Voyager : inspection en 3D'
   );
 });
+
+/**
+ * LES DEUX MODÈLES DE `science.nasa.gov` (GAL-OBJECT-IMMERSION-002) : New Horizons et le Trace Gas Orbiter
+ * d'ExoMars, fichiers GLB à textures PNG embarquées (non compressés en Draco). Ils se chargent, leur
+ * provenance pointe la PAGE de la NASA (pas un commit), et leurs pièces nommées suivent la langue.
+ */
+test('New Horizons : modèle à textures chargé, provenance science.nasa.gov, aucune pièce inventée', async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  await bootProbe(page, 'new-horizons');
+  await page.locator('#craft-inspect').click({ timeout: 60_000 });
+  const view = page.locator('#craft-view');
+  await expect(view).toHaveAttribute('data-craft-model', 'new-horizons');
+  await expect(view).toHaveAttribute('data-craft-state', 'ready', {
+    timeout: 120_000,
+  });
+  const provenance = page.locator('#craft-provenance');
+  await expect(provenance).toContainText('Visualization Technology');
+  await expect(provenance.locator('a')).toHaveAttribute(
+    'href',
+    'https://science.nasa.gov/resource/new-horizons-3d-model/'
+  );
+  // Aucune pièce n'est nommée : le seul noeud candidat (`AO_dish`) ne désigne PAS le grand réflecteur
+  // (mesuré à l'écran : la mise en évidence ne colorait que le sous-réflecteur), donc il n'est pas déclaré.
+  await expect(page.locator('.cv-part')).toHaveCount(0);
+});
+
+test('Trace Gas Orbiter : modèle chargé, quatre pièces nommées, libellés en espagnol', async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  await bootProbe(page, 'exomars-tgo', 'es');
+  await page.locator('#craft-inspect').click({ timeout: 60_000 });
+  const view = page.locator('#craft-view');
+  await expect(view).toHaveAttribute('data-craft-model', 'exomars-tgo');
+  await expect(view).toHaveAttribute('data-craft-state', 'ready', {
+    timeout: 120_000,
+  });
+  await expect(page.locator('.cv-part')).toHaveCount(4);
+  await expect(page.locator('#craft-view')).toContainText('Paneles solares');
+  const part = page.locator('.cv-part').first();
+  await part.click();
+  await expect(part).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#craft-provenance a')).toHaveAttribute(
+    'href',
+    'https://science.nasa.gov/resource/trace-gas-orbiter-3d-model/'
+  );
+});

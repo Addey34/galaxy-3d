@@ -585,12 +585,24 @@ redistribution bundle.
 
 ## Spacecraft 3D models and the Draco decoder
 
-- **Spacecraft models** under `public/assets/models/craft/` (ISS, James Webb Space Telescope, Juno, Voyager,
+- **Spacecraft models** under `public/assets/models/craft/` from the GitHub repository (ISS, James Webb Space Telescope, Juno, Voyager,
   Cassini-Huygens, Parker Solar Probe, Rosetta, OSIRIS-REx): NASA 3D Resources, repository `nasa/NASA-3D-Resources`
   at a pinned commit, copied byte for byte. The repository README states the assets are "free and without
   copyright", and NASA's Images and Media Usage Guidelines (read on 2026-11-23) say content used to render
   3D models is generally not subject to copyright in the United States. No endorsement by NASA is implied.
   Source address, SHA-256 and size of each file: [`src/registry/craft/files.json`](src/registry/craft/files.json).
+- **Two more spacecraft models** (New Horizons, ExoMars Trace Gas Orbiter), same folder: published by NASA on
+  `science.nasa.gov/3d-resources` (pages `science.nasa.gov/resource/new-horizons-3d-model/` and
+  `.../trace-gas-orbiter-3d-model/`, credit "NASA Visualization Technology Applications and Development (VTAD)"),
+  files read on 2026-11-24 and copied byte for byte; they are not in the GitHub repository, so no commit pins them
+  and their SHA-256 does (`scripts/import-craft-models.mjs` refuses a changed file). Same NASA usage rule as above.
+  The Trace Gas Orbiter is a European Space Agency mission: the model is NASA's visualisation of it, and this
+  project has not assessed any right ESA may hold in the spacecraft's design.
+- **No model for the other probes or stations**: for BepiColombo, Juice, Mars Express, Solar Orbiter, Hera,
+  Hayabusa2 and the Tiangong station no model with redistribution rights established was found (searched on
+  2026-11-24: ESA's Scifleet offers Blender, FBX and OBJ files with no licence stated for them; no official release was found for JAXA's Hayabusa2 or CMSA's
+  Tiangong; third-party sale listings are not redistributable). The card says so rather than showing an
+  invented shape.
 - **Draco decoder** `public/assets/draco/<hash>/draco_decoder.js`: the JavaScript build of Google Draco shipped with
   three.js (`three/examples/jsm/libs/draco/gltf`), Apache License 2.0, copied unchanged. The licence text is
   distributed next to it, as Apache License section 4(a) requires:
