@@ -165,6 +165,60 @@ test.describe('desktop', () => {
   });
 });
 
+test.describe('historique', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('Suivant puis fermer retire l’entrée (aucun doublon) ; un Retour pendant une ouverture retardée n’ouvre rien', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    await quiet(page);
+    await load(page, SOLAR);
+    await skyCard(page, 'TRAPPIST-1');
+    await page.locator('#exo-card-explore').click();
+    await expect(explorer(page)).toBeVisible({ timeout: 60_000 });
+    await page.goBack();
+    await expect(explorer(page)).toHaveCount(0);
+    await page.goForward();
+    await expect(explorer(page)).toBeVisible({ timeout: 60_000 });
+    // Fermer une exploration ramenée par Suivant doit RETIRER son entrée par un Retour, pas la réécrire :
+    // l'entrée reste alors devant, et Suivant la rouvre. Réécrite, elle serait un doublon de l'adresse du
+    // ciel et Suivant ne ramènerait plus rien.
+    await page.locator('#system-back').click();
+    await expect(explorer(page)).toHaveCount(0);
+    expect(search(page).get('view')).toBeNull();
+    await page.goForward();
+    await expect(explorer(page)).toBeVisible({ timeout: 60_000 });
+    await page.keyboard.press('Escape');
+    await expect(explorer(page)).toHaveCount(0);
+
+    // Les données de l'exploration RETARDÉES : un Retour avant leur arrivée annule l'ouverture. Rien ne
+    // s'ouvre ensuite, et l'adresse n'est pas réécrite contre l'intention du visiteur.
+    let release: () => void = () => undefined;
+    let heldRequests = 0;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route(/\/assets\/sky\/systems\/\d\d\.json$/, async (route) => {
+      heldRequests += 1;
+      await held;
+      await route.continue();
+    });
+    await page.goForward();
+    await expect.poll(() => search(page).get('view')).toBe('system');
+    // L'ouverture attend bien son paquet, retenu : c'est pendant cette attente que le visiteur revient.
+    await expect.poll(() => heldRequests).toBe(1);
+    await page.goBack();
+    await expect.poll(() => search(page).get('view')).toBeNull();
+    // Le paquet arrive maintenant : l'exploration annulée ne doit ni s'ouvrir ni réécrire l'adresse.
+    const arrived = page.waitForResponse(/\/assets\/sky\/systems\/\d\d\.json$/);
+    release();
+    await arrived;
+    await expect(page.locator('#system-view')).toHaveCount(0);
+    await expect(explorer(page)).toHaveCount(0);
+    await expect.poll(() => search(page).get('view')).toBeNull();
+    await page.unroute(/\/assets\/sky\/systems\/\d\d\.json$/);
+  });
+});
+
 test.describe('téléphone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 

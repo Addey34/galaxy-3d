@@ -107,6 +107,11 @@ export async function setupSystemView(
   }
   let opened: Session | null = null;
   let opening = false;
+  /**
+   * Le jeton de l'ouverture EN COURS : un mouvement d'historique pendant qu'elle attend ses données
+   * l'incrémente, et l'ouverture devenue caduque s'arrête (ou se défait) sans rien ouvrir ni réécrire.
+   */
+  let request = 0;
   /** Vrai quand CETTE ouverture a ajouté son entrée d'historique : fermer la retire par « Retour ». */
   let pushed = false;
   let baseAddress: string | null = null;
@@ -132,15 +137,25 @@ export async function setupSystemView(
   claimHistory((): boolean => {
     const address = parseSystemAddress(window.location.search);
     const viewOnly = baseAddress !== null && solarNow() === baseAddress;
-    if (opened && !address) opened.close(true);
-    else if (!opened && address?.host) {
-      open(address.host, true);
-      if (viewOnly) pushed = true;
+    // Une ouverture qui attend encore ses données est annulée par TOUT mouvement d'historique : le
+    // visiteur a choisi une autre entrée, elle ne doit plus s'ouvrir ni réécrire l'adresse.
+    if (opening) {
+      request += 1;
+      opening = false;
     }
+    if (opened && !address) opened.close(true);
+    else if (!opened && address?.host)
+      // Ramenée par Suivant, l'entrée a un prédécesseur dans la session : la fermer devra le retrouver
+      // par un « Retour » (`historyEntry`, même règle que la vue du voisinage pour son exploration).
+      open(address.host, true, viewOnly);
     return viewOnly;
   });
 
-  function open(wanted: string, fromAddress = false): void {
+  function open(
+    wanted: string,
+    fromAddress = false,
+    historyEntry = false
+  ): void {
     if (opened || opening) return;
     const refuse = (announce: string | null): void => {
       if (announce) getAnnouncer().announce(t(announce));
@@ -151,6 +166,8 @@ export async function setupSystemView(
     if (host.renderer.getContext().isContextLost())
       return refuse('st.unavailable');
     opening = true;
+    const id = ++request;
+    const stale = (): boolean => id !== request;
     const active =
       document.activeElement instanceof HTMLElement &&
       document.activeElement !== document.body
@@ -158,6 +175,7 @@ export async function setupSystemView(
         : null;
     void (async () => {
       const sky = await exoplanets();
+      if (stale()) return;
       const slug = starSlug(wanted);
       const system = sky?.systems.find((s) => starSlug(s[0]) === slug) ?? null;
       if (!sky || !system) {
@@ -169,6 +187,7 @@ export async function setupSystemView(
         ? neighbourSystemOf(system[0], groupSystems(file.stars), sky.systems)
         : null;
       const module = await import('./systemExplorer');
+      if (stale()) return;
       host.coordinator.closeAll();
 
       // ---- la vue : un conteneur plein écran (les boîtes `sv-*`), la scène solaire masquée et inerte
@@ -234,6 +253,9 @@ export async function setupSystemView(
           onClose: () => {
             // D'abord rendre la boucle à la scène solaire, puis le DOM et le focus, puis l'adresse.
             undo();
+            // Une ouverture annulée pendant qu'elle attendait ses données se défait SANS toucher à
+            // l'adresse ni rouvrir la fiche : le visiteur est déjà ailleurs dans son historique.
+            if (stale()) return;
             opened = null;
             const viaHistory = closingViaHistory;
             if (viaHistory) pushed = false;
@@ -254,6 +276,10 @@ export async function setupSystemView(
         throw error;
       }
       session.explorer = explorer;
+      if (stale()) {
+        explorer.close();
+        return;
+      }
       opened = session;
       opening = false;
       baseAddress = solarNow();
@@ -262,13 +288,14 @@ export async function setupSystemView(
         planet: requested?.planet ?? null,
       };
       if (fromAddress) {
-        pushed = false;
+        pushed = historyEntry;
         write(address, 'replace');
       } else {
         pushed = true;
         write(address, 'push');
       }
     })().catch((error: unknown) => {
+      if (stale()) return;
       opening = false;
       Logger.warn('[systemView] exploration indisponible', error);
       getAnnouncer().announce(t('sx.unavailable'));

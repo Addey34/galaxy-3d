@@ -8547,6 +8547,8 @@ SUPERSEDED 2026-11-25, dans le § précédent : la limite « aucune entrée n'es
 
 **Preuves.** `core/exoplanetSystems.test.ts` (modèle d'hôte, circumbinaire, absent, microlentille, rattachement au voisinage, cohérence des deux instantanés) ; `core/stellarPermalink.test.ts` (adresse `view=system`, identifiants distincts) ; `SystemScene.test.ts` (aucune sphère pour un couple) ; `e2e/skySystemExplorer.spec.ts` (Chromium : fiche du ciel → exploration → retour à la MÊME fiche, Retour et Suivant, axe ; six architectures par lien, hôte inconnu nettoyé ; téléphone en français sans débordement).
 
+**L'historique, corrigé avant fusion.** Deux défauts de l'enveloppe, trouvés en revue et reproduits par le test avant correction : (1) une exploration ramenée par Suivant perdait le fait que son entrée a un prédécesseur (la fin asynchrone de l'ouverture remettait `pushed` à faux), donc la fermer RÉÉCRIVAIT l'entrée au lieu de la retirer, et Suivant ne ramenait plus rien ; l'ouverture reçoit maintenant ce fait (`historyEntry`), comme l'exploration de la vue du voisinage ; (2) un Retour pendant une ouverture dont les données tardaient ne l'annulait pas : l'exploration s'ouvrait ensuite et réécrivait l'adresse. Chaque ouverture porte un jeton, tout mouvement d'historique l'annule, et une ouverture annulée se défait sans toucher à l'adresse ni rouvrir la fiche. `e2e/skySystemExplorer.spec.ts` (« historique », paquet retenu par une route) falsifié pour chacun.
+
 **Limites.** Pas de vol animé entre le ciel et l'exploration (une ouverture, comme depuis le voisinage). Les 19 hôtes de l'instantané détaillé absents de l'instantané du ciel (ajoutés à l'archive entre les deux lectures) ne sont pas sélectionnables dans le ciel. Aucune mesure sur téléphone réel.
 
 
