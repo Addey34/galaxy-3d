@@ -47,6 +47,11 @@ interface Options {
   camera: PerspectiveCamera;
   canvas: HTMLElement;
   coordinator: OverlayCoordinator;
+  /**
+   * « Explorer ce système » (GAL-UNIVERSE-007) : l'exploration de l'hôte affiché, par l'enveloppe du ciel
+   * (`ui/systemView`). Absent : pas de bouton (le renderer n'est pas disponible).
+   */
+  onExplore?: (system: ExoplanetSystem) => void;
   /** La caméra, pour centrer l'écran sur le système ouvert (`SkyCenteringView`, chargé à la première ouverture). */
   centering?: SkyCenteringHost;
 }
@@ -160,7 +165,15 @@ export async function setupExoplanetCard(
   planets.className = 'exo-planets';
   const source = document.createElement('p');
   source.className = 'exo-source';
-  body.append(planets, source);
+  const explore = document.createElement('button');
+  explore.type = 'button';
+  explore.id = 'exo-card-explore';
+  explore.className = 'settings-button exo-explore';
+  explore.hidden = !options.onExplore;
+  explore.addEventListener('click', () => {
+    if (current) options.onExplore?.(current);
+  });
+  body.append(explore, planets, source);
   card.append(header, body);
   document.body.append(card);
 
@@ -202,6 +215,7 @@ export async function setupExoplanetCard(
       date: starfield.exoplanetHosts?.retrieved ?? '',
     });
     closeButton.setAttribute('aria-label', t('surface.close'));
+    explore.textContent = t('sx.open');
   }
 
   function close(): void {

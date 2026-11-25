@@ -428,6 +428,21 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "l'exploration d'un système stellaire (GAL-UNIVERSE-006) : la scène du système (`components/stellar/SystemScene`), le modèle (`core/exoplanetSystems`), la fiche, la liste, le tableau de comparaison et les contrôles, importés par `ui/stellarView` au premier clic sur « Explorer ce système » ou à l'ouverture d'une adresse `explore=1`. Ni le démarrage ni la vue du voisinage sans exploration ne le chargent ; les paquets `public/assets/sky/systems/NN.json` (~32 Ko chacun) ne sont lus qu'alors.",
   },
   {
+    chunk: 'systemView',
+    reason:
+      "l'enveloppe de l'exploration d'un système choisi dans le CIEL (GAL-UNIVERSE-007) : rendu prêté, masque, adresse `view=system&host=`, historique ; importée par `ui/skyLayerToggles` au premier « Explorer ce système » de la fiche d'un système, ou pour une adresse `view=system`. Jamais au démarrage.",
+  },
+  {
+    chunk: 'exoplanetSystems',
+    reason:
+      "le modèle des systèmes (`core/exoplanetSystems`, GAL-UNIVERSE-006 et 007), partagé par l'exploration (`ui/systemExplorer`) et son enveloppe du ciel (`ui/systemView`) : il part avec l'une ou l'autre, jamais au démarrage.",
+  },
+  {
+    chunk: 'spectralColour',
+    reason:
+      "la couleur indicative d'un type spectral (GAL-UNIVERSE-007), partagée par la scène du voisinage et celle d'un système, sortie de `NeighbourhoodScene` pour qu'une exploration ouverte depuis le ciel ne télécharge pas la scène du voisinage. Jamais au démarrage.",
+  },
+  {
     chunk: 'exoplanetMethods',
     reason:
       "la table des méthodes de découverte de l'archive (GAL-UNIVERSE-006), partagée par la fiche d'un système du ciel (`ui/exoplanetCard`) et l'exploration d'un système (`ui/systemExplorer`) : elle part avec l'un ou l'autre, jamais au démarrage.",

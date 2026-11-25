@@ -95,6 +95,7 @@
     "e2e/settingsTabs.spec.ts": 100,
     "e2e/share.spec.ts": 49,
     "e2e/sharedViewState.spec.ts": 119,
+    "e2e/skySystemExplorer.spec.ts": 95,
     "e2e/smallBodyDataset.spec.ts": 40,
     "e2e/smallBodyFilters.spec.ts": 28,
     "e2e/smoke.spec.ts": 114,
@@ -129,5 +130,8 @@
     "e2e/weatherInspector.spec.ts": 462,
     "e2e/webxr.spec.ts": 34,
     "e2e/wind.spec.ts": 75
-  }
+  },
+  "estimated": [
+    "e2e/skySystemExplorer.spec.ts"
+  ]
 }

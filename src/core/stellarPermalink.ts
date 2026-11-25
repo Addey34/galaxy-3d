@@ -43,7 +43,11 @@ export const STELLAR_KEYS = [
   'step',
   'explore',
   'planet',
+  'host',
 ] as const;
+
+/** La valeur de `view` pour un système choisi dans le CIEL (GAL-UNIVERSE-007). */
+export const SYSTEM_VIEW_VALUE = 'system';
 
 /** Longueur maximale d'un identifiant lu dans l'adresse : le plus long du catalogue en a 16. */
 const MAX_STAR_LENGTH = 64;
@@ -227,4 +231,52 @@ export function snapYears(
 ): number {
   const snapped = Math.round(years / step) * step;
   return Math.min(window.max, Math.max(window.min, snapped));
+}
+
+/**
+ * L'ADRESSE D'UN SYSTÈME CHOISI DANS LE CIEL (GAL-UNIVERSE-007) : `?view=system&host=<id>[&planet=<id>]`.
+ * `host` est le nom d'hôte de l'archive normalisé par `starSlug` (identifiants distincts sur tout le
+ * fichier du ciel : garde de test). Sans `view=system`, rien n'est lu. Comme pour `star`, `null` dit
+ * un identifiant MAL FORMÉ, que l'appelant annonce au lieu de l'ignorer.
+ */
+export interface SystemAddress {
+  host: string | null;
+  planet?: string | null;
+}
+
+const slugOrNull = (raw: string): string | null => {
+  const wanted = raw.trim().toLowerCase();
+  return wanted.length > 0 &&
+    wanted.length <= MAX_STAR_LENGTH &&
+    SLUG_SHAPE.test(wanted)
+    ? wanted
+    : null;
+};
+
+export function parseSystemAddress(search: string): SystemAddress | null {
+  const params = new URLSearchParams(search);
+  if (params.get('view') !== SYSTEM_VIEW_VALUE) return null;
+  const host = params.get('host');
+  const address: SystemAddress = {
+    host: host === null ? null : slugOrNull(host),
+  };
+  const planet = params.get('planet');
+  if (planet !== null) address.planet = slugOrNull(planet);
+  return address;
+}
+
+/** La requête qui décrit le système (`address`), ou la requête sans lui (`null`) ; les autres clés restent. */
+export function serializeSystemAddress(
+  search: string,
+  address: { host: string; planet?: string | null } | null
+): string {
+  const params = new URLSearchParams(search);
+  for (const key of STELLAR_KEYS) params.delete(key);
+  if (address) {
+    params.set('view', SYSTEM_VIEW_VALUE);
+    params.set('host', address.host);
+    if (address.planet) params.set('planet', address.planet);
+  }
+  const query = params.toString();
+  return query ? `?${query}` : '';
 }

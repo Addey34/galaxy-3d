@@ -34,7 +34,7 @@ import {
   type NeighbourRow,
   type NeighbourSystem,
 } from './neighbours';
-import type { ExoplanetSystem } from './exoplanets';
+import { UNKNOWN_DISTANCE_PC, type ExoplanetSystem } from './exoplanets';
 import { archiveMatches } from './stellarVisit';
 
 /** Nombre de paquets : le même que `scripts/generate-exoplanet-systems.mjs` (un test lit les fichiers). */
@@ -295,7 +295,24 @@ export function skyOffsetAu(
 }
 
 export interface SystemComponent {
-  row: NeighbourRow;
+  /** Le nom affiché : celui du catalogue des voisines, ou celui de l'hôte dans l'archive. */
+  name: string;
+  /** Type spectral (catalogue des voisines d'abord, sinon archive), ou null. */
+  spectral: string | null;
+  /**
+   * La ligne du catalogue des voisines, ou null pour un système du ciel lointain (GAL-UNIVERSE-007) :
+   * il n'est alors connu que par l'archive, et rien n'est inventé de ce qu'elle ne publie pas
+   * (vitesse radiale, incertitude de distance…).
+   */
+  row: NeighbourRow | null;
+  /** Distance au Soleil (pc) publiée par l'archive (`sy_dist`) pour un système sans ligne du catalogue. */
+  archiveDistPc: number | null;
+  /**
+   * Vrai quand l'archive range au moins une planète de cette composante comme CIRCUMBINAIRE : elle tourne
+   * autour d'un couple d'étoiles dont les positions ne sont pas dans les données. La vue ne dessine alors
+   * pas d'étoile individuelle au centre de ses orbites (`SystemScene`), et la fiche le dit.
+   */
+  circumbinary: boolean;
   /** L'hôte de l'archive qui est cette étoile (le premier s'il y en a plusieurs), ou null. */
   host: SystemHostRow | null;
   /** Position projetée dans le plan du ciel (UA), la primaire à l'origine. */
@@ -350,9 +367,14 @@ export function buildSystemModel(
     names.forEach((n, k) => {
       if (!found[k]) missingHosts.push(n);
     });
+    const host = found.find((h): h is SystemHostRow => h !== null) ?? null;
     return {
+      name: row[0],
+      spectral: row[2] ?? host?.[6] ?? null,
       row,
-      host: found.find((h): h is SystemHostRow => h !== null) ?? null,
+      archiveDistPc: null,
+      circumbinary: found.some((h) => h?.[13].some((p) => p[17] === 1)),
+      host,
       offsetAu: i === 0 ? [0, 0] : skyOffsetAu(primary, row),
       separationAu: i === 0 ? 0 : projectedSeparationAu(primary, row),
     };
@@ -383,6 +405,68 @@ export function buildSystemModel(
     missingHosts,
     spatial: planets.some((p) => p.shape.kind !== 'none'),
   };
+}
+
+/**
+ * Le modèle d'un système choisi dans le CIEL (GAL-UNIVERSE-007), connu de l'archive seule : une composante
+ * (l'hôte), ses planètes de l'instantané détaillé. Aucune autre étoile n'est dessinée : l'archive dit
+ * combien le système en compte (`sy_snum`), jamais où elles sont. `detail` est null quand l'hôte du ciel
+ * manque à l'instantané détaillé (lus à des dates différentes) : la vue est alors documentaire et le dit.
+ */
+export function buildHostModel(
+  sky: ExoplanetSystem,
+  detail: SystemHostRow | null
+): SystemModel {
+  const planets: SystemPlanet[] = (detail?.[13] ?? [])
+    .map((row) => ({ row, component: 0, shape: orbitShape(row, detail) }))
+    .sort(
+      (a, b) =>
+        axisOf(a.shape) - axisOf(b.shape) || a.row[0].localeCompare(b.row[0])
+    );
+  const dist = detail?.[3] ?? sky[3];
+  return {
+    name: sky[0],
+    components: [
+      {
+        name: sky[0],
+        spectral: detail?.[6] ?? null,
+        row: null,
+        archiveDistPc:
+          dist !== null && dist < UNKNOWN_DISTANCE_PC ? dist : null,
+        circumbinary: planets.some((p) => p.row[17] === 1),
+        host: detail,
+        offsetAu: [0, 0],
+        separationAu: 0,
+      },
+    ],
+    planets,
+    archiveStars: detail?.[4] ?? null,
+    missingHosts: detail ? [] : [sky[0]],
+    spatial: planets.some((p) => p.shape.kind !== 'none'),
+  };
+}
+
+/**
+ * Le système du voisinage qui PORTE cet hôte de l'archive (par la même règle que la visite, `hostsByMember`),
+ * ou null : un hôte choisi dans le ciel qui est une étoile voisine s'explore avec ses composantes du
+ * catalogue, comme depuis la vue du voisinage.
+ */
+export function neighbourSystemOf(
+  host: string,
+  systems: readonly NeighbourSystem[],
+  archive: readonly ExoplanetSystem[]
+): NeighbourSystem | null {
+  const target = archive.find((h) => h[0] === host);
+  if (!target) return null;
+  for (const system of systems) {
+    // Présélection bon marché : une étoile voisine à moins de 10° de l'hôte, sinon rien à départager.
+    const near = system.members.some(
+      (m) => angularSeparationArcsec(m[3], m[4], target[1], target[2]) < 36_000
+    );
+    if (near && hostsByMember(system, archive).flat().includes(host))
+      return system;
+  }
+  return null;
 }
 
 const axisOf = (shape: OrbitShape): number =>

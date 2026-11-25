@@ -20,9 +20,14 @@ import {
 } from '@/components/stellar/SystemScene';
 import { allBodies } from '@/config/catalog';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import type { ExoplanetFile } from '@/core/exoplanets';
+import {
+  LIGHT_YEARS_PER_PARSEC,
+  type ExoplanetFile,
+  type ExoplanetSystem,
+} from '@/core/exoplanets';
 import {
   bucketUrl,
+  buildHostModel,
   buildSystemModel,
   hostsByMember,
   planetMass,
@@ -70,13 +75,21 @@ const ARRIVAL_FACTOR = 40;
 
 /** Ce que l'exploration demande à la vue du voisinage : le renderer, la boucle, et rien d'autre. */
 export interface ExplorerHost {
-  /** La vue du voisinage : l'exploration s'y pose et masque le reste. */
+  /** La vue qui accueille l'exploration (voisinage, ou enveloppe du ciel `ui/systemView`) ; le reste est masqué. */
   root: HTMLElement;
   renderer: THREE.WebGLRenderer;
   /** Remplace le rendu de la vue par `fn` (ou le lui rend avec `null`) : même boucle, même renderer. */
   setRender(fn: (() => void) | null): void;
-  system: NeighbourSystem;
+  /**
+   * Le sujet : un système du VOISINAGE (composantes du catalogue), ou, pour un système choisi dans le
+   * CIEL qui n'est pas une étoile voisine, l'hôte de l'archive (`skyHost`, GAL-UNIVERSE-007). Un seul
+   * des deux ; même scène, même fiche, même modèle.
+   */
+  system: NeighbourSystem | null;
+  skyHost?: ExoplanetSystem;
   name: string;
+  /** Le libellé du bouton de retour et l'annonce de fermeture : vers le voisinage (défaut) ou vers le ciel. */
+  returnTo?: 'neighbourhood' | 'sky';
   /** L'instantané d'exoplanètes de la couche du ciel (pour la correspondance étoile ↔ hôte, #576). */
   exoplanets(): Promise<ExoplanetFile | null>;
   fetchImpl: typeof fetch;
@@ -172,24 +185,38 @@ export async function openSystemExplorer(
     const archive = await host.exoplanets();
     if (!archive) throw new Error('archive des exoplanètes illisible');
     matchDate = archive.source.retrieved;
-    const hosts = hostsByMember(host.system, archive.systems);
-    const flat = hosts.flat();
-    const read = flat.length
-      ? await readHosts(flat, host.fetchImpl)
-      : { details: new Map<string, SystemHostRow>(), source: null };
-    source = read.source;
-    model = buildSystemModel(host.system, host.name, hosts, read.details);
+    if (host.system) {
+      const hosts = hostsByMember(host.system, archive.systems);
+      const flat = hosts.flat();
+      const read = flat.length
+        ? await readHosts(flat, host.fetchImpl)
+        : { details: new Map<string, SystemHostRow>(), source: null };
+      source = read.source;
+      model = buildSystemModel(host.system, host.name, hosts, read.details);
+    } else if (host.skyHost) {
+      // L'identifiant de l'hôte EFFECTIVEMENT choisi dans le ciel : un seul paquet, celui de son nom.
+      const read = await readHosts([host.skyHost[0]], host.fetchImpl);
+      source = read.source;
+      model = buildHostModel(
+        host.skyHost,
+        read.details.get(host.skyHost[0]) ?? null
+      );
+    } else throw new Error('exploration sans sujet');
   } catch (error) {
     Logger.warn('[systemExplorer] planètes illisibles', error);
     archiveUnavailable = true;
-    model = buildSystemModel(
-      host.system,
-      host.name,
-      host.system.members.map(() => []),
-      new Map()
-    );
+    model = host.system
+      ? buildSystemModel(
+          host.system,
+          host.name,
+          host.system.members.map(() => []),
+          new Map()
+        )
+      : buildHostModel(host.skyHost!, null);
   }
 
+  // Un système connu de l'archive seule (choisi dans le ciel, pas une étoile voisine) : ses textes le disent.
+  const fromSky = model.components.every((c) => c.row === null);
   const scene = new SystemScene(
     model,
     window.innerWidth / Math.max(1, window.innerHeight)
@@ -404,29 +431,51 @@ export async function openSystemExplorer(
   function renderStarCard(index: number): void {
     const component = model.components[index]!;
     const row = component.row;
-    const d = distanceFacts(row);
     const archive = component.host;
-    cardTitle.textContent = row[0];
-    const items: HTMLElement[] = [
-      ...fact(t('sx.star.spectral'), row[2] ?? t('nb.card.unknown')),
-      // Le type de l'archive quand il diffère de celui du catalogue : deux sources, dites toutes deux.
-      ...(archive?.[6] && archive[6] !== row[2]
-        ? fact(t('sx.star.spectralArchive'), archive[6])
-        : []),
-      ...fact(
-        t('st.distSun'),
-        d.lightYearsError === null
-          ? t('nb.card.distanceValue', { ly: number(d.lightYears, 4) })
-          : t('nb.card.distanceError', {
-              ly: number(d.lightYears, 5),
-              err: number(d.lightYearsError, 1),
+    cardTitle.textContent = component.name;
+    // Un système du ciel lointain n'a pas de ligne du catalogue des voisines : son type et sa distance
+    // sont ceux de l'archive, dits comme tels, et rien d'autre (aucune incertitude n'est inventée).
+    const distanceItems = (): HTMLElement[] => {
+      if (row) {
+        const d = distanceFacts(row);
+        return fact(
+          t('st.distSun'),
+          d.lightYearsError === null
+            ? t('nb.card.distanceValue', { ly: number(d.lightYears, 4) })
+            : t('nb.card.distanceError', {
+                ly: number(d.lightYears, 5),
+                err: number(d.lightYearsError, 1),
+              })
+        );
+      }
+      return fact(
+        t('sx.star.distanceArchive'),
+        component.archiveDistPc === null
+          ? t('exo.card.unknown')
+          : t('nb.card.distanceValue', {
+              ly: number(component.archiveDistPc * LIGHT_YEARS_PER_PARSEC, 4),
             })
-      ),
+      );
+    };
+    const items: HTMLElement[] = [
+      ...(row
+        ? [
+            ...fact(t('sx.star.spectral'), row[2] ?? t('nb.card.unknown')),
+            // Le type de l'archive quand il diffère de celui du catalogue : deux sources, dites toutes deux.
+            ...(archive?.[6] && archive[6] !== row[2]
+              ? fact(t('sx.star.spectralArchive'), archive[6])
+              : []),
+          ]
+        : fact(
+            t('sx.star.spectralArchive'),
+            archive?.[6] ?? t('exo.card.unknown')
+          )),
+      ...distanceItems(),
     ];
     if (index > 0)
       items.push(
         ...fact(
-          t('sx.star.separation', { name: model.components[0]!.row[0] }),
+          t('sx.star.separation', { name: model.components[0]!.name }),
           t('sx.star.separationValue', {
             au: number(component.separationAu, 3),
           })
@@ -468,10 +517,13 @@ export async function openSystemExplorer(
     }
     facts.replaceChildren(...items);
     const lines: string[] = [
-      row[11] === 'gaia-dr3'
-        ? t('nb.card.origin.gaia', { id: row[12] ?? '' })
-        : t('nb.card.origin.hyg'),
+      !row
+        ? t('sx.star.originArchive')
+        : row[11] === 'gaia-dr3'
+          ? t('nb.card.origin.gaia', { id: row[12] ?? '' })
+          : t('nb.card.origin.hyg'),
     ];
+    if (component.circumbinary) lines.push(t('sx.star.circumbinary'));
     const planets = model.planets.filter((p) => p.component === index).length;
     if (archiveUnavailable) lines.push(t('sx.archiveUnavailable'));
     else if (!archive) lines.push(t('sx.star.noHost'));
@@ -479,7 +531,9 @@ export async function openSystemExplorer(
       lines.push(
         t('sx.star.hostOf', { host: archive[0], count: String(planets) })
       );
-      if (archive[9] !== null) lines.push(t('sx.star.trueSize'));
+      // Une composante circumbinaire n'a pas de sphère : la phrase du rayon dessiné serait fausse.
+      if (archive[9] !== null && !component.circumbinary)
+        lines.push(t('sx.star.trueSize'));
     }
     if (
       model.archiveStars !== null &&
@@ -487,10 +541,13 @@ export async function openSystemExplorer(
       index === 0
     )
       lines.push(
-        t('sx.star.archiveStars', {
-          n: String(model.archiveStars),
-          m: String(model.components.length),
-        })
+        // Un système du ciel n'a pas de regroupement du catalogue des voisines à opposer au compte de l'archive.
+        fromSky
+          ? t('sx.star.archiveStarsSky', { n: String(model.archiveStars) })
+          : t('sx.star.archiveStars', {
+              n: String(model.archiveStars),
+              m: String(model.components.length),
+            })
       );
     notes.replaceChildren(...lines.map(note));
   }
@@ -537,7 +594,7 @@ export async function openSystemExplorer(
     const mass = planetMass(row);
     const methodKey = row[15] ? METHOD_KEYS[row[15]] : undefined;
     facts.replaceChildren(
-      ...fact(t('sx.planet.star'), model.components[planet.component]!.row[0]),
+      ...fact(t('sx.planet.star'), model.components[planet.component]!.name),
       ...fact(
         t('exo.card.period'),
         row[1] === null
@@ -612,7 +669,7 @@ export async function openSystemExplorer(
       button.type = 'button';
       button.dataset['kind'] = 'star';
       button.dataset['index'] = String(i);
-      button.textContent = t('sx.listStar', { name: component.row[0] });
+      button.textContent = t('sx.listStar', { name: component.name });
       button.addEventListener('click', () =>
         select({ kind: 'star', index: i })
       );
@@ -741,7 +798,7 @@ export async function openSystemExplorer(
     };
     model.components.forEach((component, i) =>
       add(
-        component.row[0],
+        component.name,
         'sv-label--sun',
         () => scene.centres[i]!.clone(),
         `star-${i}`
@@ -817,11 +874,11 @@ export async function openSystemExplorer(
   // ---- les textes, réécrits au changement de langue
   const renderTexts = (): void => {
     title.textContent = t('sx.title', { name: model.name });
-    back.textContent = t('sx.back');
+    back.textContent = t(host.returnTo === 'sky' ? 'sx.backSky' : 'sx.back');
     reset.textContent = t('sx.reset');
     compare.textContent = t('sx.compare');
     scaleNote.textContent = t('sx.scale');
-    help.textContent = t('sx.help');
+    help.textContent = t(host.returnTo === 'sky' ? 'sx.helpSky' : 'sx.help');
     surface.setAttribute('aria-label', t('sx.title', { name: model.name }));
     listTitle.textContent = t('sx.list');
     readSummary.textContent = t('sx.read.title');
@@ -829,7 +886,7 @@ export async function openSystemExplorer(
     readList.replaceChildren(
       ...(
         [
-          t('sx.read.measured'),
+          t(fromSky ? 'sx.read.measuredSky' : 'sx.read.measured'),
           t('sx.read.catalogued', { date }),
           t('sx.read.derived'),
           t('sx.read.illustrative'),
@@ -842,7 +899,7 @@ export async function openSystemExplorer(
       })
     );
     compareNote.textContent = t('sx.compare.note', {
-      name: model.components[0]!.row[0],
+      name: model.components[0]!.name,
     });
     const statusLines: string[] = [];
     if (archiveUnavailable) statusLines.push(t('sx.archiveUnavailable'));
@@ -861,9 +918,11 @@ export async function openSystemExplorer(
     status.textContent = statusLines.join(' ');
     status.hidden = statusLines.length === 0;
     const sourceLine = el('p', 'sv-note');
-    sourceLine.textContent = source
-      ? t('sx.sources', { date: source.retrieved })
-      : t('sx.sourcesStars');
+    sourceLine.textContent = fromSky
+      ? t('sx.sourcesSky', { date: source?.retrieved ?? matchDate ?? '' })
+      : source
+        ? t('sx.sources', { date: source.retrieved })
+        : t('sx.sourcesStars');
     const ack = el('p', 'sv-note sx-ack');
     ack.lang = 'en';
     ack.textContent = ARCHIVE_ACKNOWLEDGEMENT;
@@ -903,7 +962,7 @@ export async function openSystemExplorer(
       const name =
         next.kind === 'planet'
           ? model.planets[next.index]!.row[0]
-          : model.components[next.index]!.row[0];
+          : model.components[next.index]!.name;
       getAnnouncer().announce(t('sx.selected', { name }));
     }
   }
@@ -1083,7 +1142,9 @@ export async function openSystemExplorer(
       scene.dispose();
       root.remove();
       host.root.classList.remove('sv-exploring');
-      getAnnouncer().announce(t('sx.closed'));
+      getAnnouncer().announce(
+        t(host.returnTo === 'sky' ? 'sx.closedSky' : 'sx.closed')
+      );
       host.onClose();
     },
   };

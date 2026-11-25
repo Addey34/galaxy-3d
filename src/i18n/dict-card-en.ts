@@ -588,6 +588,22 @@ export const cardEn = {
   'sx.sourcesStars': 'Stars: neighbourhood catalogue (Gaia DR3 or HYG).',
   'sx.star.spectral': 'Spectral type (neighbourhood catalogue)',
   'sx.star.spectralArchive': 'Spectral type (archive)',
+  'sx.backSky': 'Back to the sky',
+  'sx.closedSky': 'Back to the sky.',
+  'sx.unknownHost':
+    'This planetary system is not in the sky catalogue: the exploration does not open.',
+  'sx.star.distanceArchive': 'Distance from the Sun (archive)',
+  'sx.star.originArchive':
+    'Star known from the NASA Exoplanet Archive only (it is not in the neighbourhood catalogue): its other stars, if any, are not placed, since the archive gives their number, not their positions.',
+  'sx.star.circumbinary':
+    'At least one planet orbits a PAIR of stars here (circumbinary in the archive): its orbit is drawn around the centre of the system, and no single star is drawn there, since the positions of the two stars are not in the data.',
+  'sx.star.archiveStarsSky': 'The archive counts {n} stars in this system.',
+  'sx.helpSky':
+    'Drag to turn, scroll or pinch to zoom, tap a star or an orbit. Keyboard: arrows turn, + and - zoom, Home shows the whole system, Escape returns to the sky. The list gives the same access.',
+  'sx.read.measuredSky':
+    'Published: the distance of the system and the parameters of its host star, as the archive gives them.',
+  'sx.sourcesSky':
+    'Star and planets: NASA Exoplanet Archive, table pscomppars, snapshot of {date}.',
 };
 
 export type CardMessageKey = keyof typeof cardEn;

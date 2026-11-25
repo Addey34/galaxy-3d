@@ -6,9 +6,11 @@ import type { ExoplanetFile } from './exoplanets';
 import {
   bucketOf,
   bucketUrl,
+  buildHostModel,
   buildSystemModel,
   hostsByMember,
   keplerAxisAu,
+  neighbourSystemOf,
   orbitExtentAu,
   orbitShape,
   planetMass,
@@ -344,5 +346,88 @@ describe('les systèmes du voisinage, sur les fichiers livrés', () => {
     const sep = projectedSeparationAu(a!, b!);
     const [x, y] = skyOffsetAu(a!, b!);
     expect(Math.hypot(x, y) / sep).toBeCloseTo(1, 3);
+  });
+});
+
+describe('un système choisi dans le CIEL (GAL-UNIVERSE-007)', () => {
+  const skyOf = (name: string) => {
+    const found = archive.systems.find((s) => s[0] === name);
+    if (!found) throw new Error(`hôte absent du ciel : ${name}`);
+    return found;
+  };
+
+  it('les deux instantanés partagent leurs identifiants : un seul hôte du ciel manque au détaillé, et il est nommé', () => {
+    const missing = archive.systems
+      .map((s) => s[0])
+      .filter((name) => !details.has(name));
+    // Lus à des dates différentes (couche du ciel, puis instantané détaillé) : l'écart est CONNU et borné.
+    expect(missing).toEqual(['Gliese 48']);
+    let same = 0;
+    for (const s of archive.systems) {
+      const d = details.get(s[0]);
+      if (!d) continue;
+      const a = s[7]
+        .map((p) => p[0])
+        .sort()
+        .join('|');
+      const b = d[13]
+        .map((p) => p[0])
+        .sort()
+        .join('|');
+      if (a === b) same += 1;
+    }
+    // Les planètes listées coïncident pour la quasi-totalité des hôtes communs (écart mesuré au 2026-11-25).
+    expect(same / (archive.systems.length - missing.length)).toBeGreaterThan(
+      0.99
+    );
+  });
+
+  it('un hôte lointain : une composante, ses planètes, aucune étoile inventée', () => {
+    const m = buildHostModel(skyOf('TRAPPIST-1'), details.get('TRAPPIST-1')!);
+    expect(m.components).toHaveLength(1);
+    expect(m.components[0]!.row).toBeNull();
+    expect(m.components[0]!.archiveDistPc).toBeGreaterThan(10);
+    expect(m.planets).toHaveLength(7);
+    expect(m.planets.every((p) => p.shape.kind === 'band')).toBe(true);
+    expect(m.spatial).toBe(true);
+  });
+
+  it('circumbinaire : la composante le dit, et aucune planète n’est rattachée à une étoile seule', () => {
+    const m = buildHostModel(skyOf('Kepler-47'), details.get('Kepler-47')!);
+    expect(m.components[0]!.circumbinary).toBe(true);
+    expect(m.archiveStars).toBe(2);
+    expect(m.planets.every((p) => p.row[17] === 1)).toBe(true);
+  });
+
+  it('absent de l’instantané détaillé : vue documentaire, la raison est portée par le modèle', () => {
+    const m = buildHostModel(skyOf('Gliese 48'), null);
+    expect(m.planets).toEqual([]);
+    expect(m.spatial).toBe(false);
+    expect(m.missingHosts).toEqual(['Gliese 48']);
+  });
+
+  it('une microlentille sans demi-grand axe ni masse d’étoile : la planète reste, sans orbite', () => {
+    const name = 'KMT-2024-BLG-0404L';
+    const m = buildHostModel(skyOf(name), details.get(name)!);
+    expect(m.planets.some((p) => p.shape.kind === 'none')).toBe(true);
+  });
+
+  it('un hôte du ciel qui est une étoile voisine retrouve son système du catalogue', () => {
+    expect(
+      neighbourSystemOf('eps Eri', systems, archive.systems)?.members.map(
+        (m) => m[0]
+      )
+    ).toEqual(['Ran']);
+    expect(
+      neighbourSystemOf('Gl 725 B', systems, archive.systems)
+        ?.members.map((m) => m[0])
+        .sort()
+    ).toEqual(['Struve 2398 A', 'Struve 2398 B']);
+    expect(
+      neighbourSystemOf('TRAPPIST-1', systems, archive.systems)
+    ).toBeNull();
+    expect(
+      neighbourSystemOf('pas un hôte', systems, archive.systems)
+    ).toBeNull();
   });
 });

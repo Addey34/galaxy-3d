@@ -966,9 +966,12 @@ function wireChrome(): {
     // Un lien d'observation du voisinage solaire (`?view=neighbourhood`) ouvre la vue (GAL-UNIVERSE-004).
     // Elle lit la date de la scène à l'ouverture : un saut de date qui attend ses octets (lot 17C) doit
     // être appliqué avant, sinon le curseur de temps compterait depuis une autre date.
+    // Même chose pour un système choisi dans le ciel (`?view=system`, GAL-UNIVERSE-007).
+    const requestedView = new URLSearchParams(window.location.search).get(
+      'view'
+    );
     const requestedStellar =
-      new URLSearchParams(window.location.search).get('view') ===
-      'neighbourhood';
+      requestedView === 'neighbourhood' || requestedView === 'system';
     if (requestedStellar) {
       if (orbitalMechanics.pendingJumpDate === null)
         stellarAddress.openFromAddress();

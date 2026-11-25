@@ -569,4 +569,20 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'sx.sourcesStars': 'Estrelas: catálogo da vizinhança (Gaia DR3 ou HYG).',
   'sx.star.spectral': 'Tipo espectral (catálogo da vizinhança)',
   'sx.star.spectralArchive': 'Tipo espectral (arquivo)',
+  'sx.backSky': 'Voltar ao céu',
+  'sx.closedSky': 'De volta ao céu.',
+  'sx.unknownHost':
+    'Este sistema planetário não está no catálogo do céu: a exploração não abre.',
+  'sx.star.distanceArchive': 'Distância ao Sol (arquivo)',
+  'sx.star.originArchive':
+    'Estrela conhecida só pelo NASA Exoplanet Archive (não está no catálogo da vizinhança): suas outras estrelas, se houver, não são posicionadas, pois o arquivo dá o número delas, não as posições.',
+  'sx.star.circumbinary':
+    'Pelo menos um planeta gira aqui em torno de um PAR de estrelas (circumbinário no arquivo): sua órbita é desenhada em torno do centro do sistema, e nenhuma estrela isolada é desenhada ali, pois as posições das duas estrelas não estão nos dados.',
+  'sx.star.archiveStarsSky': 'O arquivo conta {n} estrelas neste sistema.',
+  'sx.helpSky':
+    'Arraste para girar, role ou faça pinça para aproximar, toque numa estrela ou numa órbita. Teclado: setas para girar, + e - para aproximar, Home para o sistema inteiro, Esc para voltar ao céu. A lista dá o mesmo acesso.',
+  'sx.read.measuredSky':
+    'Publicado: a distância do sistema e os parâmetros de sua estrela hospedeira, como o arquivo os dá.',
+  'sx.sourcesSky':
+    'Estrela e planetas: NASA Exoplanet Archive, tabela pscomppars, instantâneo de {date}.',
 };
