@@ -30,10 +30,23 @@ import { cloudShellScale } from '@/core/cloudShellAltitude';
 export const CLOUD_SHELL_CEILING_RADII = 1.8;
 /** Hystérésis du plafond : une fois dans la bande on n'en sort qu'un peu plus haut. */
 export const CLOUD_SHELL_CEILING_EXIT_RADII = 1.9;
+/**
+ * Sans AUCUNE tuile peinte au bout de ce délai passé dans la bande (service en panne, réseau coupé ou trop lent),
+ * la source est déclarée indisponible jusqu'au prochain changement de source : retour au fond du jour de #579,
+ * et pas de bascule de fond d'une image à l'autre. Un chargement normal peint sa première tuile en 1 à 3 s
+ * (descentes mesurées le 2026-11-25).
+ */
+export const CLOUD_SHELL_UNAVAILABLE_AFTER_MS = 15_000;
 
 export interface CloudShell {
-  /** La couche peut-elle servir ce que la couche mondiale montre (une couche à 250 m, un jour posé) ? */
+  /** La source posée a-t-elle une fiche à 250 m, et n'a-t-elle pas été déclarée indisponible ? */
   serves(): boolean;
+  /**
+   * La couche couvre-t-elle VRAIMENT ce que la couche mondiale montre : au moins une tuile de cette source peinte.
+   * C'est elle, et pas `serves`, qui autorise le sol fin sans nuages cuits ; une fois vraie, elle le reste pour
+   * cette source (pas d'oscillation entre deux fonds).
+   */
+  ready(): boolean;
   /** À appeler à chaque image, avec le corps suivi et sa distance en rayons. */
   drive(
     body: CloudShellEarth,
@@ -60,7 +73,10 @@ export function createCloudShell(options: {
   budget: { maxTiles: number; maxConcurrentLoads: number };
   /** Un jeu de rechange pour les essais. */
   engine?: PlanetarySurfaceEngine;
+  /** Horloge, en millisecondes (par défaut `performance.now`). */
+  now?: () => number;
 }): CloudShell {
+  const now = options.now ?? (() => performance.now());
   const engine =
     options.engine ?? new PlanetarySurfaceEngine({ budget: options.budget });
   let host: CloudShellHost | null = null;
@@ -69,32 +85,63 @@ export function createCloudShell(options: {
 
   // Le MÊME objet tant que la source ne change pas : `attach` compare les jeux par identité, et un jeu
   // neuf à chaque image relancerait toute la génération (mesuré : 37 tuiles redemandées ~370 fois en 18 s).
-  let memo: { id: string; tileset: SurfaceTileset | undefined } | null = null;
-  const tilesetNow = (): SurfaceTileset | undefined => {
+  // L'état de la source y est attaché : depuis quand on attend, si une tuile a été peinte, si elle a échoué.
+  let memo: {
+    id: string;
+    tileset: SurfaceTileset | undefined;
+    waitingSince: number | null;
+    painted: boolean;
+    unavailable: boolean;
+  } | null = null;
+  const sourceNow = () => {
     const id =
       cloudsOnScreen.value && cloudsOnScreen.source
         ? cloudsOnScreen.source.id
         : null;
-    if (id === null) return undefined;
-    if (memo?.id !== id)
-      memo = { id, tileset: cloudTilesetForSource('earth', id) };
-    return memo.tileset;
+    if (id === null) return null;
+    if (memo?.id !== id) {
+      // Un AUTRE jour (ou un autre satellite) : les tuiles de l'ancien sont jetées AVANT d'attacher le nouveau.
+      // Le moteur les aurait gardées sous les nouvelles (même grille), deux jours mêlés sans le dire.
+      if (memo) engine.detach();
+      memo = {
+        id,
+        tileset: cloudTilesetForSource('earth', id),
+        waitingSince: null,
+        painted: false,
+        unavailable: false,
+      };
+    }
+    return memo;
+  };
+  const withdraw = (): void => {
+    inBand = false;
+    if (memo) memo.waitingSince = null;
+    engine.detach();
+    // La coque mondiale retrouve son altitude d'orbite dès que la couche régionale se retire.
+    host?.setShellScale(1);
   };
 
   return {
-    serves: () => tilesetNow() !== undefined,
+    serves: () => {
+      const source = sourceNow();
+      return !!source?.tileset && !source.unavailable;
+    },
+    ready: () => {
+      const source = sourceNow();
+      return !!source?.tileset && !source.unavailable && source.painted;
+    },
     drive(body, radiusKm, distanceInRadii, camera, viewportHeightPx) {
       const ceiling = inBand
         ? CLOUD_SHELL_CEILING_EXIT_RADII
         : CLOUD_SHELL_CEILING_RADII;
-      const tileset = tilesetNow();
-      inBand = tileset !== undefined && distanceInRadii < ceiling;
-      if (!inBand || !tileset) {
-        engine.detach();
-        // La coque mondiale retrouve son altitude d'orbite dès que la couche régionale se retire.
-        host?.setShellScale(1);
+      const source = sourceNow();
+      const tileset =
+        source && !source.unavailable ? source.tileset : undefined;
+      if (!source || !tileset || distanceInRadii >= ceiling) {
+        withdraw();
         return;
       }
+      inBand = true;
       const scale = LAYER_RADIUS_SCALE['clouds'] ?? 1.01;
       if (!host || hostFor !== body) {
         host?.dispose();
@@ -107,6 +154,14 @@ export function createCloudShell(options: {
       );
       engine.attach(host, tileset, radiusKm * scale, null);
       engine.update(camera, viewportHeightPx);
+      if ((engine.state?.painted ?? 0) > 0) source.painted = true;
+      if (source.painted) return;
+      const t = now();
+      source.waitingSince ??= t;
+      if (t - source.waitingSince >= CLOUD_SHELL_UNAVAILABLE_AFTER_MS) {
+        source.unavailable = true;
+        withdraw();
+      }
     },
     stats: () => {
       const state = engine.state;
@@ -120,15 +175,13 @@ export function createCloudShell(options: {
         : null;
     },
     busy: () => engine.busyCount,
-    release: () => {
-      inBand = false;
-      engine.detach();
-      host?.setShellScale(1);
-    },
+    release: withdraw,
     dispose: () => {
       engine.dispose();
       host?.dispose();
       host = null;
+      hostFor = null;
+      memo = null;
     },
   };
 }

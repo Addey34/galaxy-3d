@@ -86,16 +86,21 @@ test('approcher la Terre peint les nuages régionaux de la même observation, su
   expect(seen.wmts.length).toBeGreaterThan(0);
   for (const path of seen.wmts) expect(path).toContain(`/${DAY}/`);
   // Le sol est la mosaïque fine : aucun fond du jour (ses nuages cuits doubleraient ceux de la coque).
+  // Le fond du jour ne cède qu'une fois une tuile régionale PEINTE (`CloudShell.ready`) : on attend la bascule.
   await expect(page.locator('#surface-imagery')).not.toHaveAttribute(
     'data-day',
-    /\d/
+    /\d/,
+    { timeout: 60_000 }
   );
   // Éteindre les nuages retire tout (un seul démarrage pour les deux constats : la CI est pleine).
   // Le panneau météo, comme un visiteur. Le clic est ENVOYÉ : la scène travaille encore sur un runner lent.
   await page.locator('#weather-trigger').dispatchEvent('click');
-  await page
-    .locator('#weather-layers input[data-layer="clouds"]')
-    .uncheck({ force: true });
+  // La case aussi : `uncheck` attend une action que la scène occupée ne rend pas sur un runner lent (run
+  // 45524808645, 15 s dépassées trois fois). Un clic ENVOYÉ bascule la case et émet `change`.
+  const clouds = page.locator('#weather-layers input[data-layer="clouds"]');
+  await expect(clouds).toBeChecked();
+  await clouds.dispatchEvent('click');
+  await expect(clouds).not.toBeChecked();
   await expect(canvas).not.toHaveAttribute('data-cloud-shell', /.+/, {
     timeout: 60_000,
   });

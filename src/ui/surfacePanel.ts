@@ -606,7 +606,8 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     // Quand les nuages régionaux servent, le sol reste la mosaïque fine à toute distance : le fond du jour porte
     // ses nuages CUITS, qui doublaient ceux de la coque (mesuré : 49 % puis 31 % de pixels nuageux au passage de
     // 1,3 rayon, GAL-EARTH-CLOUD-REGIONAL-001). Sans eux, le repli de #579 : le jour garde ses nuages jusqu'à 1,02.
-    const regionalClouds = cloudShell?.serves() ?? false;
+    // PRÊTE, pas seulement compatible : une tuile peinte. Avant (chargement lent, service en panne), le repli de #579.
+    const regionalClouds = cloudShell?.ready() ?? false;
     farBase =
       choice === 'sentinel-2' &&
       !regionalClouds &&
@@ -634,7 +635,9 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       api.sceneSystem.renderer.domElement.clientHeight
     );
     driveBuildings(name, body, radiusKm, distance / renderedRadius);
-    if (name === 'earth')
+    // Une autre cible : les nuages régionaux de la Terre se retirent (tuiles, coque abaissée).
+    if (name !== 'earth') cloudShell?.release();
+    else
       cloudShell?.drive(
         body as unknown as import('@/components/surface/CloudShellHost').CloudShellEarth,
         radiusKm,
@@ -848,6 +851,8 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       window.removeEventListener(TOUR_CLEARANCE_CHANGED, placeBadge);
       engine?.dispose();
       engine = null;
+      cloudShell?.dispose();
+      cloudShell = null;
       curtain?.dispose();
       curtain = null;
       badge.remove();

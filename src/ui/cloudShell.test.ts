@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCloudShell } from './cloudShell';
+import {
+  CLOUD_SHELL_UNAVAILABLE_AFTER_MS,
+  createCloudShell,
+} from './cloudShell';
 import type { PlanetarySurfaceEngine } from '@/components/surface/PlanetarySurfaceEngine';
 import * as THREE from 'three';
 
@@ -245,5 +248,138 @@ describe('le pilote des nuages régionaux', () => {
     expect(shell.serves()).toBe(false);
     cloudsOnScreen.value = false;
     expect(shell.serves()).toBe(false);
+  });
+});
+
+describe('disponibilité réelle et cycle de vie des nuages régionaux', () => {
+  const SOURCE = (day: string) => ({
+    id: `VIIRS_NOAA21_CorrectedReflectance_TrueColor:${day}`,
+    day,
+  });
+  function setup() {
+    const calls: string[] = [];
+    let painted = 0;
+    let clock = 0;
+    const scales: number[] = [];
+    const engine = {
+      attach: vi.fn((_h: unknown, tileset: { day?: string }) =>
+        calls.push(`attach:${tileset.day}`)
+      ),
+      update: vi.fn(),
+      detach: vi.fn(() => calls.push('detach')),
+      dispose: vi.fn(() => calls.push('dispose')),
+      busyCount: 0,
+      get state() {
+        return { painted, requested: 4, level: 6, day: null };
+      },
+    } as unknown as PlanetarySurfaceEngine;
+    const body = {
+      name: 'earth',
+      layerRadius: 1,
+      group: new THREE.Group(),
+      attachSpinningChild: () => undefined,
+      createSurfaceOverlayMaterial: () => new THREE.MeshBasicMaterial(),
+      releaseSurfaceOverlayMaterial: () => undefined,
+      worldPointToGeographic: () => ({ latitudeDeg: 0, longitudeDeg: 0 }),
+      setStreamedImageryWidth: () => false,
+      shippedSurfaceWidthPx: () => 2048,
+      setSurfaceShellScale: () => undefined,
+      realCloudsUniforms: () => undefined,
+      adoptOverlayMaterial: () => undefined,
+      setCloudShellScale: (f: number) => scales.push(f),
+    } as unknown as CloudShellEarth;
+    const shell = createCloudShell({
+      budget: { maxTiles: 8, maxConcurrentLoads: 2 },
+      engine,
+      now: () => clock,
+    });
+    const camera = new THREE.PerspectiveCamera();
+    // Une caméra à 500 km d'altitude : dans la bande, coque abaissée.
+    const drive = () => shell.drive(body, 6371, 1 + 500 / 6371, camera, 800);
+    return {
+      shell,
+      drive,
+      calls,
+      scales,
+      paint: (n: number) => (painted = n),
+      advance: (ms: number) => (clock += ms),
+    };
+  }
+
+  it('n’est PRÊTE qu’une fois une tuile peinte, puis le reste pour cette source', () => {
+    const t = setup();
+    cloudsOnScreen.value = true;
+    cloudsOnScreen.source = SOURCE('2026-11-20');
+    t.drive();
+    expect(t.shell.serves()).toBe(true);
+    expect(t.shell.ready()).toBe(false); // chargement en cours : repli de #579
+    t.paint(3);
+    t.drive();
+    expect(t.shell.ready()).toBe(true);
+    t.paint(0); // tuiles en cours de remplacement : pas de retour au fond du jour
+    t.drive();
+    expect(t.shell.ready()).toBe(true);
+  });
+
+  it('sans tuile peinte après le délai : indisponible, retirée, et pas d’oscillation', () => {
+    const t = setup();
+    cloudsOnScreen.value = true;
+    cloudsOnScreen.source = SOURCE('2026-11-20');
+    t.drive();
+    t.advance(CLOUD_SHELL_UNAVAILABLE_AFTER_MS - 1);
+    t.drive();
+    expect(t.shell.serves()).toBe(true);
+    t.advance(2);
+    t.drive();
+    expect(t.shell.serves()).toBe(false);
+    expect(t.shell.ready()).toBe(false);
+    expect(t.calls.at(-1)).toBe('detach');
+    expect(t.scales.at(-1)).toBe(1); // la coque mondiale retrouve son altitude d'orbite
+    // Une tuile qui arriverait enfin ne fait pas rebasculer le fond pour cette source.
+    t.paint(5);
+    const attaches = t.calls.filter((c) => c.startsWith('attach')).length;
+    t.drive();
+    expect(t.shell.ready()).toBe(false);
+    expect(t.calls.filter((c) => c.startsWith('attach')).length).toBe(attaches);
+    // Un autre jour : un nouvel essai.
+    cloudsOnScreen.source = SOURCE('2026-11-21');
+    expect(t.shell.serves()).toBe(true);
+  });
+
+  it('jette les tuiles de l’ancien jour AVANT d’attacher le nouveau (pas de mélange temporel)', () => {
+    const t = setup();
+    cloudsOnScreen.value = true;
+    cloudsOnScreen.source = SOURCE('2026-11-20');
+    t.paint(2);
+    t.drive();
+    expect(t.shell.ready()).toBe(true);
+    cloudsOnScreen.source = SOURCE('2026-11-21');
+    t.paint(0);
+    t.drive();
+    const i = t.calls.lastIndexOf('attach:2026-11-21');
+    expect(t.calls.slice(i - 1, i + 1)).toEqual([
+      'detach',
+      'attach:2026-11-21',
+    ]);
+    // Le nouveau jour doit à son tour peindre avant de passer pour prêt.
+    expect(t.shell.ready()).toBe(false);
+  });
+
+  it('libérer retire les tuiles et rétablit la coque ; détruire libère le moteur', () => {
+    const t = setup();
+    cloudsOnScreen.value = true;
+    cloudsOnScreen.source = SOURCE('2026-11-20');
+    t.drive();
+    expect(t.scales.at(-1)).toBeLessThan(1);
+    t.shell.release();
+    expect(t.calls.at(-1)).toBe('detach');
+    expect(t.scales.at(-1)).toBe(1);
+    // Retour sur la Terre : un nouvel attachement, la même coque abaissée, aucune ancienne gardée.
+    t.drive();
+    expect(t.calls.at(-1)).toBe('attach:2026-11-20');
+    expect(t.scales.at(-1)).toBeLessThan(1);
+    t.shell.dispose();
+    expect(t.calls.at(-1)).toBe('dispose');
+    expect(t.scales.at(-1)).toBe(1);
   });
 });
