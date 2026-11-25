@@ -568,7 +568,7 @@ export const cardEn = {
   'sx.table.title': 'Compare the planets',
   'sx.table.planet': 'Planet',
   'sx.table.caption':
-    'Period in days, semi-major axis in AU, mass in Earth masses, radius in Earth radii. A dash: not published.',
+    "Period in days, semi-major axis in AU, mass in Earth masses, radius in Earth radii. † calculated by the archive; ‡ derived here (Kepler's third law); ≥ minimum mass (m sin i); a dash: not published.",
   'sx.compare.note':
     'Grey dashed circles: the orbits of the Solar System planets at the same scale (semi-major axes, NSSDCA), centred on {name}.',
   'sx.compare.ring': '{name} (Solar System)',

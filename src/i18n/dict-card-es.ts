@@ -551,7 +551,7 @@ export const cardEs: Record<CardMessageKey, string> = {
   'sx.table.title': 'Comparar los planetas',
   'sx.table.planet': 'Planeta',
   'sx.table.caption':
-    'Periodo en días, semieje mayor en UA, masa en masas terrestres, radio en radios terrestres. Un guion: no publicado.',
+    'Periodo en días, semieje mayor en UA, masa en masas terrestres, radio en radios terrestres. † calculado por el archivo; ‡ derivado aquí (tercera ley de Kepler); ≥ masa mínima (m sin i); un guion: no publicado.',
   'sx.compare.note':
     'Círculos grises discontinuos: las órbitas de los planetas del Sistema Solar a la misma escala (semiejes mayores, NSSDCA), centradas en {name}.',
   'sx.compare.ring': '{name} (Sistema Solar)',

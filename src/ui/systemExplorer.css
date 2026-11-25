@@ -84,9 +84,9 @@
 }
 /* Le tableau défile dans sa boîte sur téléphone, il ne déborde jamais du volet. */
 .sx-table {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
+  width: 100%;
+  table-layout: fixed;
+  overflow-wrap: anywhere;
   border-collapse: collapse;
   font-size: 0.74rem;
   font-variant-numeric: tabular-nums;

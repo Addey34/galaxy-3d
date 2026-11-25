@@ -553,7 +553,7 @@ export const cardFr: Record<CardMessageKey, string> = {
   'sx.table.title': 'Comparer les planètes',
   'sx.table.planet': 'Planète',
   'sx.table.caption':
-    'Période en jours, demi-grand axe en UA, masse en masses terrestres, rayon en rayons terrestres. Un tiret : non publié.',
+    'Période en jours, demi-grand axe en UA, masse en masses terrestres, rayon en rayons terrestres. † calculé par l’archive ; ‡ dérivé ici (troisième loi de Kepler) ; ≥ masse minimale (m sin i) ; un tiret : non publié.',
   'sx.compare.note':
     'Cercles gris en tirets : les orbites des planètes du Système solaire à la même échelle (demi-grands axes, NSSDCA), centrées sur {name}.',
   'sx.compare.ring': '{name} (Système solaire)',

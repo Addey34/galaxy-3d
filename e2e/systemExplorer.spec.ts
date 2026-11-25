@@ -255,6 +255,12 @@ test.describe('téléphone', () => {
     );
     await expect(card(page)).toContainText('masse minimale, m sin i');
     await expect(card(page)).toContainText('calculé');
+    // Les polices Linux de la CI sont plus larges que celles de Windows (33 px de débordement déjà vus) :
+    // on élargit le texte ici pour mesurer le pire cas, tableau déplié compris.
+    await page.addStyleTag({
+      content: '#system-explorer * { letter-spacing: 1px !important; }',
+    });
+    await page.locator('#system-table-box summary').tap();
     const overflow = await page.evaluate(() =>
       Array.from(document.querySelectorAll<HTMLElement>('#system-explorer *'))
         .filter((e) => !e.classList.contains('sr-only'))

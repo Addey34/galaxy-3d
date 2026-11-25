@@ -681,28 +681,27 @@ export async function openSystemExplorer(
       const shape = planet.shape;
       // Une valeur non publiée : un tiret simple (la légende du tableau le dit).
       const none = '-';
+      // Des MARQUES courtes, expliquées par la légende : le tableau tient dans le volet d'un téléphone.
+      const mark = (text: string, provenance: Provenance): string =>
+        provenance === 'archiveCalculated'
+          ? `${text} \u2020`
+          : provenance === 'derived'
+            ? `${text} \u2021`
+            : text;
       const cells = [
-        row[1] === null
-          ? none
-          : withProvenance(number(row[1], 4), provenanceOf(row[2])),
+        row[1] === null ? none : mark(number(row[1], 4), provenanceOf(row[2])),
         shape.kind === 'none'
           ? none
-          : withProvenance(number(shape.axis.value, 3), shape.axis.provenance),
-        row[5] === null
-          ? none
-          : withProvenance(number(row[5], 2), provenanceOf(row[6])),
+          : mark(number(shape.axis.value, 3), shape.axis.provenance),
+        row[5] === null ? none : mark(number(row[5], 2), provenanceOf(row[6])),
         !mass
           ? none
-          : `${number(mass.value, 3)} (${t(
-              mass.kind === 'mass'
-                ? 'sx.tag.trueMass'
-                : mass.kind === 'minimum'
-                  ? 'sx.tag.minimum'
-                  : 'sx.tag.calculated'
-            )})`,
-        row[9] === null
-          ? none
-          : withProvenance(number(row[9], 3), provenanceOf(row[10])),
+          : mass.kind === 'minimum'
+            ? `\u2265 ${number(mass.value, 3)}`
+            : mass.kind === 'archiveCalculated'
+              ? `${number(mass.value, 3)} \u2020`
+              : number(mass.value, 3),
+        row[9] === null ? none : mark(number(row[9], 3), provenanceOf(row[10])),
       ];
       tr.append(name);
       for (const text of cells) {

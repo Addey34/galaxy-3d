@@ -549,7 +549,7 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'sx.table.title': 'Comparar os planetas',
   'sx.table.planet': 'Planeta',
   'sx.table.caption':
-    'Período em dias, semieixo maior em UA, massa em massas terrestres, raio em raios terrestres. Um traço: não publicado.',
+    'Período em dias, semieixo maior em UA, massa em massas terrestres, raio em raios terrestres. † calculado pelo arquivo; ‡ derivado aqui (terceira lei de Kepler); ≥ massa mínima (m sin i); um traço: não publicado.',
   'sx.compare.note':
     'Círculos cinza tracejados: as órbitas dos planetas do Sistema Solar na mesma escala (semieixos maiores, NSSDCA), centradas em {name}.',
   'sx.compare.ring': '{name} (Sistema Solar)',
