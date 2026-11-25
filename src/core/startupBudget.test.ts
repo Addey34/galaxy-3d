@@ -269,15 +269,18 @@ describe('les démarrages conditionnels', () => {
     ]);
   });
 
-  it('le chargeur glTF n’est PLUS au démarrage ordinaire, mais l’adresse d’un corps modélisé le paie (rien n’est caché)', () => {
+  it('le chargeur glTF n’est PLUS au démarrage ordinaire, mais l’adresse d’un corps modélisé paie son lecteur (rien n’est caché)', () => {
     expect(BOOT_DYNAMIC_CHUNKS.map((c) => c.chunk)).not.toContain('GLTFLoader');
     expect(NON_BOOT_CHUNKS.map((c) => c.chunk)).toContain('GLTFLoader');
+    expect(NON_BOOT_CHUNKS.map((c) => c.chunk)).toContain('shapeGlb');
+    // Depuis GAL-ENGINE-CAPACITY-002 le maillage passe par le lecteur des modèles de forme : c'est LUI que
+    // l'adresse d'un corps modélisé paie, et aucun profil ne compte plus le chargeur complet.
     const body = CONDITIONAL_START_PROFILES.find((p) => p.id === 'body-link');
-    expect(body?.chunks).toEqual(['GLTFLoader']);
-    // Le pire cas cumulé hors visite le compte aussi : le gain ne se lit pas en l'omettant.
-    const worst = CONDITIONAL_START_PROFILES.find(
-      (p) => p.id === 'worst-case-body'
-    );
-    expect(worst?.chunks).toContain('GLTFLoader');
+    expect(body?.chunks).toEqual(['shapeGlb']);
+    for (const id of ['worst-case-body', 'worst-case-all']) {
+      const worst = CONDITIONAL_START_PROFILES.find((p) => p.id === id);
+      expect(worst?.chunks, id).toContain('shapeGlb');
+      expect(worst?.chunks, id).not.toContain('GLTFLoader');
+    }
   });
 });

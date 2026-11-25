@@ -116,6 +116,9 @@ export function setupPlaceDive(
    * de Mars), se masque derrière le limbe, et disparaît au premier geste, sur Échap, au
    * changement de cible, au remplacement par un autre lieu ou après `MARKER_MS`.
    */
+  // La pose du repère DEMANDÉ en dernier, résolue quoi qu'il arrive (posé, refusé, abandonné) : une étape de
+  // visite qui plonge vers un lieu ne se termine qu'une fois son repère posé (voir `diveToName`).
+  let markerSettled: Promise<void> = Promise.resolve();
   const markTarget = (place: DivePlace, replay: boolean): void => {
     const key = `${place.body}|${place.name}`;
     const mine = markerIntent.request(
@@ -125,7 +128,7 @@ export function setupPlaceDive(
     );
     if (mine === null) return;
     const target = cameraSystem.currentTarget;
-    void Promise.all([
+    markerSettled = Promise.all([
       import('./formationMarker'),
       loadDeferredMessages(),
     ]).then(
@@ -279,13 +282,19 @@ export function setupPlaceDive(
     const { loadFormations } = await import('@/config/placeObservations');
     const feature = (await loadFormations(body))?.find((f) => f.name === name);
     if (!feature) return false;
-    return dive({
+    const started = dive({
       body,
       name,
       lat: feature.lat,
       lon: feature.lon,
       diameterKm: frameKm ?? feature.diameterKm,
     });
+    // Le repère se pose par un import asynchrone. Sans cette attente, une visite passait à la légende du
+    // nouveau lieu pendant que le repère nommait ENCORE l'ancien : sous `prefers-reduced-motion` la plongée
+    // est instantanée, et sur une machine chargée le repère arrivait 1,1 à 1,6 s plus tard (mesuré, e2e
+    // `tourApollo.spec.ts:151` vert seulement au réessai ; GAL-ENGINE-CAPACITY-002).
+    if (started) await markerSettled;
+    return started;
   };
 
   const reached = (): boolean => {

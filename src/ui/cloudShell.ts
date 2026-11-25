@@ -5,7 +5,10 @@ import {
   type CloudShellEarth,
   type CloudShellHost,
 } from '@/components/surface/CloudShellHost';
-import { PlanetarySurfaceEngine } from '@/components/surface/PlanetarySurfaceEngine';
+import {
+  defaultFetcher,
+  PlanetarySurfaceEngine,
+} from '@/components/surface/PlanetarySurfaceEngine';
 import { LAYER_RADIUS_SCALE } from '@/config/layerConfig';
 import {
   cloudTilesetForSource,
@@ -31,12 +34,18 @@ export const CLOUD_SHELL_CEILING_RADII = 1.8;
 /** Hystérésis du plafond : une fois dans la bande on n'en sort qu'un peu plus haut. */
 export const CLOUD_SHELL_CEILING_EXIT_RADII = 1.9;
 /**
- * Sans AUCUNE tuile peinte au bout de ce délai passé dans la bande (service en panne, réseau coupé ou trop lent),
+ * Sans AUCUNE tuile peinte, et sans RIEN en vol, pendant ce délai passé dans la bande (service en panne, réseau coupé),
  * la source est déclarée indisponible jusqu'au prochain changement de source : retour au fond du jour de #579,
  * et pas de bascule de fond d'une image à l'autre. Un chargement normal peint sa première tuile en 1 à 3 s
  * (descentes mesurées le 2026-11-25).
  */
 export const CLOUD_SHELL_UNAVAILABLE_AFTER_MS = 15_000;
+/**
+ * Échecs de tuiles, SANS aucun succès pour cette source, qui la déclarent indisponible. Le moteur redemande une
+ * tuile en échec toutes les 8 s : pendant une panne il a presque toujours une requête en vol, et la règle
+ * d'inactivité seule ne voyait jamais la panne (349 requêtes en 38 s, mesuré le 2026-11-25).
+ */
+export const CLOUD_SHELL_FAILURES_BEFORE_UNAVAILABLE = 8;
 
 export interface CloudShell {
   /** La source posée a-t-elle une fiche à 250 m, et n'a-t-elle pas été déclarée indisponible ? */
@@ -62,6 +71,8 @@ export interface CloudShell {
     level: number;
     day: string | null;
   } | null;
+  /** Le résultat d'une requête de tuile (le pilote l'observe sur le moteur qu'il crée ; les essais l'appellent). */
+  recordFetch(ok: boolean): void;
   /** Carreaux de nuages en vol ou en fondu. */
   busy(): number;
   /** Retire les carreaux (le panneau de surface se désactive, ou la cible change). */
@@ -77,8 +88,28 @@ export function createCloudShell(options: {
   now?: () => number;
 }): CloudShell {
   const now = options.now ?? (() => performance.now());
+  // Succès et échecs des requêtes de tuiles de la source COURANTE : c'est le signal d'une panne.
+  const fetches = { ok: 0, failed: 0 };
+  const recordFetch = (ok: boolean): void => {
+    if (ok) fetches.ok += 1;
+    else fetches.failed += 1;
+  };
   const engine =
-    options.engine ?? new PlanetarySurfaceEngine({ budget: options.budget });
+    options.engine ??
+    new PlanetarySurfaceEngine({
+      budget: options.budget,
+      fetchTile: async (url, signal) => {
+        try {
+          const image = await defaultFetcher(url, signal);
+          recordFetch(true);
+          return image;
+        } catch (error) {
+          // Une requête annulée (la vue a bougé) n'est pas une panne.
+          if ((error as Error)?.name !== 'AbortError') recordFetch(false);
+          throw error;
+        }
+      },
+    });
   let host: CloudShellHost | null = null;
   let hostFor: CloudShellEarth | null = null;
   let inBand = false;
@@ -103,6 +134,8 @@ export function createCloudShell(options: {
       // Un AUTRE jour (ou un autre satellite) : les tuiles de l'ancien sont jetées AVANT d'attacher le nouveau.
       // Le moteur les aurait gardées sous les nouvelles (même grille), deux jours mêlés sans le dire.
       if (memo) engine.detach();
+      fetches.ok = 0;
+      fetches.failed = 0;
       memo = {
         id,
         tileset: cloudTilesetForSource('earth', id),
@@ -156,7 +189,24 @@ export function createCloudShell(options: {
       engine.update(camera, viewportHeightPx);
       if ((engine.state?.painted ?? 0) > 0) source.painted = true;
       if (source.painted) return;
+      if (
+        fetches.ok === 0 &&
+        fetches.failed >= CLOUD_SHELL_FAILURES_BEFORE_UNAVAILABLE
+      ) {
+        source.unavailable = true;
+        withdraw();
+        return;
+      }
       const t = now();
+      // LENT n'est pas EN PANNE : tant qu'une tuile est en vol ou en fondu, le délai ne court pas. Une vraie panne
+      // laisse le moteur sans rien en vol entre deux nouveaux essais, et c'est là qu'il court. La première
+      // version comptait le temps écoulé tout court : des tuiles servies en 20 s déclaraient la source
+      // indisponible à 11 s, pour de bon (mesuré ; e2e `cloudShell.spec.ts` rouge sur un runner lent,
+      // campagne 45541325650).
+      if (engine.busyCount > 0) {
+        source.waitingSince = null;
+        return;
+      }
       source.waitingSince ??= t;
       if (t - source.waitingSince >= CLOUD_SHELL_UNAVAILABLE_AFTER_MS) {
         source.unavailable = true;
@@ -175,6 +225,7 @@ export function createCloudShell(options: {
         : null;
     },
     busy: () => engine.busyCount,
+    recordFetch,
     release: withdraw,
     dispose: () => {
       engine.dispose();
