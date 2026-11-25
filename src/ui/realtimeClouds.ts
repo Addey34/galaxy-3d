@@ -177,6 +177,8 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
             }
           : candidate;
         lastSource = shown;
+        // La couche et le jour POSÉS : la couche régionale demande la même observation, pas une voisine.
+        cloudsOnScreen.source = { id: candidate.id, day: candidate.realDate };
         if (DEBUG_CLOUDS)
           console.info('[cloud-debug] true-color source', shown);
         relay.push(shown);

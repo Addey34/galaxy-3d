@@ -45,7 +45,9 @@ describe('MODIS cloud-fraction shader', () => {
     const shader = {
       uniforms: {},
       vertexShader: '',
-      fragmentShader: '#include <common>\n#include <map_fragment>',
+      // La composition vit dans le bloc map_pars (partagé avec les nuages régionaux depuis le 2026-11-25).
+      fragmentShader:
+        '#include <common>\n#include <map_pars_fragment>\n#include <map_fragment>',
     } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
 
     material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);

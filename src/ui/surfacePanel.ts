@@ -278,6 +278,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   checkbox.checked = enabled;
 
   let engine: PlanetarySurfaceEngine | null = null;
+  let cloudShell: import('./cloudShell').CloudShell | null = null;
   let loading = false;
   let engineUnavailable = false;
   let state: SurfaceImageryState | null = null;
@@ -492,6 +493,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
 
   const disable = (): void => {
     engine?.detach();
+    cloudShell?.release();
     buildings?.suspend();
     state = null;
     renderBadge();
@@ -500,10 +502,24 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   /** `data-surface-busy` du canvas : carreaux en vol ou en fondu, écrit sur CHANGEMENT seulement. */
   let publishedBusy = '';
   const publishBusy = (): void => {
-    const value = String(engine?.busyCount ?? 0);
+    // Les nuages régionaux comptent : un test (ou une mesure) qui attend le calme attend aussi leurs tuiles.
+    const value = String((engine?.busyCount ?? 0) + (cloudShell?.busy() ?? 0));
     if (value === publishedBusy) return;
     publishedBusy = value;
     api.sceneSystem.renderer.domElement.dataset['surfaceBusy'] = value;
+  };
+  /** `data-cloud-shell` du canvas : `jour:niveau:peints/voulus` des nuages régionaux, écrit sur CHANGEMENT. */
+  let publishedCloudShell = '';
+  const publishCloudShell = (): void => {
+    const stats = cloudShell?.stats() ?? null;
+    const value = stats
+      ? `${stats.day ?? '-'}:${stats.level}:${stats.painted}/${stats.requested}`
+      : '';
+    if (value === publishedCloudShell) return;
+    publishedCloudShell = value;
+    const canvas = api.sceneSystem.renderer.domElement;
+    if (value) canvas.dataset['cloudShell'] = value;
+    else delete canvas.dataset['cloudShell'];
   };
 
   /**
@@ -535,6 +551,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
 
   const tick = (): void => {
     publishBusy();
+    publishCloudShell();
     const name = api.cameraSystem.targetName;
     const distance = api.cameraSystem.getDistanceToTargetSceneUnits();
     if (name !== controlsFor) {
@@ -586,8 +603,14 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
 
     // De loin, l'image du jour plutôt que l'édition annuelle (`core/farBase.ts`) ; le choix
     // du visiteur reste celui qu'affiche le réglage.
+    // Quand les nuages régionaux servent, le sol reste la mosaïque fine à toute distance : le fond du jour porte
+    // ses nuages CUITS, qui doublaient ceux de la coque (mesuré : 49 % puis 31 % de pixels nuageux au passage de
+    // 1,3 rayon, GAL-EARTH-CLOUD-REGIONAL-001). Sans eux, le repli de #579 : le jour garde ses nuages jusqu'à 1,02.
+    // PRÊTE, pas seulement compatible : une tuile peinte. Avant (chargement lent, service en panne), le repli de #579.
+    const regionalClouds = cloudShell?.ready() ?? false;
     farBase =
       choice === 'sentinel-2' &&
+      !regionalClouds &&
       showsFarBase(distance / renderedRadius, farBase, cloudsOnScreen.value);
     const effective: SurfaceChoiceId = farBase ? 'daily' : choice;
     const tileset = chooseTileset?.(name, effective);
@@ -612,6 +635,16 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       api.sceneSystem.renderer.domElement.clientHeight
     );
     driveBuildings(name, body, radiusKm, distance / renderedRadius);
+    // Une autre cible : les nuages régionaux de la Terre se retirent (tuiles, coque abaissée).
+    if (name !== 'earth') cloudShell?.release();
+    else
+      cloudShell?.drive(
+        body as unknown as import('@/components/surface/CloudShellHost').CloudShellEarth,
+        radiusKm,
+        distance / renderedRadius,
+        api.cameraSystem.camera,
+        api.sceneSystem.renderer.domElement.clientHeight
+      );
   };
 
   /**
@@ -727,14 +760,24 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       { createDatedChooser, compareEdition, REGIONAL_TILESETS },
       { loadBodyHeights, heightsForGrid },
       { createCompareCurtain },
+      { createCloudShell },
     ] = await Promise.all([
       import('@/components/surface/PlanetarySurfaceEngine'),
       import('@/config/surfaceTilesets'),
       import('@/config/surfaceHeights'),
       import('@/components/surface/compareCurtain'),
+      import('./cloudShell'),
       // Les libellés du rideau (`i18n/deferredMessages`, lot 52).
       loadDeferredMessages(),
     ]);
+    const software = isSoftwareRenderer(api.sceneSystem.renderer);
+    cloudShell = createCloudShell({
+      // Des carreaux de nuages, pas de sol : un tiers du budget du sol suffit, et il borne la mémoire GPU.
+      budget: {
+        maxTiles: software ? 12 : 40,
+        maxConcurrentLoads: software ? 2 : 4,
+      },
+    });
     chooseTileset = createDatedChooser({
       date: () => api.orbitalMechanics.simulationDate,
     });
@@ -743,7 +786,6 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     curtain = createCompareCurtain(api.sceneSystem.renderer.domElement);
     loadHeights = loadBodyHeights;
     heightsFor = heightsForGrid;
-    const software = isSoftwareRenderer(api.sceneSystem.renderer);
     const forcedBudget = debugTileBudget();
     engine = new PlanetarySurfaceEngine({
       budget:
@@ -809,6 +851,8 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
       window.removeEventListener(TOUR_CLEARANCE_CHANGED, placeBadge);
       engine?.dispose();
       engine = null;
+      cloudShell?.dispose();
+      cloudShell = null;
       curtain?.dispose();
       curtain = null;
       badge.remove();

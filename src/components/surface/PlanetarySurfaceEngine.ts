@@ -48,6 +48,7 @@ import {
   tileIndexAt,
   tileMatrix,
   type TileIndex,
+  type TileMatrixShape,
 } from '@/core/tilePyramid';
 import {
   selectTiles,
@@ -104,7 +105,14 @@ export interface SurfaceHost {
   readonly figure?: Figure | null;
   readonly group: THREE.Object3D;
   attachSpinningChild(object: THREE.Object3D): void;
-  createSurfaceOverlayMaterial(oceanMatch?: OceanMatch): THREE.Material;
+  /**
+   * Un matériau pour UN carreau. `tile` dit lequel (indice et grille) : le sol n'en a pas besoin, une
+   * couche qui échantillonne une carte mondiale (le masque d'eau des nuages) en tire l'emprise du carreau.
+   */
+  createSurfaceOverlayMaterial(
+    oceanMatch?: OceanMatch,
+    tile?: { index: TileIndex; shape: TileMatrixShape }
+  ): THREE.Material;
   /** Le corps a-t-il un masque d'eau (la carte `spec` de sa surface) ? */
   hasOceanMask?(): boolean;
   releaseSurfaceOverlayMaterial(material: THREE.Material): void;
@@ -1919,7 +1927,10 @@ export class PlanetarySurfaceEngine {
         figure: host.figure ?? null,
         shape: tileset.matrix,
         material: this._toneMatched(
-          host.createSurfaceOverlayMaterial(primary.oceanMatch),
+          host.createSurfaceOverlayMaterial(primary.oceanMatch, {
+            index,
+            shape: tileset.matrix,
+          }),
           tileset.body
         ),
         releaseMaterial: (material) =>

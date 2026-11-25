@@ -54,7 +54,7 @@ const SHADOW_AWARE_UNIFORM_KEY = '__lightAttenuationUniform';
  * un second patch shader écraserait silencieusement le premier). Le hook existant
  * s'exécute d'abord, puis le nouveau.
  */
-function chainOnBeforeCompile(
+export function chainOnBeforeCompile(
   material: THREE.Material,
   fn: NonNullable<THREE.Material['onBeforeCompile']>
 ): void {
@@ -535,7 +535,7 @@ const CLOUD_FRACTION_BILINEAR_GLSL = `
           return vec2( n / max( w, 0.001 ), w );
         }`;
 
-const REAL_CLOUDS_PARS_GLSL = `
+export const REAL_CLOUDS_PARS_GLSL = `
         // Sous USE_MAP : sans image posée, map n'est pas déclaré et ces fonctions ne
         // compileraient pas (mesuré : l'erreur de shader du matériau nuages au démarrage).
         #ifdef USE_MAP
@@ -612,39 +612,27 @@ const REAL_CLOUDS_PARS_GLSL = `
           }
           return acc;
         }
-        #endif`;
-
-const REAL_CLOUDS_GLSL = `
-        #ifdef USE_MAP
-        if ( uRealClouds > 0.5 ) {
-          // Extraite AUX TEXELS puis interpolée (cf. bilinearCloudAlpha), jamais l'inverse.
-          float rcAlpha = bilinearCloudAlpha( vMapUv );
-          // Gardée de près : reconstruction lisse dès que le texel passe quelques pixels. Mesure
-          // et dérivées HORS de la branche, qui n'est pas uniforme.
-          vec2 rcGx = dFdx( vMapUv );
-          vec2 rcGy = dFdy( vMapUv );
-          float rcSmooth = uMagFloor > 0.0
-            ? smoothstep( 1.5, 3.5, magnificationPxPerTexel( vec2( textureSize( map, 0 ) ) ) )
-            : 0.0;
-          if ( rcSmooth > 0.0 ) {
-            rcAlpha = mix( rcAlpha, cubicCloudAlpha( vMapUv, rcGx, rcGy ), rcSmooth );
-          }
+        // LA COMPOSITION des nuages réels (extraite du corps du shader le 2026-11-25, sans changer une opération) :
+        // l'alpha vraies couleurs, puis les masques MODIS (jour, nuit) là SEULEMENT où l'optique manque (bord de
+        // fauchée, nuit), sous une porte de couverture. mapUv lit l'image vraies couleurs, maskUv les masques
+        // mondiaux ; la couche mondiale passe deux fois le même UV, la régionale l'UV de sa tuile puis l'UV mondial.
+        float composeCloudAlpha( float rcAlpha, vec2 mapUv, vec2 maskUv, vec2 opticalStep ) {
           // Lissage de la frontière True Color/no-data : la décision de bascule vers MODIS
           // est spatiale, tandis que rcMax reste local pour extraire les nuages optiques.
-          vec2 opticalStep = uCloudDayTexelSize * uCloudOpticalBlendRadiusTexels;
+          // opticalStep arrive en paramètre, dans l'UV de la CARTE (la mondiale : le texel du masque × le rayon).
           // Bornage vertical des voisins : sans lui, le voisin +opticalStep.y DÉPASSE v=1 au
           // pôle Sud et, avec wrapT=ClampToEdge, retombe sur la BANDE no-data du bord d'image.
           // opticalNeighbourMax s'effondre alors le long d'un CERCLE de latitude fixe → bascule
           // nette vers le masque MODIS = « déchirure circulaire » au pôle. On clampe donc la
           // coordonnée v des voisins verticaux à [0,1] : au pôle, le voisin = le pixel courant,
           // pas le bord no-data. Aucun effet ailleurs (loin des bords, le clamp est inactif).
-          float opticalUp = clamp( vMapUv.y - opticalStep.y, 0.0, 1.0 );
-          float opticalDown = clamp( vMapUv.y + opticalStep.y, 0.0, 1.0 );
-          vec3 optN = texture2D( map, vMapUv ).rgb;
-          vec3 optL = texture2D( map, vec2( vMapUv.x - opticalStep.x, vMapUv.y ) ).rgb;
-          vec3 optR = texture2D( map, vec2( vMapUv.x + opticalStep.x, vMapUv.y ) ).rgb;
-          vec3 optU = texture2D( map, vec2( vMapUv.x, opticalUp ) ).rgb;
-          vec3 optD = texture2D( map, vec2( vMapUv.x, opticalDown ) ).rgb;
+          float opticalUp = clamp( mapUv.y - opticalStep.y, 0.0, 1.0 );
+          float opticalDown = clamp( mapUv.y + opticalStep.y, 0.0, 1.0 );
+          vec3 optN = texture2D( map, mapUv ).rgb;
+          vec3 optL = texture2D( map, vec2( mapUv.x - opticalStep.x, mapUv.y ) ).rgb;
+          vec3 optR = texture2D( map, vec2( mapUv.x + opticalStep.x, mapUv.y ) ).rgb;
+          vec3 optU = texture2D( map, vec2( mapUv.x, opticalUp ) ).rgb;
+          vec3 optD = texture2D( map, vec2( mapUv.x, opticalDown ) ).rgb;
           float opticalNeighbourMax = (
               max( optN.r, max( optN.g, optN.b ) )
               + max( optL.r, max( optL.g, optL.b ) )
@@ -662,7 +650,7 @@ const REAL_CLOUDS_GLSL = `
           // FRACTION locale : décodée aux quatre texels voisins PUIS interpolée (cf.
           // bilinearCloudFraction) ; lue au plus proche, elle peignait des carrés de ~20 km.
           float dY = uCloudDayTexelSize.y;
-          vec2 dayBilinear = bilinearCloudFraction( uCloudDayMap, vMapUv, uCloudDayTexelSize );
+          vec2 dayBilinear = bilinearCloudFraction( uCloudDayMap, maskUv, uCloudDayTexelSize );
           float dayFraction = dayBilinear.x;
           // COUVERTURE (frontière douce) : l'alpha MODIS est binaire (1 sur la fauchée, 0 hors) →
           // une frontière NETTE = déchirure. On l'étale sur une LARGE bande verticale (rayon
@@ -670,27 +658,27 @@ const REAL_CLOUDS_GLSL = `
           // 0→1 progressive au lieu d'une marche, donc une jonction fondue avec la True Color.
           float dCov = dY * uCloudCoverageBlendRadiusTexels;
           float dayCoverRaw = (
-              texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y - dCov * 2.0, 0.0, 1.0 ) ) ).a
-              + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y - dCov, 0.0, 1.0 ) ) ).a
+              texture2D( uCloudDayMap, vec2( maskUv.x, clamp( maskUv.y - dCov * 2.0, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudDayMap, vec2( maskUv.x, clamp( maskUv.y - dCov, 0.0, 1.0 ) ) ).a
               + dayBilinear.y
-              + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y + dCov, 0.0, 1.0 ) ) ).a
-              + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y + dCov * 2.0, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudDayMap, vec2( maskUv.x, clamp( maskUv.y + dCov, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudDayMap, vec2( maskUv.x, clamp( maskUv.y + dCov * 2.0, 0.0, 1.0 ) ) ).a
             ) / 5.0;
           float dayCoverage = dayCoverRaw * uHasCloudDayMap;
           float dayAlpha = pow( clamp( dayFraction, 0.0, 1.0 ), 0.72 )
             * dayCoverage * uCloudDayStrength;
           // Fraction nuit : même décodage puis interpolation que le jour.
           float nY = uCloudNightTexelSize.y;
-          vec2 nightBilinear = bilinearCloudFraction( uCloudNightMap, vMapUv, uCloudNightTexelSize );
+          vec2 nightBilinear = bilinearCloudFraction( uCloudNightMap, maskUv, uCloudNightTexelSize );
           float nightFraction = nightBilinear.x;
           // Couverture nuit : même frontière douce large que le jour (alpha binaire → rampe).
           float nCov = nY * uCloudCoverageBlendRadiusTexels;
           float nightCoverRaw = (
-              texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y - nCov * 2.0, 0.0, 1.0 ) ) ).a
-              + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y - nCov, 0.0, 1.0 ) ) ).a
+              texture2D( uCloudNightMap, vec2( maskUv.x, clamp( maskUv.y - nCov * 2.0, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudNightMap, vec2( maskUv.x, clamp( maskUv.y - nCov, 0.0, 1.0 ) ) ).a
               + nightBilinear.y
-              + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y + nCov, 0.0, 1.0 ) ) ).a
-              + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y + nCov * 2.0, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudNightMap, vec2( maskUv.x, clamp( maskUv.y + nCov, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudNightMap, vec2( maskUv.x, clamp( maskUv.y + nCov * 2.0, 0.0, 1.0 ) ) ).a
             ) / 5.0;
           float nightCoverage = nightCoverRaw * uHasCloudNightMap;
           float nightAlpha = pow( clamp( nightFraction, 0.0, 1.0 ), 0.72 )
@@ -704,7 +692,7 @@ const REAL_CLOUDS_GLSL = `
           // créée par la superposition de deux produits MODIS différents.
           float dayGapAlpha = dayAlpha * ( 1.0 - nightCoverage );
           float supplementalAlpha = max( nightFallbackAlpha, dayGapAlpha );
-          float staticCoverage = texture2D( uCloudStaticMap, vMapUv ).g;
+          float staticCoverage = texture2D( uCloudStaticMap, maskUv ).g;
           float staticAlpha = smoothstep( 0.08, 0.28, staticCoverage )
             * uHasCloudStaticMap;
           float staticPolarAlpha = ( 1.0 - nightCoverage ) * ( 1.0 - dayCoverage )
@@ -739,9 +727,36 @@ const REAL_CLOUDS_GLSL = `
           float supplementalFill = supplementalAlpha * ( 1.0 - opticalAvailability );
           rcAlpha = max( rcAlpha, supplementalFill );
           float satelliteCoverage = max( dayCoverage, max( nightCoverage, opticalAvailability ) );
-          float modelAlpha = texture2D( uCloudModelMap, vMapUv ).g
+          float modelAlpha = texture2D( uCloudModelMap, maskUv ).g
             * uHasCloudModelMap * uCloudModelStrength;
           rcAlpha = max( rcAlpha, modelAlpha * ( 1.0 - satelliteCoverage ) );
+          return rcAlpha;
+        }
+        #endif`;
+
+const REAL_CLOUDS_GLSL = `
+        #ifdef USE_MAP
+        if ( uRealClouds > 0.5 ) {
+          // Extraite AUX TEXELS puis interpolée (cf. bilinearCloudAlpha), jamais l'inverse.
+          float rcAlpha = bilinearCloudAlpha( vMapUv );
+          // Gardée de près : reconstruction lisse dès que le texel passe quelques pixels. Mesure
+          // et dérivées HORS de la branche, qui n'est pas uniforme.
+          vec2 rcGx = dFdx( vMapUv );
+          vec2 rcGy = dFdy( vMapUv );
+          float rcSmooth = uMagFloor > 0.0
+            ? smoothstep( 1.5, 3.5, magnificationPxPerTexel( vec2( textureSize( map, 0 ) ) ) )
+            : 0.0;
+          if ( rcSmooth > 0.0 ) {
+            rcAlpha = mix( rcAlpha, cubicCloudAlpha( vMapUv, rcGx, rcGy ), rcSmooth );
+          }
+          // La composition vraies couleurs + masques MODIS, partagée avec les nuages régionaux
+          // (GAL-EARTH-CLOUD-REGIONAL-001) : même code, l'UV de la carte et celui des masques coïncident ici.
+          rcAlpha = composeCloudAlpha(
+            rcAlpha,
+            vMapUv,
+            vMapUv,
+            uCloudDayTexelSize * uCloudOpticalBlendRadiusTexels
+          );
           // PAS DE SEUIL SUR L'ALPHA (2026-10-13). Un smoothstep( 0.5 - fwidth, 0.5 + fwidth )
           // vivait ici pour adoucir les lisières « en escalier » : il les rendait au contraire
           // FRANCHES. À l'approche, fwidth tend vers 0 et l'alpha devenait binaire (0 ou 1, à
@@ -758,6 +773,60 @@ const REAL_CLOUDS_GLSL = `
           diffuseColor.rgb = vec3( 1.0, 0.995, 0.985 );
         }
         #endif`;
+
+/** Les déclarations des uniformes des nuages réels, partagées par la coque mondiale et les nuages régionaux. */
+export const REAL_CLOUDS_UNIFORMS_GLSL =
+  '\nuniform float uRealClouds;\nuniform float uCloudLumLow;\nuniform float uCloudLumHigh;\nuniform float uCloudSatMax;\nuniform float uCloudLumLowLand;\nuniform sampler2D uCloudOceanMask;\nuniform float uHasOceanMask;\nuniform float uCloudEdgeSoft;\nuniform float uCloudSatOceanBoost;\nuniform float uCloudOpticalAvailabilityLow;\nuniform float uCloudOpticalAvailabilityHigh;\nuniform float uCloudOpticalBlendRadiusTexels;\nuniform float uCloudCoverageBlendRadiusTexels;\nuniform sampler2D uCloudDayMap;\nuniform float uHasCloudDayMap;\nuniform float uCloudDayStrength;\nuniform vec2 uCloudDayTexelSize;\nuniform sampler2D uCloudModelMap;\nuniform float uHasCloudModelMap;\nuniform float uCloudModelStrength;\nuniform sampler2D uCloudNightMap;\nuniform float uHasCloudNightMap;\nuniform float uCloudNightStrength;\nuniform vec2 uCloudNightTexelSize;\nuniform sampler2D uCloudStaticMap;\nuniform float uHasCloudStaticMap;\nuniform float uCloudStaticStrength;';
+
+/** Déclarations, décodage de la palette MODIS et fraction interpolée : le bloc `common` des nuages réels. */
+export function realCloudsCommonGlsl(renderer: THREE.WebGLRenderer): string {
+  return (
+    REAL_CLOUDS_UNIFORMS_GLSL +
+    (compilesForSoftware(renderer)
+      ? CLOUD_FRACTION_CASCADE_GLSL
+      : CLOUD_FRACTION_TABLE_GLSL) +
+    CLOUD_FRACTION_BILINEAR_GLSL
+  );
+}
+
+/** Lie les uniformes d'un programme aux objets PARTAGÉS des nuages réels : une carte posée sert partout. */
+export function bindRealCloudsUniforms(
+  shader: THREE.WebGLProgramParametersWithUniforms,
+  realClouds: RealCloudsUniforms
+): void {
+  shader.uniforms['uRealClouds'] = realClouds.enabled;
+  shader.uniforms['uCloudLumLow'] = realClouds.lumLow;
+  shader.uniforms['uCloudLumHigh'] = realClouds.lumHigh;
+  shader.uniforms['uCloudSatMax'] = realClouds.satMax;
+  shader.uniforms['uCloudLumLowLand'] = realClouds.lumLowLand;
+  shader.uniforms['uCloudOceanMask'] = realClouds.oceanMask;
+  shader.uniforms['uHasOceanMask'] = realClouds.hasOceanMask;
+  shader.uniforms['uCloudEdgeSoft'] = realClouds.edgeSoftness;
+  shader.uniforms['uCloudSatOceanBoost'] = realClouds.satOceanBoost;
+  shader.uniforms['uCloudOpticalAvailabilityLow'] =
+    realClouds.opticalAvailabilityLow;
+  shader.uniforms['uCloudOpticalAvailabilityHigh'] =
+    realClouds.opticalAvailabilityHigh;
+  shader.uniforms['uCloudOpticalBlendRadiusTexels'] =
+    realClouds.opticalBlendRadiusTexels;
+  shader.uniforms['uCloudPaletteSize'] = { value: PALETTE_SIZE };
+  shader.uniforms['uCloudCoverageBlendRadiusTexels'] =
+    realClouds.coverageBlendRadiusTexels;
+  shader.uniforms['uCloudDayMap'] = realClouds.dayMap;
+  shader.uniforms['uHasCloudDayMap'] = realClouds.hasDayMap;
+  shader.uniforms['uCloudDayStrength'] = realClouds.dayStrength;
+  shader.uniforms['uCloudDayTexelSize'] = realClouds.dayTexelSize;
+  shader.uniforms['uCloudModelMap'] = realClouds.modelMap;
+  shader.uniforms['uHasCloudModelMap'] = realClouds.hasModelMap;
+  shader.uniforms['uCloudModelStrength'] = realClouds.modelStrength;
+  shader.uniforms['uCloudNightMap'] = realClouds.nightMap;
+  shader.uniforms['uHasCloudNightMap'] = realClouds.hasNightMap;
+  shader.uniforms['uCloudNightStrength'] = realClouds.nightStrength;
+  shader.uniforms['uCloudNightTexelSize'] = realClouds.nightTexelSize;
+  shader.uniforms['uCloudStaticMap'] = realClouds.staticMap;
+  shader.uniforms['uHasCloudStaticMap'] = realClouds.hasStaticMap;
+  shader.uniforms['uCloudStaticStrength'] = realClouds.staticStrength;
+}
 
 export function createCloudsMaterial(): THREE.MeshStandardMaterial {
   const material = createShadowAwareStandardMaterial(
@@ -833,46 +902,11 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
   material.userData[REAL_CLOUDS_UNIFORM_KEY] = realClouds;
   installMagnificationFade(material);
   chainOnBeforeCompile(material, (shader, renderer) => {
-    shader.uniforms['uRealClouds'] = realClouds.enabled;
-    shader.uniforms['uCloudLumLow'] = realClouds.lumLow;
-    shader.uniforms['uCloudLumHigh'] = realClouds.lumHigh;
-    shader.uniforms['uCloudSatMax'] = realClouds.satMax;
-    shader.uniforms['uCloudLumLowLand'] = realClouds.lumLowLand;
-    shader.uniforms['uCloudOceanMask'] = realClouds.oceanMask;
-    shader.uniforms['uHasOceanMask'] = realClouds.hasOceanMask;
-    shader.uniforms['uCloudEdgeSoft'] = realClouds.edgeSoftness;
-    shader.uniforms['uCloudSatOceanBoost'] = realClouds.satOceanBoost;
-    shader.uniforms['uCloudOpticalAvailabilityLow'] =
-      realClouds.opticalAvailabilityLow;
-    shader.uniforms['uCloudOpticalAvailabilityHigh'] =
-      realClouds.opticalAvailabilityHigh;
-    shader.uniforms['uCloudOpticalBlendRadiusTexels'] =
-      realClouds.opticalBlendRadiusTexels;
-    shader.uniforms['uCloudPaletteSize'] = { value: PALETTE_SIZE };
-    shader.uniforms['uCloudCoverageBlendRadiusTexels'] =
-      realClouds.coverageBlendRadiusTexels;
-    shader.uniforms['uCloudDayMap'] = realClouds.dayMap;
-    shader.uniforms['uHasCloudDayMap'] = realClouds.hasDayMap;
-    shader.uniforms['uCloudDayStrength'] = realClouds.dayStrength;
-    shader.uniforms['uCloudDayTexelSize'] = realClouds.dayTexelSize;
-    shader.uniforms['uCloudModelMap'] = realClouds.modelMap;
-    shader.uniforms['uHasCloudModelMap'] = realClouds.hasModelMap;
-    shader.uniforms['uCloudModelStrength'] = realClouds.modelStrength;
-    shader.uniforms['uCloudNightMap'] = realClouds.nightMap;
-    shader.uniforms['uHasCloudNightMap'] = realClouds.hasNightMap;
-    shader.uniforms['uCloudNightStrength'] = realClouds.nightStrength;
-    shader.uniforms['uCloudNightTexelSize'] = realClouds.nightTexelSize;
-    shader.uniforms['uCloudStaticMap'] = realClouds.staticMap;
-    shader.uniforms['uHasCloudStaticMap'] = realClouds.hasStaticMap;
-    shader.uniforms['uCloudStaticStrength'] = realClouds.staticStrength;
+    bindRealCloudsUniforms(shader, realClouds);
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        '#include <common>\nuniform float uRealClouds;\nuniform float uCloudLumLow;\nuniform float uCloudLumHigh;\nuniform float uCloudSatMax;\nuniform float uCloudLumLowLand;\nuniform sampler2D uCloudOceanMask;\nuniform float uHasOceanMask;\nuniform float uCloudEdgeSoft;\nuniform float uCloudSatOceanBoost;\nuniform float uCloudOpticalAvailabilityLow;\nuniform float uCloudOpticalAvailabilityHigh;\nuniform float uCloudOpticalBlendRadiusTexels;\nuniform float uCloudCoverageBlendRadiusTexels;\nuniform sampler2D uCloudDayMap;\nuniform float uHasCloudDayMap;\nuniform float uCloudDayStrength;\nuniform vec2 uCloudDayTexelSize;\nuniform sampler2D uCloudModelMap;\nuniform float uHasCloudModelMap;\nuniform float uCloudModelStrength;\nuniform sampler2D uCloudNightMap;\nuniform float uHasCloudNightMap;\nuniform float uCloudNightStrength;\nuniform vec2 uCloudNightTexelSize;\nuniform sampler2D uCloudStaticMap;\nuniform float uHasCloudStaticMap;\nuniform float uCloudStaticStrength;' +
-          (compilesForSoftware(renderer)
-            ? CLOUD_FRACTION_CASCADE_GLSL
-            : CLOUD_FRACTION_TABLE_GLSL) +
-          CLOUD_FRACTION_BILINEAR_GLSL
+        '#include <common>' + realCloudsCommonGlsl(renderer)
       )
       .replace(
         '#include <map_pars_fragment>',
@@ -1579,7 +1613,7 @@ export interface MoonlightUniforms {
   color: { value: THREE.Color };
 }
 
-function createShadowAwareStandardMaterial(
+export function createShadowAwareStandardMaterial(
   params: THREE.MeshStandardMaterialParameters,
   options: {
     invertRoughnessMap?: boolean;

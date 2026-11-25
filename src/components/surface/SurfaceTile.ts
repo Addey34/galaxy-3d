@@ -48,6 +48,7 @@ export class SurfaceTile {
   readonly hasHeights: boolean;
   private readonly _geometry: THREE.BufferGeometry;
   private readonly _material: THREE.Material;
+  private readonly _baseTransparent: boolean;
   private _texture: THREE.Texture | null = null;
   /** Image de l'édition comparée (rideau avant/après, lot 50), ou `null`. */
   private _compare: THREE.Texture | null = null;
@@ -81,6 +82,10 @@ export class SurfaceTile {
     skirtDepth?: number;
   }) {
     this._releaseMaterial = params.releaseMaterial;
+    // La transparence PROPRE du matériau, rendue à la fin du fondu : un carreau de sol est opaque, un carreau
+    // de nuages (couche régionale) reste transparent. Forcer l'opaque faisait passer les nuages dans la passe
+    // opaque, où le sol dessiné après les recouvrait par bandes de niveaux (GAL-EARTH-CLOUD-REGIONAL-001).
+    this._baseTransparent = params.material.transparent;
     this.level = params.index.level;
     this.hasHeights = params.heights !== undefined;
     const bounds = tileBounds(params.index, params.shape);
@@ -166,7 +171,7 @@ export class SurfaceTile {
     this._held = false;
     this._fadeStart = null;
     this._material.opacity = 1;
-    this._material.transparent = false;
+    this._material.transparent = this._baseTransparent;
     this._material.needsUpdate = true;
   }
 
@@ -190,7 +195,7 @@ export class SurfaceTile {
     if (opacity >= 1) {
       this._fadeStart = null;
       material.opacity = 1;
-      material.transparent = false;
+      material.transparent = this._baseTransparent;
       material.needsUpdate = true;
       return false;
     }

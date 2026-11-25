@@ -17,7 +17,7 @@
  */
 import { mkdirSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 
 const args = process.argv.slice(2);
 const flag = (name, fallback) => {
@@ -35,6 +35,9 @@ const STEPS = Number(flag('--steps', '24'));
 const WHEEL = Number(flag('--wheel', '-1200'));
 const SETTLE = Number(flag('--settle', '2500'));
 const BASE = flag('--base', null);
+const QUERY = flag('--query', '');
+const VIEWPORT = flag('--viewport', '1280x800');
+const DEVICE = flag('--device', null);
 const DATE = flag('--date', '2026-11-20T16:30:00Z');
 const OUT = resolve(flag('--out', 'reports/cloud-descent/run'));
 const SOFTWARE = args.includes('--software');
@@ -49,9 +52,11 @@ const browser = await chromium.launch({
       : ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist']),
   ],
 });
-const context = await browser.newContext({
-  viewport: { width: 1280, height: 800 },
-});
+const [vw, vh] = VIEWPORT.split('x').map(Number);
+// `--device "Pixel 7"` : écran, rapport de pixels et toucher émulés ; sinon une fenêtre de bureau.
+const context = await browser.newContext(
+  DEVICE ? { ...devices[DEVICE] } : { viewport: { width: vw, height: vh } }
+);
 await context.addInitScript(() => {
   localStorage.setItem('ssv-guided-tour-v1', '1');
   localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
@@ -83,7 +88,7 @@ page.on('response', (r) => {
 });
 
 await page.goto(
-  `${ORIGIN}/?debug-surface&mode=${MODE}&body=earth&date=${DATE}`,
+  `${ORIGIN}/?debug-surface${QUERY}&mode=${MODE}&body=earth&date=${DATE}`,
   {
     timeout: 180_000,
   }
@@ -160,9 +165,12 @@ for (let i = 0; i <= STEPS; i += 1) {
       .waitForFunction(
         () =>
           document.querySelector('canvas')?.dataset['sceneMoving'] !== '1' &&
-          document.querySelector('canvas')?.dataset['texturesLoading'] === '0',
+          document.querySelector('canvas')?.dataset['texturesLoading'] ===
+            '0' &&
+          (document.querySelector('canvas')?.dataset['surfaceBusy'] ?? '0') ===
+            '0',
         null,
-        { timeout: 20_000 }
+        { timeout: 30_000 }
       )
       .catch(() => {});
   }
@@ -175,11 +183,15 @@ for (let i = 0; i <= STEPS; i += 1) {
       .join(' ');
     return Number(/fps ([0-9.]+)/.exec(t)?.[1] ?? NaN);
   });
+  const shell = await page.evaluate(
+    () => document.querySelector('canvas')?.dataset['cloudShell'] ?? null
+  );
   frames.push({
     i,
     altKm: alt,
     file: name,
     fps,
+    shell,
     net: JSON.parse(JSON.stringify(net)),
   });
   console.log(name);

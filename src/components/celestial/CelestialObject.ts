@@ -45,6 +45,7 @@ import {
   getOverlaySunUniform,
   getPrecipUniforms,
   getRealCloudsUniforms,
+  type RealCloudsUniforms,
   getRingShadowUniforms,
   getLayerTwilightWrap,
   getThermalUniforms,
@@ -640,6 +641,26 @@ export default class CelestialObject {
       !Array.isArray(surface.material) &&
       (surface.material as THREE.MeshStandardMaterial).roughnessMap
     );
+  }
+
+  /** Les uniformes des nuages réels de la coque, partagés avec les nuages régionaux, ou `undefined`. */
+  realCloudsUniforms(): RealCloudsUniforms | undefined {
+    const clouds = this.layers.get('clouds');
+    return clouds && !Array.isArray(clouds.material)
+      ? getRealCloudsUniforms(clouds.material)
+      : undefined;
+  }
+
+  /** Rapproche la coque des nuages du sol (facteur sur son rayon construit), ou la rétablit (1). */
+  setCloudShellScale(factor: number): void {
+    this.layers.get('clouds')?.scale.setScalar(factor);
+  }
+
+  /** Prend en charge un matériau de recouvrement posé par un autre moteur : éclairage et éclipse. */
+  adoptOverlayMaterial(material: THREE.Material): void {
+    this._overlayMaterials.add(material);
+    setMaterialLightAttenuation(material, this._lightAttenuation);
+    this._syncOverlayEclipse(material);
   }
 
   createSurfaceOverlayMaterial(oceanMatch?: OceanMatch): THREE.Material {
