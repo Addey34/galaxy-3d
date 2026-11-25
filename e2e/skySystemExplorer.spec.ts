@@ -219,6 +219,100 @@ test.describe('historique', () => {
   });
 });
 
+test.describe('cycle de vie', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  /** L'état partagé que seule la session propriétaire doit tenir : vue, masques, classe, exploration. */
+  const shared = (page: Page) =>
+    page.evaluate(() => ({
+      views: document.querySelectorAll('#system-view').length,
+      explorers: document.querySelectorAll('#system-explorer').length,
+      active: document.body.classList.contains('stellar-view-active'),
+      settingsHidden: !!document
+        .getElementById('settings-trigger')
+        ?.closest('[data-stellar-hidden]'),
+    }));
+
+  for (const order of [
+    'ancienne puis récente',
+    'récente puis ancienne',
+  ] as const)
+    test(`Retour puis Suivant pendant un premier paquet retardé, réponses libérées ${order} : une seule session tient la vue`, async ({
+      page,
+    }) => {
+      test.setTimeout(240_000);
+      await quiet(page);
+      await load(page, SOLAR);
+      await skyCard(page, 'TRAPPIST-1');
+      await page.locator('#exo-card-explore').click();
+      await expect(explorer(page)).toBeVisible({ timeout: 60_000 });
+      await page.goBack();
+      await expect(explorer(page)).toHaveCount(0);
+
+      // Chaque requête du paquet est retenue À PART, puis libérée dans l'ordre voulu.
+      const releases: Array<() => void> = [];
+      await page.route(/\/assets\/sky\/systems\/\d\d\.json$/, async (route) => {
+        await new Promise<void>((resolve) => releases.push(resolve));
+        await route.continue();
+      });
+      await page.goForward();
+      await expect.poll(() => releases.length).toBe(1);
+      await page.goBack();
+      // L'ouverture annulée rend la scène solaire TOUT DE SUITE : pas d'écran vide pendant qu'elle attend.
+      await expect
+        .poll(() => shared(page))
+        .toEqual({
+          views: 0,
+          explorers: 0,
+          active: false,
+          settingsHidden: false,
+        });
+      await page.goForward();
+      await expect.poll(() => releases.length).toBe(2);
+      const [older, newer] = releases as [() => void, () => void];
+      if (order === 'ancienne puis récente') {
+        older();
+        await page.waitForTimeout(0);
+        newer();
+      } else {
+        newer();
+        await expect(explorer(page)).toBeVisible({ timeout: 60_000 });
+        older();
+      }
+      // La DERNIÈRE intention : l'exploration de TRAPPIST-1, seule, et elle seule tient la vue.
+      await expect(explorer(page)).toBeVisible({ timeout: 60_000 });
+      await expect(page.locator('#system-title')).toHaveText(
+        'The TRAPPIST-1 system'
+      );
+      // Le nettoyage tardif de l'ouverture annulée a eu le temps de passer : il n'a rien défait.
+      await page
+        .waitForResponse(/\/assets\/sky\/systems\/\d\d\.json$/)
+        .catch(() => undefined);
+      await expect
+        .poll(() => shared(page))
+        .toEqual({
+          views: 1,
+          explorers: 1,
+          active: true,
+          settingsHidden: true,
+        });
+      expect(search(page).get('host')).toBe('trappist-1');
+
+      // Fermer rend TOUT : aucun masque, aucune classe, aucune vue ne reste derrière.
+      await page.keyboard.press('Escape');
+      await expect
+        .poll(() => shared(page))
+        .toEqual({
+          views: 0,
+          explorers: 0,
+          active: false,
+          settingsHidden: false,
+        });
+      expect(search(page).get('view')).toBeNull();
+      await page.unroute(/\/assets\/sky\/systems\/\d\d\.json$/);
+    });
+});
+
 test.describe('téléphone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 

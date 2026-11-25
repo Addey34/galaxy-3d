@@ -95,7 +95,7 @@
     "e2e/settingsTabs.spec.ts": 100,
     "e2e/share.spec.ts": 49,
     "e2e/sharedViewState.spec.ts": 119,
-    "e2e/skySystemExplorer.spec.ts": 130,
+    "e2e/skySystemExplorer.spec.ts": 215,
     "e2e/smallBodyDataset.spec.ts": 40,
     "e2e/smallBodyFilters.spec.ts": 28,
     "e2e/smoke.spec.ts": 114,

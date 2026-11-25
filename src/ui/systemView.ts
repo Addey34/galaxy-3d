@@ -112,6 +112,14 @@ export async function setupSystemView(
    * l'incrémente, et l'ouverture devenue caduque s'arrête (ou se défait) sans rien ouvrir ni réécrire.
    */
   let request = 0;
+  /**
+   * L'UNIQUE propriétaire du rendu de remplacement, des masques de la scène solaire et de
+   * `stellar-view-active` : l'ouverture qui les a posés. Une ouverture annulée pendant qu'elle attend
+   * ses données les rend TOUT DE SUITE (pas d'écran vide), et son nettoyage tardif, quand ses données
+   * arrivent, ne touche plus qu'à ce qui est à elle (sa racine, son exploration) : il ne peut pas
+   * défaire une session plus récente.
+   */
+  let holder: { id: number; undo(): void } | null = null;
   /** Vrai quand CETTE ouverture a ajouté son entrée d'historique : fermer la retire par « Retour ». */
   let pushed = false;
   let baseAddress: string | null = null;
@@ -142,6 +150,8 @@ export async function setupSystemView(
     if (opening) {
       request += 1;
       opening = false;
+      // Elle a peut-être déjà posé sa vue (elle attend le paquet de son système) : la scène solaire revient.
+      holder?.undo();
     }
     if (opened && !address) opened.close(true);
     else if (!opened && address?.host)
@@ -190,7 +200,9 @@ export async function setupSystemView(
       if (stale()) return;
       host.coordinator.closeAll();
 
-      // ---- la vue : un conteneur plein écran (les boîtes `sv-*`), la scène solaire masquée et inerte
+      // ---- la vue : un conteneur plein écran (les boîtes `sv-*`), la scène solaire masquée et inerte.
+      // Une ouverture précédente annulée qui tiendrait encore la vue la rend d'abord : un seul propriétaire.
+      holder?.undo();
       const root = document.createElement('section');
       root.className = 'stellar-view';
       root.id = 'system-view';
@@ -225,12 +237,20 @@ export async function setupSystemView(
           session.explorer?.close();
         },
       };
+      let undone = false;
       const undo = (): void => {
-        host.animation.setRenderOverride(null);
+        if (undone) return;
+        undone = true;
         root.remove();
+        // Le rendu, les masques et la classe ne sont rendus que par leur PROPRIÉTAIRE : une session plus
+        // récente les a peut-être déjà repris.
+        if (holder?.id !== id) return;
+        holder = null;
+        host.animation.setRenderOverride(null);
         document.body.classList.remove('stellar-view-active');
         restoreElements(inert);
       };
+      holder = { id, undo };
       let explorer: SystemExplorer;
       try {
         explorer = await module.openSystemExplorer({
