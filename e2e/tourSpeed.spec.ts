@@ -157,11 +157,20 @@ async function clockRate(page: Page): Promise<{
 /** 6,6 h/s, la vitesse des deux positions de départ (80 en avant, 20 en arrière). */
 const SIX_POINT_SIX_HOURS = 23_760;
 
-function expectRate(measured: { rate: number }, startSlider: number): void {
+function expectRate(
+  measured: { rate: number; simSeconds: number; elapsed: number },
+  startSlider: number
+): void {
   const info = JSON.stringify(measured);
   if (startSlider === 50) {
-    // 1:1 : progression cohérente avec le temps réel.
-    expect(Math.abs(measured.rate - 1), info).toBeLessThan(0.5);
+    // 1:1 : progression cohérente avec le temps réel, À LA PRÉCISION DE L'AFFICHAGE. L'heure se lit à la
+    // seconde : sur une fenêtre de ~2 s, la lecture entière se trompe d'une seconde au plus, soit ±50 % en
+    // taux. Le seuil en taux (0,5) tombait donc sur sa propre borne (run 45533132380 : 1 s simulée en
+    // 2,029 s réelles, taux 0,493, vert au réessai). L'écart en SECONDES reste discriminant : une horloge
+    // arrêtée ou doublée s'écarte de 2 s, la précision de lecture d'au plus 1 s (+ 0,25 s de marge).
+    expect(Math.abs(measured.simSeconds - measured.elapsed), info).toBeLessThan(
+      1.25
+    );
   } else if (startSlider > 50) {
     // En avant : le temps avance, à 6,6 h/s (la lecture est à la seconde près).
     expect(measured.rate, info).toBeGreaterThan(SIX_POINT_SIX_HOURS * 0.5);
@@ -174,14 +183,26 @@ function expectRate(measured: { rate: number }, startSlider: number): void {
 }
 
 test('la mesure refuse un mauvais signe, un mauvais module et une lecture trop précoce', () => {
-  expect(() => expectRate({ rate: -SIX_POINT_SIX_HOURS }, 20)).not.toThrow();
-  expect(() => expectRate({ rate: SIX_POINT_SIX_HOURS }, 20)).toThrow();
+  // Un relevé sur 2 s : le taux suffit aux grandes vitesses, les secondes comptent à 1:1.
+  const at = (rate: number, simSeconds = rate * 2, elapsed = 2) => ({
+    rate,
+    simSeconds,
+    elapsed,
+  });
+  expect(() => expectRate(at(-SIX_POINT_SIX_HOURS), 20)).not.toThrow();
+  expect(() => expectRate(at(SIX_POINT_SIX_HOURS), 20)).toThrow();
   // Le relevé trop précoce mesuré le 2026-11-13 : le temps de la visite (200 000x) y est mêlé.
-  expect(() => expectRate({ rate: 2_412 }, 20)).toThrow();
-  expect(() => expectRate({ rate: -SIX_POINT_SIX_HOURS }, 80)).toThrow();
-  expect(() => expectRate({ rate: 1 }, 80)).toThrow();
-  expect(() => expectRate({ rate: 1 }, 50)).not.toThrow();
-  expect(() => expectRate({ rate: SIX_POINT_SIX_HOURS }, 50)).toThrow();
+  expect(() => expectRate(at(2_412), 20)).toThrow();
+  expect(() => expectRate(at(-SIX_POINT_SIX_HOURS), 80)).toThrow();
+  expect(() => expectRate(at(1), 80)).toThrow();
+  expect(() => expectRate(at(1), 50)).not.toThrow();
+  expect(() => expectRate(at(SIX_POINT_SIX_HOURS), 50)).toThrow();
+  // 1:1 à la seconde près : le relevé du run 45533132380 (1 s en 2,029 s) est juste, une horloge arrêtée
+  // ou doublée ne l'est pas.
+  expect(() => expectRate(at(1 / 2.029, 1, 2.029), 50)).not.toThrow();
+  expect(() => expectRate(at(3 / 2.01, 3, 2.01), 50)).not.toThrow();
+  expect(() => expectRate(at(0, 0, 2.02), 50)).toThrow();
+  expect(() => expectRate(at(4 / 2.01, 4, 2.01), 50)).toThrow();
 });
 
 async function startTour(page: Page, index: number): Promise<void> {

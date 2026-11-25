@@ -505,7 +505,12 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
     chunk: 'GLTFLoader',
     reason:
-      "le chargeur glTF (GAL-ENGINE-HEADROOM-001) : les quinze corps irréguliers gardent leur sphère tant qu'ils sont à plus de `MODEL_LOAD_DISTANCE` rayons, et leur maillage (donc ce chargeur) part quand la caméra franchit ce seuil ou qu'on cible le corps (`CelestialObject.prepareForApproach`, via `components/celestial/shapeModelLoader`, un seul `import()` partagé). Un démarrage SANS corps modélisé dans l'adresse ne le charge plus ; un démarrage sur `/bennu/` ou `?body=` d'un de ces corps le charge : profil `body-link`.",
+      "le chargeur glTF COMPLET de three : depuis GAL-ENGINE-CAPACITY-002 il ne sert plus que les modèles de sondes de l'inspecteur 3D (Draco, WebP, à la demande) et, en repli, un modèle de forme qui sortirait du sous-ensemble que lit `components/celestial/shapeGlb` (aucun des 58 fichiers livrés, vérifié par `shapeGlb.test.ts`). Aucun profil de démarrage ne le charge plus.",
+  },
+  {
+    chunk: 'shapeGlb',
+    reason:
+      "le lecteur des modèles de forme (GAL-ENGINE-CAPACITY-002) : les corps irréguliers gardent leur sphère tant qu'ils sont à plus de `MODEL_LOAD_DISTANCE` rayons, et leur maillage (donc ce lecteur) part quand la caméra franchit ce seuil ou qu'on cible le corps (`CelestialObject.prepareForApproach`, via `components/celestial/shapeModelLoader`). Un démarrage sur `/bennu/` ou `?body=` d'un de ces corps le charge : profil `body-link`. Il remplace le chargeur glTF complet (44 729 octets), qu'il égale fichier par fichier sur le sous-ensemble livré.",
   },
   {
     chunk: 'craftInspector',
@@ -899,14 +904,14 @@ export const CONDITIONAL_START_PROFILES: readonly ConditionalStartProfile[] = [
   {
     id: 'body-link',
     label:
-      "ouverture directe d'un corps modélisé (`/bennu/`, `?body=`) : le corps est ciblé dès le démarrage, donc son maillage et le chargeur glTF partent tout de suite",
-    chunks: ['GLTFLoader'],
+      "ouverture directe d'un corps modélisé (`/bennu/`, `?body=`) : le corps est ciblé dès le démarrage, donc son maillage et le lecteur des modèles de forme partent tout de suite",
+    chunks: ['shapeGlb'],
   },
   {
     id: 'worst-case-body',
     label:
       "pire cas cumulé hors visite : premier passage sur l'adresse d'un corps modélisé, sur un appareil VR",
-    chunks: ['guidedTour', 'GLTFLoader', 'webxr'],
+    chunks: ['guidedTour', 'shapeGlb', 'webxr'],
   },
   {
     id: 'worst-case',
@@ -917,8 +922,8 @@ export const CONDITIONAL_START_PROFILES: readonly ConditionalStartProfile[] = [
   {
     id: 'worst-case-all',
     label:
-      "TOUT cumulé, adresse artificielle comprise : `?tour=` inconnu ET un corps modélisé dans l'adresse (`?tour=…&body=bennu`), premier passage, appareil VR. Le chargeur glTF était dans le démarrage ordinaire avant GAL-ENGINE-HEADROOM-001 : cette ligne est celle que le gain ne réduit PAS (elle a même perdu le code ajouté pour différer les maillages)",
-    chunks: ['guidedTour', 'tourPlayer', 'webxr', 'GLTFLoader'],
+      "TOUT cumulé, adresse artificielle comprise : `?tour=` inconnu ET un corps modélisé dans l'adresse (`?tour=…&body=bennu`), premier passage, appareil VR. Le chargeur glTF était dans le démarrage ordinaire avant GAL-ENGINE-HEADROOM-001 : cette ligne est celle que le gain ne réduit PAS (elle a même perdu le code ajouté pour différer les maillages). Depuis GAL-ENGINE-CAPACITY-002, le maillage de l'adresse passe par le lecteur des modèles de forme au lieu du chargeur glTF complet",
+    chunks: ['guidedTour', 'tourPlayer', 'webxr', 'shapeGlb'],
   },
 ];
 
