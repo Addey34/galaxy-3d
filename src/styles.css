@@ -4038,6 +4038,13 @@ body.is-capturing #loader {
   overflow-wrap: anywhere;
   text-align: right;
 }
+/* « Explorer ce système » (GAL-UNIVERSE-007) : même bouton que « Voir dans le voisinage solaire ». */
+.exo-explore {
+  margin: 0 0 var(--sp-3);
+}
+.exo-explore[hidden] {
+  display: none;
+}
 .exo-source {
   margin: var(--sp-3) 0 0;
   font-size: 0.8rem;

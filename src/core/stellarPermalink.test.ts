@@ -2,8 +2,10 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   parseStellarAddress,
+  parseSystemAddress,
   resolveStar,
   serializeStellarAddress,
+  serializeSystemAddress,
   snapYears,
   solarIdentity,
   starSlug,
@@ -319,5 +321,49 @@ describe('solarIdentity', () => {
 
   it("rend le chemin seul quand il n'y a rien d'autre", () => {
     expect(solarIdentity('/', '?view=neighbourhood')).toBe('/');
+  });
+});
+
+describe('l’adresse d’un système choisi dans le ciel (GAL-UNIVERSE-007)', () => {
+  const sky = JSON.parse(
+    readFileSync('public/assets/sky/exoplanets.json', 'utf-8')
+  ) as { systems: Array<[string, ...unknown[]]> };
+
+  it('chaque hôte du ciel a un identifiant distinct et bien formé', () => {
+    const slugs = sky.systems.map((s) => starSlug(s[0]));
+    expect(new Set(slugs).size).toBe(slugs.length);
+    for (const slug of slugs) expect(slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+  });
+
+  it('lit l’hôte et la planète, jamais sans `view=system`, et distingue un hôte mal formé', () => {
+    expect(
+      parseSystemAddress('?view=system&host=trappist-1&planet=trappist-1-e')
+    ).toEqual({ host: 'trappist-1', planet: 'trappist-1-e' });
+    expect(parseSystemAddress('?host=trappist-1')).toBeNull();
+    expect(parseSystemAddress('?view=neighbourhood&host=x')).toBeNull();
+    expect(parseSystemAddress('?view=system&host=%3Cb%3E')).toEqual({
+      host: null,
+    });
+    expect(parseSystemAddress('?view=system')).toEqual({ host: null });
+  });
+
+  it('boucle sans perte, garde les autres clés, `null` retire la vue, l’identité solaire ne la retient pas', () => {
+    const query = serializeSystemAddress('?mode=educ&date=2026-01-01', {
+      host: 'hr-8799',
+      planet: 'hr-8799-b',
+    });
+    expect(query).toBe(
+      '?mode=educ&date=2026-01-01&view=system&host=hr-8799&planet=hr-8799-b'
+    );
+    expect(parseSystemAddress(query)).toEqual({
+      host: 'hr-8799',
+      planet: 'hr-8799-b',
+    });
+    expect(serializeSystemAddress(query, null)).toBe(
+      '?mode=educ&date=2026-01-01'
+    );
+    expect(solarIdentity('/neptune/', query)).toBe(
+      solarIdentity('/neptune/', '?mode=educ')
+    );
   });
 });

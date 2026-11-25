@@ -29,7 +29,11 @@ function model(): SystemModel {
     name: 'Test',
     components: [
       {
+        name: 'Test',
+        spectral: 'M5V',
         row,
+        archiveDistPc: null,
+        circumbinary: false,
         host: [
           'Test',
           0,
@@ -158,5 +162,29 @@ describe('SystemScene', () => {
     expect(freedGeometries).toBe(geometries.size);
     expect(freedMaterials).toBe(materials.size);
     expect(scene.scene.children).toHaveLength(0);
+  });
+});
+
+describe('SystemScene, circumbinaire (GAL-UNIVERSE-007)', () => {
+  const spheres = (scene: SystemScene): number => {
+    let n = 0;
+    scene.scene.traverse((o) => {
+      if ((o as THREE.Mesh).geometry instanceof THREE.SphereGeometry) n += 1;
+    });
+    return n;
+  };
+
+  it('aucune sphère d’étoile au centre d’orbites circumbinaires, le point reste', () => {
+    const normal = model();
+    expect(spheres(new SystemScene(normal))).toBe(1);
+    const pair = model();
+    pair.components[0] = { ...pair.components[0]!, circumbinary: true };
+    const scene = new SystemScene(pair);
+    expect(spheres(scene)).toBe(0);
+    let points = 0;
+    scene.scene.traverse((o) => {
+      if ((o as THREE.Points).isPoints) points += 1;
+    });
+    expect(points).toBe(1);
   });
 });

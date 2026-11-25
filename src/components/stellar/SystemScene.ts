@@ -23,7 +23,7 @@ import {
   starRadiusAu,
   type SystemModel,
 } from '@/core/exoplanetSystems';
-import { spectralColour } from './NeighbourhoodScene';
+import { spectralColour } from './spectralColour';
 
 /** Taille écran du point d'une étoile (pixels) : symbolique, il ne dit pas sa taille. */
 const STAR_POINT_PX = 12;
@@ -99,8 +99,12 @@ export class SystemScene {
     this.comparison.visible = false;
 
     model.components.forEach((component, i) => {
-      const colour = new THREE.Color(...spectralColour(component.row[2]));
-      const radius = starRadiusAu(component.host);
+      const colour = new THREE.Color(...spectralColour(component.spectral));
+      // Une composante à planètes CIRCUMBINAIRES est un couple d'étoiles dont les positions ne sont pas
+      // publiées : aucune sphère individuelle n'est dessinée au centre de ses orbites, seulement le point.
+      const radius = component.circumbinary
+        ? null
+        : starRadiusAu(component.host);
       if (radius !== null) {
         const sphere = new THREE.Mesh(
           new THREE.SphereGeometry(radius, 32, 16),

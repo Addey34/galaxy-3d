@@ -129,6 +129,40 @@ export function setupSkyLayerToggles(
       }
     });
   };
+  // L'exploration d'un système choisi dans le CIEL (GAL-UNIVERSE-007) : l'enveloppe se charge au premier
+  // « Explorer ce système » ou pour une adresse `view=system`, jamais au démarrage.
+  let systemView: Promise<import('./systemView').SystemView> | null = null;
+  const openSystem = (host: string, fromAddress = false): void => {
+    const stellarHost = environment.stellar;
+    if (!stellarHost) return;
+    void (systemView ??= import('./systemView').then((m) =>
+      m.setupSystemView({
+        animation: stellarHost.animation,
+        renderer: stellarHost.renderer,
+        coordinator: environment.coordinator,
+        skyArchive: () => {
+          const hosts = starfield.exoplanetHosts;
+          return hosts
+            ? { systems: hosts.systems, retrieved: hosts.retrieved }
+            : null;
+        },
+        // Le retour rend l'observation d'origine : la fiche du même système, recentrée, si la couche est allumée.
+        onReturn: (name) => {
+          if (!wanted) return;
+          void card?.then((c) => {
+            const system = starfield.exoplanetHosts?.systems.find(
+              (s) => s[0] === name
+            );
+            if (system) c.open(system);
+          });
+        },
+      })
+    ))
+      .then((view) => view.open(host, fromAddress))
+      .catch(() => {
+        systemView = null;
+      });
+  };
   let meteors: Promise<MeteorLayer | null> | null = null;
   mount({
     id: 'constellations-toggle',
@@ -151,7 +185,13 @@ export function setupSkyLayerToggles(
       wanted = on;
       if (on && !card) {
         card = import('./exoplanetCard').then((m) =>
-          m.setupExoplanetCard({ starfield, ...environment })
+          m.setupExoplanetCard({
+            starfield,
+            ...environment,
+            onExplore: environment.stellar
+              ? (system) => openSystem(system[0])
+              : undefined,
+          })
         );
       }
       void card?.then((c) => c.setActive(wanted));
@@ -292,12 +332,11 @@ export function setupSkyLayerToggles(
     // contrat (étoile, temps) est dans `core/stellarPermalink`, dans le morceau de la vue.
     openFromAddress: () => {
       if (!environment.stellar) return;
-      if (
-        new URLSearchParams(window.location.search).get('view') !==
-        'neighbourhood'
-      )
-        return;
-      openStellar(undefined, true);
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get('view');
+      if (view === 'neighbourhood') openStellar(undefined, true);
+      // Un système choisi dans le ciel (`view=system&host=`, GAL-UNIVERSE-007).
+      else if (view === 'system') openSystem(params.get('host') ?? '', true);
     },
   };
 }

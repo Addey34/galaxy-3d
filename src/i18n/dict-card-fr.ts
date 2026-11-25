@@ -573,4 +573,20 @@ export const cardFr: Record<CardMessageKey, string> = {
   'sx.sourcesStars': 'Étoiles : catalogue du voisinage (Gaia DR3 ou HYG).',
   'sx.star.spectral': 'Type spectral (catalogue du voisinage)',
   'sx.star.spectralArchive': 'Type spectral (archive)',
+  'sx.backSky': 'Retour au ciel',
+  'sx.closedSky': 'Retour au ciel.',
+  'sx.unknownHost':
+    "Ce système planétaire n'est pas dans le catalogue du ciel : l'exploration ne s'ouvre pas.",
+  'sx.star.distanceArchive': 'Distance au Soleil (archive)',
+  'sx.star.originArchive':
+    "Étoile connue de la seule NASA Exoplanet Archive (elle n'est pas dans le catalogue du voisinage) : ses autres étoiles, s'il y en a, ne sont pas placées, car l'archive en donne le nombre, pas les positions.",
+  'sx.star.circumbinary':
+    "Au moins une planète tourne ici autour d'un COUPLE d'étoiles (circumbinaire dans l'archive) : son orbite est dessinée autour du centre du système, et aucune étoile seule n'y est dessinée, car les positions des deux étoiles ne sont pas dans les données.",
+  'sx.star.archiveStarsSky': "L'archive compte {n} étoiles dans ce système.",
+  'sx.helpSky':
+    'Glisser pour tourner, molette ou pincement pour zoomer, toucher une étoile ou une orbite. Clavier : flèches pour tourner, + et - pour zoomer, Origine pour tout le système, Échap pour revenir au ciel. La liste donne le même accès.',
+  'sx.read.measuredSky':
+    "Publié : la distance du système et les paramètres de son étoile hôte, tels que l'archive les donne.",
+  'sx.sourcesSky':
+    'Étoile et planètes : NASA Exoplanet Archive, table pscomppars, instantané du {date}.',
 };

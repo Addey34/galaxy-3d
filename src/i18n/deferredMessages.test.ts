@@ -39,6 +39,7 @@ const DEFERRED_READERS: Record<string, string> = {
   'ui/stellarView.ts': 'stellarView',
   'ui/stellarVisit.ts': 'stellarVisit',
   'ui/systemExplorer.ts': 'systemExplorer',
+  'ui/systemView.ts': 'systemView',
   'ui/formationMarker.ts': 'formationMarker',
   'components/surface/compareCurtain.ts': 'compareCurtain',
   'ui/weatherInspector.ts': 'weatherInspector',

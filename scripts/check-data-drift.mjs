@@ -77,6 +77,11 @@ export const DRIFT_GENERATORS = [
     script: 'perijoves:generate',
     about: 'périjoves de Juno (Horizons)',
   },
+  {
+    id: 'exoplanet-systems',
+    script: 'exoplanets:systems',
+    about: "architecture des systèmes d'exoplanètes (NASA Exoplanet Archive)",
+  },
 ];
 
 const PER_GENERATOR_TIMEOUT_MS = 25 * 60 * 1000;
