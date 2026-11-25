@@ -23,6 +23,12 @@
     "maxLevel": 13
   },
   "publishedPixelsPerDegree": 11132,
+  "oceanMatch": {
+    "tileSrgb": [15, 28, 51],
+    "baseSrgb": [31, 60, 118],
+    "measured": "2026-11-25",
+    "method": "Médiane par canal des pixels d'eau DÉGAGÉE (masque earth_spec > 250, entre 60° S et 60° N, pixels à 12 octets au plus du pic de l'histogramme du plus grand octet) sur la mosaïque mondiale de l'édition au niveau 2 de la grille WGS84 d'EOX (8 x 4 tuiles = 2048 x 1024). node scripts/measure-ocean-match.mjs s2 2025. baseSrgb : texture earth_surface_2k.jpg livrée"
+  },
   "acquired": {
     "interval": [["2025-01-01T00:00:00Z", "2025-12-31T23:59:59Z"]]
   },
