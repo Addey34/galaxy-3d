@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  CLOUD_SHELL_FAILURES_BEFORE_UNAVAILABLE,
   CLOUD_SHELL_UNAVAILABLE_AFTER_MS,
   createCloudShell,
 } from './cloudShell';
@@ -259,6 +260,7 @@ describe('disponibilité réelle et cycle de vie des nuages régionaux', () => {
   function setup() {
     const calls: string[] = [];
     let painted = 0;
+    let busy = 0;
     let clock = 0;
     const scales: number[] = [];
     const engine = {
@@ -268,7 +270,9 @@ describe('disponibilité réelle et cycle de vie des nuages régionaux', () => {
       update: vi.fn(),
       detach: vi.fn(() => calls.push('detach')),
       dispose: vi.fn(() => calls.push('dispose')),
-      busyCount: 0,
+      get busyCount() {
+        return busy;
+      },
       get state() {
         return { painted, requested: 4, level: 6, day: null };
       },
@@ -302,6 +306,7 @@ describe('disponibilité réelle et cycle de vie des nuages régionaux', () => {
       calls,
       scales,
       paint: (n: number) => (painted = n),
+      inFlight: (n: number) => (busy = n),
       advance: (ms: number) => (clock += ms),
     };
   }
@@ -344,6 +349,54 @@ describe('disponibilité réelle et cycle de vie des nuages régionaux', () => {
     // Un autre jour : un nouvel essai.
     cloudsOnScreen.source = SOURCE('2026-11-21');
     expect(t.shell.serves()).toBe(true);
+  });
+
+  it('des ÉCHECS de tuiles sans aucun succès signent une panne, même avec des requêtes toujours en vol', () => {
+    const t = setup();
+    cloudsOnScreen.value = true;
+    cloudsOnScreen.source = SOURCE('2026-11-20');
+    t.inFlight(4); // le moteur redemande sans cesse : la règle d'inactivité ne verrait rien
+    t.drive();
+    for (let i = 0; i < CLOUD_SHELL_FAILURES_BEFORE_UNAVAILABLE - 1; i += 1)
+      t.shell.recordFetch(false);
+    t.drive();
+    expect(t.shell.serves()).toBe(true);
+    t.shell.recordFetch(false);
+    t.drive();
+    expect(t.shell.serves()).toBe(false);
+    expect(t.calls.at(-1)).toBe('detach');
+    // Un autre jour remet les comptes à zéro.
+    cloudsOnScreen.source = SOURCE('2026-11-21');
+    t.drive();
+    expect(t.shell.serves()).toBe(true);
+  });
+
+  it('un seul succès suffit : des échecs partiels ne sont pas une panne', () => {
+    const t = setup();
+    cloudsOnScreen.value = true;
+    cloudsOnScreen.source = SOURCE('2026-11-20');
+    t.inFlight(4);
+    t.shell.recordFetch(true);
+    for (let i = 0; i < 20; i += 1) t.shell.recordFetch(false);
+    t.drive();
+    expect(t.shell.serves()).toBe(true);
+  });
+
+  it('un chargement LENT (tuiles en vol) n’est jamais pris pour une panne', () => {
+    const t = setup();
+    cloudsOnScreen.value = true;
+    cloudsOnScreen.source = SOURCE('2026-11-20');
+    t.inFlight(6); // tuiles demandées, pas encore arrivées
+    for (let i = 0; i < 10; i += 1) {
+      t.advance(CLOUD_SHELL_UNAVAILABLE_AFTER_MS);
+      t.drive();
+    }
+    expect(t.shell.serves()).toBe(true);
+    // Elles arrivent enfin : la couche est prête.
+    t.inFlight(0);
+    t.paint(6);
+    t.drive();
+    expect(t.shell.ready()).toBe(true);
   });
 
   it('jette les tuiles de l’ancien jour AVANT d’attacher le nouveau (pas de mélange temporel)', () => {

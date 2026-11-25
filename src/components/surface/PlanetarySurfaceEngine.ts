@@ -330,7 +330,7 @@ export const defaultHoleDetector: TileHoleDetector = (bitmap) => {
 /** Un manque d'imagerie régionale : la tuile se montre avec l'image de la base. */
 class RegionalMiss extends Error {}
 
-const defaultFetcher: TileFetcher = async (url, signal) => {
+export const defaultFetcher: TileFetcher = async (url, signal) => {
   const response = await fetch(url, {
     signal,
     mode: 'cors',
