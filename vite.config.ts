@@ -1141,6 +1141,17 @@ function bodyLandingPages() {
             name: file.source.name,
             url: file.source.url,
             acknowledgementUrl: file.source.acknowledgementUrl,
+            // L'instantané DÉTAILLÉ de l'exploration d'un système (GAL-UNIVERSE-006), lu dans son premier paquet.
+            systems: await (async () => {
+              const detail = await readJson<{
+                source: { retrieved: string; planets: number; systems: number };
+              }>('public/assets/sky/systems/00.json');
+              return {
+                retrieved: detail.source.retrieved,
+                planets: detail.source.planets,
+                count: detail.source.systems,
+              };
+            })(),
           };
         })();
         const smallBodySnapshot = (() => {

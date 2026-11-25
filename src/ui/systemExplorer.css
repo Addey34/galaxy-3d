@@ -1,0 +1,121 @@
+/*
+ * L'exploration d'un système stellaire (`ui/systemExplorer.ts`, GAL-UNIVERSE-006). Feuille EXTERNE (la CSP de
+ * production refuse un <style> injecté), chargée avec le morceau `systemExplorer`. Elle reprend les boîtes de
+ * la vue du voisinage (`sv-*`, `stellarView.css`) pour garder la même identité visuelle.
+ */
+
+/* Tant que l'exploration est ouverte, la vue du voisinage garde son DOM (son état est celui qu'on retrouve)
+   mais ne montre que l'exploration. */
+.stellar-view.sv-exploring > :not(.system-explorer) {
+  display: none !important;
+}
+
+.system-explorer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.system-explorer > * {
+  pointer-events: auto;
+}
+.system-explorer .sv-surface {
+  z-index: 0;
+}
+.system-explorer .sv-labels {
+  z-index: 1;
+}
+/* Les noms et l'aide ne prennent jamais un clic : il doit atteindre la scène dessous (le sélecteur
+   ci-dessus rend les enfants directs cliquables, ces deux-là ne doivent pas l'être). */
+.system-explorer .sv-labels,
+.system-explorer .sv-help {
+  pointer-events: none;
+}
+.system-explorer .sv-head,
+.system-explorer .sv-help,
+.system-explorer .sv-side {
+  z-index: 2;
+}
+
+.sv-explore {
+  justify-self: start;
+  border-color: rgba(var(--accent), 0.55);
+}
+.sv-explore[hidden] {
+  display: none;
+}
+
+.sx-label--orbit {
+  color: rgba(160, 220, 255, 0.92);
+}
+
+.sx-status[hidden],
+.sx-table-box[hidden],
+#system-compare-note[hidden] {
+  display: none;
+}
+.sx-status {
+  padding: var(--sp-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+}
+.sx-list {
+  max-height: 13rem;
+}
+.sx-item--planet {
+  padding-left: var(--sp-4);
+}
+
+.sx-summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.sx-summary:focus-visible {
+  outline: 2px solid rgba(var(--accent), 0.7);
+  outline-offset: 2px;
+}
+.sx-table-box,
+.sx-read {
+  display: grid;
+  gap: var(--sp-2);
+}
+/* Le tableau défile dans sa boîte sur téléphone, il ne déborde jamais du volet. */
+.sx-table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+.sx-table caption {
+  text-align: left;
+  padding-bottom: var(--sp-1);
+}
+.sx-table th,
+.sx-table td {
+  padding: 2px var(--sp-2) 2px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--hairline);
+}
+.sx-table thead th {
+  color: var(--ink-dim);
+  font-weight: 600;
+}
+.sx-read-list {
+  margin: 0;
+  padding-left: var(--sp-4);
+  display: grid;
+  gap: var(--sp-1);
+}
+.sx-sources {
+  display: grid;
+  gap: var(--sp-1);
+}
+.sx-ack {
+  color: var(--ink-faint);
+}

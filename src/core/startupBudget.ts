@@ -423,6 +423,16 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "la visite guidée du voisinage solaire (2026-11-24, GAL-UNIVERSE-005) : le panneau, les sept arrêts avec leurs quatre langues et le calcul des nombres depuis `neighbours.json` et `exoplanets.json`, importé par `ui/stellarView` au premier clic sur « Visite guidée » ou à l'ouverture d'une adresse `visit=`. Ni le démarrage ni la vue sans visite ne le chargent.",
   },
   {
+    chunk: 'systemExplorer',
+    reason:
+      "l'exploration d'un système stellaire (GAL-UNIVERSE-006) : la scène du système (`components/stellar/SystemScene`), le modèle (`core/exoplanetSystems`), la fiche, la liste, le tableau de comparaison et les contrôles, importés par `ui/stellarView` au premier clic sur « Explorer ce système » ou à l'ouverture d'une adresse `explore=1`. Ni le démarrage ni la vue du voisinage sans exploration ne le chargent ; les paquets `public/assets/sky/systems/NN.json` (~32 Ko chacun) ne sont lus qu'alors.",
+  },
+  {
+    chunk: 'exoplanetMethods',
+    reason:
+      "la table des méthodes de découverte de l'archive (GAL-UNIVERSE-006), partagée par la fiche d'un système du ciel (`ui/exoplanetCard`) et l'exploration d'un système (`ui/systemExplorer`) : elle part avec l'un ou l'autre, jamais au démarrage.",
+  },
+  {
     chunk: 'tourClearance',
     reason:
       "l'espace que la visite guidée prend en bas de l'écran (2026-11-24, GAL-SATELLITE-TRACKING-001) : un petit module partagé par le lecteur de visites et le panneau d'imagerie de surface, tous deux chargés à la demande, donc sorti du démarrage avec eux.",

@@ -25,6 +25,7 @@ import { getAnnouncer } from './announcer';
 import { createCardCentering } from './cardCentering';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { syncSurfaceFocus } from './surfaceFocus';
+import { METHOD_KEYS } from './exoplanetMethods';
 
 /** Rayon de capture d'un clic, en pixels : un anneau de 9 px se vise du doigt sans le manquer. */
 const PICK_RADIUS_PX = 14;
@@ -32,20 +33,7 @@ const PICK_RADIUS_PX = 14;
 const CLICK_MOVE_TOLERANCE = 5;
 const MAX_SUGGESTIONS = 12;
 
-/** Méthodes de découverte de l'archive : la clé de phrase de chacune ; une inconnue reste en l'état. */
-export const METHOD_KEYS: Readonly<Record<string, string>> = {
-  Transit: 'exo.method.transit',
-  'Radial Velocity': 'exo.method.radialVelocity',
-  Imaging: 'exo.method.imaging',
-  Microlensing: 'exo.method.microlensing',
-  'Transit Timing Variations': 'exo.method.transitTiming',
-  'Eclipse Timing Variations': 'exo.method.eclipseTiming',
-  'Orbital Brightness Modulation': 'exo.method.orbitalBrightness',
-  'Pulsar Timing': 'exo.method.pulsarTiming',
-  'Pulsation Timing Variations': 'exo.method.pulsationTiming',
-  Astrometry: 'exo.method.astrometry',
-  'Disk Kinematics': 'exo.method.diskKinematics',
-};
+export { METHOD_KEYS };
 
 export interface ExoplanetCard {
   /** La couche est allumée ou éteinte : les clics, la recherche et la fiche suivent. */

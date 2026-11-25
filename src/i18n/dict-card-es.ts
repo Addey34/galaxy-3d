@@ -175,7 +175,7 @@ export const cardEs: Record<CardMessageKey, string> = {
   'exo.card.distance': 'a {ly} años luz',
   'exo.card.distanceUnknown': 'Distancia no publicada',
   'exo.card.source':
-    'NASA Exoplanet Archive, leído el {date}. Los planetas no se dibujan: solo se sitúa su estrella anfitriona en el cielo.',
+    'NASA Exoplanet Archive, leído el {date}. Los planetas no se dibujan: solo se sitúa su estrella anfitriona en el cielo. Para un planeta hallado por velocidad radial, el radio suele calcularlo el archivo a partir de la masa, no medirse.',
   'exo.card.opened': 'Sistema {name}, {count} planetas conocidos',
   'exo.unit.days': '{v} días',
   'exo.unit.earthRadii': '{v} radios terrestres',
@@ -480,4 +480,95 @@ export const cardEs: Record<CardMessageKey, string> = {
     'Trazado de la órbita: un periodo por delante de la fecha de la escena, calculado por SGP4 a partir de los elementos. No es una medición, y no se dibuja ningún trazado del pasado. Las flechas indican el sentido del movimiento.',
   'sat.pathTruncated':
     'El trazado se detiene donde los elementos dejan de ser válidos.',
+  'sx.open': 'Explorar este sistema',
+  'sx.unavailable': 'No se pudo cargar la exploración del sistema.',
+  'sx.title': 'El sistema {name}',
+  'sx.back': 'Volver a la vecindad',
+  'sx.reset': 'Todo el sistema',
+  'sx.compare': 'Comparar con el Sistema Solar',
+  'sx.scale':
+    'Una unidad es una unidad astronómica (la distancia Tierra-Sol). Las órbitas se dibujan de frente.',
+  'sx.field': 'Campo de visión: {au} UA de ancho',
+  'sx.help':
+    'Arrastrar para girar, rueda o pellizco para acercar, tocar una estrella o una órbita. Teclado: flechas para girar, + y - para acercar, Inicio para todo el sistema, Escape para volver a la vecindad. La lista da el mismo acceso.',
+  'sx.list': 'En este sistema',
+  'sx.listStar': '{name} (estrella)',
+  'sx.listPlanet': '{name} (planeta)',
+  'sx.listPlanetNoOrbit': '{name} (planeta, órbita no dibujada)',
+  'sx.opened':
+    'Sistema {name} abierto: {stars} estrellas en el catálogo, {planets} planetas catalogados.',
+  'sx.selected': '{name} seleccionado',
+  'sx.closed': 'De vuelta a la vecindad solar.',
+  'sx.archiveUnavailable':
+    'No se pudo leer el archivo de planetas: solo se muestran las estrellas.',
+  'sx.doc.noPlanets':
+    'Ninguna órbita que dibujar: el archivo no lista ningún planeta para este sistema (instantánea del {date}). Eso no significa que no tenga.',
+  'sx.doc.noAxis':
+    'Ninguna órbita que dibujar: sus planetas no tienen semieje mayor ni masa estelar para derivarlo. Sus datos están en la lista.',
+  'sx.missingHosts':
+    'Reconocidos en la capa del cielo pero ausentes de la instantánea detallada: {hosts}.',
+  'sx.star.separation': 'Separación proyectada con {name}',
+  'sx.star.separationValue':
+    '{au} UA (derivada de las posiciones del catálogo: un mínimo, la distancia a lo largo de la línea de visión es desconocida)',
+  'sx.star.teff': 'Temperatura efectiva',
+  'sx.star.radius': 'Radio',
+  'sx.star.mass': 'Masa',
+  'sx.star.noHost': 'Ningún planeta del archivo se atribuye a esta estrella.',
+  'sx.star.hostOf':
+    'NASA Exoplanet Archive: anfitriona «{host}», {count} planetas catalogados dibujados o listados aquí.',
+  'sx.star.trueSize':
+    'La estrella se dibuja con su radio publicado; su punto mantiene un tamaño constante en pantalla para encontrarla de lejos.',
+  'sx.star.archiveStars':
+    'El archivo cuenta {n} estrellas en este sistema; el catálogo de la vecindad agrupa {m} aquí (una compañera a más de un minuto de arco tiene su propio marcador).',
+  'sx.planet.star': 'Estrella anfitriona',
+  'sx.planet.eccentricity': 'Excentricidad',
+  'sx.planet.eccZero': '0 (publicada; a menudo fijada en cero por el ajuste)',
+  'sx.planet.eccUnknown':
+    'no publicada: la órbita es un círculo discontinuo en su semieje mayor',
+  'sx.planet.range': 'Distancia a la estrella',
+  'sx.planet.rangeValue': 'de {q} a {Q} UA',
+  'sx.planet.inclination': 'Inclinación',
+  'sx.planet.mass': 'Masa',
+  'sx.planet.noOrbit':
+    'Ni semieje mayor ni masa estelar para derivarlo: la órbita no se dibuja.',
+  'sx.planet.position':
+    'No se sabe dónde está el planeta en su órbita: su nombre marca la órbita, no el planeta.',
+  'sx.planet.radiusCalculated':
+    'Su radio no se midió: el archivo lo calcula a partir de la masa.',
+  'sx.planet.controversial':
+    'El archivo señala este planeta como controvertido.',
+  'sx.planet.circumbinary':
+    'El archivo lo clasifica como circumbinario (en órbita alrededor de dos estrellas).',
+  'sx.tag.calculated': 'calculado por el archivo',
+  'sx.tag.derived': 'derivado aquí, tercera ley de Kepler',
+  'sx.tag.minimum': 'masa mínima, m sin i',
+  'sx.tag.trueMass': 'masa',
+  'sx.unit.kelvin': '{v} K',
+  'sx.unit.solarRadii': '{v} radios solares',
+  'sx.unit.solarMasses': '{v} masas solares',
+  'sx.unit.earthMasses': '{v} masas terrestres',
+  'sx.unit.degrees': '{v}°',
+  'sx.table.title': 'Comparar los planetas',
+  'sx.table.planet': 'Planeta',
+  'sx.table.caption':
+    'Periodo en días, semieje mayor en UA, masa en masas terrestres, radio en radios terrestres. Un guion: no publicado.',
+  'sx.compare.note':
+    'Círculos grises discontinuos: las órbitas de los planetas del Sistema Solar a la misma escala (semiejes mayores, NSSDCA), centradas en {name}.',
+  'sx.compare.ring': '{name} (Sistema Solar)',
+  'sx.read.title': 'Cómo leer esta vista',
+  'sx.read.measured':
+    'Medido: la posición, la distancia y el movimiento de las estrellas (Gaia DR3 o HYG), y la separación proyectada entre dos estrellas del sistema.',
+  'sx.read.catalogued':
+    'Catalogado: los planetas y sus órbitas, del NASA Exoplanet Archive (instantánea del {date}). Cada valor indica cuándo el archivo lo calculó en lugar de tomarlo de una publicación.',
+  'sx.read.derived':
+    'Derivado aquí: un semieje mayor calculado a partir del periodo y de la masa estelar (tercera ley de Kepler), señalado como tal.',
+  'sx.read.illustrative':
+    'Ilustrativo: las órbitas se dibujan de frente porque su orientación en el cielo no se publica (el nodo nunca, la inclinación rara vez); una banda va de la menor a la mayor distancia a la estrella; un círculo discontinuo indica una excentricidad no publicada; los colores solo distinguen las órbitas.',
+  'sx.read.unknown':
+    'Desconocido: dónde está cada planeta en su órbita, la inclinación de las órbitas, la distancia entre las estrellas a lo largo de la línea de visión. No se dibuja nada para ello.',
+  'sx.sources':
+    'Estrellas: catálogo de la vecindad (Gaia DR3 o HYG). Planetas y estrella anfitriona: NASA Exoplanet Archive, tabla pscomppars, instantánea del {date}.',
+  'sx.sourcesStars': 'Estrellas: catálogo de la vecindad (Gaia DR3 o HYG).',
+  'sx.star.spectral': 'Tipo espectral (catálogo de la vecindad)',
+  'sx.star.spectralArchive': 'Tipo espectral (archivo)',
 };

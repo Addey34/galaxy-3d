@@ -71,6 +71,9 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'exo.method.transit': '« transit » est aussi le terme français',
   // « Messier » est le nom propre du catalogue (M 31) : il s’écrit pareil dans les quatre langues.
   'deep.card.messier': '« Messier » est un nom propre, inchangé',
+  // Une valeur et l'unité du SI (le kelvin, le degré) : rien à traduire.
+  'sx.unit.kelvin': 'symbole du kelvin, unité du SI',
+  'sx.unit.degrees': 'symbole du degré, identique partout',
   // « Constellation » s’écrit pareil en anglais et en français.
   'deep.card.constellation':
     '« constellation » s’écrit pareil en anglais et en français',

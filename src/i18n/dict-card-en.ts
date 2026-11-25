@@ -183,7 +183,7 @@ export const cardEn = {
   'exo.card.distance': '{ly} light-years away',
   'exo.card.distanceUnknown': 'Distance not published',
   'exo.card.source':
-    'NASA Exoplanet Archive, read on {date}. The planets are not drawn: only their host star is placed on the sky.',
+    'NASA Exoplanet Archive, read on {date}. The planets are not drawn: only their host star is placed on the sky. For a planet found by radial velocity, the radius is usually calculated by the archive from the mass, not measured.',
   'exo.card.opened': 'System {name}, {count} known planets',
   'exo.unit.days': '{v} days',
   'exo.unit.earthRadii': '{v} Earth radii',
@@ -498,6 +498,96 @@ export const cardEn = {
   'sat.path':
     'Orbit path: one period ahead of the scene date, computed by SGP4 from the elements. It is not measured, and no past path is drawn. The arrows show the direction of travel.',
   'sat.pathTruncated': 'The path stops where the elements stop being valid.',
+  'sx.open': 'Explore this system',
+  'sx.unavailable': 'The system exploration could not be loaded.',
+  'sx.title': 'The {name} system',
+  'sx.back': 'Back to the neighbourhood',
+  'sx.reset': 'Whole system',
+  'sx.compare': 'Compare with the Solar System',
+  'sx.scale':
+    'One unit is one astronomical unit (the Earth-Sun distance). Orbits are drawn face-on.',
+  'sx.field': 'Field of view: {au} AU across',
+  'sx.help':
+    'Drag to turn, scroll or pinch to zoom, tap a star or an orbit. Keyboard: arrows turn, + and - zoom, Home shows the whole system, Escape returns to the neighbourhood. The list gives the same access.',
+  'sx.list': 'In this system',
+  'sx.listStar': '{name} (star)',
+  'sx.listPlanet': '{name} (planet)',
+  'sx.listPlanetNoOrbit': '{name} (planet, orbit not drawn)',
+  'sx.opened':
+    'System {name} open: {stars} stars in the catalogue, {planets} catalogued planets.',
+  'sx.selected': '{name} selected',
+  'sx.closed': 'Back to the solar neighbourhood.',
+  'sx.archiveUnavailable':
+    'The planet archive could not be read: only the stars are shown.',
+  'sx.doc.noPlanets':
+    'No orbit to draw: the archive lists no planet for this system (snapshot of {date}). That does not mean it has none.',
+  'sx.doc.noAxis':
+    'No orbit to draw: its planets have neither a semi-major axis nor a stellar mass to derive one. Their facts are in the list.',
+  'sx.missingHosts':
+    'Recognised in the sky layer but absent from the detailed snapshot: {hosts}.',
+  'sx.star.separation': 'Projected separation from {name}',
+  'sx.star.separationValue':
+    '{au} AU (derived from the catalogue positions: a minimum, the distance along the line of sight is unknown)',
+  'sx.star.teff': 'Effective temperature',
+  'sx.star.radius': 'Radius',
+  'sx.star.mass': 'Mass',
+  'sx.star.noHost': 'No planet of the archive is attributed to this star.',
+  'sx.star.hostOf':
+    'NASA Exoplanet Archive: host "{host}", {count} catalogued planets drawn or listed here.',
+  'sx.star.trueSize':
+    'The star is drawn at its published radius; its point keeps a constant size on screen so it can be found from afar.',
+  'sx.star.archiveStars':
+    'The archive counts {n} stars in this system; the neighbourhood catalogue groups {m} here (a companion more than one arcminute away is its own marker).',
+  'sx.planet.star': 'Host star',
+  'sx.planet.eccentricity': 'Eccentricity',
+  'sx.planet.eccZero': '0 (published; often fixed at zero by the fit)',
+  'sx.planet.eccUnknown':
+    'not published: the orbit is a dashed circle at its semi-major axis',
+  'sx.planet.range': 'Distance to the star',
+  'sx.planet.rangeValue': 'from {q} to {Q} AU',
+  'sx.planet.inclination': 'Inclination',
+  'sx.planet.mass': 'Mass',
+  'sx.planet.noOrbit':
+    'Neither a semi-major axis nor a stellar mass to derive one: the orbit is not drawn.',
+  'sx.planet.position':
+    'Where the planet is on its orbit is not known: its name marks the orbit, not the planet.',
+  'sx.planet.radiusCalculated':
+    'Its radius was not measured: the archive calculates it from the mass.',
+  'sx.planet.controversial': 'The archive flags this planet as controversial.',
+  'sx.planet.circumbinary':
+    'The archive lists it as circumbinary (orbiting two stars).',
+  'sx.tag.calculated': 'calculated by the archive',
+  'sx.tag.derived': "derived here, Kepler's third law",
+  'sx.tag.minimum': 'minimum mass, m sin i',
+  'sx.tag.trueMass': 'mass',
+  'sx.unit.kelvin': '{v} K',
+  'sx.unit.solarRadii': '{v} solar radii',
+  'sx.unit.solarMasses': '{v} solar masses',
+  'sx.unit.earthMasses': '{v} Earth masses',
+  'sx.unit.degrees': '{v}°',
+  'sx.table.title': 'Compare the planets',
+  'sx.table.planet': 'Planet',
+  'sx.table.caption':
+    'Period in days, semi-major axis in AU, mass in Earth masses, radius in Earth radii. A dash: not published.',
+  'sx.compare.note':
+    'Grey dashed circles: the orbits of the Solar System planets at the same scale (semi-major axes, NSSDCA), centred on {name}.',
+  'sx.compare.ring': '{name} (Solar System)',
+  'sx.read.title': 'How to read this view',
+  'sx.read.measured':
+    'Measured: star positions, distances and motion (Gaia DR3 or HYG), and the projected separation between two stars of the system.',
+  'sx.read.catalogued':
+    'Catalogued: the planets and their orbits, from the NASA Exoplanet Archive (snapshot of {date}). Each value says when the archive calculated it instead of taking it from a publication.',
+  'sx.read.derived':
+    "Derived here: a semi-major axis computed from the period and the stellar mass (Kepler's third law), marked as such.",
+  'sx.read.illustrative':
+    'Illustrative: orbits are drawn face-on because their orientation on the sky is not published (the node never is, the tilt rarely); a band runs from the closest to the farthest distance to the star; a dashed circle means the eccentricity is not published; colours only tell the orbits apart.',
+  'sx.read.unknown':
+    'Unknown: where each planet is on its orbit, how the orbits are tilted, the distance between the stars along the line of sight. Nothing is drawn for them.',
+  'sx.sources':
+    'Stars: neighbourhood catalogue (Gaia DR3 or HYG). Planets and host star: NASA Exoplanet Archive, table pscomppars, snapshot of {date}.',
+  'sx.sourcesStars': 'Stars: neighbourhood catalogue (Gaia DR3 or HYG).',
+  'sx.star.spectral': 'Spectral type (neighbourhood catalogue)',
+  'sx.star.spectralArchive': 'Spectral type (archive)',
 };
 
 export type CardMessageKey = keyof typeof cardEn;
