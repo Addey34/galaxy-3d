@@ -110,7 +110,7 @@
     "e2e/surfaceImageryEarth.spec.ts": 1012,
     "e2e/surfacePanelOnDemand.spec.ts": 35,
     "e2e/surfaceStaysOpen.spec.ts": 75,
-    "e2e/systemExplorer.spec.ts": 30,
+    "e2e/systemExplorer.spec.ts": 37,
     "e2e/temporal.spec.ts": 133,
     "e2e/terminator.spec.ts": 47,
     "e2e/textureDecode.spec.ts": 16,
