@@ -5,8 +5,8 @@
  * `stellarView` (chargé au premier usage) : le démarrage ne porte que la lecture d'une clé
  * (`ui/skyLayerToggles`), pas ce contrat.
  *
- * Cinq clés, et seulement cinq (les deux dernières, `visit` et `step`, sont celles de la visite guidée,
- * GAL-UNIVERSE-005) :
+ * Sept clés, et seulement sept (`visit` et `step` sont celles de la visite guidée, GAL-UNIVERSE-005 ;
+ * `explore` et `planet`, celles de l'exploration d'un système, GAL-UNIVERSE-006) :
  *
  *   - `view=neighbourhood` : la vue 3D du voisinage est ouverte ;
  *   - `star=<identifiant>` : l'étoile (ou le système) choisie, identifiée par son NOM normalisé
@@ -17,6 +17,10 @@
  *     La visite fixe ELLE-MÊME l'étoile, le décalage de temps et le cadrage de chaque étape : à
  *     l'ouverture, `visit` l'emporte sur `star` et `t` ; ils reprennent leur sens dès que la visite est
  *     quittée.
+ *   - `explore=1` : le système de l'étoile choisie est exploré (`ui/systemExplorer`) ; sans `star`, il
+ *     ne signifie rien et n'est pas écrit ;
+ *   - `planet=<identifiant>` : la planète choisie dans l'exploration (nom normalisé par `starSlug`) ;
+ *     sans `explore`, elle ne signifie rien.
  *
  * CE QUI N'Y EST PAS, volontairement : la caméra (azimut, distance), la transition d'ouverture, la
  * langue, la liste filtrée. La caméra est un état transitoire que rien ne décrit comme une
@@ -31,7 +35,15 @@
 export const STELLAR_VIEW_VALUE = 'neighbourhood';
 
 /** Les clés que ce module possède (et qu'il est seul à effacer). */
-export const STELLAR_KEYS = ['view', 'star', 't', 'visit', 'step'] as const;
+export const STELLAR_KEYS = [
+  'view',
+  'star',
+  't',
+  'visit',
+  'step',
+  'explore',
+  'planet',
+] as const;
 
 /** Longueur maximale d'un identifiant lu dans l'adresse : le plus long du catalogue en a 16. */
 const MAX_STAR_LENGTH = 64;
@@ -58,6 +70,13 @@ export interface StellarAddress {
   visit?: string | null;
   /** Le rang de l'étape (0 à 99), ou `undefined` s'il manque ou n'est pas un entier : la visite commence alors à 0. */
   step?: number;
+  /** Vrai quand l'adresse demande l'exploration du système de l'étoile choisie (`explore=1`). */
+  explore?: boolean;
+  /**
+   * La planète choisie dans l'exploration, telle qu'elle est écrite ; `null` quand elle n'a pas la FORME
+   * d'un identifiant (l'appelant le dit). Lue seulement avec `explore`.
+   */
+  planet?: string | null;
 }
 
 /**
@@ -116,6 +135,19 @@ export function parseStellarAddress(search: string): StellarAddress | null {
       if (rank <= MAX_STEP) address.step = rank;
     }
   }
+  if (params.get('explore') === '1') {
+    address.explore = true;
+    const planet = params.get('planet');
+    if (planet !== null) {
+      const wanted = planet.trim().toLowerCase();
+      address.planet =
+        wanted.length > 0 &&
+        wanted.length <= MAX_STAR_LENGTH &&
+        SLUG_SHAPE.test(wanted)
+          ? wanted
+          : null;
+    }
+  }
   return address;
 }
 
@@ -131,6 +163,8 @@ export function serializeStellarAddress(
     years?: number;
     visit?: string | null;
     step?: number;
+    explore?: boolean;
+    planet?: string | null;
   } | null
 ): string {
   const params = new URLSearchParams(search);
@@ -144,6 +178,11 @@ export function serializeStellarAddress(
     if (address.visit) {
       params.set('visit', address.visit);
       params.set('step', String(Math.max(0, Math.round(address.step ?? 0))));
+    }
+    // L'exploration désigne le système de l'étoile choisie : sans étoile, elle n'est pas écrite.
+    if (address.explore && address.star) {
+      params.set('explore', '1');
+      if (address.planet) params.set('planet', address.planet);
     }
   }
   const query = params.toString();

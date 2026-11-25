@@ -139,6 +139,19 @@ function exoplanetsCatalogue() {
     name: file.source.name,
     url: file.source.url,
     acknowledgementUrl: file.source.acknowledgementUrl,
+    systems: (() => {
+      const detail = JSON.parse(
+        readFileSync(
+          resolve(ROOT, 'public/assets/sky/systems/00.json'),
+          'utf-8'
+        )
+      ) as { source: { retrieved: string; planets: number; systems: number } };
+      return {
+        retrieved: detail.source.retrieved,
+        planets: detail.source.planets,
+        count: detail.source.systems,
+      };
+    })(),
   };
 }
 

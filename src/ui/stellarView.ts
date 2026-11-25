@@ -207,6 +207,8 @@ export async function setupStellarView(
       years?: number;
       visit?: string | null;
       step?: number;
+      explore?: boolean;
+      planet?: string | null;
     } | null,
     how: 'push' | 'replace'
   ): void => {
@@ -228,6 +230,8 @@ export async function setupStellarView(
   claimHistory((): boolean => {
     const address = parseStellarAddress(window.location.search);
     const viewOnly = baseAddress !== null && solarNow() === baseAddress;
+    // L'exploration d'un système suit l'historique comme la vue elle-même (GAL-UNIVERSE-006).
+    if (opened && address) opened.followExplore(address);
     if (opened && !address) opened.close(true);
     else if (!opened && address) {
       open(undefined, true);
@@ -248,6 +252,8 @@ export async function setupStellarView(
     inert: MaskedElement[];
     opener: HTMLElement | null;
     close(viaHistory?: boolean): void;
+    /** Ouvre ou ferme l'exploration selon l'adresse ramenée par un Retour ou un Suivant. */
+    followExplore(address: ReturnType<typeof parseStellarAddress>): void;
   }
 
   function open(focus?: string, fromAddress = false, visit = false): void {
@@ -347,7 +353,11 @@ export async function setupStellarView(
     const cardTitle = el('h3', 'sv-heading', 'stellar-card-title');
     const facts = el('dl', 'exo-facts');
     const notes = el('div', 'sv-notes');
-    card.append(cardTitle, facts, notes);
+    // L'exploration du système choisi (GAL-UNIVERSE-006) : un morceau à part, chargé au premier clic.
+    const explore = el('button', 'sv-button sv-explore', 'stellar-explore');
+    explore.type = 'button';
+    explore.hidden = true;
+    card.append(cardTitle, facts, notes, explore);
     const timeBox = el('div', 'sv-time');
     const timeLabel = el('label', 'sv-time-label');
     timeLabel.htmlFor = 'stellar-time';
@@ -451,6 +461,7 @@ export async function setupStellarView(
       scale.textContent = t('st.scale');
       skip.textContent = t('st.skip');
       visitStart.textContent = t('sv.visit.start');
+      explore.textContent = t('sx.open');
       stageNote.textContent = t('st.stageNote');
       fieldText = '';
       stageUnit = '';
@@ -642,6 +653,10 @@ export async function setupStellarView(
     // ---- l'adresse suit l'observation (étoile choisie, décalage de temps), une fois l'entrée posée
     let addressLive = false;
     let visitAddress: { id: string; step: number } | null = null;
+    // L'exploration en cours, la planète qu'elle a choisie, et le rendu qu'elle emprunte à la vue.
+    let exploring: { close(viaHistory?: boolean): void } | null = null;
+    let exploredPlanet: string | null = null;
+    let exploreRender: (() => void) | null = null;
     const syncAddress = (): void => {
       if (!addressLive) return;
       writeAddress(
@@ -651,6 +666,7 @@ export async function setupStellarView(
           ...(visitAddress
             ? { visit: visitAddress.id, step: visitAddress.step }
             : {}),
+          ...(exploring ? { explore: true, planet: exploredPlanet } : {}),
         },
         'replace'
       );
@@ -683,6 +699,7 @@ export async function setupStellarView(
 
     // ---- la fiche de l'étoile choisie
     function renderCard(): void {
+      explore.hidden = current < 0;
       if (current < 0) {
         facts.replaceChildren();
         notes.textContent = t('st.noSelection');
@@ -917,6 +934,11 @@ export async function setupStellarView(
     // ---- la boucle : le rendu de remplacement de l'application
     scene.setYears(yearsNow(), true);
     host.animation.setRenderOverride(() => {
+      // Pendant l'exploration d'un système, le même rendu de remplacement dessine SA scène.
+      if (exploreRender) {
+        exploreRender();
+        return;
+      }
       if (transition) {
         const p = transitionProgress(performance.now() - transition.t0);
         if (p >= 1) endTransition();
@@ -1037,6 +1059,104 @@ export async function setupStellarView(
       surface.removeEventListener('wheel', stopGlide);
     });
 
+    // ---- l'exploration du système choisi (GAL-UNIVERSE-006)
+    let explorerModule: Promise<typeof import('./systemExplorer')> | null =
+      null;
+    /** Vrai quand CETTE exploration a ajouté son entrée d'historique : la fermer la retire par « Retour ». */
+    let explorePushed = false;
+    let exploreRequested = false;
+    let closingViaHistory = false;
+    const beginExplore = (
+      fromAddress: boolean,
+      planet: string | null = null,
+      historyEntry = false
+    ): void => {
+      if (current < 0 || exploring || exploreRequested) return;
+      exploreRequested = true;
+      endTransition();
+      glide = null;
+      const index = current;
+      void (explorerModule ??= import('./systemExplorer').catch(
+        (error: unknown) => {
+          explorerModule = null;
+          throw error;
+        }
+      ))
+        .then((module) =>
+          module.openSystemExplorer({
+            root,
+            renderer: host.renderer,
+            setRender: (fn) => {
+              exploreRender = fn;
+            },
+            system: systems[index]!,
+            name: names[index]!,
+            exoplanets: controller.exoplanets,
+            fetchImpl,
+            initialPlanet: planet,
+            onPlanet: (slug) => {
+              exploredPlanet = slug;
+              syncAddress();
+            },
+            onClose: () => {
+              const viaHistory = closingViaHistory;
+              closingViaHistory = false;
+              exploring = null;
+              exploredPlanet = null;
+              if (opened !== session) return;
+              layout();
+              explore.focus();
+              if (viaHistory) explorePushed = false;
+              else if (explorePushed) {
+                explorePushed = false;
+                window.history.back();
+              } else syncAddress();
+            },
+          })
+        )
+        .then((explorer) => {
+          exploreRequested = false;
+          if (opened !== session) {
+            explorer.close();
+            return;
+          }
+          exploring = {
+            close: (viaHistory = false) => {
+              closingViaHistory = viaHistory;
+              explorer.close();
+            },
+          };
+          if (!fromAddress && addressLive) {
+            // Un geste ajoute UNE entrée : le Retour du navigateur revient au voisinage.
+            explorePushed = true;
+            writeAddress(
+              {
+                star: starSlug(names[index]!),
+                years: offsetYears,
+                explore: true,
+                planet: exploredPlanet,
+              },
+              'push'
+            );
+          } else {
+            // Ramenée par Suivant, l'entrée de l'exploration a un prédécesseur (le voisinage) : la fermer
+            // doit le retrouver par un Retour, sinon un doublon resterait et fermer la vue la rouvrirait.
+            if (historyEntry) explorePushed = true;
+            syncAddress();
+          }
+        })
+        .catch((error: unknown) => {
+          exploreRequested = false;
+          Logger.warn(
+            '[stellarView] exploration du système indisponible',
+            error
+          );
+          getAnnouncer().announce(t('sx.unavailable'));
+        });
+    };
+    explore.addEventListener('click', () => beginExplore(false));
+    closers.push(() => exploring?.close(true));
+
     const session: Session = {
       scene,
       controls,
@@ -1044,6 +1164,12 @@ export async function setupStellarView(
       cleanups,
       inert,
       opener,
+      followExplore(address) {
+        if (!address) return;
+        if (exploring && !address.explore) exploring.close(true);
+        else if (!exploring && address.explore && current >= 0)
+          beginExplore(true, address.planet ?? null, true);
+      },
       close(viaHistory = false) {
         if (opened !== session) return;
         opened = null;
@@ -1136,6 +1262,9 @@ export async function setupStellarView(
       syncAddress();
     } else if (visit) beginVisit(null);
     if (unknownStar) getAnnouncer().announce(t('st.unknownStar'));
+    // L'exploration demandée par l'adresse (`explore=1`, `planet=`) : seulement pour une étoile reconnue.
+    if (requested?.explore && current >= 0 && requested.visit === undefined)
+      beginExplore(true, requested.planet ?? null);
     if (transition) getAnnouncer().announce(t('st.transitionStart'));
     renderField(true);
     back.focus();

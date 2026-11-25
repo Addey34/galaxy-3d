@@ -178,7 +178,7 @@ export const cardFr: Record<CardMessageKey, string> = {
   'exo.card.distance': 'à {ly} années-lumière',
   'exo.card.distanceUnknown': 'Distance non publiée',
   'exo.card.source':
-    'NASA Exoplanet Archive, relevé du {date}. Les planètes ne sont pas dessinées : seule leur étoile hôte est placée sur le ciel.',
+    'NASA Exoplanet Archive, relevé du {date}. Les planètes ne sont pas dessinées : seule leur étoile hôte est placée sur le ciel. Pour une planète trouvée par vitesse radiale, le rayon est le plus souvent calculé par l’archive à partir de la masse, pas mesuré.',
   'exo.card.opened': 'Système {name}, {count} planètes connues',
   'exo.unit.days': '{v} jours',
   'exo.unit.earthRadii': '{v} rayons terrestres',
@@ -482,4 +482,95 @@ export const cardFr: Record<CardMessageKey, string> = {
     "Trace de l'orbite : une période en avant de la date de la scène, calculée par SGP4 à partir des éléments. Elle n'est pas mesurée, et aucune trace du passé n'est dessinée. Les flèches montrent le sens du déplacement.",
   'sat.pathTruncated':
     "La trace s'arrête là où les éléments cessent d'être valables.",
+  'sx.open': 'Explorer ce système',
+  'sx.unavailable': "L'exploration du système n'a pas pu être chargée.",
+  'sx.title': 'Le système {name}',
+  'sx.back': 'Retour au voisinage',
+  'sx.reset': 'Tout le système',
+  'sx.compare': 'Comparer au Système solaire',
+  'sx.scale':
+    'Une unité vaut une unité astronomique (la distance Terre-Soleil). Les orbites sont dessinées de face.',
+  'sx.field': 'Champ de vue : {au} UA de large',
+  'sx.help':
+    'Glisser pour tourner, molette ou pincement pour zoomer, toucher une étoile ou une orbite. Clavier : flèches pour tourner, + et - pour zoomer, Origine pour tout le système, Échap pour revenir au voisinage. La liste donne le même accès.',
+  'sx.list': 'Dans ce système',
+  'sx.listStar': '{name} (étoile)',
+  'sx.listPlanet': '{name} (planète)',
+  'sx.listPlanetNoOrbit': '{name} (planète, orbite non dessinée)',
+  'sx.opened':
+    'Système {name} ouvert : {stars} étoiles au catalogue, {planets} planètes cataloguées.',
+  'sx.selected': '{name} choisie',
+  'sx.closed': 'Retour au voisinage solaire.',
+  'sx.archiveUnavailable':
+    "L'archive des planètes n'a pas pu être lue : seules les étoiles sont montrées.",
+  'sx.doc.noPlanets':
+    "Aucune orbite à dessiner : l'archive ne liste aucune planète pour ce système (instantané du {date}). Cela ne veut pas dire qu'il n'en a pas.",
+  'sx.doc.noAxis':
+    "Aucune orbite à dessiner : ses planètes n'ont ni demi-grand axe ni masse d'étoile pour en dériver un. Leurs données sont dans la liste.",
+  'sx.missingHosts':
+    "Reconnus dans la couche du ciel mais absents de l'instantané détaillé : {hosts}.",
+  'sx.star.separation': 'Séparation projetée avec {name}',
+  'sx.star.separationValue':
+    '{au} UA (dérivée des positions du catalogue : un minimum, la distance le long de la ligne de visée est inconnue)',
+  'sx.star.teff': 'Température effective',
+  'sx.star.radius': 'Rayon',
+  'sx.star.mass': 'Masse',
+  'sx.star.noHost':
+    "Aucune planète de l'archive n'est attribuée à cette étoile.",
+  'sx.star.hostOf':
+    'NASA Exoplanet Archive : hôte « {host} », {count} planètes cataloguées dessinées ou listées ici.',
+  'sx.star.trueSize':
+    "L'étoile est dessinée à son rayon publié ; son point garde une taille constante à l'écran pour la retrouver de loin.",
+  'sx.star.archiveStars':
+    "L'archive compte {n} étoiles dans ce système ; le catalogue du voisinage en regroupe {m} ici (une compagne à plus d'une minute d'arc a son propre repère).",
+  'sx.planet.star': 'Étoile hôte',
+  'sx.planet.eccentricity': 'Excentricité',
+  'sx.planet.eccZero': "0 (publiée ; souvent fixée à zéro par l'ajustement)",
+  'sx.planet.eccUnknown':
+    "non publiée : l'orbite est un cercle en tirets à son demi-grand axe",
+  'sx.planet.range': "Distance à l'étoile",
+  'sx.planet.rangeValue': 'de {q} à {Q} UA',
+  'sx.planet.inclination': 'Inclinaison',
+  'sx.planet.mass': 'Masse',
+  'sx.planet.noOrbit':
+    "Ni demi-grand axe ni masse d'étoile pour en dériver un : l'orbite n'est pas dessinée.",
+  'sx.planet.position':
+    "La position de la planète sur son orbite n'est pas connue : son nom marque l'orbite, pas la planète.",
+  'sx.planet.radiusCalculated':
+    "Son rayon n'a pas été mesuré : l'archive le calcule à partir de la masse.",
+  'sx.planet.controversial': "L'archive signale cette planète comme contestée.",
+  'sx.planet.circumbinary':
+    "L'archive la classe comme circumbinaire (en orbite autour de deux étoiles).",
+  'sx.tag.calculated': "valeur calculée par l'archive",
+  'sx.tag.derived': 'valeur dérivée ici, troisième loi de Kepler',
+  'sx.tag.minimum': 'masse minimale, m sin i',
+  'sx.tag.trueMass': 'masse',
+  'sx.unit.kelvin': '{v} K',
+  'sx.unit.solarRadii': '{v} rayons solaires',
+  'sx.unit.solarMasses': '{v} masses solaires',
+  'sx.unit.earthMasses': '{v} masses terrestres',
+  'sx.unit.degrees': '{v}°',
+  'sx.table.title': 'Comparer les planètes',
+  'sx.table.planet': 'Planète',
+  'sx.table.caption':
+    'Période en jours, demi-grand axe en UA, masse en masses terrestres, rayon en rayons terrestres. † calculé par l’archive ; ‡ dérivé ici (troisième loi de Kepler) ; ≥ masse minimale (m sin i) ; un tiret : non publié.',
+  'sx.compare.note':
+    'Cercles gris en tirets : les orbites des planètes du Système solaire à la même échelle (demi-grands axes, NSSDCA), centrées sur {name}.',
+  'sx.compare.ring': '{name} (Système solaire)',
+  'sx.read.title': 'Comment lire cette vue',
+  'sx.read.measured':
+    'Mesuré : la position, la distance et le mouvement des étoiles (Gaia DR3 ou HYG), et la séparation projetée entre deux étoiles du système.',
+  'sx.read.catalogued':
+    "Catalogué : les planètes et leurs orbites, de la NASA Exoplanet Archive (instantané du {date}). Chaque valeur dit quand l'archive l'a calculée au lieu de la tirer d'une publication.",
+  'sx.read.derived':
+    "Dérivé ici : un demi-grand axe calculé à partir de la période et de la masse de l'étoile (troisième loi de Kepler), signalé comme tel.",
+  'sx.read.illustrative':
+    "Illustratif : les orbites sont dessinées de face car leur orientation sur le ciel n'est pas publiée (le nœud jamais, l'inclinaison rarement) ; une bande va de la plus petite à la plus grande distance à l'étoile ; un cercle en tirets signifie une excentricité non publiée ; les couleurs ne servent qu'à distinguer les orbites.",
+  'sx.read.unknown':
+    "Inconnu : la position de chaque planète sur son orbite, l'inclinaison des orbites, la distance entre les étoiles le long de la ligne de visée. Rien n'est dessiné pour cela.",
+  'sx.sources':
+    'Étoiles : catalogue du voisinage (Gaia DR3 ou HYG). Planètes et étoile hôte : NASA Exoplanet Archive, table pscomppars, instantané du {date}.',
+  'sx.sourcesStars': 'Étoiles : catalogue du voisinage (Gaia DR3 ou HYG).',
+  'sx.star.spectral': 'Type spectral (catalogue du voisinage)',
+  'sx.star.spectralArchive': 'Type spectral (archive)',
 };

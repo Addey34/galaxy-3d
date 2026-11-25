@@ -44,7 +44,7 @@ teste l'application ouverte sur un CHEMIN, jamais la page elle-même. Elles ont 
 
 `pnpm test:pages`. Le fichier reste dans `e2e/`, donc dans le périmètre de `pnpm format` et
 d'ESLint ; un dossier à part en sortirait. En CI ces scénarios tournent dans le job **`verify`**,
-qui construit déjà, et non dans le job e2e, qui est shardé sur six machines sans build.
+qui construit déjà, et non dans le job e2e, qui est shardé sur plusieurs machines sans build (leur nombre : la matrice de `.github/workflows/ci.yml`, seule source).
 
 **Ces scénarios portent un TÉMOIN, et ce n'est pas décoratif** : `vite preview` replie tout chemin
 inconnu sur la coquille de l'application, exactement comme la réécriture SPA de Firebase. Une page

@@ -192,6 +192,71 @@ describe('la visite guidée dans l’adresse (GAL-UNIVERSE-005)', () => {
   });
 });
 
+describe('l’exploration d’un système dans l’adresse (GAL-UNIVERSE-006)', () => {
+  it('lit `explore=1` et la planète, jamais sans la vue, et la planète jamais sans `explore`', () => {
+    expect(
+      parseStellarAddress(
+        '?view=neighbourhood&star=proxima-centauri&explore=1&planet=proxima-cen-b'
+      )
+    ).toEqual({
+      star: 'proxima-centauri',
+      explore: true,
+      planet: 'proxima-cen-b',
+    });
+    expect(parseStellarAddress('?star=x&explore=1')).toBeNull();
+    expect(parseStellarAddress('?view=neighbourhood&star=x&planet=y')).toEqual({
+      star: 'x',
+    });
+    expect(
+      parseStellarAddress('?view=neighbourhood&star=x&explore=yes')
+    ).toEqual({ star: 'x' });
+  });
+
+  it('distingue une planète MAL FORMÉE (null) d’une planète absente', () => {
+    expect(
+      parseStellarAddress('?view=neighbourhood&star=x&explore=1&planet=%3Cb%3E')
+        ?.planet
+    ).toBeNull();
+    expect(
+      parseStellarAddress('?view=neighbourhood&star=x&explore=1')?.planet
+    ).toBeUndefined();
+  });
+
+  it('n’écrit l’exploration qu’avec une étoile, et `null` retire tout', () => {
+    expect(
+      serializeStellarAddress('?mode=educ', {
+        star: 'barnards-star',
+        explore: true,
+        planet: 'barnard-b',
+      })
+    ).toBe(
+      '?mode=educ&view=neighbourhood&star=barnards-star&explore=1&planet=barnard-b'
+    );
+    expect(
+      serializeStellarAddress('', { explore: true, planet: 'barnard-b' })
+    ).toBe('?view=neighbourhood');
+    expect(
+      serializeStellarAddress(
+        '?view=neighbourhood&star=a&explore=1&planet=b&mode=educ',
+        null
+      )
+    ).toBe('?mode=educ');
+  });
+
+  it('boucle sans perte, et l’identité solaire ne retient pas l’exploration', () => {
+    const address = { star: 'gl-71', explore: true, planet: 'tau-cet-g' };
+    expect(parseStellarAddress(serializeStellarAddress('', address))).toEqual(
+      address
+    );
+    expect(
+      solarIdentity(
+        '/neptune/',
+        '?view=neighbourhood&star=a&explore=1&planet=b'
+      )
+    ).toBe(solarIdentity('/neptune/', ''));
+  });
+});
+
 describe('resolveStar', () => {
   const systems = [
     ['Rigil Kentaurus', 'Toliman', 'Proxima Centauri'],
