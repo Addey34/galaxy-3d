@@ -99,7 +99,7 @@ jobs:
       # etre verifiee A LA MAIN.
       #
       # ELLES TOURNENT ICI, ET PAS DANS LE JOB e2e, POUR UNE RAISON DE COUT MESUREE : le job
-      # e2e est shard sur ONZE machines qui ne construisent pas, donc il faudrait onze
+      # e2e est shard sur QUATORZE machines qui ne construisent pas, donc il faudrait quatorze
       # `pnpm build`. Ce job-ci construit deja. (Lot 41 : 11 scenarios, 2,4 min du job. Mesure du
       # 2026-11-23 : 151 scenarios, 6 a 7,5 min sur un runner ordinaire, jusqu'a 10,6 sur un lent ;
       # c'est pourquoi l'enveloppe du job est de 25 min et l'etape porte son propre garde-fou.)
@@ -227,7 +227,7 @@ jobs:
   # (un echec signale une regression de cablage) mais ne bloque pas le deploiement, car
   # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
   e2e-full:
-    name: Browser tests (e2e ${{ matrix.shard }}/11)
+    name: Browser tests (e2e ${{ matrix.shard }}/14)
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     # SHARDING. La suite entiere ne tenait PAS dans le budget : mesure du 2026-09-08, elle
@@ -303,6 +303,18 @@ jobs:
     # plus long d'abord, sur la machine la moins chargee. Prevu a onze machines : 15,3 min au pire
     # sur un 7763, 14,9 au mieux. A REMESURER apres tout ajout lourd de tests.
     #
+    # PASSE DE 11 A 14 le 2026-11-25 (GAL-UNIVERSE-006, decision du CTO), toujours UN worker par machine.
+    # Le travail cumule a depasse ce que onze machines tiennent : releve sur les runs `45643597477`
+    # (branche) et `45625784356` (main), normalises au 7763 par les facteurs de `e2e/durations.json`,
+    # 269,0 min de tests pour 115 fichiers. Predit par `scripts/e2e-shard.mjs` sur ces durees :
+    # 11 machines -> pire 24,5 min sur un 7763 (26,3 sur un Xeon 8370C, facteur 1,07), deja au-dela
+    # du seuil d'alerte de 24 ; 12 -> 22,5 (24,1) ; 13 -> 20,8 (22,3) ; 14 -> 19,8 (21,2). Au-dela de
+    # 14 rien ne se gagne : le pire shard EST alors un seul fichier, `surfaceImageryEarth.spec.ts`
+    # (19,8 min), que la repartition par fichier ne coupe pas. Cout : runners standard d'un depot
+    # PUBLIC, gratuits et sans quota de minutes (docs GitHub « About billing for GitHub Actions »,
+    # lu le 2026-11-25) ; un run push ou dispatch compte 16 jobs (14 e2e, verify, secret scan), sous
+    # la limite de 20 jobs simultanes du plan Free (« Actions limits », meme date).
+    #
     # Et la lecon de procedure, deja payee au lot 19 : ajouter des tests REDISTRIBUE les shards,
     # ce job ne tourne QUE sur main (`if: push`), et une suite locale ne sharde pas. Aucune CI de
     # branche ne peut donc montrer ce depassement avant la fusion : il se corrige a l'avance, en
@@ -324,7 +336,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     # Garde-fous PAR ETAPE depuis le 2026-10-01 (ligne 44.2). Il n'y en avait qu'un, de 30 min sur
     # le JOB entier, pose contre une install apt bloquee. Il mesurait donc aussi un miroir tiers :
     # ce jour-la, `playwright install --with-deps` a pris 68 s le matin, puis 363 s et 500 s
@@ -366,8 +378,8 @@ jobs:
       - name: Run e2e shard
         timeout-minutes: 30
         run: |
-          files="$(node scripts/e2e-shard.mjs ${{ matrix.shard }} 11)"
-          echo "Shard ${{ matrix.shard }}/11 : $files"
+          files="$(node scripts/e2e-shard.mjs ${{ matrix.shard }} 14)"
+          echo "Shard ${{ matrix.shard }}/14 : $files"
           pnpm exec playwright test $files
       - name: Upload Playwright diagnostics
         if: always()

@@ -74,10 +74,16 @@ test('opens upcoming astronomical events and jumps the simulation to one', async
     timeout: 90_000,
   });
 
+  // L'ADRESSE suit le champ, elle ne le précède pas : mesuré le 2026-11-25 (8 passages sous charge,
+  // 4 workers), elle porte la bonne date 0,1 à 0,8 s APRÈS que le champ l'affiche (la sélection du corps
+  // observé la réécrit ensuite), et la lire tout de suite échouait 3 fois sur 8 (`date` encore absent).
+  // On attend donc la CONDITION, jamais une durée : une date absente ou fausse échoue toujours.
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get('date'), {
+      timeout: 15_000,
+    })
+    .toContain(expectedDate.toISOString().slice(0, 19));
   const url = new URL(page.url());
-  expect(url.searchParams.get('date')).toContain(
-    expectedDate.toISOString().slice(0, 19)
-  );
 
   // La lecture doit être figée sur l'instant de l'événement…
   await expect(page.locator('#play-pause-btn')).toHaveClass(/is-paused/);
