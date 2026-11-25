@@ -537,8 +537,8 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'sx.planet.controversial': 'O arquivo marca este planeta como controverso.',
   'sx.planet.circumbinary':
     'O arquivo o classifica como circumbinário (em órbita de duas estrelas).',
-  'sx.tag.calculated': 'calculado pelo arquivo',
-  'sx.tag.derived': 'derivado aqui, terceira lei de Kepler',
+  'sx.tag.calculated': 'valor calculado pelo arquivo',
+  'sx.tag.derived': 'valor derivado aqui, terceira lei de Kepler',
   'sx.tag.minimum': 'massa mínima, m sin i',
   'sx.tag.trueMass': 'massa',
   'sx.unit.kelvin': '{v} K',

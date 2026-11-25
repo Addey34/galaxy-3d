@@ -541,8 +541,8 @@ export const cardFr: Record<CardMessageKey, string> = {
   'sx.planet.controversial': "L'archive signale cette planète comme contestée.",
   'sx.planet.circumbinary':
     "L'archive la classe comme circumbinaire (en orbite autour de deux étoiles).",
-  'sx.tag.calculated': "calculée par l'archive",
-  'sx.tag.derived': 'dérivée ici, troisième loi de Kepler',
+  'sx.tag.calculated': "valeur calculée par l'archive",
+  'sx.tag.derived': 'valeur dérivée ici, troisième loi de Kepler',
   'sx.tag.minimum': 'masse minimale, m sin i',
   'sx.tag.trueMass': 'masse',
   'sx.unit.kelvin': '{v} K',
