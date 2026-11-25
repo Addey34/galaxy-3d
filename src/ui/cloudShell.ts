@@ -3,6 +3,7 @@ import type * as THREE from 'three';
 import {
   createCloudShellHost,
   type CloudShellEarth,
+  type CloudShellHost,
 } from '@/components/surface/CloudShellHost';
 import { PlanetarySurfaceEngine } from '@/components/surface/PlanetarySurfaceEngine';
 import { LAYER_RADIUS_SCALE } from '@/config/layerConfig';
@@ -11,6 +12,7 @@ import {
   type SurfaceTileset,
 } from '@/config/surfaceTilesets';
 import { cloudsOnScreen } from '@/core/cloudsOnScreen';
+import { cloudShellScale } from '@/core/cloudShellAltitude';
 
 /**
  * LES NUAGES RÉGIONAUX (GAL-EARTH-CLOUD-REGIONAL-001) : la couche mondiale (une image de 2 048 px, 19,7 km
@@ -61,7 +63,7 @@ export function createCloudShell(options: {
 }): CloudShell {
   const engine =
     options.engine ?? new PlanetarySurfaceEngine({ budget: options.budget });
-  let host: ReturnType<typeof createCloudShellHost> | null = null;
+  let host: CloudShellHost | null = null;
   let hostFor: CloudShellEarth | null = null;
   let inBand = false;
 
@@ -89,13 +91,20 @@ export function createCloudShell(options: {
       inBand = tileset !== undefined && distanceInRadii < ceiling;
       if (!inBand || !tileset) {
         engine.detach();
+        // La coque mondiale retrouve son altitude d'orbite dès que la couche régionale se retire.
+        host?.setShellScale(1);
         return;
       }
       const scale = LAYER_RADIUS_SCALE['clouds'] ?? 1.01;
       if (!host || hostFor !== body) {
+        host?.dispose();
         host = createCloudShellHost(body, { scale });
         hostFor = body;
       }
+      // La coque descend vers une altitude réaliste quand la caméra approche (`core/cloudShellAltitude`).
+      host.setShellScale(
+        cloudShellScale((distanceInRadii - 1) * radiusKm, radiusKm, scale)
+      );
       engine.attach(host, tileset, radiusKm * scale, null);
       engine.update(camera, viewportHeightPx);
     },
@@ -114,7 +123,12 @@ export function createCloudShell(options: {
     release: () => {
       inBand = false;
       engine.detach();
+      host?.setShellScale(1);
     },
-    dispose: () => engine.dispose(),
+    dispose: () => {
+      engine.dispose();
+      host?.dispose();
+      host = null;
+    },
   };
 }

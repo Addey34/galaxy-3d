@@ -2,10 +2,13 @@ import * as THREE from 'three';
 
 import { REALTIME_CLOUDS_SETTINGS } from '@/config/engine';
 import {
+  bindRealCloudsUniforms,
   chainOnBeforeCompile,
   createShadowAwareStandardMaterial,
   LAYER_TERMINATOR_WRAP,
   REAL_CLOUDS_PARS_GLSL,
+  realCloudsCommonGlsl,
+  type RealCloudsUniforms,
 } from '@/config/layerConfig';
 import {
   MAGNIFICATION_FADE_END_PX,
@@ -63,36 +66,42 @@ export const REGIONAL_CLOUDS_GLSL = `
         #ifdef USE_MAP
         {
           float rcAlpha = bilinearCloudAlpha( vMapUv );
+          // La COMPOSITION de la couche mondiale (composeCloudAlpha, code partagé) : les masques MODIS du même jour
+          // ne comblent que là où l'image vraies couleurs n'a pas d'observation (bord de fauchée, nuit), à LEUR
+          // résolution (celle de la carte mondiale des masques), jamais présentés comme une mesure à 250 m.
+          vec2 maskUv = vMapUv * uCloudTile.zw + uCloudTile.xy;
+          rcAlpha = composeCloudAlpha(
+            rcAlpha,
+            vMapUv,
+            maskUv,
+            ( uCloudDayTexelSize * uCloudOpticalBlendRadiusTexels ) / uCloudTile.zw
+          );
           // Grossissement du texel du CARREAU, et de celui de la couche mondiale (même point, même caméra).
           float pxTile = magnificationPxPerTexel( vec2( textureSize( map, 0 ) ) * uCloudTileSpan );
           float pxGlobal = magnificationPxPerTexel( vec2( ${GLOBAL_MAP_WIDTH}.0, ${GLOBAL_MAP_WIDTH / 2}.0 ) );
-          // Le fondu du carreau est celui de la règle commune (lot 48) : 3 à 6 pixels par texel.
           float fadeTile = mix( uMagFloor, 1.0, 1.0 - smoothstep( ${MAGNIFICATION_FADE_START_PX}.0, ${MAGNIFICATION_FADE_END_PX}.0, pxTile ) );
-          // Ce que la couche mondiale montre encore : 1 loin, 0 une fois son texel trop grossi. Le carreau prend
-          // le relais en deux fois plus court : plein quand la mondiale n'est plus qu'à la moitié, pour que le
-          // recouvrement de deux alphas d'un MÊME nuage reste proche de 1 au lieu de creuser une bande pâle.
+          // Ce que la couche mondiale montre encore : 1 loin, 0 une fois son texel trop grossi. Le carreau prend le
+          // relais en deux fois plus court, pour que deux alphas d'un MÊME nuage ne creusent pas une bande pâle.
           float fadeGlobal = 1.0 - smoothstep( ${MAGNIFICATION_FADE_START_PX}.0, ${MAGNIFICATION_FADE_END_PX}.0, pxGlobal );
           float regionalWeight = clamp( 2.0 * ( 1.0 - fadeGlobal ), 0.0, 1.0 );
           rcAlpha *= fadeTile * regionalWeight * uCloudOpacity;
           float cloudSunFacing = dot( normalize( vMoonWorldNormal ), fragmentSunDir() );
           rcAlpha *= terminatorDay( cloudSunFacing, uTerminatorWrap );
           diffuseColor.a *= rcAlpha;
-          diffuseColor.rgb = vec3( 1.0, 0.995, 0.985 );
+          // LA TEINTE MESURÉE : le minimum des canaux de l'image (le même signal que l'extraction), ramené de 0,72
+          // à 1. Un sommet très blanc reste blanc, un voile plus mince ou ombré au passage du satellite reste plus
+          // gris : c'est la structure OBSERVÉE du nuage, qu'un blanc uni effaçait. Aucun bruit, aucun détail
+          // ajouté. Sans observation optique (pixel noir, comblé par MODIS), le blanc de la couche mondiale.
+          vec3 rcObs = texture2D( map, vMapUv ).rgb;
+          float rcObsMin = min( rcObs.r, min( rcObs.g, rcObs.b ) );
+          float rcObsMax = max( rcObs.r, max( rcObs.g, rcObs.b ) );
+          float rcShade = mix( 1.0, mix( 0.72, 1.0, smoothstep( uCloudLumLow, 0.9, rcObsMin ) ), smoothstep( 0.02, 0.08, rcObsMax ) );
+          diffuseColor.rgb = mix( vec3( 1.0, 0.995, 0.985 ), vec3( rcShade ), regionalWeight );
         }
         #endif`;
 
-/** Les seuils d'extraction, UNE fois pour tous les carreaux : ceux de la couche mondiale. */
-const shared = {
-  lumLow: { value: REALTIME_CLOUDS_SETTINGS.cloudLuminanceLow },
-  lumHigh: { value: REALTIME_CLOUDS_SETTINGS.cloudLuminanceHigh },
-  satMax: { value: REALTIME_CLOUDS_SETTINGS.cloudSaturationMax },
-  lumLowLand: { value: REALTIME_CLOUDS_SETTINGS.cloudLuminanceLowLand },
-  edgeSoft: { value: REALTIME_CLOUDS_SETTINGS.edgeSoftness },
-  satOceanBoost: { value: REALTIME_CLOUDS_SETTINGS.cloudSatOceanBoost },
-  opacity: { value: REALTIME_CLOUDS_SETTINGS.opacity },
-  oceanMask: { value: null as THREE.Texture | null },
-  hasOceanMask: { value: 0 },
-};
+/** Opacité finale de la couche mondiale (`REALTIME_CLOUDS_SETTINGS.opacity`), que le carreau remet à 1 après son fondu. */
+const cloudOpacity = { value: REALTIME_CLOUDS_SETTINGS.opacity };
 
 /** L'UV de la carte mondiale pour l'UV d'un carreau : `u_global = u0 + u * du`, de même pour v. */
 export function tileOceanTransform(
@@ -112,10 +121,8 @@ export function tileOceanTransform(
 
 export function createRegionalCloudMaterial(
   tile: { index: TileIndex; shape: TileMatrixShape } | undefined,
-  oceanMask: THREE.Texture | null
+  realClouds: RealCloudsUniforms
 ): THREE.MeshStandardMaterial {
-  shared.oceanMask.value = oceanMask;
-  shared.hasOceanMask.value = oceanMask ? 1 : 0;
   const material = createShadowAwareStandardMaterial(
     {
       transparent: true,
@@ -142,17 +149,11 @@ export function createRegionalCloudMaterial(
   };
   const spanUniform = { value: new THREE.Vector2(t.span[0], t.span[1]) };
   material.userData['__regionalClouds'] = true;
-  chainOnBeforeCompile(material, (shader) => {
+  chainOnBeforeCompile(material, (shader, renderer) => {
+    // Les MÊMES objets que la couche mondiale : seuils, masque d'eau, masques MODIS jour et nuit déjà chargés.
+    bindRealCloudsUniforms(shader, realClouds);
     shader.uniforms['uMagFloor'] = magnificationFloorUniform;
-    shader.uniforms['uCloudLumLow'] = shared.lumLow;
-    shader.uniforms['uCloudLumHigh'] = shared.lumHigh;
-    shader.uniforms['uCloudSatMax'] = shared.satMax;
-    shader.uniforms['uCloudLumLowLand'] = shared.lumLowLand;
-    shader.uniforms['uCloudEdgeSoft'] = shared.edgeSoft;
-    shader.uniforms['uCloudSatOceanBoost'] = shared.satOceanBoost;
-    shader.uniforms['uCloudOpacity'] = shared.opacity;
-    shader.uniforms['uCloudOceanMask'] = shared.oceanMask;
-    shader.uniforms['uHasOceanMask'] = shared.hasOceanMask;
+    shader.uniforms['uCloudOpacity'] = cloudOpacity;
     shader.uniforms['uCloudTile'] = tileUniform;
     shader.uniforms['uCloudTileSpan'] = spanUniform;
     shader.vertexShader = shader.vertexShader
@@ -170,7 +171,8 @@ export function createRegionalCloudMaterial(
         '#include <common>' +
           MAGNIFICATION_VERTEX_PARS_GLSL +
           MAGNIFICATION_FLOOR_PARS_GLSL +
-          'uniform float uCloudLumLow;\nuniform float uCloudLumHigh;\nuniform float uCloudSatMax;\nuniform float uCloudLumLowLand;\nuniform float uCloudEdgeSoft;\nuniform float uCloudSatOceanBoost;\nuniform float uCloudOpacity;\nuniform sampler2D uCloudOceanMask;\nuniform float uHasOceanMask;\nuniform vec4 uCloudTile;\nuniform vec2 uCloudTileSpan;'
+          realCloudsCommonGlsl(renderer) +
+          '\nuniform float uCloudOpacity;\nuniform vec4 uCloudTile;\nuniform vec2 uCloudTileSpan;'
       )
       .replace(
         '#include <map_pars_fragment>',

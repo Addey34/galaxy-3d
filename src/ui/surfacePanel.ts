@@ -603,13 +603,14 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
 
     // De loin, l'image du jour plutôt que l'édition annuelle (`core/farBase.ts`) ; le choix
     // du visiteur reste celui qu'affiche le réglage.
+    // Quand les nuages régionaux servent, le sol reste la mosaïque fine à toute distance : le fond du jour porte
+    // ses nuages CUITS, qui doublaient ceux de la coque (mesuré : 49 % puis 31 % de pixels nuageux au passage de
+    // 1,3 rayon, GAL-EARTH-CLOUD-REGIONAL-001). Sans eux, le repli de #579 : le jour garde ses nuages jusqu'à 1,02.
+    const regionalClouds = cloudShell?.serves() ?? false;
     farBase =
       choice === 'sentinel-2' &&
-      showsFarBase(
-        distance / renderedRadius,
-        farBase,
-        cloudsOnScreen.value && !(cloudShell?.serves() ?? false)
-      );
+      !regionalClouds &&
+      showsFarBase(distance / renderedRadius, farBase, cloudsOnScreen.value);
     const effective: SurfaceChoiceId = farBase ? 'daily' : choice;
     const tileset = chooseTileset?.(name, effective);
     if (!tileset) {

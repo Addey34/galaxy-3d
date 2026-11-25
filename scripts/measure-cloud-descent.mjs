@@ -17,7 +17,7 @@
  */
 import { mkdirSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 
 const args = process.argv.slice(2);
 const flag = (name, fallback) => {
@@ -36,6 +36,8 @@ const WHEEL = Number(flag('--wheel', '-1200'));
 const SETTLE = Number(flag('--settle', '2500'));
 const BASE = flag('--base', null);
 const QUERY = flag('--query', '');
+const VIEWPORT = flag('--viewport', '1280x800');
+const DEVICE = flag('--device', null);
 const DATE = flag('--date', '2026-11-20T16:30:00Z');
 const OUT = resolve(flag('--out', 'reports/cloud-descent/run'));
 const SOFTWARE = args.includes('--software');
@@ -50,9 +52,11 @@ const browser = await chromium.launch({
       : ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist']),
   ],
 });
-const context = await browser.newContext({
-  viewport: { width: 1280, height: 800 },
-});
+const [vw, vh] = VIEWPORT.split('x').map(Number);
+// `--device "Pixel 7"` : écran, rapport de pixels et toucher émulés ; sinon une fenêtre de bureau.
+const context = await browser.newContext(
+  DEVICE ? { ...devices[DEVICE] } : { viewport: { width: vw, height: vh } }
+);
 await context.addInitScript(() => {
   localStorage.setItem('ssv-guided-tour-v1', '1');
   localStorage.setItem('ssv-explo-tour-nudge-v1', '1');

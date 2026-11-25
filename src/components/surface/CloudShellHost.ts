@@ -1,11 +1,21 @@
 import * as THREE from 'three';
 import type { SurfaceHost } from './PlanetarySurfaceEngine';
 import { createRegionalCloudMaterial } from './cloudShellMaterial';
+import type { RealCloudsUniforms } from '@/config/layerConfig';
 
 /** Ce que la façade demande de la Terre en plus de l'interface du moteur. */
 export interface CloudShellEarth extends SurfaceHost {
-  getOceanMask(): THREE.Texture | null;
+  /** Les uniformes des nuages réels de la couche mondiale, ou `undefined` sans couche nuages. */
+  realCloudsUniforms(): RealCloudsUniforms | undefined;
   adoptOverlayMaterial(material: THREE.Material): void;
+  /** Échelle de la coque mondiale, pour qu'elle reste à la même altitude que les carreaux régionaux. */
+  setCloudShellScale(factor: number): void;
+}
+
+/** La façade, plus l'échelle de la coque (les carreaux et la coque mondiale descendent ENSEMBLE). */
+export interface CloudShellHost extends SurfaceHost {
+  setShellScale(factor: number): void;
+  dispose(): void;
 }
 
 /**
@@ -26,7 +36,13 @@ export function createCloudShellHost(
     /** Rapport du rayon de la coque à celui du corps (1,01 pour les nuages). */
     scale: number;
   }
-): SurfaceHost {
+): CloudShellHost {
+  // Les carreaux vont dans UN groupe à eux, enfant du parent qui tourne : son échelle rapproche la coque
+  // du sol sans reconstruire un seul carreau.
+  const tiles = new THREE.Group();
+  tiles.name = 'regional-clouds';
+  earth.attachSpinningChild(tiles);
+  let shellScale = 1;
   // Un groupe MIROIR : même position monde que la Terre, rayon rendu multiplié par `scale`. Il ne porte
   // aucun enfant (les carreaux vont au parent qui tourne, celui de la Terre).
   const proxy = new THREE.Object3D();
@@ -35,7 +51,8 @@ export function createCloudShellHost(
   Object.defineProperty(proxy.userData, 'radius', {
     get: () =>
       ((earth.group.userData['radius'] as number | undefined) ?? 0) *
-      options.scale,
+      options.scale *
+      shellScale,
     enumerable: true,
   });
 
@@ -44,9 +61,13 @@ export function createCloudShellHost(
     layerRadius: earth.layerRadius * options.scale,
     figure: null,
     group: proxy,
-    attachSpinningChild: (object) => earth.attachSpinningChild(object),
+    attachSpinningChild: (object) => tiles.add(object),
     createSurfaceOverlayMaterial: (_oceanMatch, tile) => {
-      const material = createRegionalCloudMaterial(tile, earth.getOceanMask());
+      const realClouds = earth.realCloudsUniforms();
+      // Sans couche mondiale il n'y a rien à prolonger : le pilote ne s'attache pas dans ce cas (`cloudsOnScreen`).
+      if (!realClouds)
+        throw new Error('nuages régionaux sans couche de nuages mondiale');
+      const material = createRegionalCloudMaterial(tile, realClouds);
       // Éclairage et ombre d'éclipse de la Terre : un nuage régional suit le même Soleil que la coque.
       earth.adoptOverlayMaterial(material);
       return material;
@@ -59,5 +80,14 @@ export function createCloudShellHost(
     setStreamedImageryWidth: () => false,
     shippedSurfaceWidthPx: () => 2048,
     setSurfaceShellScale: () => undefined,
+    setShellScale: (factor) => {
+      shellScale = factor;
+      tiles.scale.setScalar(factor);
+      earth.setCloudShellScale(factor);
+    },
+    dispose: () => {
+      tiles.removeFromParent();
+      earth.setCloudShellScale(1);
+    },
   };
 }

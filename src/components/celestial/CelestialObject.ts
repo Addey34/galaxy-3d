@@ -45,6 +45,7 @@ import {
   getOverlaySunUniform,
   getPrecipUniforms,
   getRealCloudsUniforms,
+  type RealCloudsUniforms,
   getRingShadowUniforms,
   getLayerTwilightWrap,
   getThermalUniforms,
@@ -642,12 +643,17 @@ export default class CelestialObject {
     );
   }
 
-  /** La carte d'eau (canal r de la carte `spec` de la surface), ou `null` : les nuages en tirent leur seuil. */
-  getOceanMask(): THREE.Texture | null {
-    const surface = this.layers.get('surface');
-    return surface && !Array.isArray(surface.material)
-      ? ((surface.material as THREE.MeshStandardMaterial).roughnessMap ?? null)
-      : null;
+  /** Les uniformes des nuages réels de la coque, partagés avec les nuages régionaux, ou `undefined`. */
+  realCloudsUniforms(): RealCloudsUniforms | undefined {
+    const clouds = this.layers.get('clouds');
+    return clouds && !Array.isArray(clouds.material)
+      ? getRealCloudsUniforms(clouds.material)
+      : undefined;
+  }
+
+  /** Rapproche la coque des nuages du sol (facteur sur son rayon construit), ou la rétablit (1). */
+  setCloudShellScale(factor: number): void {
+    this.layers.get('clouds')?.scale.setScalar(factor);
   }
 
   /** Prend en charge un matériau de recouvrement posé par un autre moteur : éclairage et éclipse. */

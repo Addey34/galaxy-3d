@@ -219,6 +219,24 @@ describe('fondu d’entrée d’un carreau', () => {
     expect(material.transparent).toBe(false);
   });
 
+  it('rend à un matériau TRANSPARENT sa transparence après le fondu (couche de nuages)', () => {
+    // Un carreau de nuages passé opaque était dessiné dans la passe opaque, puis recouvert par le sol.
+    const material = new THREE.MeshBasicMaterial({ transparent: true });
+    const tile = new SurfaceTile({
+      index: { level: 3, row: 1, column: 2 },
+      radius: 0.27,
+      shape: WMTS_EQUIRECTANGULAR_2x1,
+      material,
+    });
+    tile.setTexture(new THREE.Texture(), undefined, 1000);
+    expect(tile.advanceFade(5000)).toBe(false);
+    expect(material.opacity).toBe(1);
+    expect(material.transparent).toBe(true);
+    tile.setTexture(new THREE.Texture(), undefined, 1000);
+    tile.finishFade();
+    expect(material.transparent).toBe(true);
+  });
+
   it('does not fade at all without a start instant (reduced motion)', () => {
     const { tile, material } = fadingTile();
     tile.setTexture(new THREE.Texture());

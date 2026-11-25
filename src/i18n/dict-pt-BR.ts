@@ -469,7 +469,7 @@ export const ptBR: Record<MessageKey, string> = {
   'weather.seaTemperature': 'Temperatura do mar (GHRSST)',
   'weather.thermalModel': 'Temperatura do ar (modelo)',
   'weather.clouds.note':
-    'Cobertura de nuvens real, imagem de satélite da NASA (imagem do dia).',
+    'Cobertura de nuvens real, imagem de satélite da NASA (imagem do dia). De perto: VIIRS a 250 m, lacunas preenchidas pela fração MODIS Aqua do dia (~20 km, outra passagem). Desenhadas a uma altitude fixada, não medida.',
   'weather.cloudsModel.note':
     'Cobertura de nuvens modelada: mundial sem falhas, cobre passado e previsão; escolha esta para o momento presente e a viagem no tempo.',
   'weather.precip.note':

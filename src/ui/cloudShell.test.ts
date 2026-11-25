@@ -73,8 +73,9 @@ describe('la façade de la coque', () => {
       setStreamedImageryWidth: () => true,
       shippedSurfaceWidthPx: () => 8192,
       setSurfaceShellScale: () => undefined,
-      getOceanMask: () => null,
+      realCloudsUniforms: () => undefined,
       adoptOverlayMaterial: () => undefined,
+      setCloudShellScale: () => undefined,
     };
   };
 
@@ -89,6 +90,27 @@ describe('la façade de la coque', () => {
     // Le morph Éduc↔Explo fait varier le rayon rendu : la façade le SUIT.
     body.group.userData['radius'] = 10;
     expect(host.group.userData['radius']).toBeCloseTo(10.1);
+  });
+
+  it('fait descendre ENSEMBLE les carreaux et la coque mondiale, puis les rétablit', () => {
+    const body = earth();
+    const scales: number[] = [];
+    body.setCloudShellScale = (f) => scales.push(f);
+    const added: THREE.Object3D[] = [];
+    body.attachSpinningChild = (o) => added.push(o);
+    const host = createCloudShellHost(body, { scale: 1.01 });
+    const tile = new THREE.Mesh();
+    host.attachSpinningChild(tile);
+    // Les carreaux vont dans le groupe propre aux nuages, lui-même enfant du parent qui tourne.
+    expect(added).toHaveLength(1);
+    expect(tile.parent).toBe(added[0]);
+    host.setShellScale(0.9917);
+    expect(added[0]!.scale.x).toBeCloseTo(0.9917);
+    expect(scales.at(-1)).toBeCloseTo(0.9917);
+    // Le rayon que voit le moteur suit l'échelle : « caméra sous la coque » se juge sur la coque abaissée.
+    expect(host.group.userData['radius']).toBeCloseTo(2 * 1.01 * 0.9917);
+    host.dispose();
+    expect(scales.at(-1)).toBe(1);
   });
 
   it('ne borne JAMAIS la caméra : la finesse des nuages n’est pas déclarée au corps', () => {
@@ -108,6 +130,24 @@ describe('le matériau régional', () => {
     // Les mêmes fonctions : un nuage a le même contour dans les deux couches.
     expect(REGIONAL_EXTRACTION_GLSL).toContain('bilinearCloudAlpha');
     expect(REGIONAL_CLOUDS_GLSL).toContain('bilinearCloudAlpha( vMapUv )');
+  });
+
+  it('compose comme la couche mondiale, par le MÊME code (une seule définition)', () => {
+    const defs =
+      REAL_CLOUDS_PARS_GLSL.split('float composeCloudAlpha(').length - 1;
+    expect(defs).toBe(1);
+    expect(REGIONAL_CLOUDS_GLSL).toContain('composeCloudAlpha(');
+    // Les masques sont lus dans l'UV MONDIAL, l'image dans l'UV du carreau.
+    expect(REGIONAL_CLOUDS_GLSL).toContain(
+      'vec2 maskUv = vMapUv * uCloudTile.zw + uCloudTile.xy;'
+    );
+  });
+
+  it('teint par le signal mesuré, et seulement là où le carreau a pris le relais', () => {
+    expect(REGIONAL_CLOUDS_GLSL).toContain('rcObsMin');
+    expect(REGIONAL_CLOUDS_GLSL).toContain(
+      'mix( vec3( 1.0, 0.995, 0.985 ), vec3( rcShade ), regionalWeight )'
+    );
   });
 
   it('pose le complément de la couche mondiale : ni doublon ni trou', () => {
@@ -154,8 +194,9 @@ describe('le pilote des nuages régionaux', () => {
     setStreamedImageryWidth: () => false,
     shippedSurfaceWidthPx: () => 2048,
     setSurfaceShellScale: () => undefined,
-    getOceanMask: () => null,
+    realCloudsUniforms: () => undefined,
     adoptOverlayMaterial: () => undefined,
+    setCloudShellScale: () => undefined,
   } as unknown as CloudShellEarth;
   const camera = new THREE.PerspectiveCamera();
 
