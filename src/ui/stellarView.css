@@ -245,6 +245,12 @@
 .sv-time-input {
   width: 100%;
 }
+/* Écran tactile : le curseur du temps mesurait 16 à 20 px de haut (cible WCAG 2.2 : 24 px). */
+@media (pointer: coarse) {
+  .sv-time-input {
+    min-height: 24px;
+  }
+}
 .sv-time-out {
   font-variant-numeric: tabular-nums;
 }

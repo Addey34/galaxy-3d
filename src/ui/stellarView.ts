@@ -610,10 +610,26 @@ export async function setupStellarView(
       }
     };
 
+    // Les boîtes de la vue (boutons et notes du haut, aide, volet) sont translucides : un nom posé dessous
+    // se lisait à travers et brouillait leur texte sur un petit écran (iPhone SE, GAL-MOBILE-EXCELLENCE-001).
+    // Un nom qui tomberait sous une boîte se pose ailleurs ou se tait, comme devant un nom plus prioritaire.
+    // Les emprises sont relues au plus toutes les 250 ms.
+    let boxes: DOMRect[] = [];
+    let boxesAt = -Infinity;
+    const obstacles = (): DOMRect[] => {
+      const now = performance.now();
+      if (now - boxesAt < 250) return boxes;
+      boxesAt = now;
+      boxes = [...head.children, help, side]
+        .map((node) => node.getBoundingClientRect())
+        .filter((r) => r.width > 0 && r.height > 0);
+      return boxes;
+    };
     const updateLabels = (): void => {
       const width = window.innerWidth;
       const height = window.innerHeight;
       const placed: Array<{ x: number; y: number; w: number }> = [];
+      const covered = obstacles();
       for (const item of labelItems) {
         const s = scene.projectVector(item.point(), width, height);
         let visible = false;
@@ -637,6 +653,15 @@ export async function setupStellarView(
                 Math.abs(p.y - y) < 18
             );
             if (clash) continue;
+            const left = x - item.width / 2;
+            const under = covered.some(
+              (r) =>
+                left < r.right &&
+                left + item.width > r.left &&
+                y - 8 < r.bottom &&
+                y + 8 > r.top
+            );
+            if (under) continue;
             placed.push({ x, y, w: item.width });
             item.el.style.transform = `translate(${Math.round(x - item.width / 2)}px, ${Math.round(y - 8)}px)`;
             // Où est le point lui-même (px écran) : les tests cliquent l'étoile, pas son nom.
