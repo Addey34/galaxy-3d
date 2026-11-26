@@ -38,7 +38,7 @@ import { shouldReveal } from '@/core/tileReveal';
 import type { Figure } from '@/core/ellipsoid';
 import type { OceanMatch } from '@/core/oceanMatch';
 import { coverageEdges } from '@/core/coverageFeather';
-import { fallbackAncestors } from '@/core/tileFallback';
+import { coverageIndex, fallbackAncestors } from '@/core/tileFallback';
 import * as THREE from 'three';
 
 import {
@@ -424,6 +424,13 @@ export class PlanetarySurfaceEngine {
 
   private readonly _tiles = new Map<string, SurfaceTile>();
   private readonly _fallbackLevels: number;
+  /**
+   * Feuilles voulues ABSENTES mais couvertes par un carreau plus grossier du jeu courant, posé et franc : ce
+   * sol est PEINT et le bandeau le compte. Sans cela un ancêtre de repli, qui cesse d'être voulu dès qu'il
+   * couvre ses feuilles, restait à l'écran sans que le bandeau apparaisse avant la première feuille (CI de
+   * `main` après #588 : bandeau absent 30 s sur un processeur lent).
+   */
+  private _leavesUnderAncestor = 0;
   /** Carreaux en fondu d'entrée : évite de parcourir `_tiles` à chaque image au repos. */
   private _fadingTiles = 0;
   /** Carreaux posés mais retenus, révélés ensemble (`core/tileReveal.ts`). */
@@ -1167,6 +1174,7 @@ export class PlanetarySurfaceEngine {
     let painted = 0;
     let compare = this._compare;
     for (const key of this._wanted) if (this._tiles.has(key)) painted += 1;
+    painted += this._leavesUnderAncestor;
     if (painted === 0 && this._staleTileset) {
       tileset = this._staleTileset;
       compare = this._staleCompare;
@@ -1470,7 +1478,6 @@ export class PlanetarySurfaceEngine {
     tiles: readonly TileIndex[],
     firstDrawableLevel: number
   ): TileIndex[] {
-    if (this._fallbackLevels <= 0) return [];
     const solid: TileIndex[] = [];
     const prefix = this._prefix();
     for (const [key, tile] of this._tiles) {
@@ -1478,6 +1485,14 @@ export class PlanetarySurfaceEngine {
       const index = indexOfKey(key);
       if (index) solid.push(index);
     }
+    const covered = coverageIndex(solid, firstDrawableLevel);
+    this._leavesUnderAncestor = 0;
+    for (const leaf of tiles) {
+      if (this._tiles.has(this._key(leaf))) continue;
+      const level = covered.coarserOrSelf(leaf);
+      if (level !== null && level < leaf.level) this._leavesUnderAncestor += 1;
+    }
+    if (this._fallbackLevels <= 0) return [];
     return fallbackAncestors({
       leaves: tiles,
       painted: (index) => this._tiles.has(this._key(index)),
@@ -1549,6 +1564,7 @@ export class PlanetarySurfaceEngine {
     for (const kept of this._retained.values()) kept.tile.dispose();
     this._retained.clear();
     this._fadingTiles = 0;
+    this._leavesUnderAncestor = 0;
     this._held.clear();
     this._heldSinceMs = null;
     this._relief.clear();
@@ -2125,14 +2141,12 @@ function debugCoverage(
   // Un enfant déjà posé le couvre en partie : déficit compté nul.
   let uncovered = 0;
   let deficit = 0;
+  // Même index que le repli (temps proportionnel à carreaux × profondeur, pas au produit des listes).
+  const covered = coverageIndex(solid, firstDrawableLevel);
   for (const m of missing) {
-    let best: number | null = null;
-    let finer = false;
-    for (const p of solid) {
-      if (!overlaps(m, p)) continue;
-      if (p.level >= m.level) finer = true;
-      else if (best === null || p.level > best) best = p.level;
-    }
+    const self = covered.coarserOrSelf(m);
+    const finer = self === m.level || covered.hasFiner(m);
+    const best = self !== null && self < m.level ? self : null;
     if (finer) continue;
     if (best === null) {
       uncovered += 1;

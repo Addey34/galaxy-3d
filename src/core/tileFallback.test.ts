@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ancestorAt, fallbackAncestors, tilesOverlap } from './tileFallback';
+import {
+  ancestorAt,
+  coverageIndex,
+  fallbackAncestors,
+  tilesOverlap,
+} from './tileFallback';
 import type { TileIndex } from './tilePyramid';
 
 const t = (level: number, row: number, column: number): TileIndex => ({
@@ -62,5 +67,34 @@ describe('les ancêtres de repli', () => {
     expect(ancestorAt(t(10, 81, 161), 7)).toEqual(t(7, 10, 20));
     expect(tilesOverlap(t(7, 10, 20), t(10, 87, 167))).toBe(true);
     expect(tilesOverlap(t(7, 10, 20), t(10, 88, 167))).toBe(false);
+  });
+});
+
+describe("l'index de couverture (sans produit des listes)", () => {
+  it('répond exactement comme la comparaison carreau à carreau, sur des tirages aléatoires', () => {
+    let seed = 7;
+    const rand = (n: number): number => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    for (let trial = 0; trial < 40; trial += 1) {
+      const pick = (): TileIndex => {
+        const level = 4 + rand(6);
+        return t(level, rand(2 ** (level - 2)), rand(2 ** (level - 1)));
+      };
+      const solid = Array.from({ length: 60 }, pick);
+      const probes = Array.from({ length: 120 }, pick);
+      const index = coverageIndex(solid, 4);
+      for (const m of probes) {
+        const coarser = solid
+          .filter((p) => p.level <= m.level && tilesOverlap(m, p))
+          .map((p) => p.level);
+        const expected = coarser.length ? Math.max(...coarser) : null;
+        expect(index.coarserOrSelf(m)).toBe(expected);
+        expect(index.hasFiner(m)).toBe(
+          solid.some((p) => p.level > m.level && tilesOverlap(m, p))
+        );
+      }
+    }
   });
 });
