@@ -9,6 +9,8 @@ export interface ObservationActions {
   getMode(): 'educ' | 'explo';
   /** Réécrit l'adresse après un changement de date ou de mode. */
   sync(): void;
+  /** Fige la lecture, comme le panneau des événements avant un saut vers un événement. */
+  pause(): void;
   /** Lance une visite par le lecteur de visites (chargé à la demande). */
   startTour(id: string): Promise<boolean>;
   /** Allume la couche des satellites en orbite, comme sa case. */

@@ -375,6 +375,7 @@ function wireChrome(): {
       setMode: (mode) => modeSwitcher.setMode(mode),
       getMode: () => modeSwitcher.getMode(),
       sync: () => syncPermalink(),
+      pause: () => playback.pause(),
       startTour: (id) => tourPlayer.start(id),
       showSatellites: () => satellites?.show(),
       openNeighbourhood: () => stellarAddress.openNeighbourhood(),

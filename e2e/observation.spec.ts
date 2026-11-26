@@ -113,18 +113,81 @@ test('Pluton → inspection 3D de New Horizons, par la commande existante', asyn
   expect(bodyOf(page)).toBe('pluto');
 });
 
-test('Voyager 2 → Neptune à la date de la rencontre, la sonde gardée', async ({
+test('Voyager 2 → Neptune à la date de la rencontre, retour immédiat puis exact (corps, date, mode)', async ({
   page,
 }) => {
   test.setTimeout(180_000);
-  await boot(page, 'body=voyager2&date=1990-01-01T00:00:00Z&mode=explo');
+  await boot(page, 'body=voyager2&date=1990-01-01T00:00:00Z&mode=educ');
+  const startDate = param(page, 'date');
   const neptune = action(page, 'body', /Neptune/);
   await expect(neptune).toBeVisible({ timeout: 30_000 });
   await neptune.click();
+  // Seul le temps a changé (la sonde reste choisie) : le retour s'offre quand même, tout de suite.
+  const back = page.locator('#observe-back');
+  await expect(back).toBeVisible({ timeout: 1_000 });
+  await expect(back).toContainText('Voyager 2');
   await expect
     .poll(() => param(page, 'date')?.slice(0, 10), { timeout: 30_000 })
     .toBe('1989-08-25');
   expect(bodyOf(page)).toBe('voyager2');
+  expect(param(page, 'mode')).toBe('explo');
+
+  await back.click();
+  await expect
+    .poll(() => param(page, 'date')?.slice(0, 10), { timeout: 30_000 })
+    .toBe(startDate?.slice(0, 10));
+  expect(bodyOf(page)).toBe('voyager2');
+  await expect.poll(() => param(page, 'mode')).not.toBe('explo');
+  await expect(back).toBeHidden();
+});
+
+const setSceneDate = (page: Page, day: string) =>
+  page.locator('#date-input').evaluate((el, d) => {
+    (el as HTMLInputElement).value = d;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, day);
+
+test('Lune : le prochain événement suit la date de la scène sans quitter la fiche, et le saut fige la lecture', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await boot(page, 'body=moon&date=2026-01-01T00:00:00Z');
+  const event = page.locator('.bi-observe-action[data-kind="event"]');
+  const at = async () => (await event.getAttribute('data-at')) ?? '';
+  await expect(event).toBeVisible({ timeout: 30_000 });
+  expect((await at()) >= '2026-01-01').toBe(true);
+  expect((await at()) < '2026-01-09').toBe(true);
+
+  // En avant puis en arrière : un quartier de Lune tombe moins de 8 jours plus tard.
+  await setSceneDate(page, '2026-06-15');
+  await expect
+    .poll(at, { timeout: 10_000 })
+    .toMatch(/^2026-06-(1[5-9]|2[0-3])/);
+  await setSceneDate(page, '2026-03-01');
+  await expect.poll(at, { timeout: 10_000 }).toMatch(/^2026-03-0[1-9]/);
+  const cost = Number(
+    await page.locator('.bi-observe').getAttribute('data-event-cost-ms')
+  );
+  test
+    .info()
+    .annotations.push({ type: 'eventCostMs', description: String(cost) });
+  console.log(`[observation] calcul des événements : ${cost} ms`);
+
+  // Le saut : lecture figée (garantie du panneau des événements), date exacte, retour offert, puis le
+  // PROCHAIN événement (l'actuel est atteint, donc recalculé).
+  const target = await at();
+  await event.click();
+  await expect(page.locator('#play-pause-btn')).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  await expect
+    .poll(() => param(page, 'date')?.slice(0, 16), { timeout: 30_000 })
+    .toBe(target.slice(0, 16));
+  await expect(page.locator('#observe-back')).toBeVisible();
+  await expect.poll(at, { timeout: 10_000 }).not.toBe(target);
+  expect((await at()) > target).toBe(true);
+  expect(bodyOf(page)).toBe('moon');
 });
 
 test('Terre → satellites en orbite ; Soleil → voisinage solaire', async ({
