@@ -17,7 +17,10 @@ async function sceneMean(page: Page, label: string): Promise<number> {
   mkdirSync(`${OUT}/${device}`, { recursive: true });
   const hide = await page.addStyleTag({
     content:
-      '.surface, .dock, #reading-light-badge { visibility: hidden !important; }',
+      // Le repère de lieu (« Olympus Mons · Mars ») est une légende HTML provisoire posée au centre de la
+      // zone mesurée : présente à la première prise et effacée à la dernière, elle faisait dire 5,5
+      // niveaux d'écart à une scène identique (iPhone 15, GAL-MOBILE-EXCELLENCE-001). On mesure la SCÈNE.
+      '.surface, .dock, #reading-light-badge, #formation-marker { visibility: hidden !important; }',
   });
   const png = await page.screenshot({ path: `${OUT}/${device}/${label}.png` });
   await hide.evaluate((el) => (el as Element).remove());

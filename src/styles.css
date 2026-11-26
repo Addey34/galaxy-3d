@@ -1389,6 +1389,18 @@ button {
 .bi-discovery p {
   margin: 0;
 }
+/* Écran tactile : une cible d'au moins 24 px de haut (WCAG 2.2, 2.5.8) pour les commandes isolées de la fiche,
+   les titres dépliables et le lien de source d'une découverte. Mesuré le 2026-11-26 (Pixel 7, iPhone SE,
+   paysage) : 16 à 21 px. Les liens pris dans une phrase ou une liste de citations restent dans leur ligne
+   (exception de la règle). Le bureau ne change pas. */
+@media (pointer: coarse) {
+  #body-info summary,
+  .bi-discovery-source {
+    min-height: 24px;
+    padding-block: 3px;
+    box-sizing: border-box;
+  }
+}
 .bi-discovery-standing,
 .bi-discovery-moons {
   color: rgba(235, 244, 255, 0.95);
@@ -2558,7 +2570,10 @@ button {
 }
 .credits-list {
   display: grid;
-  grid-template-columns: auto 1fr;
+  /* `minmax(0, 1fr)` et non `1fr` : une colonne `1fr` ne descend pas sous son mot le plus long, et
+     l'adresse du remerciement Gaia (287 px d'un tenant) poussait toute la colonne hors d'un écran de
+     412 px (GAL-MOBILE-EXCELLENCE-001, `device-journeys`). */
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.15rem 0.6rem;
   margin: 0;
 }
@@ -2567,6 +2582,9 @@ button {
 }
 .credits-list dd {
   margin: 0;
+  min-width: 0;
+  /* Une adresse se coupe où il le faut plutôt que de déborder. */
+  overflow-wrap: anywhere;
   color: var(--ink-dim);
 }
 .help-credits a {
