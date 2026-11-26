@@ -249,6 +249,15 @@ const FOCUS_BODY: Partial<Record<AstronomicalEventKind, string>> = {
   aphelion: 'earth',
 };
 
+/**
+ * Les corps qu'un événement peut recadrer : ceux de FOCUS_BODY et ceux des oppositions/conjonctions. Un corps
+ * hors de cet ensemble n'a jamais de « prochain événement » (GAL-OBSERVATION-001 ne calcule rien pour lui).
+ */
+export const EVENT_FOCUS_BODIES: ReadonlySet<string> = new Set([
+  ...Object.values(FOCUS_BODY),
+  ...ALIGNMENT_SEARCHES.map((search) => search.name),
+]);
+
 /** Corps sur lequel recadrer la caméra : `event.body` (opposition/conjonction) sinon FOCUS_BODY. */
 export function eventFocusBody(event: AstronomicalEvent): string {
   return event.body ?? FOCUS_BODY[event.kind] ?? 'earth';

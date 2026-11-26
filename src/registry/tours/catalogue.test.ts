@@ -35,14 +35,19 @@ describe('buildTourCatalogue : dérivé des fiches, dans l’ordre déclaré', (
 describe('le catalogue livré au lecteur (module virtuel du greffon)', () => {
   it('est exactement celui des fiches : mêmes identifiants, mêmes titres, même ordre', () => {
     expect(tourCatalogue.map((entry) => entry.id)).toEqual(TOUR_ORDER);
-    expect(tourCatalogue).toEqual(
+    expect(tourCatalogue.map(({ id, title: t }) => ({ id, title: t }))).toEqual(
       TOUR_SCRIPTS.map(({ id, title: t }) => ({ id, title: t }))
     );
   });
 
-  it('porte les titres dans les quatre langues, sans aucune étape ni légende', () => {
+  it('porte les titres dans les quatre langues, sans aucune étape ni légende (seulement les corps et lieux rejoints)', () => {
     for (const entry of tourCatalogue) {
-      expect(Object.keys(entry).sort()).toEqual(['id', 'title']);
+      expect(Object.keys(entry).sort()).toEqual([
+        'bodies',
+        'id',
+        'places',
+        'title',
+      ]);
       for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const)
         expect(entry.title[locale].length).toBeGreaterThan(3);
     }
@@ -74,5 +79,29 @@ describe('le chargeur différé d’une visite', () => {
     expect(TOUR_RECORDS.map((r) => r.id).sort()).toEqual(
       [...TOUR_ORDER].sort()
     );
+  });
+});
+
+describe('les corps et lieux rejoints (GAL-OBSERVATION-001), lus dans les étapes', () => {
+  const entry = (id: string) => tourCatalogue.find((e) => e.id === id)!;
+
+  it('Apollo 11 rejoint la Lune et plonge vers la Station Tranquillité', () => {
+    expect(entry('moon-tranquillity').bodies).toEqual(['moon']);
+    expect(entry('moon-tranquillity').places).toContainEqual({
+      body: 'moon',
+      name: 'Statio Tranquillitatis',
+    });
+  });
+
+  it('chaque visite rejoint au moins un corps, sans doublon, comme ses étapes le disent', () => {
+    for (const record of TOUR_RECORDS) {
+      const e = entry(record.id);
+      const flyTo = record.steps
+        .filter((s) => s.kind === 'flyTo')
+        .map((s) => (s as { body: string }).body);
+      expect(e.bodies.length, record.id).toBeGreaterThan(0);
+      expect(new Set(e.bodies).size).toBe(e.bodies.length);
+      expect([...new Set(flyTo)]).toEqual(e.bodies);
+    }
   });
 });

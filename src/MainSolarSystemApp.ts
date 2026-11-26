@@ -65,6 +65,7 @@ import { setupGazetteerToggle } from './ui/gazetteerToggle';
 import { setupSkyLayerToggles } from './ui/skyLayerToggles';
 import { setupSatelliteToggle } from './ui/satelliteToggle';
 import type { CraftInspector, CraftOpener } from './ui/craftAccess';
+import type { ObservationActions } from './ui/observationAccess';
 import { setupKeepAppearanceToggle } from './ui/keepAppearanceToggle';
 import gazetteerIndex from './config/gazetteerIndex.json';
 import { EARTH_NAMES_BODY } from './core/earthNames';
@@ -367,6 +368,18 @@ function wireChrome(): {
     // morceau chargé à la PREMIÈRE ouverture d'une fiche : aucun n'agit avant, et le budget du
     // démarrage n'avait plus la marge de les payer (cf. ui/cardBlocks). Un échec de chargement se
     // retente, espacé : une panne réseau passagère ne doit pas éteindre ces blocs pour la visite.
+    // « Poursuivre l'observation » (GAL-OBSERVATION-001) : les commandes existantes, lues AU CLIC (le bloc
+    // ne se charge qu'à la première fiche, après le démarrage complet).
+    const observation: ObservationActions = {
+      selectBody: (name) => planetNav.selectBody(name),
+      setMode: (mode) => modeSwitcher.setMode(mode),
+      getMode: () => modeSwitcher.getMode(),
+      sync: () => syncPermalink(),
+      pause: () => playback.pause(),
+      startTour: (id) => tourPlayer.start(id),
+      showSatellites: () => satellites?.show(),
+      openNeighbourhood: () => stellarAddress.openNeighbourhood(),
+    };
     let cardBlocks: 'idle' | 'loading' | 'ready' = 'idle';
     let cardBlocksRetryAt = 0;
     api.animationSystem.onFrame(() => {
@@ -377,7 +390,7 @@ function wireChrome(): {
       // afficherait des clés brutes.
       void Promise.all([import('./ui/cardBlocks'), loadDeferredMessages()])
         .then(([module]) => {
-          module.setupCardBlocks(api, bodyInfo, openCraft);
+          module.setupCardBlocks(api, bodyInfo, openCraft, observation);
           cardBlocks = 'ready';
         })
         .catch((error: unknown) => {

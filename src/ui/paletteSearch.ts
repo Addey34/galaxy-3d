@@ -22,7 +22,6 @@ import {
   type PreparedIndex,
   type SearchDataset,
   type SearchHit,
-  type SearchIndexFile,
   type SearchKind,
 } from '@/core/search';
 import { lookAtFormation } from './lookAtFormation';
@@ -30,7 +29,7 @@ import { getLocale, t } from '@/i18n';
 import { LOCALE_PATH } from '@/i18n/locales';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { PublicAPI } from '@/SolarSystemApp';
-import Logger from '@/utils/Logger';
+import { loadSearchIndex } from './searchIndexLoader';
 
 /** Ce que l'application prête à la recherche pour agir. */
 export interface SearchContext {
@@ -45,29 +44,13 @@ export interface SearchContext {
   showDataset(id: string): void;
 }
 
-/** Adresse ABSOLUE : une adresse relative résoudrait sous `/titan/` quand on démarre sur une page de corps. */
-export const SEARCH_INDEX_URL = '/assets/search/index.json';
+export { SEARCH_INDEX_URL } from './searchIndexLoader';
 
 /** Le segment des pages de mission, celui de `seo/documentPage.ts` (croisé par un test). */
 export const MISSIONS_PATH_SEGMENT = 'missions';
 
 let prepared: { locale: string; index: PreparedIndex } | null = null;
-let file: Promise<SearchIndexFile | null> | null = null;
-
-function loadIndex(): Promise<SearchIndexFile | null> {
-  file ??= fetch(SEARCH_INDEX_URL)
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json() as Promise<SearchIndexFile>;
-    })
-    .catch((error: unknown) => {
-      // Une panne se retente à la frappe suivante : on ne garde pas l'échec.
-      file = null;
-      Logger.warn(`[Recherche] index indisponible : ${String(error)}`);
-      return null;
-    });
-  return file;
-}
+const loadIndex = loadSearchIndex;
 
 /** Les résultats typés d'une requête ; `[]` tant que l'index n'est pas là ou s'il manque. */
 export async function searchTyped(
