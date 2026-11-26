@@ -37,6 +37,7 @@ import { tileToneRatio } from '@/config/tileGain';
 import { shouldReveal } from '@/core/tileReveal';
 import type { Figure } from '@/core/ellipsoid';
 import type { OceanMatch } from '@/core/oceanMatch';
+import { coverageEdges } from '@/core/coverageFeather';
 import * as THREE from 'three';
 
 import {
@@ -844,6 +845,7 @@ export class PlanetarySurfaceEngine {
    */
   update(camera: THREE.PerspectiveCamera, viewportHeightPx: number): void {
     this._advanceFades();
+    this._advanceFeather();
     const host = this._host;
     const tileset = this._tileset;
     if (!host || !tileset || this._radiusKm <= 0) return;
@@ -1056,6 +1058,48 @@ export class PlanetarySurfaceEngine {
 
     this._declareImageryWidth(centre, level);
     this._publishState(tileset, level, tiles.length, centre);
+    this._updateCoverageFeather(tileset);
+  }
+
+  /** Les carreaux visibles au dernier calcul de la couverture : rien à refaire tant qu'ils sont les mêmes. */
+  private _featherSignature = '';
+
+  /** Instant de la dernière avance du fondu de bord, pour son lissage temporel. */
+  private _featherAt = 0;
+
+  /**
+   * Le fondu de la FRONTIÈRE EXTÉRIEURE de la couverture (`core/coverageFeather`), pour les jeux qui le
+   * demandent : chaque tuile visible apprend vers quels côtés et coins aucune autre tuile visible (tous
+   * niveaux) ne la prolonge. Les autres jeux (autres corps, nuages régionaux) ne sont pas touchés.
+   */
+  private _updateCoverageFeather(tileset: SurfaceTileset): void {
+    if (!tileset.coverageFeather) return;
+    const visible = [...this._tiles.values()].filter(
+      (tile) => tile.mesh.visible && !tile.held
+    );
+    // Recalculé seulement quand l'ensemble des carreaux visibles CHANGE : la comparaison de chaque carreau
+    // à tous les autres coûte, et la couverture ne bouge pas d'une image à l'autre au repos.
+    const signature = visible.map((tile) => tile.mesh.name).join('|');
+    if (signature === this._featherSignature) return;
+    this._featherSignature = signature;
+    for (const tile of visible) {
+      const others = visible
+        .filter((other) => other !== tile)
+        .map((other) => other.bounds);
+      tile.setEdgeTarget(coverageEdges(tile.bounds, others));
+    }
+  }
+
+  /** Lisse les poids du fondu de bord vers leur cible (mouvement réduit : d'un coup). */
+  private _advanceFeather(): void {
+    const now = performance.now();
+    const dt = prefersReducedMotion()
+      ? Number.POSITIVE_INFINITY
+      : this._featherAt === 0
+        ? 0
+        : now - this._featherAt;
+    this._featherAt = now;
+    for (const tile of this._tiles.values()) tile.advanceEdges(dt);
   }
 
   /**
@@ -1938,6 +1982,7 @@ export class PlanetarySurfaceEngine {
         ...(relief
           ? { heights: relief.heights, skirtDepth: relief.skirtDepth }
           : {}),
+        ...(tileset.coverageFeather ? { coverageFeather: true } : {}),
       });
       // Arrivé après que la vue l'a quitté : posé SANS fondu, masqué, gardé pour le retour.
       const stillWanted = this._wanted.has(key);

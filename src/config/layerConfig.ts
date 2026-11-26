@@ -16,6 +16,7 @@ import {
   OCEAN_MATCH_VERTEX_GLSL,
   OCEAN_MATCH_VERTEX_PARS_GLSL,
   oceanLiftLinear,
+  oceanTileLinear,
   type OceanMatch,
 } from '@/core/oceanMatch';
 import { isSoftwareRenderer } from '@/components/systems/rendererKind';
@@ -79,6 +80,9 @@ export function installOceanMatch(
   chainOnBeforeCompile(material, (shader) => {
     shader.uniforms['uOceanMask'] = { value: mask };
     shader.uniforms['uOceanLift'] = { value: lift };
+    shader.uniforms['uOceanTile'] = {
+      value: new THREE.Vector3(...oceanTileLinear(match)),
+    };
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',

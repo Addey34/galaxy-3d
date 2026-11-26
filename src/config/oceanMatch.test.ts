@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -62,5 +62,50 @@ describe('oceanMatch de la mosaïque Blue Marble', () => {
         `canal ${k}`
       ).toBeLessThanOrEqual(2)
     );
+  });
+});
+
+describe('toutes les mosaïques de la Terre qui ramènent leur océan (GAL-EARTH-VISUAL-COHERENCE-001)', () => {
+  const dir = join(
+    resolve(dirname(fileURLToPath(import.meta.url)), '..'),
+    'registry/products/tilesets'
+  );
+  const fiches = readdirSync(dir)
+    .filter((f) => f.startsWith('earth-') && f.endsWith('.json'))
+    .map((f) => ({
+      file: f,
+      json: JSON.parse(readFileSync(join(dir, f), 'utf8')) as {
+        oceanMatch?: {
+          baseSrgb: number[];
+          tileSrgb: number[];
+          measured: string;
+          method: string;
+        };
+      },
+    }));
+
+  it('les trois VIIRS et les neuf éditions Sentinel-2 le déclarent, mesuré, daté, avec sa méthode', () => {
+    const matched = fiches.filter((f) => f.json.oceanMatch).map((f) => f.file);
+    for (const expected of [
+      'earth-gibs-viirs-noaa21-truecolor-250m.json',
+      'earth-gibs-viirs-noaa20-truecolor-250m.json',
+      'earth-gibs-viirs-snpp-truecolor-250m.json',
+      'earth-eox-s2cloudless-2016.json',
+      'earth-eox-s2cloudless-2025.json',
+    ])
+      expect(matched).toContain(expected);
+    expect(matched.filter((f) => f.startsWith('earth-eox-'))).toHaveLength(9);
+    for (const f of fiches.filter((x) => x.json.oceanMatch)) {
+      expect(f.json.oceanMatch!.measured, f.file).toMatch(
+        /^\d{4}-\d{2}-\d{2}$/
+      );
+      expect(f.json.oceanMatch!.method.length, f.file).toBeGreaterThan(40);
+    }
+  });
+
+  it('elles visent toutes la MÊME couleur, celle de la base livrée (une seule cible)', () => {
+    const base = fiche.oceanMatch!.baseSrgb;
+    for (const f of fiches.filter((x) => x.json.oceanMatch))
+      expect(f.json.oceanMatch!.baseSrgb, f.file).toEqual(base);
   });
 });

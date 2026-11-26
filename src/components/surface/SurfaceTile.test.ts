@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 
 import { SurfaceTile } from './SurfaceTile';
+import { NO_FADE } from '@/core/coverageFeather';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { geographicToLocalDirection } from '@/core/frames';
 import { tileBounds, WMTS_EQUIRECTANGULAR_2x1 } from '@/core/tilePyramid';
@@ -317,5 +318,73 @@ describe('finishFade (carreau en fondu retenu)', () => {
     expect(tile.fading).toBe(false);
     expect(material.opacity).toBe(1);
     expect(material.transparent).toBe(false);
+  });
+});
+
+describe('SurfaceTile, fondu de la frontière de couverture (GAL-EARTH-VISUAL-COHERENCE-001)', () => {
+  const RADIUS = 0.27;
+  const make = (coverageFeather: boolean): SurfaceTile =>
+    new SurfaceTile({
+      index: { level: 2, row: 1, column: 3 },
+      radius: RADIUS,
+      shape: WMTS_EQUIRECTANGULAR_2x1,
+      material: new THREE.MeshBasicMaterial(),
+      coverageFeather,
+    });
+
+  it('n’est posé que pour un jeu qui le demande : sans lui, rien ne change (autres corps, nuages)', () => {
+    const plain = make(false);
+    expect(plain.featherActive).toBe(false);
+    plain.setEdgeTarget({ ...NO_FADE, east: 1 });
+    expect(plain.advanceEdges(16)).toBe(false);
+    expect(
+      (plain.mesh.material as THREE.Material).customProgramCacheKey?.() ?? ''
+    ).not.toContain('coverage-feather');
+    const feathered = make(true);
+    expect(
+      (feathered.mesh.material as THREE.Material).customProgramCacheKey!()
+    ).toContain('coverage-feather');
+  });
+
+  it('un bord découvert rend la tuile transparente le temps du fondu, puis rend sa transparence propre', () => {
+    const tile = make(true);
+    const material = tile.mesh.material as THREE.Material;
+    expect(material.transparent).toBe(false);
+    tile.setEdgeTarget({ ...NO_FADE, east: 1 });
+    expect(tile.advanceEdges(Number.POSITIVE_INFINITY)).toBe(true);
+    expect(tile.featherActive).toBe(true);
+    expect(material.transparent).toBe(true);
+    // La couverture revient : le poids retombe, la tuile redevient opaque.
+    tile.setEdgeTarget(NO_FADE);
+    tile.advanceEdges(Number.POSITIVE_INFINITY);
+    expect(tile.featherActive).toBe(false);
+    expect(material.transparent).toBe(false);
+  });
+
+  it('porte son emprise en degrés, celle que le moteur compare', () => {
+    const tile = make(true);
+    expect(tile.bounds.east).toBeGreaterThan(tile.bounds.west);
+    expect(tile.bounds.north).toBeGreaterThan(tile.bounds.south);
+  });
+});
+
+describe('SurfaceTile, ordre de rendu du sol qui fond son bord', () => {
+  it('se dessine avant les couches posées au-dessus (nuages : 1 + niveau), le plus fin devant le plus grossier', () => {
+    const tile = (level: number, coverageFeather: boolean): SurfaceTile =>
+      new SurfaceTile({
+        index: { level, row: 1, column: 3 },
+        radius: 0.27,
+        shape: WMTS_EQUIRECTANGULAR_2x1,
+        material: new THREE.MeshBasicMaterial(),
+        coverageFeather,
+      });
+    const groundFine = tile(8, true);
+    const groundCoarse = tile(5, true);
+    const cloud = tile(3, false);
+    expect(groundFine.mesh.renderOrder).toBeLessThan(cloud.mesh.renderOrder);
+    expect(groundFine.mesh.renderOrder).toBeLessThan(0);
+    expect(groundFine.mesh.renderOrder).toBeGreaterThan(
+      groundCoarse.mesh.renderOrder
+    );
   });
 });

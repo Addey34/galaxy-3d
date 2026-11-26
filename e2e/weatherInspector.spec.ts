@@ -34,6 +34,15 @@ async function shot(page: Page, name: string): Promise<void> {
  */
 const SCENE_DAY = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
 const SCENE_DATE = `${SCENE_DAY}T12:00:00Z`;
+/**
+ * Le jour vers lequel le scénario de changement de date saute : la VEILLE de la scène, calculée. Écrite
+ * en dur (2026-11-25), elle est devenue le jour même de la scène le 2026-11-26 (la scène est « hier ») :
+ * le changement de date ne changeait plus rien et le test était rouge à date fixe (campagne 45727282205,
+ * et `main` aussi). Deux jours avant maintenant : toujours un autre jour, toujours servi par le modèle.
+ */
+const TARGET_DAY = new Date(Date.now() - 2 * 86_400_000)
+  .toISOString()
+  .slice(0, 10);
 const SCENE_DATE_TEXT = `${SCENE_DAY} 12:00 UTC`;
 
 async function boot(
@@ -305,10 +314,10 @@ test('a date change shows no value while the grid is out of date, then the new o
   });
 
   mock.hold();
-  await page.locator('#date-input').evaluate((el) => {
-    (el as HTMLInputElement).value = '2026-11-25';
+  await page.locator('#date-input').evaluate((el, day) => {
+    (el as HTMLInputElement).value = day;
     el.dispatchEvent(new Event('change', { bubbles: true }));
-  });
+  }, TARGET_DAY);
   // Réponse en route : la grille chargée décrit une autre heure. Aucune valeur n'est montrée.
   await expect(temperature.locator('.wi-message')).toContainText(
     /Updating|Out of date/,
@@ -323,7 +332,7 @@ test('a date change shows no value while the grid is out of date, then the new o
   });
   const meta = temperature.locator('.wi-meta');
   await meta.locator('summary').click();
-  await expect(meta).toContainText('2026-11-25');
+  await expect(meta).toContainText(TARGET_DAY);
 });
 
 test('units and language follow the existing preferences', async ({ page }) => {
