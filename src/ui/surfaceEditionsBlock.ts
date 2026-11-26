@@ -66,16 +66,28 @@ export function setupSurfaceEditionsBlock(
   anchor.after(box);
 
   let shown: string | null = null;
-  /** L'édition POSÉE sur la scène, par corps (absente : celle par défaut). */
-  const applied = new Map<string, string>();
-  /** La dernière autre édition choisie, cible de « Comparer avec… ». */
+  /** Le dernier corps à éditions montré : sa scène reste publiée fiche fermée (un chargement tardif s'y verrait). */
+  let tracked: string | null = null;
+  /** L'édition DEMANDÉE et pas encore posée, par corps : la dernière intention du visiteur. */
+  const pending = new Map<string, string>();
+  /** La dernière autre édition montrée, cible de « Comparer avec… ». */
   let other: string | null = null;
   let request = 0;
   let sceneDay = '';
 
   const catalogue = (body: string) => surfaceEditions[body] ?? null;
-  const appliedOf = (body: string): string =>
-    applied.get(body) ?? catalogue(body)!.defaultEdition;
+  /**
+   * L'édition que la SCÈNE montre, lue sur le moteur (`appliedTextureBase`) et non tenue à part : le choix
+   * actif, le badge et la note ne peuvent pas diverger de la carte réellement posée.
+   */
+  const appliedOf = (body: string): string => {
+    const cat = catalogue(body)!;
+    const base = api.sceneSystem.getBody(body)?.appliedTextureBase(cat.layer);
+    const edition = base?.split('__')[1];
+    return edition && cat.editions.some((e) => e.edition === edition)
+      ? edition
+      : cat.defaultEdition;
+  };
   const editionOf = (body: string, edition: string): SurfaceEdition =>
     catalogue(body)!.editions.find((e) => e.edition === edition)!;
 
@@ -133,15 +145,24 @@ export function setupSurfaceEditionsBlock(
     }
   };
 
+  /** Le choix affiché, la description et les textes de la fiche, alignés sur la scène (ou sur la demande en vol). */
+  const refresh = (body: string): void => {
+    if (shown !== body || box.hidden) return;
+    markChecked(pending.get(body) ?? appliedOf(body));
+    describe(body);
+    syncCardTexts(body);
+  };
+
   /** Pose une édition ; un choix plus récent rend celui-ci caduc (le moteur jette son chargement). */
   const select = async (body: string, edition: string): Promise<void> => {
     const current = appliedOf(body);
-    if (edition === current && !box.hasAttribute('aria-busy')) return;
+    if (edition === current && !pending.has(body)) return;
     const object = api.sceneSystem.getBody(body);
     const cat = catalogue(body);
     if (!object || !cat) return;
     const mine = ++request;
     const wanted = editionOf(body, edition);
+    pending.set(body, edition);
     markChecked(edition);
     box.setAttribute('aria-busy', 'true');
     status.hidden = false;
@@ -151,35 +172,37 @@ export function setupSurfaceEditionsBlock(
       texturePath(body, cat.layer, edition),
       wanted.tiers as TextureQuality[]
     );
+    // Une intention plus récente (autre choix, fiche quittée) possède désormais le changement.
     if (mine !== request) return;
+    pending.delete(body);
     box.removeAttribute('aria-busy');
     if (ok) {
       if (edition !== current) other = current;
-      applied.set(body, edition);
       status.hidden = true;
       getAnnouncer().announce(t('ed.announce', { date: day(wanted.from) }));
     } else {
-      markChecked(current);
       status.textContent = t('ed.unavailable', {
         date: day(wanted.from),
-        shown: day(editionOf(body, current).from),
+        shown: day(editionOf(body, appliedOf(body)).from),
       });
     }
-    if (shown === body) {
-      describe(body);
-      syncCardTexts(body);
-    }
+    refresh(body);
   };
 
-  /** Rend l'édition par défaut d'un corps quand sa fiche n'est plus affichée. */
+  /**
+   * Rend l'édition par défaut d'un corps quand sa fiche n'est plus affichée, y compris quand une demande est
+   * encore EN VOL : sans cela, elle arriverait fiche fermée et poserait sa carte sur la scène.
+   */
   const restore = (body: string): void => {
     const cat = catalogue(body);
-    if (!cat || appliedOf(body) === cat.defaultEdition) return;
+    if (!cat) return;
+    if (!pending.has(body) && appliedOf(body) === cat.defaultEdition) return;
     request++;
+    pending.delete(body);
     box.removeAttribute('aria-busy');
-    const e = editionOf(body, cat.defaultEdition);
-    applied.delete(body);
+    status.hidden = true;
     other = null;
+    const e = editionOf(body, cat.defaultEdition);
     void api.sceneSystem
       .getBody(body)
       ?.setLayerEdition(
@@ -230,10 +253,10 @@ export function setupSurfaceEditionsBlock(
         return b;
       })
     );
-    markChecked(appliedOf(current));
-    describe(current);
-    if (applied.has(current)) syncCardTexts(current);
+    tracked = current;
     box.hidden = false;
+    status.hidden = !pending.has(current);
+    refresh(current);
   };
 
   let last = 0;
@@ -241,14 +264,19 @@ export function setupSurfaceEditionsBlock(
     // Ce que la SCÈNE montre (la carte posée), distinct de ce que le bloc a demandé, publié à CHAQUE image
     // (une lecture de table) : un chargement tardif d'une édition abandonnée, même pendant une image, s'y
     // verrait. Le reste du bloc suit la cadence de 500 ms.
-    if (shown && !box.hidden) {
-      const cat = catalogue(shown);
+    // Publié aussi fiche FERMÉE pour le dernier corps montré : la planète reste dans la scène.
+    const watched = shown ?? tracked;
+    if (watched) {
+      const cat = catalogue(watched);
       const base = cat
-        ? api.sceneSystem.getBody(shown)?.appliedTextureBase(cat.layer)
+        ? api.sceneSystem.getBody(watched)?.appliedTextureBase(cat.layer)
         : undefined;
       const edition = base?.split('__')[1] ?? '';
-      if (box.dataset['sceneEdition'] !== edition)
+      if (box.dataset['sceneEdition'] !== edition) {
         box.dataset['sceneEdition'] = edition;
+        // La scène a changé (restauration finie, LOD) : le bloc la suit.
+        if (shown === watched && !pending.has(watched)) refresh(watched);
+      }
     }
     const at = performance.now();
     if (at - last < 500) return;

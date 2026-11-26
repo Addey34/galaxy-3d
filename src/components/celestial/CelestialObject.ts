@@ -152,12 +152,32 @@ export default class CelestialObject {
   private lastLODNormalizedDistance = Infinity;
   /** Génération des éditions de couche (GAL-ATMOSPHERES-001) : un chargement d'une autre édition est jeté. */
   private _editionGeneration = 0;
-  /** Le chemin de base de la carte RÉELLEMENT posée par couche (ce que la scène montre, pas ce qui est demandé). */
-  private readonly _appliedBase = new Map<string, string>();
+  /**
+   * La carte RÉELLEMENT posée par couche (chemin de base et paliers) : ce que la scène montre, pas ce qui est
+   * demandé. C'est le SEUL repli d'un changement d'édition qui échoue : jamais une demande intermédiaire.
+   */
+  private readonly _applied = new Map<
+    string,
+    { base: string; tiers: TextureQuality[] }
+  >();
 
   /** Chemin de base de la carte posée pour une couche (GAL-ATMOSPHERES-001 : ce que la scène montre). */
   appliedTextureBase(layer: string): string | undefined {
-    return this._appliedBase.get(layer);
+    return this._applied.get(layer)?.base;
+  }
+
+  /** Note la configuration COURANTE d'une couche comme celle de la carte qui vient d'être posée. */
+  private _recordApplied(layer: string): void {
+    const base = (this.config.textures as Record<string, string | undefined>)[
+      layer
+    ];
+    const tiers = (
+      this.config.textureResolutions as Record<
+        string,
+        TextureQuality[] | undefined
+      >
+    )[layer];
+    if (base && tiers) this._applied.set(layer, { base, tiers: [...tiers] });
   }
   // Dernier palier de qualité surface effectivement chargé (ultra/high/…). Le LOD ne
   // relance un chargement que lorsque ce palier CHANGE, pas à chaque petit déplacement
@@ -415,12 +435,16 @@ export default class CelestialObject {
         return false;
       }
       this._applyLoadedTexture(layer, texture);
-      this._appliedBase.set(layer, basePath);
+      this._applied.set(layer, { base: basePath, tiers: [...tiers] });
       return true;
     } catch {
+      // Repli sur la DERNIÈRE carte réellement posée, jamais sur une demande intermédiaire (une édition A
+      // demandée, abandonnée pour B qui échoue, ne doit pas devenir la configuration : le LOD suivant la
+      // chargerait). Avant toute carte posée, l'état d'avant cet appel.
       if (generation === this._editionGeneration) {
-        textures[layer] = previousBase;
-        resolutions[layer] = previousTiers;
+        const last = this._applied.get(layer);
+        textures[layer] = last?.base ?? previousBase;
+        resolutions[layer] = last ? [...last.tiers] : previousTiers;
         this._lastLODQuality = null;
       }
       return false;
@@ -436,10 +460,7 @@ export default class CelestialObject {
           100
         );
         this._applyLoadedTexture(textureKey, texture);
-        const base = (
-          this.config.textures as Record<string, string | undefined>
-        )[textureKey];
-        if (base) this._appliedBase.set(textureKey, base);
+        this._recordApplied(textureKey);
       } catch {
         Logger.warn(
           `[CelestialObject] Failed to load ${textureKey} for ${this.name}`
@@ -1770,10 +1791,8 @@ export default class CelestialObject {
           this.textureSystem.releaseCachedTexture(texture);
           continue;
         }
-        const base = (
-          this.config.textures as Record<string, string | undefined>
-        )[textureKey];
-        if (base) this._appliedBase.set(textureKey, base);
+        // Même génération : la configuration lue est celle qui a été chargée.
+        this._recordApplied(textureKey);
         // Le helper ré-vérifie l'état après l'await : une observation peut avoir
         // remplacé les nuages pendant le chargement LOD.
         this._applyLoadedTexture(textureKey, texture);
