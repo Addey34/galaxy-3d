@@ -7,11 +7,11 @@ import {
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import { formatDateText } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
-import { bodyDisplayName } from '@/i18n/bodyText';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import type { PlanetNavigation } from './planetNav';
 import type { PlaybackControls } from './playback';
 import { getAnnouncer } from './announcer';
+import { eventLabel } from './eventLabel';
 import { formatFixed, formatPercent } from './localNumber';
 
 const MS_PER_DAY = 86_400_000;
@@ -36,39 +36,6 @@ function formatEventDate(date: Date): string {
     getLocale(),
     intlLocale()
   );
-}
-
-const EVENT_KEYS: Record<AstronomicalEvent['kind'], string> = {
-  'new-moon': 'events.newMoon',
-  'first-quarter': 'events.firstQuarter',
-  'full-moon': 'events.fullMoon',
-  'third-quarter': 'events.thirdQuarter',
-  'solar-eclipse': 'events.solarEclipse',
-  'lunar-eclipse': 'events.lunarEclipse',
-  'march-equinox': 'events.marchEquinox',
-  'june-solstice': 'events.juneSolstice',
-  'september-equinox': 'events.septemberEquinox',
-  'december-solstice': 'events.decemberSolstice',
-  perihelion: 'events.perihelion',
-  aphelion: 'events.aphelion',
-  opposition: 'events.opposition',
-  conjunction: 'events.conjunction',
-};
-
-function eventLabel(event: AstronomicalEvent): string {
-  const label = t(EVENT_KEYS[event.kind]);
-  if (event.body) {
-    // Opposition/conjonction : « Mars · Opposition » — le nom de la planète prime, le
-    // libellé générique précise le type d'alignement.
-    return `${bodyDisplayName(event.body)} · ${label}`;
-  }
-  if (!event.eclipseKind) return label;
-  // Éclipse : type (totale/partielle…) + ampleur obscurcie.
-  const parts = [t(`events.kind.${event.eclipseKind}`)];
-  if (event.obscuration !== undefined && event.obscuration > 0) {
-    parts.push(formatPercent(event.obscuration));
-  }
-  return `${label} · ${parts.join(' · ')}`;
 }
 
 /** Infobulle au survol : détails (visibilité d'éclipse) + rappel « cliquer pour y aller ». */

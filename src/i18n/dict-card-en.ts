@@ -604,6 +604,26 @@ export const cardEn = {
     'Published: the distance of the system and the parameters of its host star, as the archive gives them.',
   'sx.sourcesSky':
     'Star and planets: NASA Exoplanet Archive, table pscomppars, snapshot of {date}.',
+  'obs.label': 'Continue observing',
+  'obs.tour': 'Guided tour: {title}',
+  'obs.tourPlace': 'Guided tour: {title} ({place})',
+  'obs.orbit': '{probe}, in orbit from {date}',
+  'obs.contact': '{probe}, contact with the body on {date}',
+  'obs.flyby': '{probe}, flyby on {date}',
+  'obs.mission': '{probe}, mission declared for this body',
+  'obs.missionFrom': '{probe}, at this body from {date}',
+  'obs.bodyOrbit': '{body}: orbit insertion on {date}',
+  'obs.bodyContact': '{body}: contact on {date}',
+  'obs.bodyFlyby': '{body}: closest approach on {date}',
+  'obs.bodyMission': '{body}: mission target',
+  'obs.bodyMissionFrom': '{body}: at this body from {date}',
+  'obs.inspect': 'Inspect {probe} in 3D',
+  'obs.event': 'Next event: {event}, {date}',
+  'obs.satellites': 'Show the satellites in orbit',
+  'obs.neighbourhood': 'Leave for the solar neighbourhood',
+  'obs.back': 'Back to {body}, {date}',
+  'obs.note':
+    'Each link comes from a measurement or a registry shipped with Galaxy.',
 };
 
 export type CardMessageKey = keyof typeof cardEn;

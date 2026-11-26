@@ -16,6 +16,38 @@ import type { LocalizedText } from '../../types';
 export interface TourCatalogueEntry {
   readonly id: string;
   readonly title: LocalizedText;
+  /**
+   * Les corps que la visite REJOINT (cibles de ses `flyTo`, dans l'ordre, sans doublon) et les lieux où elle
+   * PLONGE (`diveTo`, avec le corps du dernier `flyTo` qui précède) : LUS dans ses étapes, jamais écrits à
+   * part. Ce sont les relations « ce corps, ce lieu → cette visite » de l'observation interconnectée
+   * (GAL-OBSERVATION-001).
+   */
+  readonly bodies: readonly string[];
+  readonly places: readonly { readonly body: string; readonly name: string }[];
+}
+
+/** Les corps rejoints et les lieux visités par une fiche, lus dans ses étapes. */
+export function tourReach(steps: readonly unknown[]): {
+  bodies: string[];
+  places: { body: string; name: string }[];
+} {
+  const bodies: string[] = [];
+  const places: { body: string; name: string }[] = [];
+  let current: string | null = null;
+  for (const raw of steps) {
+    const step = raw as { kind?: string; body?: unknown; place?: unknown };
+    if (step.kind === 'flyTo' && typeof step.body === 'string') {
+      current = step.body;
+      if (!bodies.includes(step.body)) bodies.push(step.body);
+    } else if (
+      step.kind === 'diveTo' &&
+      typeof step.place === 'string' &&
+      current &&
+      !places.some((p) => p.body === current && p.name === step.place)
+    )
+      places.push({ body: current, name: step.place });
+  }
+  return { bodies, places };
 }
 
 /**
@@ -42,11 +74,13 @@ export function buildTourCatalogue(
   records: readonly {
     readonly id: string;
     readonly title: LocalizedText;
+    readonly steps?: readonly unknown[];
   }[],
   order: readonly string[]
 ): TourCatalogueEntry[] {
-  return orderTourRecords(records, order).map(({ id, title }) => ({
+  return orderTourRecords(records, order).map(({ id, title, steps }) => ({
     id,
     title,
+    ...tourReach(steps ?? []),
   }));
 }

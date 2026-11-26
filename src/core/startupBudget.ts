@@ -593,6 +593,21 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "la fonction partagée par les fiches du ciel profond et des exoplanètes (2026-11-04) : elle ne fait que lire l'ancre et charger `SkyCenteringView` à la première ouverture d'une fiche. Morceau de la couche, activé par un réglage, jamais au démarrage.",
   },
   {
+    chunk: 'eventLabel',
+    reason:
+      "le nom d'un événement céleste (GAL-OBSERVATION-001), partagé par le panneau des événements et le bloc « Poursuivre l'observation » de la fiche, deux morceaux hors démarrage : Rollup en fait un morceau commun, chargé avec l'un ou l'autre.",
+  },
+  {
+    chunk: 'searchIndexLoader',
+    reason:
+      "la lecture unique de l'index de la recherche (GAL-OBSERVATION-001), partagée par la palette typée (première frappe utile) et le bloc « Poursuivre l'observation » (première fiche) : aucun des deux n'est au démarrage. Rollup y range aussi le repli des accents (`core/textFold`, GAL-SCIENCE-022A), partagé par les mêmes deux morceaux, qui était avant un morceau `textFold` à lui (SUPERSEDED 2026-11-26).",
+  },
+  {
+    chunk: '_virtual_tour-catalogue',
+    reason:
+      "le catalogue léger des visites (identifiant, titre, corps et lieux rejoints), lu par le lecteur de visites et le bloc « Poursuivre l'observation » (GAL-OBSERVATION-001), tous deux chargés à la demande.",
+  },
+  {
     chunk: 'skyPick',
     reason:
       "la sélection d'un point du ciel par sa direction (`core/skyPick`), partagée par les repères des exoplanètes (`ExoplanetHosts`), ceux du ciel profond (`DeepSkyMarkers`) et leurs fiches, des morceaux hors démarrage : Rollup en fait un morceau commun, qui ne se charge qu'avec eux.",
@@ -656,11 +671,6 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
     chunk: 'placeObservations',
     reason:
       "le chargeur des formations nommées et de leurs observations (`config/placeObservations`) est partagé par deux morceaux hors démarrage, les blocs de fiche (`cardBlocks`) et la recherche typée (`paletteSearch`, qui y lit la position d'une formation choisie) : Vite l'en a sorti en morceau commun au lot 47, et il n'est chargé qu'avec l'un d'eux.",
-  },
-  {
-    chunk: 'textFold',
-    reason:
-      "le repli des accents et de la casse (`core/textFold`, GAL-SCIENCE-022A) est partagé par deux morceaux hors démarrage, la recherche typée (`paletteSearch`) et le bloc « Formations observées » de la fiche (`cardBlocks`) : Vite l'en a sorti en morceau commun, et il n'est chargé qu'avec l'un d'eux.",
   },
   {
     chunk: 'WindParticles',

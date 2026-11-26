@@ -22,12 +22,15 @@ import { setupCraftBlock } from './craftBlock';
 import { setupDiscoveryBlock } from './discoveryBlock';
 import { setupInstrumentsBlock } from './instrumentsBlock';
 import { setupMissionsBlock } from './missionsBlock';
+import type { ObservationActions } from './observationAccess';
+import { setupObservationBlock } from './observationBlock';
 import { setupPlacesBlock } from './placesBlock';
 
 export function setupCardBlocks(
   api: PublicAPI,
   bodyInfo: BodyInfoPanel,
-  openCraft: CraftOpener
+  openCraft: CraftOpener,
+  observation: ObservationActions
 ): void {
   setupDiscoveryBlock(api, bodyInfo);
   setupAtmosphereBlock(api, bodyInfo);
@@ -36,4 +39,5 @@ export function setupCardBlocks(
   setupInstrumentsBlock(api, bodyInfo);
   setupCraftBlock(api, bodyInfo, openCraft);
   setupPlacesBlock(api, bodyInfo);
+  setupObservationBlock(api, bodyInfo, openCraft, observation);
 }

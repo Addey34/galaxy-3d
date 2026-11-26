@@ -70,6 +70,7 @@
     "e2e/modes.spec.ts": 223,
     "e2e/navigationHistory.spec.ts": 198,
     "e2e/neighbourStars.spec.ts": 333,
+    "e2e/observation.spec.ts": 150,
     "e2e/opticalZoom.spec.ts": 48,
     "e2e/orbitLinesOnDemand.spec.ts": 27,
     "e2e/overlayCanvasSize.spec.ts": 11,
@@ -89,8 +90,8 @@
     "e2e/satelliteLayer.spec.ts": 107,
     "e2e/satelliteSelection.spec.ts": 160,
     "e2e/satelliteTracking.spec.ts": 386,
-    "e2e/search.spec.ts": 197,
     "e2e/seaTemperature.spec.ts": 18,
+    "e2e/search.spec.ts": 197,
     "e2e/settingsMobileLayout.spec.ts": 57,
     "e2e/settingsTabs.spec.ts": 100,
     "e2e/share.spec.ts": 49,
@@ -132,6 +133,7 @@
     "e2e/wind.spec.ts": 75
   },
   "estimated": [
+    "e2e/observation.spec.ts",
     "e2e/skySystemExplorer.spec.ts"
   ]
 }

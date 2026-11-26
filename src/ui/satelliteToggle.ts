@@ -28,6 +28,8 @@ export interface SatelliteToggle {
   ): void;
   /** Un clic tombe-t-il sur un satellite peint ? Sa fiche s'ouvre alors, et le clic est pris. */
   claim(clientX: number, clientY: number): boolean;
+  /** Allume la couche comme sa case, la case cochée avec (GAL-OBSERVATION-001). */
+  show(): void;
 }
 
 export function setupSatelliteToggle(
@@ -61,38 +63,39 @@ export function setupSatelliteToggle(
     }
   };
 
+  const set = (on: boolean): void => {
+    wanted = on;
+    if (on || layer) {
+      void (layer ??= import('./satelliteLayer').then((m) =>
+        m.setupSatelliteLayer(env)
+      )).then((l) => {
+        loaded = l;
+        if (!l) {
+          // Le service n'a pas répondu : la case se décoche et le dit, au lieu de promettre.
+          wanted = false;
+          const box = document.getElementById(
+            'satellites-toggle'
+          ) as HTMLInputElement | null;
+          if (box) box.checked = false;
+          if (status) {
+            shown = t('settings.satellites.unavailable');
+            status.textContent = shown;
+            status.hidden = false;
+          }
+          layer = null;
+          return;
+        }
+        l.setActive(wanted);
+        render();
+      });
+    }
+    render();
+  };
   mount({
     id: 'satellites-toggle',
     labelKey: 'settings.satellites',
     ready: () => true,
-    set: (on) => {
-      wanted = on;
-      if (on || layer) {
-        void (layer ??= import('./satelliteLayer').then((m) =>
-          m.setupSatelliteLayer(env)
-        )).then((l) => {
-          loaded = l;
-          if (!l) {
-            // Le service n'a pas répondu : la case se décoche et le dit, au lieu de promettre.
-            wanted = false;
-            const box = document.getElementById(
-              'satellites-toggle'
-            ) as HTMLInputElement | null;
-            if (box) box.checked = false;
-            if (status) {
-              shown = t('settings.satellites.unavailable');
-              status.textContent = shown;
-              status.hidden = false;
-            }
-            layer = null;
-            return;
-          }
-          l.setActive(wanted);
-          render();
-        });
-      }
-      render();
-    },
+    set,
   });
   const wrapper = document.getElementById('satellites-toggle-wrapper');
   status = document.createElement('p');
@@ -107,6 +110,13 @@ export function setupSatelliteToggle(
 
   return {
     claim: (clientX, clientY) => loaded?.claim(clientX, clientY) ?? false,
+    show: () => {
+      const box = document.getElementById(
+        'satellites-toggle'
+      ) as HTMLInputElement | null;
+      if (box) box.checked = true;
+      if (!wanted) set(true);
+    },
     update(camera, date, morph, occlusion, space) {
       if (!wanted || !loaded) return;
       loaded.update(camera, date, morph, occlusion, space);

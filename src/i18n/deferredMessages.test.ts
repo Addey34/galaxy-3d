@@ -28,6 +28,7 @@ const DEFERRED_READERS: Record<string, string> = {
   'ui/discoveryBlock.ts': 'cardBlocks',
   'ui/instrumentsBlock.ts': 'cardBlocks',
   'ui/missionsBlock.ts': 'cardBlocks',
+  'ui/observationBlock.ts': 'cardBlocks',
   'ui/placesBlock.ts': 'cardBlocks',
   'ui/paletteSearch.ts': 'paletteSearch',
   'ui/exoplanetCard.ts': 'exoplanetCard',

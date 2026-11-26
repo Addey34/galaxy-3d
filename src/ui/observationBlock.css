@@ -1,0 +1,45 @@
+/* « Poursuivre l'observation » (GAL-OBSERVATION-001) : des actions, une par ligne, au même gabarit que
+   « Inspecter en 3D ». Chargée avec le bloc, jamais au démarrage. */
+.bi-observe {
+  margin: var(--sp-3) 0;
+}
+.bi-observe[hidden],
+.bi-observe-back[hidden] {
+  display: none;
+}
+.bi-observe-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0;
+  padding: 0;
+  list-style: none;
+}
+.bi-observe-action,
+.bi-observe-back {
+  width: 100%;
+  min-height: var(--control-h);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-md, 10px);
+  background: var(--surface-solid);
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.bi-observe-back {
+  margin-top: var(--sp-2);
+  border-style: dashed;
+}
+.bi-observe-action:hover,
+.bi-observe-action:focus-visible,
+.bi-observe-back:hover,
+.bi-observe-back:focus-visible {
+  background: var(--control-bg-hover);
+}
+.bi-observe-note {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.85em;
+}
