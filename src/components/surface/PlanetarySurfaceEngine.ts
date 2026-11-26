@@ -38,7 +38,7 @@ import { shouldReveal } from '@/core/tileReveal';
 import type { Figure } from '@/core/ellipsoid';
 import type { OceanMatch } from '@/core/oceanMatch';
 import { coverageEdges } from '@/core/coverageFeather';
-import { fallbackAncestors } from '@/core/tileFallback';
+import { coverageIndex, fallbackAncestors } from '@/core/tileFallback';
 import * as THREE from 'three';
 
 import {
@@ -2125,14 +2125,12 @@ function debugCoverage(
   // Un enfant déjà posé le couvre en partie : déficit compté nul.
   let uncovered = 0;
   let deficit = 0;
+  // Même index que le repli (temps proportionnel à carreaux × profondeur, pas au produit des listes).
+  const covered = coverageIndex(solid, firstDrawableLevel);
   for (const m of missing) {
-    let best: number | null = null;
-    let finer = false;
-    for (const p of solid) {
-      if (!overlaps(m, p)) continue;
-      if (p.level >= m.level) finer = true;
-      else if (best === null || p.level > best) best = p.level;
-    }
+    const self = covered.coarserOrSelf(m);
+    const finer = self === m.level || covered.hasFiner(m);
+    const best = self !== null && self < m.level ? self : null;
     if (finer) continue;
     if (best === null) {
       uncovered += 1;

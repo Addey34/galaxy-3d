@@ -39,6 +39,49 @@ export function ancestorAt(index: TileIndex, level: number): TileIndex {
   };
 }
 
+/**
+ * L'INDEX DE COUVERTURE d'un ensemble de carreaux posés : en temps proportionnel à (carreaux × profondeur),
+ * et non au produit des deux listes. La première version comparait chaque feuille à chaque carreau posé :
+ * ~6 ms par passe pour 512 feuilles et 500 carreaux sur un PC rapide (mesuré le 2026-11-26), bien plus sur un
+ * processeur lent ou un téléphone, à chaque passe du moteur (régression de GAL-SURFACE-MULTILOD-001, trouvée
+ * par la CI de `main`).
+ */
+export interface CoverageIndex {
+  /** Niveau du carreau posé le plus fin qui contient `index` (lui compris), ou `null`. */
+  coarserOrSelf(index: TileIndex): number | null;
+  /** Un carreau posé PLUS FIN est-il à l'intérieur de `index` ? */
+  hasFiner(index: TileIndex): boolean;
+}
+
+/**
+ * `floorLevel` : aucun carreau ne se pose ni ne se demande plus grossier (le premier niveau peint) ; les
+ * ancêtres sous lui ne sont ni indexés ni cherchés.
+ */
+export function coverageIndex(
+  solid: readonly TileIndex[],
+  floorLevel = 0
+): CoverageIndex {
+  const own = new Set<string>();
+  const inside = new Set<string>();
+  let lowest = Number.POSITIVE_INFINITY;
+  for (const p of solid) {
+    own.add(keyOf(p));
+    lowest = Math.min(lowest, p.level);
+    for (let level = p.level - 1; level >= floorLevel; level -= 1)
+      inside.add(keyOf(ancestorAt(p, level)));
+  }
+  return {
+    coarserOrSelf(index) {
+      for (let level = index.level; level >= lowest; level -= 1)
+        if (own.has(keyOf(ancestorAt(index, level)))) return level;
+      return null;
+    },
+    hasFiner(index) {
+      return inside.has(keyOf(index));
+    },
+  };
+}
+
 export interface FallbackOptions {
   /** Feuilles voulues par la sélection, dans son ordre. */
   leaves: readonly TileIndex[];
@@ -56,11 +99,13 @@ export function fallbackAncestors(options: FallbackOptions): TileIndex[] {
   const { leaves, painted, solid, firstDrawableLevel, levels, max } = options;
   if (levels <= 0 || max <= 0) return [];
   const leafKeys = new Set(leaves.map(keyOf));
+  const covered = coverageIndex(solid, firstDrawableLevel);
   const out: TileIndex[] = [];
   const seen = new Set<string>();
   for (const leaf of leaves) {
     if (painted(leaf)) continue;
-    if (solid.some((p) => tilesOverlap(leaf, p))) continue;
+    if (covered.coarserOrSelf(leaf) !== null || covered.hasFiner(leaf))
+      continue;
     const level = Math.max(firstDrawableLevel, leaf.level - levels);
     if (level >= leaf.level) continue;
     const ancestor = ancestorAt(leaf, level);
