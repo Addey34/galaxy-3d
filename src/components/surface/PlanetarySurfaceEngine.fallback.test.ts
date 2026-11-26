@@ -160,4 +160,59 @@ describe('les ancêtres de repli dans le moteur', () => {
     expect(levels.length).toBe(25);
     engine.dispose();
   });
+
+  it('un ancêtre posé sous des feuilles absentes compte comme peint : le bandeau paraît sans attendre les feuilles', async () => {
+    // Les feuilles ne viennent JAMAIS (un coureur lent, une source qui tarde) ; seuls les ancêtres arrivent.
+    // Avant la correction, l'ancêtre posé cessait d'être voulu (il couvre ses feuilles), restait à l'écran,
+    // et `painted` valait 0 : bandeau caché tant qu'aucune feuille n'était là (CI de `main` après #588).
+    // Le plus grossier niveau de la sélection, lu sans repli : tout carreau sous lui est un ancêtre.
+    const leafLevels: number[] = [];
+    const probe = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile: async (url) => {
+        leafLevels.push(levelOf(url));
+        return bitmap();
+      },
+      fallbackLevels: 0,
+    });
+    probe.attach(makeHost(), TILESET, RADIUS_KM);
+    probe.update(cameraAt(8), 800);
+    await vi.waitFor(() => expect(leafLevels.length).toBe(25));
+    probe.dispose();
+    const leafFloor = Math.min(...leafLevels);
+    const now = vi.spyOn(performance, 'now');
+    let t = 1000;
+    now.mockImplementation(() => t);
+    const fetchTile = vi.fn<TileFetcher>(async (url, signal) => {
+      if (levelOf(url) < leafFloor) return bitmap();
+      return new Promise<ImageBitmap>((_, reject) =>
+        signal?.addEventListener('abort', () => reject(new Error('abort')))
+      );
+    });
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 32 },
+      fetchTile,
+      fallbackLevels: 3,
+    });
+    const host = makeHost();
+    engine.attach(host, TILESET, RADIUS_KM);
+    const camera = cameraAt(8);
+    engine.update(camera, 800);
+    await vi.waitFor(() =>
+      expect(meshes(host).some((m) => m.visible)).toBe(true)
+    );
+    // Le temps passe : le fondu de l'ancêtre s'achève, il devient franc et cesse d'être voulu.
+    for (let i = 0; i < 10; i += 1) {
+      t += 1000;
+      engine.update(camera, 800);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+    }
+    const levels = fetchTile.mock.calls.map(([url]) => levelOf(url));
+    expect(Math.min(...levels)).toBeLessThan(leafFloor);
+    expect(engine.state?.painted ?? 0).toBeGreaterThan(0);
+    // Le niveau annoncé est celui de l'ancêtre réellement montré, jamais celui des feuilles absentes.
+    expect(engine.state!.level).toBeLessThan(leafFloor);
+    now.mockRestore();
+    engine.dispose();
+  });
 });

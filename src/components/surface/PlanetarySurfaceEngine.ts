@@ -424,6 +424,13 @@ export class PlanetarySurfaceEngine {
 
   private readonly _tiles = new Map<string, SurfaceTile>();
   private readonly _fallbackLevels: number;
+  /**
+   * Feuilles voulues ABSENTES mais couvertes par un carreau plus grossier du jeu courant, posé et franc : ce
+   * sol est PEINT et le bandeau le compte. Sans cela un ancêtre de repli, qui cesse d'être voulu dès qu'il
+   * couvre ses feuilles, restait à l'écran sans que le bandeau apparaisse avant la première feuille (CI de
+   * `main` après #588 : bandeau absent 30 s sur un processeur lent).
+   */
+  private _leavesUnderAncestor = 0;
   /** Carreaux en fondu d'entrée : évite de parcourir `_tiles` à chaque image au repos. */
   private _fadingTiles = 0;
   /** Carreaux posés mais retenus, révélés ensemble (`core/tileReveal.ts`). */
@@ -1167,6 +1174,7 @@ export class PlanetarySurfaceEngine {
     let painted = 0;
     let compare = this._compare;
     for (const key of this._wanted) if (this._tiles.has(key)) painted += 1;
+    painted += this._leavesUnderAncestor;
     if (painted === 0 && this._staleTileset) {
       tileset = this._staleTileset;
       compare = this._staleCompare;
@@ -1470,7 +1478,6 @@ export class PlanetarySurfaceEngine {
     tiles: readonly TileIndex[],
     firstDrawableLevel: number
   ): TileIndex[] {
-    if (this._fallbackLevels <= 0) return [];
     const solid: TileIndex[] = [];
     const prefix = this._prefix();
     for (const [key, tile] of this._tiles) {
@@ -1478,6 +1485,14 @@ export class PlanetarySurfaceEngine {
       const index = indexOfKey(key);
       if (index) solid.push(index);
     }
+    const covered = coverageIndex(solid, firstDrawableLevel);
+    this._leavesUnderAncestor = 0;
+    for (const leaf of tiles) {
+      if (this._tiles.has(this._key(leaf))) continue;
+      const level = covered.coarserOrSelf(leaf);
+      if (level !== null && level < leaf.level) this._leavesUnderAncestor += 1;
+    }
+    if (this._fallbackLevels <= 0) return [];
     return fallbackAncestors({
       leaves: tiles,
       painted: (index) => this._tiles.has(this._key(index)),
@@ -1549,6 +1564,7 @@ export class PlanetarySurfaceEngine {
     for (const kept of this._retained.values()) kept.tile.dispose();
     this._retained.clear();
     this._fadingTiles = 0;
+    this._leavesUnderAncestor = 0;
     this._held.clear();
     this._heldSinceMs = null;
     this._relief.clear();
