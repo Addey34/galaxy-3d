@@ -336,6 +336,12 @@ const imageryTileset = z
       })
       .strict()
       .optional(),
+    /**
+     * Fondre la FRONTIÈRE EXTÉRIEURE de la couverture de ce jeu vers la texture globale du corps
+     * (GAL-EARTH-VISUAL-COHERENCE-001, `core/coverageFeather`) : pour les jeux dont la couleur s'écarte
+     * visiblement de la texture livrée. Absent : la couverture garde son bord net (autres corps, nuages).
+     */
+    coverageFeather: z.boolean().optional(),
     mission: z.string().min(1),
     instrument: z.string().min(1),
     service: z

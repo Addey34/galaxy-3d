@@ -594,6 +594,9 @@
           ],
           "additionalProperties": false
         },
+        "coverageFeather": {
+          "type": "boolean"
+        },
         "mission": {
           "type": "string",
           "minLength": 1

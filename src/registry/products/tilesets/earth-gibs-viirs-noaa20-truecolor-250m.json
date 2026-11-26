@@ -26,6 +26,7 @@
     }
   },
   "publishedPixelsPerDegree": 296.5,
+  "coverageFeather": true,
   "oceanMatch": {
     "tileSrgb": [21, 24, 38],
     "baseSrgb": [31, 60, 118],

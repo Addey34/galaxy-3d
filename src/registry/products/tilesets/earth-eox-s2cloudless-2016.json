@@ -23,6 +23,7 @@
     "maxLevel": 13
   },
   "publishedPixelsPerDegree": 11132,
+  "coverageFeather": true,
   "oceanMatch": {
     "tileSrgb": [16, 29, 50],
     "baseSrgb": [31, 60, 118],

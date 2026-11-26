@@ -76,6 +76,8 @@ export interface SurfaceTileset {
   edition?: number;
   /** Couleurs d'océan de la mosaïque et de la base, si la fiche les harmonise (cf. fiche). */
   oceanMatch?: OceanMatch;
+  /** Fondre la frontière extérieure de la couverture (`core/coverageFeather`). */
+  coverageFeather?: boolean;
   /** Mosaïque posée seulement si on la choisit (cf. fiche, `optIn`). */
   optIn?: true;
 }
@@ -112,6 +114,7 @@ function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
     verified: fiche.verified,
     ...(fiche.edition !== undefined ? { edition: fiche.edition } : {}),
     ...(fiche.oceanMatch ? { oceanMatch: fiche.oceanMatch } : {}),
+    ...(fiche.coverageFeather ? { coverageFeather: true } : {}),
     ...(fiche.optIn ? { optIn: true as const } : {}),
     ...(time
       ? {
@@ -274,7 +277,13 @@ export function cloudTilesetForSource(
   const dated = (chain.get(body) ?? []).find((entry) =>
     entry.service.template.includes(`/${layer}/`)
   );
-  return dated ? tilesetForDay(dated, day) : undefined;
+  if (!dated) return undefined;
+  // Le fondu de la frontière de couverture (`coverageFeather`) est celui du SOL : la couche régionale des
+  // nuages ne le prend pas. Mesuré (GAL-EARTH-VISUAL-COHERENCE-001, Lisbonne, 502 km) : hérité de la fiche
+  // VIIRS, il effaçait des carreaux de nuages au MILIEU de la couverture (voisins d'un autre niveau ou
+  // encore invisibles), découpant le voile nuageux en rectangles.
+  const { coverageFeather: _ground, ...clouds } = tilesetForDay(dated, day);
+  return clouds;
 }
 
 /**

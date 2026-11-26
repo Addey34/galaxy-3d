@@ -33,9 +33,18 @@ import { tileFadeOpacity } from '@/core/tileFade';
 import { buildTilePatch, type PatchHeights } from '@/core/tilePatch';
 import {
   tileBounds,
+  type TileBounds,
   type TileIndex,
   type TileMatrixShape,
 } from '@/core/tilePyramid';
+import {
+  approach,
+  COVERAGE_FEATHER_GLSL,
+  COVERAGE_FEATHER_PARS_GLSL,
+  NO_FADE,
+  type EdgeFade,
+} from '@/core/coverageFeather';
+import { chainOnBeforeCompile } from '@/config/layerConfig';
 
 /** Segments par carreau SANS relief : la courbure d'un carreau est faible, 8 suffisent. */
 const TILE_SEGMENTS = 8;
@@ -46,6 +55,17 @@ export class SurfaceTile {
   readonly level: number;
   /** Le carreau porte-t-il des hauteurs mesurées ? Lu par le bandeau et par l'e2e. */
   readonly hasHeights: boolean;
+  /** Son emprise en degrés : la couverture du moteur se lit sur ces emprises (`core/coverageFeather`). */
+  readonly bounds: TileBounds;
+  /**
+   * Le fondu de la frontière extérieure de la couverture (GAL-EARTH-VISUAL-COHERENCE-001), posé seulement
+   * pour les jeux qui le demandent (`coverageFeather`) : poids courants et cibles, côtés puis coins.
+   */
+  private readonly _feather: {
+    side: THREE.Vector4;
+    corner: THREE.Vector4;
+    target: EdgeFade;
+  } | null = null;
   private readonly _geometry: THREE.BufferGeometry;
   private readonly _material: THREE.Material;
   private readonly _baseTransparent: boolean;
@@ -80,6 +100,8 @@ export class SurfaceTile {
     heights?: PatchHeights;
     /** Profondeur de la jupe, en unités locales. N'a de sens qu'avec des hauteurs. */
     skirtDepth?: number;
+    /** Fondre la frontière extérieure de la couverture (`core/coverageFeather`) : jeux qui le demandent. */
+    coverageFeather?: boolean;
   }) {
     this._releaseMaterial = params.releaseMaterial;
     // La transparence PROPRE du matériau, rendue à la fin du fondu : un carreau de sol est opaque, un carreau
@@ -89,6 +111,7 @@ export class SurfaceTile {
     this.level = params.index.level;
     this.hasHeights = params.heights !== undefined;
     const bounds = tileBounds(params.index, params.shape);
+    this.bounds = bounds;
 
     const patch = buildTilePatch({
       bounds,
@@ -137,6 +160,32 @@ export class SurfaceTile {
     this._material.polygonOffset = !this.hasHeights;
     this._material.polygonOffsetFactor = -1 - this.level;
     this._material.polygonOffsetUnits = -1 - this.level;
+    if (params.coverageFeather) {
+      const feather = {
+        side: new THREE.Vector4(0, 0, 0, 0),
+        corner: new THREE.Vector4(0, 0, 0, 0),
+        target: { ...NO_FADE },
+      };
+      this._feather = feather;
+      chainOnBeforeCompile(this._material, (shader) => {
+        shader.uniforms['uEdgeSide'] = { value: feather.side };
+        shader.uniforms['uEdgeCorner'] = { value: feather.corner };
+        shader.fragmentShader = shader.fragmentShader
+          .replace(
+            '#include <common>',
+            '#include <common>' + COVERAGE_FEATHER_PARS_GLSL
+          )
+          .replace(
+            '#include <map_fragment>',
+            '#include <map_fragment>' + COVERAGE_FEATHER_GLSL
+          );
+      });
+      const previousKey = this._material.customProgramCacheKey?.bind(
+        this._material
+      );
+      this._material.customProgramCacheKey = () =>
+        `${previousKey ? previousKey() : ''}-coverage-feather`;
+    }
     this.mesh = new THREE.Mesh(this._geometry, this._material);
     this.mesh.name = `tile_${params.index.level}_${params.index.row}_${params.index.column}`;
     // Le carreau n'est montré qu'une fois son image décodée : un carreau blanc au-dessus de
@@ -145,6 +194,11 @@ export class SurfaceTile {
     // Marque lue par la couche de bâtiments : le sol RENDU se mesure sur ces maillages-là.
     this.mesh.userData['surfaceTile'] = true;
     this.mesh.renderOrder = 1 + this.level;
+    // Un carreau de SOL qui fond son bord devient transparent : dans la passe transparente, son ordre
+    // (1 + niveau) le faisait dessiner APRÈS les carreaux de nuages et la coque, qu'il recouvrait alors par
+    // rectangles (mesuré : Lisbonne, 502 km). Le sol se dessine avant toute couche posée au-dessus de lui ;
+    // entre carreaux de sol, le plus fin reste devant.
+    if (params.coverageFeather) this.mesh.renderOrder = this.level - 100;
   }
 
   /**
@@ -171,8 +225,69 @@ export class SurfaceTile {
     this._held = false;
     this._fadeStart = null;
     this._material.opacity = 1;
-    this._material.transparent = this._baseTransparent;
-    this._material.needsUpdate = true;
+    this._syncTransparency();
+  }
+
+  /**
+   * Transparente tant qu'elle apparaît OU qu'un de ses bords s'efface ; sinon sa transparence propre. Un
+   * changement de transparence recompile le programme : il n'est posé que s'il change vraiment.
+   */
+  private _syncTransparency(): void {
+    const wanted =
+      this._fadeStart !== null || this._held || this.featherActive
+        ? true
+        : this._baseTransparent;
+    if (this._material.transparent !== wanted) {
+      this._material.transparent = wanted;
+      this._material.needsUpdate = true;
+    }
+  }
+
+  /** Un bord s'efface-t-il (même un peu) ? */
+  get featherActive(): boolean {
+    const f = this._feather;
+    if (!f) return false;
+    return (
+      f.side.x +
+        f.side.y +
+        f.side.z +
+        f.side.w +
+        f.corner.x +
+        f.corner.y +
+        f.corner.z +
+        f.corner.w >
+      0
+    );
+  }
+
+  /** Les côtés et coins vers lesquels la tuile doit s'effacer, d'après la couverture du moteur. */
+  setEdgeTarget(target: EdgeFade): void {
+    if (this._feather) this._feather.target = target;
+  }
+
+  /**
+   * Rapproche les poids de leur cible (lissage `core/coverageFeather.approach`) ; rend vrai tant qu'ils
+   * bougent. Sous mouvement réduit, le moteur passe un pas infini : la cible est atteinte d'un coup.
+   */
+  advanceEdges(dtMs: number): boolean {
+    const f = this._feather;
+    if (!f) return false;
+    const t = f.target;
+    const before = f.side.toArray().join() + f.corner.toArray().join();
+    f.side.set(
+      approach(f.side.x, t.west, dtMs),
+      approach(f.side.y, t.east, dtMs),
+      approach(f.side.z, t.south, dtMs),
+      approach(f.side.w, t.north, dtMs)
+    );
+    f.corner.set(
+      approach(f.corner.x, t.southWest, dtMs),
+      approach(f.corner.y, t.southEast, dtMs),
+      approach(f.corner.z, t.northWest, dtMs),
+      approach(f.corner.w, t.northEast, dtMs)
+    );
+    this._syncTransparency();
+    return before !== f.side.toArray().join() + f.corner.toArray().join();
   }
 
   /** Lève la rétention : le fondu commence à `nowMs`, le même instant pour tout le groupe. */
@@ -195,8 +310,7 @@ export class SurfaceTile {
     if (opacity >= 1) {
       this._fadeStart = null;
       material.opacity = 1;
-      material.transparent = this._baseTransparent;
-      material.needsUpdate = true;
+      this._syncTransparency();
       return false;
     }
     material.opacity = opacity;

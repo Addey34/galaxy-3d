@@ -9,6 +9,7 @@ import {
   DATED_SURFACE_CHAIN,
   DATED_SURFACE_TILESETS,
   DOMAIN_MAX_AGE_MS,
+  cloudTilesetForSource,
   compareEdition,
   editionFor,
   REGIONAL_TILESETS,
@@ -1011,5 +1012,30 @@ describe('imageries régionales (lot 53, pas 4)', () => {
       ['Londres', 51.507, -0.128],
     ] as const)
       expect(coversBounds(around(lat, lon), ign), name).toBe(false);
+  });
+});
+
+describe('fondu de la frontière de couverture (GAL-EARTH-VISUAL-COHERENCE-001)', () => {
+  it('le sol VIIRS le demande ; la couche régionale des nuages, tirée de la même fiche, jamais', () => {
+    const ground = (DATED_SURFACE_CHAIN.get('earth') ?? []).find((t) =>
+      t.service.template.includes(
+        '/VIIRS_NOAA21_CorrectedReflectance_TrueColor/'
+      )
+    );
+    expect(ground?.coverageFeather).toBe(true);
+    const clouds = cloudTilesetForSource(
+      'earth',
+      'VIIRS_NOAA21_CorrectedReflectance_TrueColor:2026-11-20'
+    );
+    expect(clouds).toBeDefined();
+    expect(clouds!.coverageFeather).toBeUndefined();
+  });
+
+  it('les neuf éditions Sentinel-2 le demandent', () => {
+    const editions = [...(SURFACE_VARIANTS.get('earth')?.values() ?? [])]
+      .flat()
+      .filter((t) => t.id.startsWith('earth-eox-s2cloudless-'));
+    expect(editions.length).toBe(9);
+    for (const t of editions) expect(t.coverageFeather, t.id).toBe(true);
   });
 });
