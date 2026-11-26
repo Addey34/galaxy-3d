@@ -23,10 +23,7 @@
   "providers": [
     {
       "name": "ISAS/JAXA, Hayabusa2 ONC (Sugita, S. et al., Hayabusa2 Optical Navigation Camera Data, doi:10.17597/isas.darts/hyb2-00200)",
-      "roles": [
-        "licensor",
-        "producer"
-      ]
+      "roles": ["licensor", "producer"]
     }
   ],
   "tier": "free",

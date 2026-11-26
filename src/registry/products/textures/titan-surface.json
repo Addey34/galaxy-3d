@@ -16,9 +16,7 @@
   "providers": [
     {
       "name": "USGS Astrogeology Science Center / NASA-JPL-Caltech / SSI (Cassini ISS, controlled global mosaic 702 m)",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

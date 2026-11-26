@@ -16,9 +16,7 @@
   "providers": [
     {
       "name": "NASA/JPL/SSI Cassini ISS, DLR global mosaic (Roatsch et al.), NASA PDS CO-S-ISSNA/ISSWA-5-MIDR-V1.0",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

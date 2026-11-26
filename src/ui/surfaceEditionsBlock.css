@@ -1,0 +1,64 @@
+/* Les observations de l'atmosphère (GAL-ATMOSPHERES-001) : un groupe de dates, chargé avec le bloc. */
+.bi-editions {
+  margin: var(--sp-3) 0 0;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--hairline);
+}
+.bi-editions[hidden],
+.bi-editions-compare[hidden],
+.bi-editions-status[hidden] {
+  display: none;
+}
+.bi-editions-title {
+  margin: 0 0 var(--sp-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.bi-editions-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.bi-editions-option,
+.bi-editions-compare {
+  min-height: var(--control-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface-solid);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.bi-editions-option[aria-checked='true'] {
+  border-color: rgba(var(--accent), 0.95);
+  background: var(--control-bg-hover);
+  font-weight: 600;
+}
+.bi-editions-option:hover,
+.bi-editions-option:focus-visible,
+.bi-editions-compare:hover,
+.bi-editions-compare:focus-visible {
+  background: var(--control-bg-hover);
+}
+.bi-editions-compare {
+  margin-top: var(--sp-2);
+  border-style: dashed;
+}
+.bi-editions-status,
+.bi-editions-info,
+.bi-editions-scene,
+.bi-editions-limits {
+  margin: var(--sp-2) 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+.bi-editions-limits {
+  color: var(--ink-faint);
+}
+.bi-editions-status {
+  color: var(--ink);
+}

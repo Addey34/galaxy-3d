@@ -161,6 +161,37 @@ const shippedTexture = z
      * ces dates, pas à celle de la scène), en UTC, lu dans l'en-tête ou le README de la source
      * (GAL-CATALOG-EXCELLENCE-001). La fiche du corps le dit.
      */
+    /**
+     * TOUTES les éditions d'une couche qui en a plusieurs (GAL-ATMOSPHERES-001) : chaque observation datée,
+     * sa source, sa résolution, la nature de sa couleur, ses paliers et la part de la surface complétée.
+     * Les champs du haut de la fiche décrivent l'édition PAR DÉFAUT (`textureEditions` du corps), qui figure
+     * aussi ici. L'application en lit une copie dérivée (`virtual:surface-editions`).
+     */
+    editions: z
+      .array(
+        z
+          .object({
+            edition: z.string().regex(/^[a-z0-9]+(_[a-z0-9]+)*$/),
+            observed: z
+              .object({
+                from: z
+                  .string()
+                  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
+                to: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
+              })
+              .strict(),
+            downloadUrl: httpsUrl,
+            sourcePage: httpsUrl,
+            sourcePixelWidth: z.number().int().positive(),
+            tiers: z.array(z.enum(['1k', '2k', '4k', '8k'])).min(1),
+            colorNature: z.enum(COLOR_NATURES),
+            /** Part de la SURFACE (pondérée par le cosinus de la latitude) complétée, de 0 à 1. */
+            filledShare: z.number().min(0).max(1),
+            note: z.string(),
+          })
+          .strict()
+      )
+      .optional(),
     observed: z
       .object({
         from: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),

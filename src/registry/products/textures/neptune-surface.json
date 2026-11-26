@@ -10,25 +10,82 @@
     {
       "rel": "license",
       "href": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "rel": "via",
+      "href": "https://archive.stsci.edu/hlsp/opal"
     }
   ],
   "providers": [
     {
-      "name": "Solar System Scope (solarsystemscope.com)",
-      "roles": [
-        "licensor",
-        "producer"
-      ]
+      "name": "NASA, ESA, A.A. Simon, M.H. Wong: Hubble Space Telescope WFC3/UVIS, Outer Planet Atmospheres Legacy (OPAL), MAST high-level science product, DOI 10.17909/T9G593",
+      "roles": ["producer", "licensor"]
     }
   ],
   "tier": "free",
-  "colorNature": "illustrative",
+  "colorNature": "enhanced",
+  "filled": true,
+  "observed": {
+    "from": "2026-08-31T04:00:57Z",
+    "to": "2026-08-31T18:29:02Z"
+  },
+  "sourceUrl": "https://archive.stsci.edu/hlsp/opal/opal-neptune-cycle-33",
   "review": {
-    "status": "reference",
-    "sourcePage": "https://science.nasa.gov/asset/hubble/full-color-neptune-global-map-from-hubbles-opal-program-dark-spot-and-companion-clouds-closeup/",
-    "sourceResolution": "Hubble global atmospheric map",
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle33/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2026a_f467m-f547m-f657n_v1_globalmap.tif",
+    "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-neptune-cycle-33",
+    "sourceResolution": "2 pixels/degree global map (721 x 361, oversampled per the producer), Hubble WFC3/UVIS",
+    "sourcePixelWidth": 721,
     "projection": "equirectangular",
     "qualityClass": "dynamic",
-    "note": "Atmospheric snapshot, not a permanent surface."
-  }
+    "license": "CC BY 4.0 (OPAL page and FITS header, read 2026-11-26)",
+    "credit": "NASA, ESA, A.A. Simon, M.H. Wong",
+    "attributionNeeded": true,
+    "note": "Remplace le 2026-11-26 (GAL-ATMOSPHERES-001) la carte illustrative de Solar System Scope : une observation authentique de 720 px plutot qu'une illustration de 1024 px. Palier de base a la largeur de la source (720 x 360), sans agrandissement. Editions et limites : champ editions."
+  },
+  "editions": [
+    {
+      "edition": "opal_2015a",
+      "observed": {
+        "from": "2015-09-18T07:15:00Z",
+        "to": "2015-09-18T22:21:00Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle22/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2015a_f467m-f547m-f657n_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-neptune-cycle-22",
+      "sourcePixelWidth": 721,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.154,
+      "note": "README : 180 degres Ouest au bord gauche, decroissant vers la droite : deja centree sur 0, pas de demi-tour. 2 px par degre, suréchantillonne. Nord au-dela d'environ 55 degres non observe. 15,4 % de la surface completes."
+    },
+    {
+      "edition": "opal_2018a",
+      "observed": {
+        "from": "2018-09-09T19:49:00Z",
+        "to": "2018-09-19T08:39:00Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle25/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2018a_f467m-f547m-f657n_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-neptune-cycle-25",
+      "sourcePixelWidth": 721,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.216,
+      "note": "Annee de la decouverte d'une tache sombre par OPAL. README : pannes de gyroscope, couverture partielle, premiere rotation etalee du 9 au 19 septembre ; 360 degres Ouest au bord gauche (demi-tour). 21,6 % de la surface completes."
+    },
+    {
+      "edition": "opal_2026a",
+      "observed": {
+        "from": "2026-08-31T04:00:57Z",
+        "to": "2026-08-31T18:29:02Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle33/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2026a_f467m-f547m-f657n_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-neptune-cycle-33",
+      "sourcePixelWidth": 721,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.153,
+      "note": "README : 360 degres Ouest au bord gauche (demi-tour). Nord au-dela d'environ 60 degres non observe. 15,3 % de la surface completes."
+    }
+  ]
 }

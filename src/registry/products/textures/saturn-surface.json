@@ -19,10 +19,7 @@
   "providers": [
     {
       "name": "NASA, ESA, A.A. Simon, M.H. Wong: Hubble Space Telescope WFC3/UVIS, Outer Planet Atmospheres Legacy (OPAL), MAST high-level science product, DOI 10.17909/T9G593",
-      "roles": [
-        "producer",
-        "licensor"
-      ]
+      "roles": ["producer", "licensor"]
     }
   ],
   "tier": "free",
@@ -46,5 +43,49 @@
     "credit": "NASA, ESA, A.A. Simon, M.H. Wong",
     "attributionNeeded": true,
     "note": "Remplace le 2026-11-26 la carte de Solar System Scope (illustrative). Composite couleur du PRODUCTEUR (filtres F631N, F502N, F395N, legere accentuation du contraste par OPAL ; nature enhanced et non natural : chaque bande est etiree par le producteur, couleur moyenne mesuree de la bande -45/+45 degres R/V 0,97, B/V 0,90 contre 1,11 et 0,81 pour la carte de Solar System Scope tiree de Cassini), premiere rotation du cycle 32 : 2025-08-29 05:53:28 a 14:20:17 UTC (README du jeu), cinq mois apres le passage de la Terre dans le plan des anneaux. Cadrage du README : bord gauche = 360 degres Ouest System III, decroissant vers la droite (meme cadrage que Jupiter), roule d'un demi-tour. Latitudes non observees : calottes au-dela d'environ 82 degres et une bande d'environ 1,6 degre pres de 3 degres Nord (ombre et tranche des anneaux), plus 3 degres de franges : calottes a la couleur moyenne mesuree des 2 degres qui les bordent, bande au passage lineaire entre ses deux bords, sans detail en longitude (15,7 % des lignes). Une couture verticale de la mosaique du producteur reste visible. 1k au plus : 1800 px de source."
-  }
+  },
+  "editions": [
+    {
+      "edition": "opal_2018a",
+      "observed": {
+        "from": "2018-06-06T04:30:00Z",
+        "to": "2018-06-06T13:12:00Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle25/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2018a_f395n-f502n-f631n_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-saturn-cycle-25",
+      "sourcePixelWidth": 1800,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.481,
+      "note": "Anneaux grand ouverts : seul l'hemisphere Nord est observe (de -8 a +90 degres selon le README), le Sud est a la couleur moyenne mesuree du bord. 48,1 % de la surface completes."
+    },
+    {
+      "edition": "opal_2022a",
+      "observed": {
+        "from": "2022-09-21T20:43:02Z",
+        "to": "2022-09-22T03:37:34Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle29/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2022a_f395n-f502n-f631n_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-saturn-cycle-29",
+      "sourcePixelWidth": 1800,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.308,
+      "note": "Bandes du Sud partiellement cachees par les anneaux : longitudes manquantes a la moyenne zonale de leur latitude, bande vide entre -10 et -26 degres au passage lineaire entre ses bords. Arcs clairs du producteur visibles vers -45 degres. 30,8 % de la surface completes."
+    },
+    {
+      "edition": "opal_2025a",
+      "observed": {
+        "from": "2025-08-29T05:53:28Z",
+        "to": "2025-08-29T14:20:17Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle32/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2025a_f395n-f502n-f631n_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-saturn-cycle-32",
+      "sourcePixelWidth": 1800,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.098,
+      "note": "Edition publiee le 2026-11-26, cinq mois apres le passage de la Terre dans le plan des anneaux. 9,8 % de la surface completes."
+    }
+  ]
 }

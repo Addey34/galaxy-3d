@@ -16,9 +16,7 @@
   "providers": [
     {
       "name": "Philip Stooke / NASA PDS (Giotto/Vega)",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

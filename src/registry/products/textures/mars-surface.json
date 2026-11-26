@@ -15,10 +15,7 @@
   "providers": [
     {
       "name": "Solar System Scope (solarsystemscope.com)",
-      "roles": [
-        "licensor",
-        "producer"
-      ]
+      "roles": ["licensor", "producer"]
     }
   ],
   "tier": "free",

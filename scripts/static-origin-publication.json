@@ -1,46 +1,107 @@
 {
-  "$comment": "Publication ADDITIVE sur galaxy-static (GAL-CATALOG-EXCELLENCE-001). `add` : les fichiers NEUFS attendus, et seulement eux (chemin, octets, SHA-256 du dépôt) ; `retain` : les fichiers déjà en ligne qui ne sont plus dans l'arbre de travail parce qu'une ÉDITION les remplace dans le catalogue, gardés en ligne pour les anciennes versions du client et le retour arrière, lus octet pour octet au commit `rollback.commit`. Lu par scripts/static-origin-publish.mjs (préflight, assemblage, vérification) et par src/config/staticOriginPublication.test.ts. Ne pas éditer à la main sans recalculer les empreintes.",
+  "$comment": "Publication ADDITIVE sur galaxy-static (GAL-CATALOG-EXCELLENCE-001). `add` : les fichiers NEUFS attendus, et seulement eux (chemin, octets, SHA-256 du dépôt) ; `retain` : les fichiers déjà en ligne qui ne sont plus dans l'arbre de travail parce qu'une ÉDITION les remplace dans le catalogue, gardés en ligne pour les anciennes versions du client et le retour arrière, lus octet pour octet à leur commit (`commit`, sinon `rollback.commit`). Lu par scripts/static-origin-publish.mjs (préflight, assemblage, vérification) et par src/config/staticOriginPublication.test.ts. Ne pas éditer à la main sans recalculer les empreintes.",
   "rollback": {
-    "commit": "ebd08ac5064f011a771bd10d3eb09ea7ffc8da72",
-    "description": "main après #585 : le client de ce commit lit jupiter_surface_{1k,2k,4k}.jpg et saturn_surface_1k.jpg (Solar System Scope). Revenir à ce commit sur Cloudflare Pages suffit : ces fichiers restent servis par galaxy-static."
+    "commit": "dd9e54928e0ac6198fedb3ac9b6b02fa52f4c3a0",
+    "description": "main après #586 : le client de ce commit lit jupiter_surface__opal_2025a_*, saturn_surface__opal_2025a_1k, uranus_surface_1k et neptune_surface_1k (Solar System Scope). Les clients antérieurs (ebd08ac5) lisent jupiter_surface_{1k,2k,4k} et saturn_surface_1k : tous restent servis."
   },
   "add": [
     {
-      "path": "assets/textures/jupiter/jupiter_surface__opal_2025a_1k.jpg",
-      "bytes": 76917,
-      "sha256": "3cc8f8278ccd15d074c8f5e88dce5d4fe2b818bb48739d500ebe245a1990b910"
+      "path": "assets/textures/jupiter/jupiter_surface__opal_2015a_1k.jpg",
+      "bytes": 70458,
+      "sha256": "0459d3eae43182636855cbd3c18d70a6117c95b60d73684dc709c68cda365d7c"
     },
     {
-      "path": "assets/textures/jupiter/jupiter_surface__opal_2025a_2k.jpg",
-      "bytes": 236425,
-      "sha256": "03f55b72af6457271b9fb7ff9c1aa4474240c5673cd3644f6231dac9bd194fa6"
+      "path": "assets/textures/jupiter/jupiter_surface__opal_2015a_2k.jpg",
+      "bytes": 211992,
+      "sha256": "a58279ec02be7de08e88b20278c1c68d2a002273013eb78b2b353509edea6605"
     },
     {
-      "path": "assets/textures/saturn/saturn_surface__opal_2025a_1k.jpg",
-      "bytes": 32169,
-      "sha256": "840f122773796a0f11e78fd6dcf9d6dd6b3d1cd47e28925bac7ddb805ed53bcb"
+      "path": "assets/textures/jupiter/jupiter_surface__opal_2020a_1k.jpg",
+      "bytes": 74166,
+      "sha256": "da2c5985cab6530f5650ae4edf10c3874de2606db46eb395365d649ed8c4004c"
+    },
+    {
+      "path": "assets/textures/jupiter/jupiter_surface__opal_2020a_2k.jpg",
+      "bytes": 227708,
+      "sha256": "c4d412f3dca941de7c88bc2e4a67f77c7616f3ac715de0606128e164710b6220"
+    },
+    {
+      "path": "assets/textures/saturn/saturn_surface__opal_2018a_1k.jpg",
+      "bytes": 20394,
+      "sha256": "54ffe7b535fe57dbda33f9312424410c86a14e565c64863e4e6f77e9b3241fc2"
+    },
+    {
+      "path": "assets/textures/saturn/saturn_surface__opal_2022a_1k.jpg",
+      "bytes": 33423,
+      "sha256": "64805b068e1defb57a590d10e3c5094a4cdd03e222946eeb1244827328db386d"
+    },
+    {
+      "path": "assets/textures/uranus/uranus_surface__opal_2015a_1k.jpg",
+      "bytes": 9989,
+      "sha256": "b681e1531cdff4116a4e2fad56f28b77f70161aeb88b8ebf500b540d882ccdba"
+    },
+    {
+      "path": "assets/textures/uranus/uranus_surface__opal_2020a_1k.jpg",
+      "bytes": 9788,
+      "sha256": "d0c9e5e0fd72e6440b73a9de3db3caa5392a335556ae50c9a05d50300d9943ac"
+    },
+    {
+      "path": "assets/textures/uranus/uranus_surface__opal_2026a_1k.jpg",
+      "bytes": 8224,
+      "sha256": "69aef38d6131d3792b7e69b163ff36c0de345cabdc70f65f8c3848e91567232c"
+    },
+    {
+      "path": "assets/textures/neptune/neptune_surface__opal_2015a_1k.jpg",
+      "bytes": 11545,
+      "sha256": "cd5d3e4b65764c92a61bdc0eea04c3ae3c18eebef196a477392f0588365ab1e8"
+    },
+    {
+      "path": "assets/textures/neptune/neptune_surface__opal_2018a_1k.jpg",
+      "bytes": 12264,
+      "sha256": "c309a9c1a86659417c7efc9a51d6c26dc96ebbd818f187c14494a89ba0a810cc"
+    },
+    {
+      "path": "assets/textures/neptune/neptune_surface__opal_2026a_1k.jpg",
+      "bytes": 14765,
+      "sha256": "0eaa9901b113501c59efc88e7242270240b681e6bd0b0f548576fc0ac0c19bc2"
     }
   ],
   "retain": [
     {
       "path": "assets/textures/jupiter/jupiter_surface_1k.jpg",
       "bytes": 85777,
-      "sha256": "58e866dfbfd5499a7c956ceb15d063ee83ca9b86d6e9c8ed4b316d12a51387cb"
+      "sha256": "58e866dfbfd5499a7c956ceb15d063ee83ca9b86d6e9c8ed4b316d12a51387cb",
+      "commit": "ebd08ac5064f011a771bd10d3eb09ea7ffc8da72"
     },
     {
       "path": "assets/textures/jupiter/jupiter_surface_2k.jpg",
       "bytes": 284991,
-      "sha256": "e7bac63f4bb57f99b6f249970aa91f103a9ab0da7572e1f0629a821cdafe9090"
+      "sha256": "e7bac63f4bb57f99b6f249970aa91f103a9ab0da7572e1f0629a821cdafe9090",
+      "commit": "ebd08ac5064f011a771bd10d3eb09ea7ffc8da72"
     },
     {
       "path": "assets/textures/jupiter/jupiter_surface_4k.jpg",
       "bytes": 922165,
-      "sha256": "8eee23015b334bb0aef236160b08b73fde3dd1bc3792ce361cb10c3ae538d80c"
+      "sha256": "8eee23015b334bb0aef236160b08b73fde3dd1bc3792ce361cb10c3ae538d80c",
+      "commit": "ebd08ac5064f011a771bd10d3eb09ea7ffc8da72"
     },
     {
       "path": "assets/textures/saturn/saturn_surface_1k.jpg",
       "bytes": 37328,
-      "sha256": "c713f938faaa325499859f4f9cadb775f12c5fa6463d681f678525ba1f77113c"
+      "sha256": "c713f938faaa325499859f4f9cadb775f12c5fa6463d681f678525ba1f77113c",
+      "commit": "ebd08ac5064f011a771bd10d3eb09ea7ffc8da72"
+    },
+    {
+      "path": "assets/textures/uranus/uranus_surface_1k.jpg",
+      "bytes": 11230,
+      "sha256": "af15dbc742b7f947638b1e2f4bf0b4d0ce30e618609155b11865918a5db7ebd7",
+      "commit": "dd9e54928e0ac6198fedb3ac9b6b02fa52f4c3a0"
+    },
+    {
+      "path": "assets/textures/neptune/neptune_surface_1k.jpg",
+      "bytes": 21991,
+      "sha256": "e4e378e58cc964198d38b377f626c28692466b5dd7beebc4b68a2b308f7880d7",
+      "commit": "dd9e54928e0ac6198fedb3ac9b6b02fa52f4c3a0"
     }
   ]
 }

@@ -83,6 +83,25 @@ function baseName(body, layer, edition) {
  *                 degrés observés qui la bordent ; une bande intérieure, le passage linéaire entre
  *                 les moyennes des deux bords. Aucun détail en longitude n'est créé. Calculé à la
  *                 résolution de la source, avant tout redimensionnement.
+ *  - partialRows : 'row-mean' (avec `unobserved`, GAL-ATMOSPHERES-001) : une latitude PARTIELLEMENT observée
+ *                 garde ses longitudes observées ; les autres (noirs, ou, avec `discordantChannels`, à canaux
+ *                 discordants : un canal sous 12 ou sous 30 % du plus fort, les franges où un filtre manque ; à
+ *                 réserver aux sources qui en ont, une vraie couleur saturée y passerait pour une frange) et
+ *                 `unobservedMarginDeg` degrés de franges
+ *                 autour d'elles, en longitude) prennent la couleur moyenne MESURÉE de cette même latitude
+ *                 (moyenne zonale, légitime pour une atmosphère en bandes). Une latitude vide, ou observée
+ *                 sur moins de 5 % de sa longueur, suit la règle de `unobserved`. Le journal donne la part de
+ *                 la SURFACE complétée (pondérée par le cosinus de la latitude). Sans cette option, l'ancien
+ *                 traitement (ligne entière) reste celui des éditions déjà publiées, à l'octet près.
+ *  - trimInclusiveGrid : la carte échantillonne les degrés ENTIERS bornes comprises (721 × 361 à 2 px par
+ *                 degré : 0 et 360 de longitude, -90 et +90 de latitude) ; la dernière colonne (doublon
+ *                 de la première) et la dernière ligne sont retirées, d'où 720 × 360 sans rééchantillonnage
+ *                 (décalage d'un demi-pixel, 0,25 degré, assumé et écrit dans la fiche).
+ *  - flipLongitude : l'Est croît vers la GAUCHE dans la source (README) : chaque ligne est retournée avant
+ *                 le cadrage (`centerLongitude`).
+ *  - baseTierAtSourceWidth : une source plus étroite que 1024 px donne le palier de base (`1k`, le niveau
+ *                 de démarrage, toujours livré) à SA largeur, sans agrandissement ; les paliers au-dessus
+ *                 sont refusés comme d'habitude.
  *  - license/credit/tier : provenance, affichée en fin d'import et recopiée dans
  *                 sa fiche src/registry/products/textures/.
  */
@@ -731,6 +750,186 @@ const IMPORTS = [
   // halley : garder la carte Stooke actuelle (crédit Philip Stooke / NASA PDS requis).
   // pallas, hygiea : aucune texture fidèle n'existe (VLT/SPHERE = forme grise sans texture)
   //   → couleur unie via fallbackColor, pas d'import.
+  // --- Éditions OPAL datées (GAL-ATMOSPHERES-001), une entrée par observation ---
+  {
+    // Hubble OPAL, rotation 2015a (2015-01-19, README : bord gauche = 360 degrés Ouest System III, décroissant vers la droite).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle22/jupiter/hlsp_opal_hst_wfc3-uvis_jupiter-2015a_f395n-f502n-f631n_v1_globalmap.tif
+    body: 'jupiter',
+    layer: 'surface',
+    edition: 'opal_2015a',
+    src: `${V1}/jupiter/hlsp_opal_hst_wfc3-uvis_jupiter-2015a_f395n-f502n-f631n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 3,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2020a (2020-08-24/25, même cadrage ; source à canal alpha (transparent = non observé)).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle27/jupiter/hlsp_opal_hst_wfc3-uvis_jupiter-2020a_f395n-f502n-f631n_v1_globalmap.tif
+    body: 'jupiter',
+    layer: 'surface',
+    edition: 'opal_2020a',
+    src: `${V1}/jupiter/hlsp_opal_hst_wfc3-uvis_jupiter-2020a_f395n-f502n-f631n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 3,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2018a (2018-06-06, observée de -8 à +90 degrés (anneaux ouverts), même cadrage).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle25/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2018a_f395n-f502n-f631n_v1_globalmap.tif
+    body: 'saturn',
+    layer: 'surface',
+    edition: 'opal_2018a',
+    src: `${V1}/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2018a_f395n-f502n-f631n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 3,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2022a (2022-09-21/22, bandes partielles au Sud (anneaux), même cadrage).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle29/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2022a_f395n-f502n-f631n_v1_globalmap.tif
+    body: 'saturn',
+    layer: 'surface',
+    edition: 'opal_2022a',
+    src: `${V1}/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2022a_f395n-f502n-f631n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 3,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2015a (2015-09-12, README : bord gauche = 0 degré Est, croissant vers la droite).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle23/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2015a_f467m-f547m-f657n_v1_globalmap.tif
+    body: 'uranus',
+    layer: 'surface',
+    edition: 'opal_2015a',
+    src: `${V1}/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2015a_f467m-f547m-f657n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    trimInclusiveGrid: true,
+    baseTierAtSourceWidth: true,
+    discordantChannels: true,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 5,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2020a (2020-10-08/09, même cadrage).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle28/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2020a_f467m-f547m-f657n_v1_globalmap.tif
+    body: 'uranus',
+    layer: 'surface',
+    edition: 'opal_2020a',
+    src: `${V1}/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2020a_f467m-f547m-f657n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    trimInclusiveGrid: true,
+    baseTierAtSourceWidth: true,
+    discordantChannels: true,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 5,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2026a (2026-10-19, README : bord DROIT = 0 degré Est, croissant vers la GAUCHE (retournée)).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle34/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2026a_f657n-f547m-f467m_v1_globalmap.tif
+    body: 'uranus',
+    layer: 'surface',
+    edition: 'opal_2026a',
+    src: `${V1}/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2026a_f657n-f547m-f467m_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    flipLongitude: true,
+    trimInclusiveGrid: true,
+    baseTierAtSourceWidth: true,
+    discordantChannels: true,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 5,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2015a (2015-09-18, README : bord gauche = 180 degrés Ouest, décroissant vers la droite (déjà centrée sur 0)).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle22/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2015a_f467m-f547m-f657n_v1_globalmap.tif
+    body: 'neptune',
+    layer: 'surface',
+    edition: 'opal_2015a',
+    src: `${V1}/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2015a_f467m-f547m-f657n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 0,
+    trimInclusiveGrid: true,
+    baseTierAtSourceWidth: true,
+    discordantChannels: true,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 5,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2018a (2018-09, README : bord gauche = 360 degrés Ouest ; pannes de gyroscope, couverture partielle de certains filtres).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle25/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2018a_f467m-f547m-f657n_v1_globalmap.tif
+    body: 'neptune',
+    layer: 'surface',
+    edition: 'opal_2018a',
+    src: `${V1}/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2018a_f467m-f547m-f657n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    trimInclusiveGrid: true,
+    baseTierAtSourceWidth: true,
+    discordantChannels: true,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 5,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
+  {
+    // Hubble OPAL, rotation 2026a (2026-08-31, README : bord gauche = 360 degrés Ouest).
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle33/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2026a_f467m-f547m-f657n_v1_globalmap.tif
+    body: 'neptune',
+    layer: 'surface',
+    edition: 'opal_2026a',
+    src: `${V1}/neptune/hlsp_opal_hst_wfc3-uvis_neptune-2026a_f467m-f547m-f657n_v1_globalmap.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: false,
+    centerLongitude: 180,
+    trimInclusiveGrid: true,
+    baseTierAtSourceWidth: true,
+    discordantChannels: true,
+    unobserved: 'latitude-band-mean',
+    partialRows: 'row-mean',
+    unobservedMarginDeg: 5,
+    unobservedBandDeg: 2,
+    ...OPAL,
+  },
 ];
 
 /**
@@ -948,6 +1147,175 @@ async function fillUnobservedLatitudes(entry) {
   };
 }
 
+/**
+ * Une carte d'atmosphère préparée par la règle complète (`partialRows: 'row-mean'`, cf. en-tête) : grille
+ * inclusive retirée, longitude retournée si la source l'exige, latitudes partielles complétées par leur
+ * moyenne zonale, latitudes vides par la moyenne des bords. Rend une entrée brute de sharp.
+ */
+async function prepareAtmosphereMap(entry) {
+  const raw = await sharp(entry.src, { limitInputPixels: false })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let W = raw.info.width;
+  let H = raw.info.height;
+  const srcW = W;
+  if (entry.trimInclusiveGrid) {
+    W -= 1;
+    H -= 1;
+  }
+  const C = 3;
+  const data = Buffer.alloc(W * H * C);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const sx = entry.flipLongitude ? W - 1 - x : x;
+      const i = (y * srcW + sx) * 4;
+      const o = (y * W + x) * C;
+      // Un pixel transparent est non observé : il compte comme noir.
+      const a = raw.data[i + 3];
+      data[o] = a ? raw.data[i] : 0;
+      data[o + 1] = a ? raw.data[i + 1] : 0;
+      data[o + 2] = a ? raw.data[i + 2] : 0;
+    }
+  // Manquant : noir, OU bandes discordantes au bord de la couverture (franges arc-en-ciel : un filtre
+  // n'y a pas observé, un canal tombe presque à zéro). Mesuré sur les cartes OPAL d'Uranus et de
+  // Neptune : leurs vraies couleurs gardent un rapport min/max de canal de 0,5 et plus.
+  const black = (o) => {
+    const lo = Math.min(data[o], data[o + 1], data[o + 2]);
+    const hi = Math.max(data[o], data[o + 1], data[o + 2]);
+    if (hi < 6) return true;
+    // Seulement là où la source a ces franges (`discordantChannels`) : sur Jupiter, la Grande Tache rouge
+    // (bleu faible) passerait pour une frange et serait effacée (vu le 2026-11-26 sur l'édition 2015a).
+    return entry.discordantChannels === true && (lo < 12 || lo < hi * 0.3);
+  };
+  const rowsPerDeg = H / 180;
+  const marginRows = Math.round((entry.unobservedMarginDeg ?? 0) * rowsPerDeg);
+  const marginCols = Math.round(((entry.unobservedMarginDeg ?? 0) * W) / 360);
+  // 1. Lignes vides (ou presque) ; marge en latitude autour d'elles.
+  const empty = new Array(H).fill(false);
+  for (let y = 0; y < H; y++) {
+    let n = 0;
+    for (let x = 0; x < W; x++) if (black((y * W + x) * C)) n++;
+    empty[y] = n >= W * 0.95;
+  }
+  const emptyCore = empty.slice();
+  for (let y = 0; y < H; y++)
+    if (emptyCore[y])
+      for (let d = -marginRows; d <= marginRows; d++)
+        if (y + d >= 0 && y + d < H) empty[y + d] = true;
+  // 2. Masque des pixels manquants, DILATÉ en latitude ET en longitude (les franges du bord de la
+  // couverture sont des pointes verticales : une marge en longitude seule les laissait), puis les lignes
+  // partielles complétées par leur moyenne zonale.
+  const raw0 = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++)
+      if (empty[y] || black((y * W + x) * C)) raw0[y * W + x] = 1;
+  const horiz = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++)
+      if (raw0[y * W + x])
+        for (let d = -marginCols; d <= marginCols; d++)
+          horiz[y * W + ((x + d + W) % W)] = 1;
+  const missing = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++)
+      if (horiz[y * W + x])
+        for (let d = -marginRows; d <= marginRows; d++)
+          if (y + d >= 0 && y + d < H) missing[(y + d) * W + x] = 1;
+  const replacedPixel = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) {
+    if (empty[y]) continue;
+    const sum = [0, 0, 0];
+    let n = 0;
+    for (let x = 0; x < W; x++)
+      if (!missing[y * W + x]) {
+        const o = (y * W + x) * C;
+        sum[0] += data[o];
+        sum[1] += data[o + 1];
+        sum[2] += data[o + 2];
+        n++;
+      }
+    if (n === W) continue;
+    if (n < W * 0.05) {
+      empty[y] = true;
+      continue;
+    }
+    for (let x = 0; x < W; x++)
+      if (missing[y * W + x]) {
+        const o = (y * W + x) * C;
+        data[o] = Math.round(sum[0] / n);
+        data[o + 1] = Math.round(sum[1] / n);
+        data[o + 2] = Math.round(sum[2] / n);
+        replacedPixel[y * W + x] = 1;
+      }
+  }
+  // 3. Lignes vides : moyenne mesurée des bords observés (calotte) ou passage linéaire (bande).
+  const band = Math.max(
+    1,
+    Math.round((entry.unobservedBandDeg ?? 2) * rowsPerDeg)
+  );
+  const bandMean = (from, step) => {
+    const sum = [0, 0, 0];
+    let n = 0;
+    for (let y = from, k = 0; y >= 0 && y < H && k < band; y += step) {
+      if (empty[y]) break;
+      k++;
+      for (let x = 0; x < W; x++) {
+        const o = (y * W + x) * C;
+        sum[0] += data[o];
+        sum[1] += data[o + 1];
+        sum[2] += data[o + 2];
+        n++;
+      }
+    }
+    return n ? sum.map((v) => v / n) : null;
+  };
+  for (let y = 0; y < H;) {
+    if (!empty[y]) {
+      y++;
+      continue;
+    }
+    let end = y;
+    while (end < H && empty[end]) end++;
+    const above = y > 0 ? bandMean(y - 1, -1) : null;
+    const below = end < H ? bandMean(end, 1) : null;
+    if (!above && !below)
+      throw new Error(`${entry.src} : aucune latitude observée`);
+    for (let r = y; r < end; r++) {
+      const t = above && below ? (r - y + 1) / (end - y + 1) : 0;
+      const colour =
+        above && below
+          ? above.map((a, i) => a + (below[i] - a) * t)
+          : (above ?? below);
+      for (let x = 0; x < W; x++) {
+        const o = (r * W + x) * C;
+        data[o] = Math.round(colour[0]);
+        data[o + 1] = Math.round(colour[1]);
+        data[o + 2] = Math.round(colour[2]);
+        replacedPixel[r * W + x] = 1;
+      }
+    }
+    y = end;
+  }
+  // 4. Part de la SURFACE complétée (aire : cosinus de la latitude du centre de la ligne).
+  let area = 0;
+  let filled = 0;
+  for (let y = 0; y < H; y++) {
+    const weight = Math.cos(((90 - (y + 0.5) / rowsPerDeg) * Math.PI) / 180);
+    for (let x = 0; x < W; x++) {
+      area += weight;
+      if (replacedPixel[y * W + x]) filled += weight;
+    }
+  }
+  console.log(
+    `  surface complétée : ${((filled / area) * 100).toFixed(1)} % (latitudes partielles par leur moyenne zonale, vides par la moyenne des bords) ; carte ${W}×${H}`
+  );
+  return {
+    input: data,
+    options: { raw: { width: W, height: H, channels: C } },
+  };
+}
+
 const prepared = new Map();
 
 /** La source d'une entrée, ouverte par sharp ; une image PDS3 passe par son étiquette. */
@@ -970,7 +1338,11 @@ async function importOne(entry) {
     return;
   }
 
-  if (entry.unobserved === 'latitude-band-mean' && !prepared.has(entry))
+  if (entry.partialRows === 'row-mean' && !prepared.has(entry)) {
+    if (entry.unobserved !== 'latitude-band-mean')
+      throw new Error(`${entry.body} : partialRows exige unobserved`);
+    prepared.set(entry, await prepareAtmosphereMap(entry));
+  } else if (entry.unobserved === 'latitude-band-mean' && !prepared.has(entry))
     prepared.set(entry, await fillUnobservedLatitudes(entry));
   else if (entry.unobserved !== undefined && !prepared.has(entry))
     throw new Error(
@@ -993,8 +1365,13 @@ async function importOne(entry) {
   );
 
   // Cibles réellement générables (pas d'upscale au-delà de la source).
-  const targets = entry.resolutions.filter((q) => QUALITY_WIDTH[q] <= srcWidth);
-  const dropped = entry.resolutions.filter((q) => QUALITY_WIDTH[q] > srcWidth);
+  // Le palier de base à la largeur de la source quand elle est plus étroite (`baseTierAtSourceWidth`).
+  const baseAtSource =
+    entry.baseTierAtSourceWidth && srcWidth < QUALITY_WIDTH['1k'];
+  const widthOf = (q) =>
+    baseAtSource && q === '1k' ? srcWidth : QUALITY_WIDTH[q];
+  const targets = entry.resolutions.filter((q) => widthOf(q) <= srcWidth);
+  const dropped = entry.resolutions.filter((q) => widthOf(q) > srcWidth);
   if (dropped.length) {
     console.log(
       `  (ignoré, > source : ${dropped.join(', ')} — la source ne fait que ${srcWidth}px)`
@@ -1002,7 +1379,7 @@ async function importOne(entry) {
   }
 
   for (const q of targets) {
-    const width = QUALITY_WIDTH[q];
+    const width = widthOf(q);
     const height = heightFor(width);
     const dst = join(outDir, `${base}_${q}.jpg`);
     const label = `${entry.body}/${base}_${q} (${width}×${height})`;

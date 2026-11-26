@@ -3,7 +3,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import publication from '../../scripts/static-origin-publication.json';
-import { allBodies } from './catalog';
+import surfaceEditions from 'virtual:surface-editions';
+import { allBodies, texturePath } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import type { TextureResolutions } from '@/types';
 
@@ -27,6 +28,12 @@ function catalogueTextureFiles(): Set<string> {
       for (const tier of tiers ?? [])
         files.add(`assets/textures/${base}_${tier}.jpg`);
     }
+  for (const [body, cat] of Object.entries(surfaceEditions))
+    for (const e of cat.editions)
+      for (const tier of e.tiers)
+        files.add(
+          `assets/textures/${texturePath(body, cat.layer, e.edition)}_${tier}.jpg`
+        );
   return files;
 }
 
@@ -40,7 +47,7 @@ describe('publication additive sur galaxy-static', () => {
     }
   });
 
-  it('chaque fichier neuf est demandé par le catalogue (une édition déclarée)', () => {
+  it('chaque fichier neuf est demandé par le catalogue ou les éditions du registre', () => {
     const wanted = catalogueTextureFiles();
     for (const f of publication.add)
       expect(wanted.has(f.path), f.path).toBe(true);

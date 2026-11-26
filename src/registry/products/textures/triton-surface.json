@@ -16,9 +16,7 @@
   "providers": [
     {
       "name": "USGS Astrogeology / NASA Voyager 2 (ClrMosaic)",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

@@ -106,12 +106,12 @@ const ADDED = new Map(publication.add.map((f) => [f.path, f]));
 function retainedBytes(f) {
   const out = spawnSync(
     'git',
-    ['show', `${publication.rollback.commit}:public/${f.path}`],
+    ['show', `${f.commit ?? publication.rollback.commit}:public/${f.path}`],
     { cwd: ROOT, maxBuffer: 64 * 1024 * 1024 }
   );
   if (out.status !== 0)
     throw new Error(
-      `${f.path} : illisible au commit ${publication.rollback.commit}`
+      `${f.path} : illisible au commit ${f.commit ?? publication.rollback.commit}`
     );
   const bytes = out.stdout;
   if (bytes.length !== f.bytes || sha256(bytes) !== f.sha256)

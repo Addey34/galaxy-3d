@@ -110,6 +110,7 @@
     "e2e/stellarVisit.spec.ts": 107,
     "e2e/subsolar.spec.ts": 108,
     "e2e/surfaceApproach.spec.ts": 41,
+    "e2e/surfaceEditions.spec.ts": 200,
     "e2e/surfaceImagery.spec.ts": 666,
     "e2e/surfaceImageryEarth.spec.ts": 1188,
     "e2e/surfacePanelOnDemand.spec.ts": 29,
@@ -136,6 +137,7 @@
   "estimated": [
     "e2e/giantSurfaces.spec.ts",
     "e2e/observation.spec.ts",
-    "e2e/skySystemExplorer.spec.ts"
+    "e2e/skySystemExplorer.spec.ts",
+    "e2e/surfaceEditions.spec.ts"
   ]
 }

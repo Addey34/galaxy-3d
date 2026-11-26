@@ -10,25 +10,82 @@
     {
       "rel": "license",
       "href": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "rel": "via",
+      "href": "https://archive.stsci.edu/hlsp/opal"
     }
   ],
   "providers": [
     {
-      "name": "Solar System Scope (solarsystemscope.com)",
-      "roles": [
-        "licensor",
-        "producer"
-      ]
+      "name": "NASA, ESA, A.A. Simon, M.H. Wong: Hubble Space Telescope WFC3/UVIS, Outer Planet Atmospheres Legacy (OPAL), MAST high-level science product, DOI 10.17909/T9G593",
+      "roles": ["producer", "licensor"]
     }
   ],
   "tier": "free",
-  "colorNature": "illustrative",
+  "colorNature": "enhanced",
+  "filled": true,
+  "observed": {
+    "from": "2026-10-19T00:50:00Z",
+    "to": "2026-10-19T15:33:00Z"
+  },
+  "sourceUrl": "https://archive.stsci.edu/hlsp/opal/opal-uranus-cycle-34",
   "review": {
-    "status": "reference",
-    "sourcePage": "https://maps.jpl.nasa.gov/tmaps/",
-    "sourceResolution": "representative atmospheric map",
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle34/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2026a_f657n-f547m-f467m_v1_globalmap.tif",
+    "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-uranus-cycle-34",
+    "sourceResolution": "2 pixels/degree global map (721 x 361, oversampled per the producer), Hubble WFC3/UVIS",
+    "sourcePixelWidth": 721,
     "projection": "equirectangular",
     "qualityClass": "dynamic",
-    "note": "No fixed surface; methane haze and seasonal atmosphere require a date-labelled model."
-  }
+    "license": "CC BY 4.0 (OPAL page and FITS header, read 2026-11-26)",
+    "credit": "NASA, ESA, A.A. Simon, M.H. Wong",
+    "attributionNeeded": true,
+    "note": "Remplace le 2026-11-26 (GAL-ATMOSPHERES-001) la carte illustrative de Solar System Scope : une observation authentique de 720 px plutot qu'une illustration de 1024 px. Palier de base a la largeur de la source (720 x 360), sans agrandissement. Editions et limites : champ editions."
+  },
+  "editions": [
+    {
+      "edition": "opal_2015a",
+      "observed": {
+        "from": "2015-09-12T05:04:00Z",
+        "to": "2015-09-12T20:07:00Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle23/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2015a_f467m-f547m-f657n_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-uranus-cycle-23",
+      "sourcePixelWidth": 721,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.172,
+      "note": "README : 0 degre Est au bord gauche, croissant vers la droite (demi-tour) ; 2 px par degre, suréchantillonne selon le producteur. Grille inclusive 721 x 361 ramenee a 720 x 360 sans reechantillonnage (decalage d'un quart de degre). Sud au-dela d'environ -55 degres dans la nuit polaire. 17,2 % de la surface completes."
+    },
+    {
+      "edition": "opal_2020a",
+      "observed": {
+        "from": "2020-10-08T11:30:00Z",
+        "to": "2020-10-09T00:40:00Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle28/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2020a_f467m-f547m-f657n_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-uranus-cycle-28",
+      "sourcePixelWidth": 721,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.319,
+      "note": "Meme cadrage et meme grille qu'en 2015. Sud au-dela d'environ -35 degres dans la nuit polaire. 31,9 % de la surface completes."
+    },
+    {
+      "edition": "opal_2026a",
+      "observed": {
+        "from": "2026-10-19T00:50:00Z",
+        "to": "2026-10-19T15:33:00Z"
+      },
+      "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle34/uranus/hlsp_opal_hst_wfc3-uvis_uranus-2026a_f657n-f547m-f467m_v1_globalmap.tif",
+      "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-uranus-cycle-34",
+      "sourcePixelWidth": 721,
+      "tiers": ["1k"],
+      "colorNature": "enhanced",
+      "filledShare": 0.506,
+      "note": "README : bord DROIT = 0 degre Est, croissant vers la GAUCHE : chaque ligne est retournee avant le demi-tour. Sud au-dela d'environ -12 degres dans la nuit polaire : 50,6 % de la surface completes."
+    }
+  ]
 }

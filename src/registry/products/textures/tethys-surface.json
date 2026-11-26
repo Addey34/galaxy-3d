@@ -16,9 +16,7 @@
   "providers": [
     {
       "name": "USGS Astrogeology / NASA-JPL-Caltech (Cassini/Voyager mosaic 293m)",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

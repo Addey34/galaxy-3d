@@ -15,9 +15,7 @@
   "providers": [
     {
       "name": "USGS Astrogeology / NASA Dawn Framing Camera (DLR)",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

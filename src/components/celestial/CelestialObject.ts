@@ -77,7 +77,11 @@ import {
   type ModelQuality,
 } from '@/core/modelLod';
 import { textureLodDistance } from '@/core/textureLod';
-import type { CameraDistance, CelestialBodyConfig } from '@/types';
+import type {
+  CameraDistance,
+  CelestialBodyConfig,
+  TextureQuality,
+} from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 import { loadShapeGltf } from './shapeModelLoader';
 import Logger from '@/utils/Logger';
@@ -146,6 +150,15 @@ export default class CelestialObject {
   private _scaleFactor = 1;
 
   private lastLODNormalizedDistance = Infinity;
+  /** Génération des éditions de couche (GAL-ATMOSPHERES-001) : un chargement d'une autre édition est jeté. */
+  private _editionGeneration = 0;
+  /** Le chemin de base de la carte RÉELLEMENT posée par couche (ce que la scène montre, pas ce qui est demandé). */
+  private readonly _appliedBase = new Map<string, string>();
+
+  /** Chemin de base de la carte posée pour une couche (GAL-ATMOSPHERES-001 : ce que la scène montre). */
+  appliedTextureBase(layer: string): string | undefined {
+    return this._appliedBase.get(layer);
+  }
   // Dernier palier de qualité surface effectivement chargé (ultra/high/…). Le LOD ne
   // relance un chargement que lorsque ce palier CHANGE, pas à chaque petit déplacement
   // caméra : évite le « thrash » d'oscillation entre deux résolutions autour d'un seuil.
@@ -363,6 +376,57 @@ export default class CelestialObject {
       this.textureSystem.releaseCachedTexture(previous);
   }
 
+  /**
+   * Change l'ÉDITION d'une couche (GAL-ATMOSPHERES-001) : nouveau chemin de base et nouveaux paliers, chargés
+   * tout de suite au palier courant par le même `TextureSystem` (cache, libération de la carte précédente).
+   * Rend vrai quand la nouvelle carte est posée ; faux si une autre édition a été demandée entre-temps (le
+   * chargement tardif est jeté), ou si le chargement échoue : la configuration revient alors à l'édition
+   * précédente, et la carte affichée n'a pas changé. Le cadrage n'est pas touché.
+   */
+  async setLayerEdition(
+    layer: string,
+    basePath: string,
+    tiers: readonly TextureQuality[]
+  ): Promise<boolean> {
+    const textures = this.config.textures as
+      Record<string, string | undefined> | undefined;
+    const resolutions = this.config.textureResolutions as Record<
+      string,
+      TextureQuality[] | undefined
+    >;
+    const previousBase = textures?.[layer];
+    const previousTiers = resolutions[layer];
+    if (!textures || !previousBase || !previousTiers) return false;
+    const generation = ++this._editionGeneration;
+    textures[layer] = basePath;
+    resolutions[layer] = [...tiers];
+    this._lastLODQuality = null;
+    try {
+      const distance = Number.isFinite(this.lastLODNormalizedDistance)
+        ? this.lastLODNormalizedDistance
+        : 100;
+      const texture = await this.textureSystem.getLODTexture(
+        this.name,
+        layer,
+        distance
+      );
+      if (generation !== this._editionGeneration) {
+        this.textureSystem.releaseCachedTexture(texture);
+        return false;
+      }
+      this._applyLoadedTexture(layer, texture);
+      this._appliedBase.set(layer, basePath);
+      return true;
+    } catch {
+      if (generation === this._editionGeneration) {
+        textures[layer] = previousBase;
+        resolutions[layer] = previousTiers;
+        this._lastLODQuality = null;
+      }
+      return false;
+    }
+  }
+
   private async _loadAllTextures(): Promise<void> {
     for (const textureKey of Object.keys(this.config.textures ?? {})) {
       try {
@@ -372,6 +436,10 @@ export default class CelestialObject {
           100
         );
         this._applyLoadedTexture(textureKey, texture);
+        const base = (
+          this.config.textures as Record<string, string | undefined>
+        )[textureKey];
+        if (base) this._appliedBase.set(textureKey, base);
       } catch {
         Logger.warn(
           `[CelestialObject] Failed to load ${textureKey} for ${this.name}`
@@ -1686,6 +1754,7 @@ export default class CelestialObject {
     this.lastLODNormalizedDistance = textureDistance;
     this._lastLODQuality = nextQuality;
 
+    const generation = this._editionGeneration;
     try {
       for (const textureKey of Object.keys(this.config.textures ?? {})) {
         // Nuages réels actifs : le LOD ne remplace pas la couche `clouds` (l'image
@@ -1696,6 +1765,15 @@ export default class CelestialObject {
           textureKey,
           textureDistance
         );
+        // Une autre édition a été choisie pendant le chargement : cette carte décrit l'ancienne.
+        if (generation !== this._editionGeneration) {
+          this.textureSystem.releaseCachedTexture(texture);
+          continue;
+        }
+        const base = (
+          this.config.textures as Record<string, string | undefined>
+        )[textureKey];
+        if (base) this._appliedBase.set(textureKey, base);
         // Le helper ré-vérifie l'état après l'await : une observation peut avoir
         // remplacé les nuages pendant le chargement LOD.
         this._applyLoadedTexture(textureKey, texture);

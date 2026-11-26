@@ -624,6 +624,18 @@ export const cardEn = {
   'obs.back': 'Back to {body}, {date}',
   'obs.note':
     'Each link comes from a measurement or a registry shipped with Galaxy.',
+  'ed.title': 'Observations of the atmosphere',
+  'ed.info':
+    'Hubble (OPAL), observed on {date}, from a source map {px} px wide; {share} of the surface is completed with measured mean colours, without invented detail.',
+  'ed.scene':
+    'Scene date: {date}. Nothing is interpolated between two observations, and the planet’s rotation phase is not dated: the longitudes of its features are not those of the scene.',
+  'ed.limits':
+    'Comparing observations: the producer stretches each one’s colours separately, and coverage and resolution differ, so part of what changes comes from the processing, not from the planet.',
+  'ed.compare': 'Compare with {date}',
+  'ed.loading': 'Loading the observation of {date}…',
+  'ed.unavailable':
+    'The observation of {date} could not be loaded: the one of {shown} stays on screen.',
+  'ed.announce': 'Observation of {date} shown',
 };
 
 export type CardMessageKey = keyof typeof cardEn;

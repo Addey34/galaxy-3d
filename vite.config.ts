@@ -9,6 +9,7 @@ import {
 } from './src/seo/pwaRouting';
 import { stripGlslComments as stripGlslSource } from './src/build/glslComments';
 import { buildTourCatalogue } from './src/registry/tours/catalogue';
+import { buildSurfaceEditions } from './src/core/surfaceEditions';
 import { clientFactSnapshot as reduceFactSnapshot } from './src/build/clientFactSnapshot';
 import type {
   BuildingManifestSummary,
@@ -158,6 +159,8 @@ function stripRegistryNotes() {
  * livrée.
  */
 const TOUR_CATALOGUE_ID = 'virtual:tour-catalogue';
+/** Les éditions datées des surfaces (GAL-ATMOSPHERES-001), dérivées des fiches : lues par la fiche du corps. */
+const SURFACE_EDITIONS_ID = 'virtual:surface-editions';
 
 function deriveRegistryText() {
   const PREFIX = 'virtual:registry-text/catalogue-';
@@ -220,7 +223,8 @@ function deriveRegistryText() {
     resolveId(id: string): string | null {
       return id.startsWith(PREFIX) ||
         id.startsWith(CARD_PREFIX) ||
-        id === TOUR_CATALOGUE_ID
+        id === TOUR_CATALOGUE_ID ||
+        id === SURFACE_EDITIONS_ID
         ? `\0${id}`
         : null;
     },
@@ -229,6 +233,25 @@ function deriveRegistryText() {
       // langues, dans l'ordre de `order.json`, dérivés des fiches. Le sélecteur le lit sans
       // qu'aucune visite ne soit ouverte ; `buildTourCatalogue` refuse un ordre qui ne recouvre
       // pas exactement les fiches, donc un build ne livre jamais un sélecteur incohérent.
+      // Les éditions datées des surfaces : chaque fiche de texture qui en déclare, et l'édition par
+      // défaut de chaque corps (`textureEditions`). `buildSurfaceEditions` refuse une couche dont l'édition
+      // par défaut manque à la liste : un build ne livre jamais une fiche incohérente.
+      if (id === `\0${SURFACE_EDITIONS_ID}`) {
+        const { readdirSync, readFileSync } = await import('fs');
+        const read = (dir: string) =>
+          readdirSync(resolve(__dirname, dir))
+            .filter((name) => name.endsWith('.json') && name !== 'order.json')
+            .map((name) =>
+              JSON.parse(readFileSync(resolve(__dirname, dir, name), 'utf-8'))
+            );
+        const defaults: Record<string, Record<string, string>> = {};
+        for (const entity of read('src/registry/entities'))
+          if (entity.config?.textureEditions)
+            defaults[entity.id] = entity.config.textureEditions;
+        return `export default ${JSON.stringify(
+          buildSurfaceEditions(read('src/registry/products/textures'), defaults)
+        )};`;
+      }
       if (id === `\0${TOUR_CATALOGUE_ID}`) {
         const { readdirSync, readFileSync } = await import('fs');
         const dir = resolve(__dirname, 'src/registry/tours');

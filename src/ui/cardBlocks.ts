@@ -25,6 +25,7 @@ import { setupMissionsBlock } from './missionsBlock';
 import type { ObservationActions } from './observationAccess';
 import { setupObservationBlock } from './observationBlock';
 import { setupPlacesBlock } from './placesBlock';
+import { setupSurfaceEditionsBlock } from './surfaceEditionsBlock';
 
 export function setupCardBlocks(
   api: PublicAPI,
@@ -40,4 +41,5 @@ export function setupCardBlocks(
   setupCraftBlock(api, bodyInfo, openCraft);
   setupPlacesBlock(api, bodyInfo);
   setupObservationBlock(api, bodyInfo, openCraft, observation);
+  setupSurfaceEditionsBlock(api, bodyInfo);
 }

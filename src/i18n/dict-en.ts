@@ -253,7 +253,7 @@ export const en = {
   'help.tip.time.text': 'scroll to time-travel, tap to pick',
   'credits.textures': 'Textures',
   'credits.textures.list':
-    'USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope (CC BY 4.0) · Jupiter, Saturn: Hubble OPAL, NASA, ESA, A.A. Simon, M.H. Wong (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0; the 2016 edition CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modified) · Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modified).',
+    'USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope (CC BY 4.0) · Jupiter, Saturn, Uranus, Neptune: Hubble OPAL, NASA, ESA, A.A. Simon, M.H. Wong (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0; the 2016 edition CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modified) · Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modified).',
   'credits.fictional': 'Illustrative surfaces',
   'credits.fictional.list':
     'Bodies never mapped globally have an illustrative texture, not a scientific map; the body card says so, and Sources lists them.',
