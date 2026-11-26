@@ -10,25 +10,41 @@
     {
       "rel": "license",
       "href": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "rel": "via",
+      "href": "https://archive.stsci.edu/hlsp/opal"
     }
   ],
   "providers": [
     {
-      "name": "Solar System Scope (solarsystemscope.com)",
+      "name": "NASA, ESA, A.A. Simon, M.H. Wong: Hubble Space Telescope WFC3/UVIS, Outer Planet Atmospheres Legacy (OPAL), MAST high-level science product, DOI 10.17909/T9G593",
       "roles": [
-        "licensor",
-        "producer"
+        "producer",
+        "licensor"
       ]
     }
   ],
   "tier": "free",
-  "colorNature": "illustrative",
+  "colorNature": "enhanced",
+  "filled": true,
+  "observed": {
+    "from": "2025-08-29T05:53:28Z",
+    "to": "2025-08-29T14:20:17Z"
+  },
+  "sourceUrl": "https://archive.stsci.edu/hlsp/opal/opal-saturn-cycle-32",
   "review": {
-    "status": "reference",
-    "sourcePage": "https://maps.jpl.nasa.gov/tmaps/",
-    "sourceResolution": "representative atmospheric map",
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle32/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2025a_f395n-f502n-f631n_v1_globalmap.tif",
+    "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-saturn-cycle-32",
+    "sourceResolution": "5 pixels/degree global map (1800 x 900), Hubble WFC3/UVIS, rotation 2025a",
+    "sourcePixelWidth": 1800,
     "projection": "equirectangular",
     "qualityClass": "dynamic",
-    "note": "JPL explicitly treats gas-giant maps as representative, not scientific static surfaces."
+    "license": "CC BY 4.0 (FITS header LICENSE, LIC_ATTR read 2026-11-26)",
+    "credit": "NASA, ESA, A.A. Simon, M.H. Wong",
+    "attributionNeeded": true,
+    "note": "Remplace le 2026-11-26 la carte de Solar System Scope (illustrative). Composite couleur du PRODUCTEUR (filtres F631N, F502N, F395N, legere accentuation du contraste par OPAL ; nature enhanced et non natural : chaque bande est etiree par le producteur, couleur moyenne mesuree de la bande -45/+45 degres R/V 0,97, B/V 0,90 contre 1,11 et 0,81 pour la carte de Solar System Scope tiree de Cassini), premiere rotation du cycle 32 : 2025-08-29 05:53:28 a 14:20:17 UTC (README du jeu), cinq mois apres le passage de la Terre dans le plan des anneaux. Cadrage du README : bord gauche = 360 degres Ouest System III, decroissant vers la droite (meme cadrage que Jupiter), roule d'un demi-tour. Latitudes non observees : calottes au-dela d'environ 82 degres et une bande d'environ 1,6 degre pres de 3 degres Nord (ombre et tranche des anneaux), plus 3 degres de franges : calottes a la couleur moyenne mesuree des 2 degres qui les bordent, bande au passage lineaire entre ses deux bords, sans detail en longitude (15,7 % des lignes). Une couture verticale de la mosaique du producteur reste visible. 1k au plus : 1800 px de source."
   }
 }

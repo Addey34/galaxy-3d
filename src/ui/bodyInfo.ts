@@ -11,7 +11,7 @@ import { loadCardText } from '@/config/cardText';
 import { factProvenancePending } from '@/config/cardFacts';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
-import { colorNatureOf } from '@/config/colorNature';
+import { colorNatureOf, SURFACE_OBSERVED_BY_BODY } from '@/config/colorNature';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { formatIsoDay } from '@/core/dateText';
 import { kelvinWithConversion, superscript } from '@/core/numberText';
@@ -1000,10 +1000,17 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     const nature = illustrative ? undefined : colorNatureOf(name);
     colorNatureEl.hidden = !nature;
     if (nature) {
-      colorNatureEl.textContent = t('bi.color', {
-        nature: t(`bi.color.${nature}`),
-      });
-      colorNatureEl.title = t(`bi.color.${nature}.hint`);
+      // Une atmosphère est un instantané : la date de l'observation fait partie de ce que montre la carte.
+      const observed = SURFACE_OBSERVED_BY_BODY.get(name);
+      const day = observed
+        ? formatIsoDay(observed, getLocale(), intlLocale())
+        : '';
+      colorNatureEl.textContent = observed
+        ? t('bi.color.dated', { nature: t(`bi.color.${nature}`), date: day })
+        : t('bi.color', { nature: t(`bi.color.${nature}`) });
+      colorNatureEl.title = observed
+        ? `${t(`bi.color.${nature}.hint`)} ${t('bi.color.observedHint', { date: day })}`
+        : t(`bi.color.${nature}.hint`);
       colorNatureEl.setAttribute(
         'aria-label',
         `${colorNatureEl.textContent} : ${colorNatureEl.title}`
