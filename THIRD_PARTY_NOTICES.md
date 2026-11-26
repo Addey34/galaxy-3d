@@ -47,8 +47,9 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
 
 2. **CC BY 4.0: Solar System Scope, and ISAS/JAXA for `ryugu`.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.
-   8k variants): `mercury`, `venus`, `mars`, `moon`, `saturn` (ring only since 2026-11-26), `uranus`,
-   `neptune`, `sun`, `stars`. Keep the "Solar System Scope (CC BY 4.0)" credit in the app. SUPERSEDED
+   8k variants): `mercury`, `venus`, `mars`, `moon`, `saturn` (ring only since 2026-11-26), `sun`,
+   `stars` (`uranus` and `neptune` surfaces: Hubble OPAL since 2026-11-26, GAL-ATMOSPHERES-001; their
+   former files stay served for earlier clients). Keep the "Solar System Scope (CC BY 4.0)" credit in the app. SUPERSEDED
    2026-11-26: the `jupiter` and `saturn` SURFACES are no longer Solar System Scope (see the Hubble OPAL
    entry below). **Note: `earth` is
    NASA and NOAA public domain (group 1 above), not Solar System Scope**, despite otherwise sharing this
@@ -61,7 +62,13 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    science products of MAST, DOI 10.17909/T9G593, licence and attribution read in the FITS header on
    2026-11-26 (`LICENSE = 'CC BY 4.0'`, `LIC_ATTR = 'NASA, ESA, A.A. Simon, M.H. Wong'`). Files: the
    producer's colour composites (F631N, F502N, F395N, slight contrast enhancement by OPAL), Jupiter
-   rotation 2025a (2025-12-11) and Saturn rotation 2025a (2025-08-29). Modified by this project:
+   rotation 2025a (2025-12-11) and Saturn rotation 2025a (2025-08-29). Since GAL-ATMOSPHERES-001
+   (2026-11-26), several dated EDITIONS per giant, each listed with its source file, date and completed
+   share in the `editions` of its texture record: Jupiter 2015a, 2020a, 2025a; Saturn 2018a, 2022a, 2025a;
+   Uranus 2015a, 2020a, 2026a; Neptune 2015a, 2018a, 2026a (Uranus and Neptune at their native 720 px,
+   the producer's 721 x 361 inclusive grid trimmed of its duplicated last column and row, no
+   resampling). Partly observed latitudes keep their observed longitudes; the missing ones (and colour
+   fringes where a filter is missing, for Uranus and Neptune) take the measured mean colour of that latitude. Modified by this project:
    rolled half a turn to the app's longitude framing, resized (Jupiter 2k and 1k, Saturn 1k), and the
    latitudes the maps do not cover (polar caps, the band hidden by Saturn's rings, 3 degrees of edge
    fringes) replaced by the measured mean colour of the bordering observed latitudes. The credit

@@ -442,6 +442,32 @@
     {
       "body": "jupiter",
       "layer": "surface",
+      "edition": "opal_2015a",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.00576
+      },
+      "bytes": 282450
+    },
+    {
+      "body": "jupiter",
+      "layer": "surface",
+      "edition": "opal_2020a",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.0081
+      },
+      "bytes": 301874
+    },
+    {
+      "body": "jupiter",
+      "layer": "surface",
       "edition": "opal_2025a",
       "shipped": [
         "1k",
@@ -569,11 +595,32 @@
     {
       "body": "neptune",
       "layer": "surface",
+      "edition": "opal_2015a",
       "shipped": [
         "1k"
       ],
       "detail": {},
-      "bytes": 21991
+      "bytes": 11545
+    },
+    {
+      "body": "neptune",
+      "layer": "surface",
+      "edition": "opal_2018a",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 12264
+    },
+    {
+      "body": "neptune",
+      "layer": "surface",
+      "edition": "opal_2026a",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 14765
     },
     {
       "body": "nereid",
@@ -731,6 +778,26 @@
     {
       "body": "saturn",
       "layer": "surface",
+      "edition": "opal_2018a",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 20394
+    },
+    {
+      "body": "saturn",
+      "layer": "surface",
+      "edition": "opal_2022a",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 33423
+    },
+    {
+      "body": "saturn",
+      "layer": "surface",
       "edition": "opal_2025a",
       "shipped": [
         "1k"
@@ -858,11 +925,32 @@
     {
       "body": "uranus",
       "layer": "surface",
+      "edition": "opal_2015a",
       "shipped": [
         "1k"
       ],
       "detail": {},
-      "bytes": 11230
+      "bytes": 9989
+    },
+    {
+      "body": "uranus",
+      "layer": "surface",
+      "edition": "opal_2020a",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 9788
+    },
+    {
+      "body": "uranus",
+      "layer": "surface",
+      "edition": "opal_2026a",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 8224
     },
     {
       "body": "venus",

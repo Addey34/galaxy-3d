@@ -1,7 +1,8 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { allBodies, ringTexturePath } from './catalog';
+import surfaceEditions from 'virtual:surface-editions';
+import { allBodies, ringTexturePath, texturePath } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import type { TextureQuality, TextureResolutions } from '@/types';
 
@@ -50,6 +51,18 @@ describe('catalogue texture manifest', () => {
         }
       }
     }
+
+    // Les éditions secondaires d'une couche (GAL-ATMOSPHERES-001), déclarées par la fiche du registre.
+    for (const [body, cat] of Object.entries(surfaceEditions))
+      for (const e of cat.editions)
+        for (const tier of e.tiers) {
+          const path = assetPath(
+            texturePath(body, cat.layer, e.edition),
+            tier as TextureQuality
+          );
+          configured.add(resolve(path));
+          expect(existsSync(path), `${body} ${e.edition} ${tier}`).toBe(true);
+        }
 
     const orphans = jpegFiles(TEXTURE_ROOT).filter(
       (path) => !configured.has(resolve(path))

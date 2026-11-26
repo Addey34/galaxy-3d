@@ -11,6 +11,7 @@ import {
   tierForSourceWidth,
 } from '@/core/textureLadder';
 import { textureReviews } from '@/registry/products';
+import surfaceEditions from 'virtual:surface-editions';
 import { allBodies } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import { SMALL_BODIES } from './smallBodies';
@@ -40,8 +41,20 @@ function camel(layer: string): string {
   return layer.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
-/** Largeur de source declaree pour une couche, ou null si le registre n'en donne pas. */
-function sourceWidth(body: string, layer: string): number | null {
+/**
+ * Largeur de source d'une couche, ou null si le registre n'en donne pas. Une ÉDITION (GAL-ATMOSPHERES-001)
+ * a la sienne, lue dans les `editions` de la fiche.
+ */
+function sourceWidth(
+  body: string,
+  layer: string,
+  edition?: string
+): number | null {
+  const cat = surfaceEditions[body];
+  if (edition && cat?.layer === layer) {
+    const e = cat.editions.find((x) => x.edition === edition);
+    if (e) return e.sourcePixelWidth;
+  }
   const review = textureReviews().find(
     (r) => r.body === body && r.layer === layer
   );
@@ -117,6 +130,17 @@ function declaredLayers(): {
         tiers: [...config.ring.textureResolutions],
       });
   }
+  // Les éditions SECONDAIRES d'une couche (GAL-ATMOSPHERES-001) : déclarées par la fiche du registre, pas
+  // par le catalogue (qui ne porte que l'édition par défaut), et livrées elles aussi.
+  for (const [body, cat] of Object.entries(surfaceEditions))
+    for (const e of cat.editions)
+      if (e.edition !== cat.defaultEdition)
+        out.push({
+          body,
+          layer: cat.layer,
+          tiers: [...e.tiers] as TextureQuality[],
+          edition: e.edition,
+        });
   // Pluton et ses lunes sont atteignables par les DEUX catalogues : on dedoublonne, en
   // exigeant que les deux vues declarent la meme echelle.
   const byKey = new Map<
@@ -124,7 +148,7 @@ function declaredLayers(): {
     { body: string; layer: string; tiers: TextureQuality[]; edition?: string }
   >();
   for (const entry of out) {
-    const key = `${entry.body}/${entry.layer}`;
+    const key = `${entry.body}/${entry.layer}${entry.edition ? `@${entry.edition}` : ''}`;
     const seen = byKey.get(key);
     if (seen)
       expect(entry.tiers, `${key} declare deux echelles`).toEqual(seen.tiers);
@@ -148,10 +172,12 @@ const rowCases = ladder.rows.map((r) => [`${r.body}/${r.layer}`, r] as const);
 describe('echelle de resolutions d une texture (lot 16)', () => {
   it('le releve mesure couvre exactement les textures livrees', () => {
     const declared = declaredLayers()
-      .map((d) => `${d.body}/${d.layer}`)
+      .map((d) => `${d.body}/${d.layer}${d.edition ? `@${d.edition}` : ''}`)
       .sort();
     const measured = ladder.rows
-      .map((r) => `${r.body}/${camel(r.layer)}`)
+      .map(
+        (r) => `${r.body}/${camel(r.layer)}${r.edition ? `@${r.edition}` : ''}`
+      )
       .sort();
     expect(measured).toEqual(declared);
   });
@@ -161,7 +187,8 @@ describe('echelle de resolutions d une texture (lot 16)', () => {
     (_label, row) => {
       const layer = camel(row.layer);
       const declared = declaredLayers().find(
-        (d) => d.body === row.body && d.layer === layer
+        (d) =>
+          d.body === row.body && d.layer === layer && d.edition === row.edition
       );
       expect(
         declared,
@@ -205,7 +232,8 @@ describe('echelle de resolutions d une texture (lot 16)', () => {
         // ailleurs le plancher de detail arbitre seul, et un agrandissement, qui ne porte par
         // construction aucun detail neuf, y tombe de lui-meme.
         sourcePixelWidth:
-          sourceWidth(row.body, camel(row.layer)) ?? Number.MAX_SAFE_INTEGER,
+          sourceWidth(row.body, camel(row.layer), row.edition) ??
+          Number.MAX_SAFE_INTEGER,
         detailByTier: row.detail,
       });
       expect(verdict.shipped).toEqual(row.shipped);
@@ -215,13 +243,18 @@ describe('echelle de resolutions d une texture (lot 16)', () => {
   it.each(rowCases)(
     '%s : aucun palier ne depasse la largeur de sa source',
     (_label, row) => {
-      const width = sourceWidth(row.body, camel(row.layer));
+      const width = sourceWidth(row.body, camel(row.layer), row.edition);
       if (width === null) return;
-      for (const tier of row.shipped)
+      for (const tier of row.shipped) {
+        // Le FICHIER ne dépasse jamais sa source : le palier de base peut être plus étroit que 1024 px
+        // quand la source l'est (GAL-ATMOSPHERES-001, Uranus et Neptune à 720 px), jamais agrandi.
         expect(
-          TIER_WIDTH[tier],
+          jpegSize(tierFile(row, tier)).width,
           `${row.body}/${row.layer} ${tier} depasse sa source de ${width} px`
         ).toBeLessThanOrEqual(width);
+        // Au-dessus du palier de base, la largeur nominale du palier tient elle aussi dans la source.
+        if (tier !== '1k') expect(TIER_WIDTH[tier]).toBeLessThanOrEqual(width);
+      }
     }
   );
 

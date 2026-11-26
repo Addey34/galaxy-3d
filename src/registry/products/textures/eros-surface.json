@@ -16,9 +16,7 @@
   "providers": [
     {
       "name": "USGS Astrogeology / NASA-JHU/APL NEAR MSI global albedo mosaics (Golish et al. 2023)",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

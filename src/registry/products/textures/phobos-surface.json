@@ -16,9 +16,7 @@
   "providers": [
     {
       "name": "USGS Astrogeology / NASA Viking Orbiter (DLR control)",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

@@ -235,7 +235,7 @@ export const ptBR: Record<MessageKey, string> = {
   'help.tip.time.text': 'roda para viajar no tempo, toque para escolher',
   'credits.textures': 'Texturas',
   'credits.textures.list':
-    'USGS Astrogeology / NASA-JPL (domínio público) · Solar System Scope (CC BY 4.0) · Júpiter, Saturno: Hubble OPAL, NASA, ESA, A.A. Simon, M.H. Wong (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0; a edição de 2016 em CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modificada) · Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modificadas).',
+    'USGS Astrogeology / NASA-JPL (domínio público) · Solar System Scope (CC BY 4.0) · Júpiter, Saturno, Urano, Netuno: Hubble OPAL, NASA, ESA, A.A. Simon, M.H. Wong (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0; a edição de 2016 em CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modificada) · Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modificadas).',
   'credits.fictional': 'Superfícies ilustrativas',
   'credits.fictional.list':
     'Os corpos nunca mapeados por completo têm uma textura ilustrativa, não um mapa científico; a ficha do corpo informa isso, e Fontes os lista.',

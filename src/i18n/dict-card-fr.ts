@@ -609,4 +609,16 @@ export const cardFr: Record<CardMessageKey, string> = {
   'obs.back': 'Revenir à {body}, {date}',
   'obs.note':
     'Chaque lien vient d’une mesure ou d’un registre livrés avec Galaxy.',
+  'ed.title': 'Observations de l’atmosphère',
+  'ed.info':
+    'Hubble (OPAL), observée le {date}, d’après une carte source de {px} px de large ; {share} de la surface est complétée par des couleurs moyennes mesurées, sans détail inventé.',
+  'ed.scene':
+    'Date de la scène : {date}. Rien n’est interpolé entre deux observations, et la phase de rotation de la planète n’est pas datée : les longitudes de ses formations ne sont pas celles de la scène.',
+  'ed.limits':
+    'Comparer des observations : le producteur étire les couleurs de chacune séparément, et la couverture comme la résolution diffèrent ; une partie de ce qui change vient du traitement, pas de la planète.',
+  'ed.compare': 'Comparer avec le {date}',
+  'ed.loading': 'Chargement de l’observation du {date}…',
+  'ed.unavailable':
+    'L’observation du {date} n’a pas pu être chargée : celle du {shown} reste affichée.',
+  'ed.announce': 'Observation du {date} affichée',
 };

@@ -16,9 +16,7 @@
   "providers": [
     {
       "name": "NASA Earth Observatory / Blue Marble: Land Surface, Shallow Water & Shaded Topography (21600×10800)",
-      "roles": [
-        "producer"
-      ]
+      "roles": ["producer"]
     }
   ],
   "tier": "free",

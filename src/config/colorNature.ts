@@ -47,7 +47,7 @@ export const COLOR_NATURE_BY_BODY: ReadonlyMap<string, ColorNature> = new Map<
   ['mimas', 'monochrome'],
   ['miranda', 'monochrome'],
   ['moon', 'monochrome'],
-  ['neptune', 'illustrative'],
+  ['neptune', 'enhanced'],
   ['nereid', 'generated'],
   ['nix', 'generated'],
   ['oberon', 'generated'],
@@ -69,7 +69,7 @@ export const COLOR_NATURE_BY_BODY: ReadonlyMap<string, ColorNature> = new Map<
   ['titania', 'monochrome'],
   ['triton', 'false-color'],
   ['umbriel', 'generated'],
-  ['uranus', 'illustrative'],
+  ['uranus', 'enhanced'],
   ['venus', 'radar'],
   ['vesta', 'monochrome'],
 ]);
@@ -86,6 +86,8 @@ export const SURFACE_OBSERVED_BY_BODY: ReadonlyMap<
 > = new Map([
   ['jupiter', { day: '2025-12-11', filled: true }],
   ['saturn', { day: '2025-08-29', filled: true }],
+  ['uranus', { day: '2026-10-19', filled: true }],
+  ['neptune', { day: '2026-08-31', filled: true }],
 ]);
 
 /** Nature de la couleur d'une surface, ou `undefined` pour un corps sans surface livrée. */
