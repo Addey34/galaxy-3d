@@ -23,6 +23,9 @@
         "1k"
       ]
     },
+    "textureEditions": {
+      "surface": "opal_2025a"
+    },
     "realData": {
       "orbitalInclination": {
         "$deg": 1.304

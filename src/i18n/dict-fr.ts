@@ -540,6 +540,10 @@ export const fr: Record<MessageKey, string> = {
   'bi.collapse': 'Afficher moins',
   'bi.live.label': 'Distance depuis vous',
   'bi.color': 'Couleur : {nature}',
+  'bi.surfaceNote':
+    "Cette carte est un instantané d'une atmosphère observée le {date} : elle montre ce jour-là, pas la date de la scène.",
+  'bi.surfaceNote.filled':
+    "Les latitudes qu'elle ne couvre pas sont complétées par la couleur moyenne mesurée de leurs bords, sans détail inventé.",
   'bi.color.dated': 'Couleur : {nature}, {date}',
   'bi.color.observedHint':
     'Atmosphère observée le {date} : elle change, cette carte montre ce jour-là, pas la date de la scène.',

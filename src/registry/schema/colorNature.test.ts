@@ -54,7 +54,15 @@ describe('colorNature des surfaces livrées', () => {
     const fromRegistry = new Map(
       surfaces.flatMap((p) =>
         p.shipped && p.observed
-          ? [[p.body, p.observed.from.slice(0, 10)] as const]
+          ? [
+              [
+                p.body,
+                {
+                  day: p.observed.from.slice(0, 10),
+                  filled: p.filled === true,
+                },
+              ] as const,
+            ]
           : []
       )
     );

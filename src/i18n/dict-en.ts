@@ -564,6 +564,10 @@ export const en = {
   // c'est-à-dire une règle française appliquée à l'anglais.
   'bi.creditLine': '{label}: {value}',
   'bi.color': 'Colour: {nature}',
+  'bi.surfaceNote':
+    'This map is a snapshot of an atmosphere observed on {date}: it shows that day, not the date of the scene.',
+  'bi.surfaceNote.filled':
+    'The latitudes it does not cover are filled with the measured mean colour of their edges, without invented detail.',
   'bi.color.dated': 'Colour: {nature}, {date}',
   'bi.color.observedHint':
     'Atmosphere observed on {date}: it changes, so this map shows that day, not the date of the scene.',

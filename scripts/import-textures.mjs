@@ -55,9 +55,9 @@ const QUALITY_WIDTH = { '1k': 1024, '2k': 2048, '4k': 4096, '8k': 8192 };
 function toSnake(s) {
   return s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 }
-/** Chemin de base (sans _res.jpg) d'une entrée, dérivé du corps + couche. */
-function baseName(body, layer) {
-  return `${body}_${toSnake(layer)}`;
+/** Chemin de base (sans _res.jpg) d'une entrée, dérivé du corps + couche (+ édition, `catalog.texturePath`). */
+function baseName(body, layer, edition) {
+  return `${body}_${toSnake(layer)}${edition ? `__${edition}` : ''}`;
 }
 
 /**
@@ -72,6 +72,9 @@ function baseName(body, layer) {
  *                 courant des produits OSIRIS-REx et des cartes de Stooke. L'application attend 0 au
  *                 centre (`core/modelUv.ts`) : l'image est alors roulée d'une demi-largeur. Absent =
  *                 0. Toute autre valeur est refusée. Lu dans l'étiquette de la source, jamais deviné.
+ *  - edition    : version scientifique de la carte, dans le nom du fichier (`{body}_{layer}__{edition}_{res}.jpg`),
+ *                 la même que `textureEditions` de la fiche du corps : une carte qui CHANGE de contenu
+ *                 prend un nom neuf, l'ancienne reste servie sous le sien (publication additive).
  *  - unobserved : 'latitude-band-mean' pour une carte d'ATMOSPHÈRE dont des latitudes ne sont pas
  *                 observées (calottes au-delà du limbe, bande cachée par les anneaux) : une ligne
  *                 dont plus de 1 % des pixels sont noirs est NON OBSERVÉE, ainsi que
@@ -313,6 +316,7 @@ const IMPORTS = [
     resolutions: ['4k', '2k', '1k'],
     fillHoles: false,
     centerLongitude: 180,
+    edition: 'opal_2025a',
     unobserved: 'latitude-band-mean',
     unobservedMarginDeg: 3,
     unobservedBandDeg: 2,
@@ -330,6 +334,7 @@ const IMPORTS = [
     resolutions: ['4k', '2k', '1k'],
     fillHoles: false,
     centerLongitude: 180,
+    edition: 'opal_2025a',
     unobserved: 'latitude-band-mean',
     unobservedMarginDeg: 3,
     unobservedBandDeg: 2,
@@ -982,7 +987,7 @@ async function importOne(entry) {
   const heightFor = (w) =>
     isEqui ? Math.round(w / 2) : Math.round((w * srcHeight) / srcWidth);
 
-  const base = baseName(entry.body, entry.layer);
+  const base = baseName(entry.body, entry.layer, entry.edition);
   console.log(
     `\n${entry.body}/${base}  (source ${srcWidth}×${srcHeight} ${meta.format}${isEqui ? '' : ' — ratio préservé'})`
   );

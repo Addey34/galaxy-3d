@@ -1,0 +1,46 @@
+{
+  "$comment": "Publication ADDITIVE sur galaxy-static (GAL-CATALOG-EXCELLENCE-001). `add` : les fichiers NEUFS attendus, et seulement eux (chemin, octets, SHA-256 du dépôt) ; `retain` : les fichiers déjà en ligne qui ne sont plus dans l'arbre de travail parce qu'une ÉDITION les remplace dans le catalogue, gardés en ligne pour les anciennes versions du client et le retour arrière, lus octet pour octet au commit `rollback.commit`. Lu par scripts/static-origin-publish.mjs (préflight, assemblage, vérification) et par src/config/staticOriginPublication.test.ts. Ne pas éditer à la main sans recalculer les empreintes.",
+  "rollback": {
+    "commit": "ebd08ac5064f011a771bd10d3eb09ea7ffc8da72",
+    "description": "main après #585 : le client de ce commit lit jupiter_surface_{1k,2k,4k}.jpg et saturn_surface_1k.jpg (Solar System Scope). Revenir à ce commit sur Cloudflare Pages suffit : ces fichiers restent servis par galaxy-static."
+  },
+  "add": [
+    {
+      "path": "assets/textures/jupiter/jupiter_surface__opal_2025a_1k.jpg",
+      "bytes": 76917,
+      "sha256": "3cc8f8278ccd15d074c8f5e88dce5d4fe2b818bb48739d500ebe245a1990b910"
+    },
+    {
+      "path": "assets/textures/jupiter/jupiter_surface__opal_2025a_2k.jpg",
+      "bytes": 236425,
+      "sha256": "03f55b72af6457271b9fb7ff9c1aa4474240c5673cd3644f6231dac9bd194fa6"
+    },
+    {
+      "path": "assets/textures/saturn/saturn_surface__opal_2025a_1k.jpg",
+      "bytes": 32169,
+      "sha256": "840f122773796a0f11e78fd6dcf9d6dd6b3d1cd47e28925bac7ddb805ed53bcb"
+    }
+  ],
+  "retain": [
+    {
+      "path": "assets/textures/jupiter/jupiter_surface_1k.jpg",
+      "bytes": 85777,
+      "sha256": "58e866dfbfd5499a7c956ceb15d063ee83ca9b86d6e9c8ed4b316d12a51387cb"
+    },
+    {
+      "path": "assets/textures/jupiter/jupiter_surface_2k.jpg",
+      "bytes": 284991,
+      "sha256": "e7bac63f4bb57f99b6f249970aa91f103a9ab0da7572e1f0629a821cdafe9090"
+    },
+    {
+      "path": "assets/textures/jupiter/jupiter_surface_4k.jpg",
+      "bytes": 922165,
+      "sha256": "8eee23015b334bb0aef236160b08b73fde3dd1bc3792ce361cb10c3ae538d80c"
+    },
+    {
+      "path": "assets/textures/saturn/saturn_surface_1k.jpg",
+      "bytes": 37328,
+      "sha256": "c713f938faaa325499859f4f9cadb775f12c5fa6463d681f678525ba1f77113c"
+    }
+  ]
+}

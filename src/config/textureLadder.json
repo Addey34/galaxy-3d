@@ -442,6 +442,7 @@
     {
       "body": "jupiter",
       "layer": "surface",
+      "edition": "opal_2025a",
       "shipped": [
         "1k",
         "2k"
@@ -730,6 +731,7 @@
     {
       "body": "saturn",
       "layer": "surface",
+      "edition": "opal_2025a",
       "shipped": [
         "1k"
       ],

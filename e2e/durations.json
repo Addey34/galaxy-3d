@@ -52,6 +52,7 @@
     "e2e/flybys.spec.ts": 8,
     "e2e/formationMarker.spec.ts": 468,
     "e2e/gazetteer.spec.ts": 69,
+    "e2e/giantSurfaces.spec.ts": 60,
     "e2e/gpuMemory.spec.ts": 31,
     "e2e/guidedTour.spec.ts": 106,
     "e2e/i18n-locales.spec.ts": 190,
@@ -133,6 +134,7 @@
     "e2e/wind.spec.ts": 75
   },
   "estimated": [
+    "e2e/giantSurfaces.spec.ts",
     "e2e/observation.spec.ts",
     "e2e/skySystemExplorer.spec.ts"
   ]

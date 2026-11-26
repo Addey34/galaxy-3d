@@ -551,6 +551,10 @@ export const es: Record<MessageKey, string> = {
   'bi.colourCredit': 'Color de superficie',
   'bi.creditLine': '{label}: {value}',
   'bi.color': 'Color: {nature}',
+  'bi.surfaceNote':
+    'Este mapa es una instantánea de una atmósfera observada el {date}: muestra ese día, no la fecha de la escena.',
+  'bi.surfaceNote.filled':
+    'Las latitudes que no cubre se completan con el color medio medido de sus bordes, sin detalle inventado.',
   'bi.color.dated': 'Color: {nature}, {date}',
   'bi.color.observedHint':
     'Atmósfera observada el {date}: cambia, así que este mapa muestra ese día, no la fecha de la escena.',
