@@ -116,6 +116,8 @@ describe('ce que le moteur demande', () => {
   it('ne redemande RIEN quand la caméra ne bouge pas', async () => {
     const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -138,6 +140,8 @@ describe('ce que le moteur demande', () => {
       throw new Error('503');
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -162,6 +166,8 @@ describe('ce que le moteur demande', () => {
       return bitmap();
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -195,6 +201,8 @@ describe('ce que le moteur demande', () => {
         return bitmap();
       });
       const engine = new PlanetarySurfaceEngine({
+        // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+        fallbackLevels: 0,
         budget: { maxTiles: 25, maxConcurrentLoads: 25 },
         fetchTile,
       });
@@ -275,6 +283,8 @@ describe('ce que le moteur demande', () => {
       });
       try {
         const engine = new PlanetarySurfaceEngine({
+          // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+          fallbackLevels: 0,
           budget: { maxTiles: 4, maxConcurrentLoads: 4 },
           fetchTile: async () => bitmap(),
         });
@@ -299,6 +309,8 @@ describe('ce que le moteur demande', () => {
         throw new Error('503');
       });
       const engine = new PlanetarySurfaceEngine({
+        // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+        fallbackLevels: 0,
         budget: { maxTiles: 25, maxConcurrentLoads: 25 },
         fetchTile,
       });
@@ -402,6 +414,8 @@ describe('ce que le moteur demande', () => {
   it('ne demande rien tant que le corps est loin, ni sous sa surface', () => {
     const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -422,6 +436,8 @@ describe('ce que le moteur demande', () => {
   it('refuse de peindre un niveau plus grossier que la texture livrée', () => {
     const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -457,6 +473,8 @@ describe('les carreaux quittés restent en mémoire un temps', () => {
   it('retrouver un endroit quitté ne redemande rien et le montre aussitôt', async () => {
     const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -504,6 +522,8 @@ describe('les carreaux quittés restent en mémoire un temps', () => {
   it('retient un carreau encore en fondu, terminé d’un coup, au lieu de le détruire (#468)', async () => {
     const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -552,6 +572,8 @@ describe('un chargement que la vue a quitté', () => {
         })
     );
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 200 },
       fetchTile,
     });
@@ -661,6 +683,8 @@ describe('le relief sous les carreaux', () => {
       );
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
       fetchHeights,
@@ -706,6 +730,8 @@ describe('le relief sous les carreaux', () => {
       );
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
       fetchHeights,
@@ -774,6 +800,8 @@ describe('le relief sous les carreaux', () => {
       return buffer;
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
       fetchHeights,
@@ -822,6 +850,8 @@ describe('le relief sous les carreaux', () => {
       throw new Error('404');
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
       fetchHeights,
@@ -855,6 +885,8 @@ describe('la finesse déclarée au corps', () => {
       return bitmap();
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -927,6 +959,8 @@ describe('changement de jour d’une couche datée', () => {
     );
     const states: Array<{ id: string; painted: number } | null> = [];
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
       onState: (s) => states.push(s && { id: s.tilesetId, painted: s.painted }),
@@ -975,6 +1009,8 @@ describe('changement de jour d’une couche datée', () => {
         )
     );
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -1038,6 +1074,8 @@ describe('le rideau avant/après', () => {
         })
     );
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -1072,6 +1110,8 @@ describe('le rideau avant/après', () => {
       return bitmap();
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -1096,6 +1136,8 @@ describe('le rideau avant/après', () => {
         )
     );
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -1128,6 +1170,8 @@ describe('le rideau avant/après', () => {
 
   it('refuse une édition comparée sur une autre grille', () => {
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile: async () => bitmap(),
     });

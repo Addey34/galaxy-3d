@@ -38,6 +38,7 @@ import { shouldReveal } from '@/core/tileReveal';
 import type { Figure } from '@/core/ellipsoid';
 import type { OceanMatch } from '@/core/oceanMatch';
 import { coverageEdges } from '@/core/coverageFeather';
+import { fallbackAncestors } from '@/core/tileFallback';
 import * as THREE from 'three';
 
 import {
@@ -422,6 +423,7 @@ export class PlanetarySurfaceEngine {
   private _staleCompare: SurfaceTileset | null = null;
 
   private readonly _tiles = new Map<string, SurfaceTile>();
+  private readonly _fallbackLevels: number;
   /** Carreaux en fondu d'entrée : évite de parcourir `_tiles` à chaque image au repos. */
   private _fadingTiles = 0;
   /** Carreaux posés mais retenus, révélés ensemble (`core/tileReveal.ts`). */
@@ -507,8 +509,15 @@ export class PlanetarySurfaceEngine {
     fetchTile?: TileFetcher;
     hasHoles?: TileHoleDetector;
     fetchHeights?: HeightFetcher;
+    /**
+     * Niveaux au-dessus d'une feuille découverte où chercher son ancêtre de repli (0 : aucun) ; défaut
+     * `FALLBACK_LEVELS` (3, ou `?surface-fallback=` dans l'adresse). Les essais d'un AUTRE mécanisme
+     * (reprises, générations, couronnes) qui comptent les requêtes à l'unité le coupent.
+     */
+    fallbackLevels?: number;
   }) {
     this._budget = options.budget;
+    this._fallbackLevels = options.fallbackLevels ?? FALLBACK_LEVELS;
     this._scaleBudgetToTileSize = options.scaleBudgetToTileSize ?? false;
     this._fetchTile = options.fetchTile ?? defaultFetcher;
     this._hasHoles = options.hasHoles ?? defaultHoleDetector;
@@ -948,7 +957,15 @@ export class PlanetarySurfaceEngine {
     );
     const level = (under ?? tiles[0]!).level;
 
-    const wanted = new Set(tiles.map((index) => this._key(index)));
+    // LES ANCÊTRES DE REPLI (GAL-SURFACE-MULTILOD-001) : un carreau voulu, absent, et qu'aucun carreau posé
+    // ne couvre laisse voir la texture globale (le trou mesuré pendant une descente). Son ancêtre
+    // `fallbackLevels` niveaux plus haut (jamais plus grossier que le premier niveau peint) le couvre, ainsi
+    // que ses voisins : il est demandé AVANT les feuilles, ou rendu tout de suite s'il est retenu. Il ne
+    // reste voulu que tant qu'une feuille qu'il couvre manque ; borné par `MAX_FALLBACK_TILES`.
+    const fallback = this._fallbackFor(tiles, firstDrawableLevel);
+    const wanted = new Set(
+      [...tiles, ...fallback].map((index) => this._key(index))
+    );
     this._wanted = wanted;
     // Un carreau qui n'est plus voulu reste en place tant qu'il couvre du sol VOULU et pas encore
     // peint : sans cela le sol disparaît à chaque changement de niveau (défaut 2 du docblock).
@@ -961,9 +978,21 @@ export class PlanetarySurfaceEngine {
       const key = this._key(index);
       if (!this._tiles.has(key)) this._revive(key);
     }
+    for (const index of fallback) {
+      const key = this._key(index);
+      if (!this._tiles.has(key)) this._revive(key);
+    }
     const missing = tiles.filter((index) => !this._tiles.has(this._key(index)));
     const complete = missing.length === 0;
     this._missing = missing.length;
+    debugCoverage(
+      this._tiles,
+      tiles,
+      missing,
+      level,
+      this._pending.size,
+      firstDrawableLevel
+    );
     const current = this._prefix();
     // Une tuile d'une génération PRÉCÉDENTE ne reste que là où une tuile voulue n'est pas encore
     // franche (absente, ou en fondu : l'ancienne image sert de fond au fondu). Avant, une seule
@@ -996,11 +1025,9 @@ export class PlanetarySurfaceEngine {
       if (wanted.has(key)) continue;
       const stale = !key.startsWith(current);
       const index = stale ? null : indexOfKey(key);
-      const needed =
-        !complete &&
-        (stale
-          ? staleStillCovers(key)
-          : index !== null && missing.some((m) => overlaps(m, index)));
+      const needed = stale
+        ? !complete && staleStillCovers(key)
+        : index !== null && missing.some((m) => overlaps(m, index));
       if (!needed) {
         this._held.delete(tile);
         this._tiles.delete(key);
@@ -1029,7 +1056,10 @@ export class PlanetarySurfaceEngine {
       this._staleDeadlineMs = Number.POSITIVE_INFINITY;
     }
     this._queue.length = 0;
-    for (const index of tiles) {
+    // Les ancêtres de repli d'abord (un carreau grossier couvre plusieurs feuilles), puis les feuilles dans
+    // l'ordre de la sélection. Mesuré : les feuilles fines d'abord, ou le plus grossier d'abord, faisaient moins
+    // bien (plus de trous, netteté égale ou moindre) ; cf. ARCHITECTURE.
+    for (const index of [...fallback, ...tiles]) {
       const key = this._key(index);
       if (
         this._tiles.has(key) ||
@@ -1435,6 +1465,29 @@ export class PlanetarySurfaceEngine {
   }
 
   /** Remet un carreau retenu en place ; faux s'il n'y en a pas (ou plus). */
+  /** Les ancêtres de repli des feuilles voulues qu'aucun carreau posé ne couvre (cf. `update`). */
+  private _fallbackFor(
+    tiles: readonly TileIndex[],
+    firstDrawableLevel: number
+  ): TileIndex[] {
+    if (this._fallbackLevels <= 0) return [];
+    const solid: TileIndex[] = [];
+    const prefix = this._prefix();
+    for (const [key, tile] of this._tiles) {
+      if (tile.fading || !key.startsWith(prefix)) continue;
+      const index = indexOfKey(key);
+      if (index) solid.push(index);
+    }
+    return fallbackAncestors({
+      leaves: tiles,
+      painted: (index) => this._tiles.has(this._key(index)),
+      solid,
+      firstDrawableLevel,
+      levels: this._fallbackLevels,
+      max: MAX_FALLBACK_TILES,
+    });
+  }
+
   private _revive(key: string): boolean {
     const kept = this._retained.get(key);
     if (!kept) return false;
@@ -2045,6 +2098,87 @@ export class PlanetarySurfaceEngine {
 
 /** Durée maximale de rétention d'un carreau masqué, en ms. */
 const RETAIN_MS = 45_000;
+
+/**
+ * LA COUVERTURE RÉELLE, pour la mesure (`?debug-surface` seulement, GAL-SURFACE-MULTILOD-001) : à chaque
+ * passe, les carreaux voulus, ceux qui manquent, et ceux qui manquent SANS qu'aucun carreau posé ne
+ * les couvre (un parent gardé, un enfant déjà là) : là, c'est la texture globale qui se voit. Cumul des
+ * passes dans `window.__surfaceCoverage` (bornée), lu par `scripts/measure-surface-continuity.mjs`.
+ */
+function debugCoverage(
+  painted: ReadonlyMap<string, { fading: boolean }>,
+  wanted: readonly TileIndex[],
+  missing: readonly TileIndex[],
+  level: number,
+  inFlight: number,
+  firstDrawableLevel: number
+): void {
+  if (!DEBUG_SURFACE_COVERAGE) return;
+  const solid: TileIndex[] = [];
+  for (const [key, tile] of painted) {
+    if (tile.fading) continue;
+    const index = indexOfKey(key);
+    if (index) solid.push(index);
+  }
+  // Le DÉFICIT de finesse d'un carreau voulu absent : les niveaux entre lui et ce qui se voit à sa place
+  // (son ancêtre posé le plus fin ; à défaut, la texture globale, un cran sous le premier niveau peint).
+  // Un enfant déjà posé le couvre en partie : déficit compté nul.
+  let uncovered = 0;
+  let deficit = 0;
+  for (const m of missing) {
+    let best: number | null = null;
+    let finer = false;
+    for (const p of solid) {
+      if (!overlaps(m, p)) continue;
+      if (p.level >= m.level) finer = true;
+      else if (best === null || p.level > best) best = p.level;
+    }
+    if (finer) continue;
+    if (best === null) {
+      uncovered += 1;
+      deficit += m.level - (firstDrawableLevel - 1);
+    } else deficit += m.level - best;
+  }
+  const w = window as unknown as {
+    __surfaceCoverage?: {
+      t: number;
+      wanted: number;
+      missing: number;
+      uncovered: number;
+      deficit: number;
+      resident: number;
+      level: number;
+      inFlight: number;
+    }[];
+  };
+  const log = (w.__surfaceCoverage ??= []);
+  log.push({
+    t: Math.round(performance.now()),
+    wanted: wanted.length,
+    missing: missing.length,
+    uncovered,
+    deficit,
+    resident: painted.size,
+    level,
+    inFlight,
+  });
+  if (log.length > 20000) log.splice(0, log.length - 20000);
+}
+
+/**
+ * Niveaux au-dessus d'une feuille découverte où chercher son ancêtre de repli : 3, fixé par la mesure
+ * (GAL-SURFACE-MULTILOD-001). `?surface-fallback=0` coupe le repli : retour arrière immédiat et mesure A/B
+ * sur le même build (`scripts/measure-surface-continuity.mjs --query surface-fallback=0`).
+ */
+const SURFACE_PARAMS =
+  typeof location === 'undefined'
+    ? new URLSearchParams()
+    : new URLSearchParams(location.search);
+const FALLBACK_LEVELS = Number(SURFACE_PARAMS.get('surface-fallback') ?? '3');
+/** Au plus tant d'ancêtres de repli à la fois : la mémoire graphique reste bornée. */
+const MAX_FALLBACK_TILES = 24;
+/** La mesure de couverture (`?debug-surface`), lue une fois : un essai peut remplacer `window` sans `location`. */
+const DEBUG_SURFACE_COVERAGE = SURFACE_PARAMS.has('debug-surface');
 
 /** Journal des libérations de carreaux (`?debug-surface` seulement) : `window.__tileLog`. */
 function debugTileLog(

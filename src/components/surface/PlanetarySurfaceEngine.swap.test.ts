@@ -129,6 +129,8 @@ describe('changer de jeu en changeant de relief', () => {
   it('ne remet jamais la finesse déclarée à zéro et garde les carreaux peints', async () => {
     const fetchTile = vi.fn<TileFetcher>(async () => bitmap());
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
       // Aucun relief à lire : l'essai porte sur la permutation, pas sur le décodage des hauteurs.
@@ -159,6 +161,8 @@ describe('changer de jeu en changeant de relief', () => {
 
   it('un détachement RESTE le seul chemin qui remet la finesse à zéro', () => {
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile: async () => bitmap(),
     });
@@ -183,6 +187,8 @@ describe('changer de jeu en changeant de relief', () => {
       return bitmap();
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -219,6 +225,8 @@ describe('changer de jeu en changeant de relief', () => {
       return bitmap();
     });
     const engine = new PlanetarySurfaceEngine({
+      // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+      fallbackLevels: 0,
       budget: { maxTiles: 25, maxConcurrentLoads: 25 },
       fetchTile,
     });
@@ -277,6 +285,8 @@ describe('changer de jeu en changeant de relief', () => {
       host: ReturnType<typeof makeHost>;
     }> {
       const engine = new PlanetarySurfaceEngine({
+        // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+        fallbackLevels: 0,
         budget: { maxTiles: 25, maxConcurrentLoads: 25 },
         fetchTile: async () => bitmap(),
       });
@@ -330,6 +340,8 @@ describe('changer de jeu en changeant de relief', () => {
     it('une ancienne réponse ne nourrit pas le cache du nouveau relief et ne supprime pas sa requête en vol', async () => {
       const resolvers: Array<(bytes: ArrayBuffer) => void> = [];
       const engine = new PlanetarySurfaceEngine({
+        // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+        fallbackLevels: 0,
         budget: { maxTiles: 25, maxConcurrentLoads: 25 },
         fetchTile: async () => bitmap(),
         fetchHeights: () =>
@@ -374,6 +386,8 @@ describe('changer de jeu en changeant de relief', () => {
     it('une ancienne ÉCHEC ne marque pas la clé du nouveau relief en échec', async () => {
       const rejecters: Array<(e: Error) => void> = [];
       const engine = new PlanetarySurfaceEngine({
+        // Ce fichier essaie un autre mécanisme et compte les requêtes : sans ancêtres de repli.
+        fallbackLevels: 0,
         budget: { maxTiles: 25, maxConcurrentLoads: 25 },
         fetchTile: async () => bitmap(),
         fetchHeights: () =>
