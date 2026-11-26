@@ -261,6 +261,15 @@ const catalogueConfig = z
     rotationSpeed: encoded,
     orbitalColor: color,
     textureResolutions: plainObject,
+    /**
+     * L'ÉDITION d'une couche dont le contenu a changé (GAL-CATALOG-EXCELLENCE-001) : la version scientifique
+     * de la carte entre dans le NOM du fichier (`{corps}_{couche}__{édition}_{palier}.jpg`), si bien
+     * qu'un client garde les octets que ses propres métadonnées décrivent et que l'ancienne carte reste
+     * servie sous son nom (retour arrière, anciennes versions du client). Absente : le nom historique.
+     */
+    textureEditions: z
+      .record(z.string(), z.string().regex(/^[a-z0-9]+(_[a-z0-9]+)*$/))
+      .optional(),
     fallbackColor: color.optional(),
     model: plainObject.optional(),
     atmosphereColor: color.optional(),

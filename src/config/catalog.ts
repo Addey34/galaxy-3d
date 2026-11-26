@@ -69,8 +69,17 @@ export function modelPath(bodyName: string, quality: string): string {
   return `/assets/models/${bodyName}/${bodyName}_shape_${quality}.glb`;
 }
 
-export function texturePath(bodyName: string, layer: string): string {
-  return `${bodyName}/${bodyName}_${toSnake(layer)}`;
+/**
+ * Chemin de base d'une couche : `{body}/{body}_{layer}`, ou `{body}/{body}_{layer}__{edition}` quand la
+ * couche déclare une ÉDITION (`textureEditions`, GAL-CATALOG-EXCELLENCE-001). Le double tiret bas ne peut
+ * pas apparaître dans un nom de couche (snake_case) : il sépare sans ambiguïté.
+ */
+export function texturePath(
+  bodyName: string,
+  layer: string,
+  edition?: string
+): string {
+  return `${bodyName}/${bodyName}_${toSnake(layer)}${edition ? `__${edition}` : ''}`;
 }
 
 /**
@@ -84,7 +93,12 @@ export function deriveTextures(
 ): TextureConfig {
   const out: Record<string, string> = { ...(config.textures ?? {}) };
   for (const layer of Object.keys(config.textureResolutions)) {
-    if (!out[layer]) out[layer] = texturePath(bodyName, layer);
+    if (!out[layer])
+      out[layer] = texturePath(
+        bodyName,
+        layer,
+        config.textureEditions?.[layer as keyof TextureConfig]
+      );
   }
   return out as TextureConfig;
 }

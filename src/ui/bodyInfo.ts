@@ -11,7 +11,7 @@ import { loadCardText } from '@/config/cardText';
 import { factProvenancePending } from '@/config/cardFacts';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
-import { colorNatureOf } from '@/config/colorNature';
+import { colorNatureOf, SURFACE_OBSERVED_BY_BODY } from '@/config/colorNature';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { formatIsoDay } from '@/core/dateText';
 import { kelvinWithConversion, superscript } from '@/core/numberText';
@@ -833,6 +833,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   fictionalEl.after(colorNatureEl);
   const statsEl = panel.querySelector<HTMLElement>('.bi-stats')!;
   const descEl = panel.querySelector<HTMLElement>('.bi-desc')!;
+  const surfaceNoteEl = panel.querySelector<HTMLElement>('.bi-surface-note');
   const creditEl = panel.querySelector<HTMLElement>('.bi-credit');
   const sourcesEl = panel.querySelector<HTMLDetailsElement>('.bi-sources');
   const sourcesList = sourcesEl?.querySelector<HTMLOListElement>('ol');
@@ -1000,10 +1001,17 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     const nature = illustrative ? undefined : colorNatureOf(name);
     colorNatureEl.hidden = !nature;
     if (nature) {
-      colorNatureEl.textContent = t('bi.color', {
-        nature: t(`bi.color.${nature}`),
-      });
-      colorNatureEl.title = t(`bi.color.${nature}.hint`);
+      // Une atmosphère est un instantané : la date de l'observation fait partie de ce que montre la carte.
+      const observed = SURFACE_OBSERVED_BY_BODY.get(name);
+      const day = observed
+        ? formatIsoDay(observed.day, getLocale(), intlLocale())
+        : '';
+      colorNatureEl.textContent = observed
+        ? t('bi.color.dated', { nature: t(`bi.color.${nature}`), date: day })
+        : t('bi.color', { nature: t(`bi.color.${nature}`) });
+      colorNatureEl.title = observed
+        ? `${t(`bi.color.${nature}.hint`)} ${t('bi.color.observedHint', { date: day })}`
+        : t(`bi.color.${nature}.hint`);
       colorNatureEl.setAttribute(
         'aria-label',
         `${colorNatureEl.textContent} : ${colorNatureEl.title}`
@@ -1095,6 +1103,23 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     const desc = bodyDescription(cfg);
     descEl.textContent = desc;
     descEl.hidden = !desc;
+    // La date d'un instantané et ses latitudes complétées, en clair (le badge ne le dit qu'au survol).
+    if (surfaceNoteEl) {
+      const snapshot = illustrative
+        ? undefined
+        : SURFACE_OBSERVED_BY_BODY.get(name);
+      surfaceNoteEl.hidden = !snapshot;
+      surfaceNoteEl.textContent = snapshot
+        ? [
+            t('bi.surfaceNote', {
+              date: formatIsoDay(snapshot.day, getLocale(), intlLocale()),
+            }),
+            snapshot.filled ? t('bi.surfaceNote.filled') : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+        : '';
+    }
 
     // Crédit du modèle de forme affiché. Il n'existait que dans la configuration et dans le
     // fichier glTF : nulle part où un visiteur le voit, alors que la politique ISAS/JAXA exige

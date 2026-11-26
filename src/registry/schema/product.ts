@@ -32,7 +32,10 @@ const kebabId = z
 /**
  * Ce que la couleur d'une surface représente : `natural` (visible, vraies couleurs),
  * `colorized` (monochrome teinté d'après des mesures de couleur), `monochrome`, `infrared`,
- * `radar`, `false-color` (rapports de bandes), `generated` (texture produite par ce dépôt),
+ * `radar`, `false-color` (rapports de bandes), `enhanced` (bandes VISIBLES rouge, verte, bleue dont
+ * l'équilibre a été étiré bande par bande par le producteur : teintes réelles, balance qui n'est pas
+ * celle de l'œil ; GAL-CATALOG-EXCELLENCE-001, mesuré sur Saturne OPAL : R/V 0,97 contre 1,11),
+ * `generated` (texture produite par ce dépôt),
  * `illustrative` (carte d'artiste ou rendu représentatif retouché, pas une image résolue).
  */
 export const COLOR_NATURES = [
@@ -42,6 +45,7 @@ export const COLOR_NATURES = [
   'infrared',
   'radar',
   'false-color',
+  'enhanced',
   'generated',
   'illustrative',
 ] as const;
@@ -152,6 +156,18 @@ const shippedTexture = z
     colorNature: z.enum(COLOR_NATURES).optional(),
     /** Lacunes de la carte d'origine comblées. */
     filled: z.boolean().optional(),
+    /**
+     * L'INTERVALLE d'observation d'une carte qui est un INSTANTANÉ (une atmosphère change : la carte vaut à
+     * ces dates, pas à celle de la scène), en UTC, lu dans l'en-tête ou le README de la source
+     * (GAL-CATALOG-EXCELLENCE-001). La fiche du corps le dit.
+     */
+    observed: z
+      .object({
+        from: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
+        to: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
+      })
+      .strict()
+      .optional(),
     /** Page de la source affichée en lien du crédit. */
     sourceUrl: httpsUrl.optional(),
     /** Traitement appliqué après import, pour le dépôt. */

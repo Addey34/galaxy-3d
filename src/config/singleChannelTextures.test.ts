@@ -23,7 +23,7 @@ describe('cartes à un seul canal : vraiment en niveaux de gris', () => {
         [];
       const base =
         (cfg.textures as Record<string, string> | undefined)?.[key] ??
-        texturePath(name, key);
+        texturePath(name, key, cfg.textureEditions?.[key as never]);
       for (const res of resolutions)
         files.push(
           resolve(__dirname, `../../public/assets/textures/${base}_${res}.jpg`)

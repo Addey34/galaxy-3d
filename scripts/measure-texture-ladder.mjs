@@ -135,7 +135,9 @@ for (const body of readdirSync(TEX_DIR).sort()) {
     if (parsed) (groups[parsed.base] ??= {})[parsed.tier] = join(dir, file);
   }
   for (const [base, byTier] of Object.entries(groups).sort()) {
-    const layer = base.slice(body.length + 1);
+    // `{body}_{layer}__{edition}` : l'édition est rangée à part, la couche reste celle du catalogue.
+    const [bodyLayer, edition] = base.split('__');
+    const layer = bodyLayer.slice(body.length + 1);
     const tiers = {};
     for (const tier of ['2k', '4k', '8k']) {
       if (!byTier[tier]) continue;
@@ -143,7 +145,14 @@ for (const body of readdirSync(TEX_DIR).sort()) {
     }
     const shipped = ['1k', '2k', '4k', '8k'].filter((t) => byTier[t]);
     const bytes = shipped.reduce((sum, t) => sum + statSync(byTier[t]).size, 0);
-    rows.push({ body, layer, shipped, detail: tiers, bytes });
+    rows.push({
+      body,
+      layer,
+      ...(edition ? { edition } : {}),
+      shipped,
+      detail: tiers,
+      bytes,
+    });
     console.error(
       `${body}/${layer} ${shipped.join(',')} ` +
         Object.entries(tiers)

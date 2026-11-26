@@ -253,7 +253,7 @@ export const en = {
   'help.tip.time.text': 'scroll to time-travel, tap to pick',
   'credits.textures': 'Textures',
   'credits.textures.list':
-    'USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0; the 2016 edition CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modified) · Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modified).',
+    'USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope (CC BY 4.0) · Jupiter, Saturn: Hubble OPAL, NASA, ESA, A.A. Simon, M.H. Wong (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0; the 2016 edition CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida: Philip Stooke / NASA PDS · Ryugu: ISAS/JAXA Hayabusa2 ONC (modified) · Lutetia, 67P: ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modified).',
   'credits.fictional': 'Illustrative surfaces',
   'credits.fictional.list':
     'Bodies never mapped globally have an illustrative texture, not a scientific map; the body card says so, and Sources lists them.',
@@ -564,6 +564,13 @@ export const en = {
   // c'est-à-dire une règle française appliquée à l'anglais.
   'bi.creditLine': '{label}: {value}',
   'bi.color': 'Colour: {nature}',
+  'bi.surfaceNote':
+    'This map is a snapshot of an atmosphere observed on {date}: it shows that day, not the date of the scene.',
+  'bi.surfaceNote.filled':
+    'The latitudes it does not cover are filled with the measured mean colour of their edges, without invented detail.',
+  'bi.color.dated': 'Colour: {nature}, {date}',
+  'bi.color.observedHint':
+    'Atmosphere observed on {date}: it changes, so this map shows that day, not the date of the scene.',
   'bi.color.natural': 'natural',
   'bi.color.natural.hint':
     'Visible-light colours, close to what the eye would see.',
@@ -582,6 +589,9 @@ export const en = {
   'bi.color.false-color': 'false colour',
   'bi.color.false-color.hint':
     'Colours assigned to bands that are not visible red, green and blue: they are not what the eye would see.',
+  'bi.color.enhanced': 'enhanced colour',
+  'bi.color.enhanced.hint':
+    'Visible red, green and blue bands, each stretched by the producer: the hues are real, their balance is not what the eye would see.',
   'bi.color.generated': 'generated',
   'bi.color.generated.hint':
     'Texture produced by this project: no spacecraft has imaged this surface.',

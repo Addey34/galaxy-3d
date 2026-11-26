@@ -55,9 +55,9 @@ const QUALITY_WIDTH = { '1k': 1024, '2k': 2048, '4k': 4096, '8k': 8192 };
 function toSnake(s) {
   return s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 }
-/** Chemin de base (sans _res.jpg) d'une entrée, dérivé du corps + couche. */
-function baseName(body, layer) {
-  return `${body}_${toSnake(layer)}`;
+/** Chemin de base (sans _res.jpg) d'une entrée, dérivé du corps + couche (+ édition, `catalog.texturePath`). */
+function baseName(body, layer, edition) {
+  return `${body}_${toSnake(layer)}${edition ? `__${edition}` : ''}`;
 }
 
 /**
@@ -72,6 +72,17 @@ function baseName(body, layer) {
  *                 courant des produits OSIRIS-REx et des cartes de Stooke. L'application attend 0 au
  *                 centre (`core/modelUv.ts`) : l'image est alors roulée d'une demi-largeur. Absent =
  *                 0. Toute autre valeur est refusée. Lu dans l'étiquette de la source, jamais deviné.
+ *  - edition    : version scientifique de la carte, dans le nom du fichier (`{body}_{layer}__{edition}_{res}.jpg`),
+ *                 la même que `textureEditions` de la fiche du corps : une carte qui CHANGE de contenu
+ *                 prend un nom neuf, l'ancienne reste servie sous le sien (publication additive).
+ *  - unobserved : 'latitude-band-mean' pour une carte d'ATMOSPHÈRE dont des latitudes ne sont pas
+ *                 observées (calottes au-delà du limbe, bande cachée par les anneaux) : une ligne
+ *                 dont plus de 1 % des pixels sont noirs est NON OBSERVÉE, ainsi que
+ *                 `unobservedMarginDeg` degrés de part et d'autre (franges colorées du bord de
+ *                 coupe). Une calotte prend la couleur MOYENNE mesurée des `unobservedBandDeg`
+ *                 degrés observés qui la bordent ; une bande intérieure, le passage linéaire entre
+ *                 les moyennes des deux bords. Aucun détail en longitude n'est créé. Calculé à la
+ *                 résolution de la source, avant tout redimensionnement.
  *  - license/credit/tier : provenance, affichée en fin d'import et recopiée dans
  *                 sa fiche src/registry/products/textures/.
  */
@@ -84,6 +95,13 @@ const USGS = {
 const SSS = {
   license: 'CC BY 4.0',
   credit: 'Solar System Scope (solarsystemscope.com)',
+  tier: 'free',
+};
+// Hubble OPAL (Outer Planet Atmospheres Legacy, MAST HLSP, DOI 10.17909/T9G593) : cartes globales
+// DATÉES de l'atmosphère, CC BY 4.0, attribution lue dans l'en-tête FITS (`LIC_ATTR`) le 2026-11-26.
+const OPAL = {
+  license: 'CC BY 4.0',
+  credit: 'NASA, ESA, A.A. Simon, M.H. Wong (Hubble OPAL, DOI 10.17909/T9G593)',
   tier: 'free',
 };
 const SSS_FICT = {
@@ -287,20 +305,40 @@ const IMPORTS = [
     ...SSS,
   },
   {
+    // Hubble OPAL, rotation 2025a (2025-12-11, 07:24 à 15:40 UT), composite couleur F631N/F502N/F395N du
+    // producteur, 10 px/degré (3600 px : rien au-delà de 2k). Se retélécharge :
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle32/jupiter/hlsp_opal_hst_wfc3-uvis_jupiter-2025a_f395n-f502n-f631n_v1_globalmap.tif
+    // Bord gauche = 0° Ouest System III, longitudes Ouest DÉCROISSANTES vers la droite (README) : l'Est
+    // croît vers la droite depuis 0, d'où le demi-tour. Remplace le 2026-11-26 la carte de Solar System Scope.
     body: 'jupiter',
     layer: 'surface',
-    src: `${V1}/jupiter/jupiter_surface_8k.jpg`,
+    src: `${V1}/jupiter/hlsp_opal_hst_wfc3-uvis_jupiter-2025a_f395n-f502n-f631n_v1_globalmap.tif`,
     resolutions: ['4k', '2k', '1k'],
     fillHoles: false,
-    ...SSS,
+    centerLongitude: 180,
+    edition: 'opal_2025a',
+    unobserved: 'latitude-band-mean',
+    unobservedMarginDeg: 3,
+    unobservedBandDeg: 2,
+    ...OPAL,
   },
   {
+    // Hubble OPAL, rotation 2025a (2025-08-29, 05:53 à 23:47 UT, cinq mois après le passage de la Terre
+    // dans le plan des anneaux), composite F631N/F502N/F395N du producteur, 5 px/degré (1800 px : 1k
+    // seulement). Se retélécharge :
+    // https://archive.stsci.edu/missions/hlsp/opal/cycle32/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2025a_f395n-f502n-f631n_v1_globalmap.tif
+    // Bord gauche = 360° Ouest System III, décroissant vers la droite (README) : même cadrage que Jupiter.
     body: 'saturn',
     layer: 'surface',
-    src: `${V1}/saturn/saturn_surface_8k.jpg`,
+    src: `${V1}/saturn/hlsp_opal_hst_wfc3-uvis_saturn-2025a_f395n-f502n-f631n_v1_globalmap.tif`,
     resolutions: ['4k', '2k', '1k'],
     fillHoles: false,
-    ...SSS,
+    centerLongitude: 180,
+    edition: 'opal_2025a',
+    unobserved: 'latitude-band-mean',
+    unobservedMarginDeg: 3,
+    unobservedBandDeg: 2,
+    ...OPAL,
   },
   {
     body: 'saturn',
@@ -825,8 +863,99 @@ function readPds3Image(path) {
   return { input: pixels, options: { raw: { width, height, channels: 1 } } };
 }
 
+/**
+ * Les latitudes non observées d'une carte d'atmosphère (`unobserved: 'latitude-band-mean'`), remplacées
+ * par la couleur moyenne MESURÉE des latitudes observées qui les bordent. Rend une entrée brute de sharp.
+ */
+async function fillUnobservedLatitudes(entry) {
+  const { data, info } = await sharp(entry.src, { limitInputPixels: false })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width: W, height: H, channels: C } = info;
+  const rowsPerDeg = H / 180;
+  const observed = new Array(H);
+  for (let y = 0; y < H; y++) {
+    let black = 0;
+    for (let x = 0; x < W; x++) {
+      const o = (y * W + x) * C;
+      if (data[o] + data[o + 1] + data[o + 2] < 6) black++;
+    }
+    observed[y] = black <= W * 0.01;
+  }
+  // La marge : les franges du bord de coupe sont des pixels colorés mais faux.
+  const margin = Math.round((entry.unobservedMarginDeg ?? 0) * rowsPerDeg);
+  const keep = observed.slice();
+  for (let y = 0; y < H; y++)
+    if (!observed[y])
+      for (let d = -margin; d <= margin; d++)
+        if (y + d >= 0 && y + d < H) keep[y + d] = false;
+  const band = Math.max(
+    1,
+    Math.round((entry.unobservedBandDeg ?? 2) * rowsPerDeg)
+  );
+  /** Couleur moyenne des `band` lignes observées à partir de `from`, dans le sens `step`. */
+  const bandMean = (from, step) => {
+    const sum = [0, 0, 0];
+    let n = 0;
+    for (let y = from, k = 0; y >= 0 && y < H && k < band; y += step) {
+      if (!keep[y]) break;
+      k++;
+      for (let x = 0; x < W; x++) {
+        const o = (y * W + x) * C;
+        sum[0] += data[o];
+        sum[1] += data[o + 1];
+        sum[2] += data[o + 2];
+        n++;
+      }
+    }
+    return n ? sum.map((v) => v / n) : null;
+  };
+  let replaced = 0;
+  for (let y = 0; y < H;) {
+    if (keep[y]) {
+      y++;
+      continue;
+    }
+    let end = y;
+    while (end < H && !keep[end]) end++;
+    const above = y > 0 ? bandMean(y - 1, -1) : null;
+    const below = end < H ? bandMean(end, 1) : null;
+    if (!above && !below)
+      throw new Error(`${entry.src} : aucune latitude observée`);
+    for (let r = y; r < end; r++) {
+      const t = above && below ? (r - y + 1) / (end - y + 1) : 0;
+      const colour =
+        above && below
+          ? above.map((a, i) => a + (below[i] - a) * t)
+          : (above ?? below);
+      for (let x = 0; x < W; x++) {
+        const o = (r * W + x) * C;
+        data[o] = Math.round(colour[0]);
+        data[o + 1] = Math.round(colour[1]);
+        data[o + 2] = Math.round(colour[2]);
+      }
+      replaced++;
+    }
+    y = end;
+  }
+  console.log(
+    `  latitudes non observées remplacées : ${replaced} lignes sur ${H} (${((replaced / H) * 100).toFixed(1)} %)`
+  );
+  return {
+    input: data,
+    options: { raw: { width: W, height: H, channels: C } },
+  };
+}
+
+const prepared = new Map();
+
 /** La source d'une entrée, ouverte par sharp ; une image PDS3 passe par son étiquette. */
 function openSource(entry) {
+  if (prepared.has(entry)) {
+    const { input, options } = prepared.get(entry);
+    return sharp(input, { ...options, limitInputPixels: false });
+  }
   if (/\.img$/i.test(entry.src)) {
     const { input, options } = readPds3Image(entry.src);
     return sharp(input, { ...options, limitInputPixels: false });
@@ -841,6 +970,12 @@ async function importOne(entry) {
     return;
   }
 
+  if (entry.unobserved === 'latitude-band-mean' && !prepared.has(entry))
+    prepared.set(entry, await fillUnobservedLatitudes(entry));
+  else if (entry.unobserved !== undefined && !prepared.has(entry))
+    throw new Error(
+      `${entry.body} : unobserved ${entry.unobserved} non pris en charge`
+    );
   const meta = await openSource(entry).metadata();
   const srcWidth = meta.width ?? 0;
   const srcHeight = meta.height ?? 0;
@@ -852,7 +987,7 @@ async function importOne(entry) {
   const heightFor = (w) =>
     isEqui ? Math.round(w / 2) : Math.round((w * srcHeight) / srcWidth);
 
-  const base = baseName(entry.body, entry.layer);
+  const base = baseName(entry.body, entry.layer, entry.edition);
   console.log(
     `\n${entry.body}/${base}  (source ${srcWidth}×${srcHeight} ${meta.format}${isEqui ? '' : ' — ratio préservé'})`
   );

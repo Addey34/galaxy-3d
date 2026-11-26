@@ -10,26 +10,41 @@
     {
       "rel": "license",
       "href": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "rel": "via",
+      "href": "https://archive.stsci.edu/hlsp/opal"
     }
   ],
   "providers": [
     {
-      "name": "Solar System Scope (solarsystemscope.com)",
+      "name": "NASA, ESA, A.A. Simon, M.H. Wong: Hubble Space Telescope WFC3/UVIS, Outer Planet Atmospheres Legacy (OPAL), MAST high-level science product, DOI 10.17909/T9G593",
       "roles": [
-        "licensor",
-        "producer"
+        "producer",
+        "licensor"
       ]
     }
   ],
   "tier": "free",
-  "colorNature": "illustrative",
+  "colorNature": "enhanced",
+  "filled": true,
+  "observed": {
+    "from": "2025-12-11T07:24:09Z",
+    "to": "2025-12-11T15:40:10Z"
+  },
+  "sourceUrl": "https://archive.stsci.edu/hlsp/opal/opal-jupiter-cycle-32",
   "review": {
-    "status": "reference",
-    "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/photojournal/pia/pia19/pia19643/PIA19643.tif",
-    "sourcePage": "https://science.nasa.gov/photojournal/spinning-jupiter-and-global-map/",
-    "sourceResolution": "global Hubble map, dynamic atmosphere",
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://archive.stsci.edu/missions/hlsp/opal/cycle32/jupiter/hlsp_opal_hst_wfc3-uvis_jupiter-2025a_f395n-f502n-f631n_v1_globalmap.tif",
+    "sourcePage": "https://archive.stsci.edu/hlsp/opal/opal-jupiter-cycle-32",
+    "sourceResolution": "10 pixels/degree global map (3600 x 1800), Hubble WFC3/UVIS, rotation 2025a",
+    "sourcePixelWidth": 3600,
     "projection": "equirectangular",
     "qualityClass": "dynamic",
-    "note": "Jupiter has no permanent surface; texture is an atmospheric snapshot and must be date-labelled."
+    "license": "CC BY 4.0 (FITS header LICENSE, LIC_ATTR read 2026-11-26)",
+    "credit": "NASA, ESA, A.A. Simon, M.H. Wong",
+    "attributionNeeded": true,
+    "note": "Remplace le 2026-11-26 la carte de Solar System Scope (illustrative). Composite couleur du PRODUCTEUR (TIF du jeu, filtres F631N rouge, F502N vert, F395N bleu, legere accentuation du contraste par OPAL ; nature enhanced et non natural : chaque bande est etiree par le producteur, couleur moyenne mesuree de la bande -45/+45 degres R/V 1,15, B/V 0,89), premiere rotation du cycle 32 : 2025-12-11 07:24:09 a 15:40:10 UTC (README du jeu ; DATE-OBS de l'en-tete FITS). Cadrage du README : bord gauche = 0 degre Ouest System III, longitudes Ouest decroissantes vers la droite, donc l'Est croit vers la droite ; roule d'un demi-tour vers le cadrage de l'application. Temoin du SENS : morphologique (le sillage turbulent de la Grande Tache rouge est a l'Ouest, a gauche de la carte source) ; aucun temoin publie de la longitude System III de la Tache a cette date trouve. La phase de rotation de Jupiter n'est pas datee dans l'application (config/datedRotation) : la longitude affichee de la Tache n'est donc pas celle du jour de la scene. Latitudes non observees (au-dela d'environ 85 degres Nord et 82 degres Sud) et 3 degres de franges au bord de coupe : remplacees par la couleur moyenne mesuree des 2 degres observes qui les bordent, sans detail invente (10,9 % des lignes). Limite mesuree : la correction de limbe du producteur (Minnaert) laisse une luminance croissante vers les poles (151 a 70 degres Nord, 209 a 82 degres Nord, moyenne par ligne), publiee telle quelle. 2k au plus : 3600 px de source."
   }
 }

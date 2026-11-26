@@ -1293,6 +1293,15 @@ button {
 .bi-desc[hidden] {
   display: none;
 }
+.bi-surface-note {
+  margin: var(--sp-2) 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+.bi-surface-note[hidden] {
+  display: none;
+}
 /* Renvoi numéroté vers la source, date de validité d'un fait qui évolue. */
 .bi-stats .bi-ref {
   margin-left: 0.15em;

@@ -1998,6 +1998,16 @@
                 "$ref": "#/$defs/__schema0"
               }
             },
+            "textureEditions": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$"
+              }
+            },
             "fallbackColor": {
               "type": "string",
               "pattern": "^0x[0-9a-f]{6}$"

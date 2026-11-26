@@ -239,7 +239,7 @@ function bootTextureLayers(): BootTextureDerivation {
       if (!declared?.length) continue;
       const basePath =
         config.textures?.[layer as keyof typeof config.textures] ??
-        texturePath(name, layer);
+        texturePath(name, layer, config.textureEditions?.[layer as never]);
       // La distance 100 que passe `_loadAllTextures` : aucun seuil ne la couvre, donc le repli
       // de `chooseTextureQuality` décide — et il prend le DERNIER palier déclaré.
       const chosen = chooseTextureQuality(sorted, declared, 100);

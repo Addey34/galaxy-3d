@@ -47,12 +47,27 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
 
 2. **CC BY 4.0: Solar System Scope, and ISAS/JAXA for `ryugu`.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.
-   8k variants): `mercury`, `venus`, `mars`, `moon`, `jupiter`, `saturn`, `uranus`, `neptune`,
-   `sun`, `stars`. Keep the "Solar System Scope (CC BY 4.0)" credit in the app. **Note: `earth` is
+   8k variants): `mercury`, `venus`, `mars`, `moon`, `saturn` (ring only since 2026-11-26), `uranus`,
+   `neptune`, `sun`, `stars`. Keep the "Solar System Scope (CC BY 4.0)" credit in the app. SUPERSEDED
+   2026-11-26: the `jupiter` and `saturn` SURFACES are no longer Solar System Scope (see the Hubble OPAL
+   entry below). **Note: `earth` is
    NASA and NOAA public domain (group 1 above), not Solar System Scope**, despite otherwise sharing this
    provider with the rest of the planet set. `saturn/saturn_ring_8k.jpg` was regenerated on
    2026-09-16 from the same Solar System Scope file (`8k_saturn_ring_alpha.png`): the previous
    export had leaked white pixels from under the transparent inner edge.
+
+   **`jupiter` and `saturn` surfaces (since 2026-11-26): Hubble OPAL, CC BY 4.0.** Global colour maps of
+   the Outer Planet Atmospheres Legacy program (NASA/ESA Hubble Space Telescope, WFC3/UVIS), high-level
+   science products of MAST, DOI 10.17909/T9G593, licence and attribution read in the FITS header on
+   2026-11-26 (`LICENSE = 'CC BY 4.0'`, `LIC_ATTR = 'NASA, ESA, A.A. Simon, M.H. Wong'`). Files: the
+   producer's colour composites (F631N, F502N, F395N, slight contrast enhancement by OPAL), Jupiter
+   rotation 2025a (2025-12-11) and Saturn rotation 2025a (2025-08-29). Modified by this project:
+   rolled half a turn to the app's longitude framing, resized (Jupiter 2k and 1k, Saturn 1k), and the
+   latitudes the maps do not cover (polar caps, the band hidden by Saturn's rings, 3 degrees of edge
+   fringes) replaced by the measured mean colour of the bordering observed latitudes. The credit
+   "Hubble OPAL, NASA, ESA, A.A. Simon, M.H. Wong (CC BY 4.0)" is shown in the app's help credits and
+   on /sources. The program asks publications to cite Simon et al. 2015 and Wong et al. 2020 (as listed on the MAST page)
+   and the DOI.
 
    **`ryugu` (since 2026-10-05)** carries an albedo map made by this project: no albedo map of
    Ryugu is published as a data product. Source: the Hayabusa2 ONC seven-filter cubes,

@@ -205,6 +205,8 @@ export interface CelestialBodyConfig {
   rotationSpeed: number;
   orbitalColor: number;
   textureResolutions: TextureResolutions;
+  /** Édition d'une couche, dans le nom de ses fichiers (`catalog.texturePath`) ; absente = nom historique. */
+  textureEditions?: Partial<Record<keyof TextureResolutions, string>>;
   /**
    * Chemins de texture par couche. Normalement **dérivé** de la clé du corps +
    * `textureResolutions` (voir `catalog.deriveTextures`, peuplé au chargement) ; ne l'écrire

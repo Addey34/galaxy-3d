@@ -23,6 +23,8 @@ const LADDER_PATH = join(PROJECT_ROOT, 'src/config/textureLadder.json');
 interface LadderRow {
   body: string;
   layer: string;
+  /** Édition de la couche (`textureEditions`), quand le nom du fichier en porte une. */
+  edition?: string;
   shipped: TextureQuality[];
   detail: Partial<Record<TextureQuality, number>>;
   bytes: number;
@@ -85,8 +87,14 @@ function declaredLayers(): {
   body: string;
   layer: string;
   tiers: TextureQuality[];
+  edition?: string;
 }[] {
-  const out: { body: string; layer: string; tiers: TextureQuality[] }[] = [];
+  const out: {
+    body: string;
+    layer: string;
+    tiers: TextureQuality[];
+    edition?: string;
+  }[] = [];
   for (const { name, config } of [
     ...allBodies(CELESTIAL_CONFIG),
     ...allBodies({ bodies: SMALL_BODIES }),
@@ -94,7 +102,13 @@ function declaredLayers(): {
     for (const [layer, tiers] of Object.entries(
       (config.textureResolutions ?? {}) as TextureResolutions
     )) {
-      if (tiers?.length) out.push({ body: name, layer, tiers: [...tiers] });
+      if (tiers?.length)
+        out.push({
+          body: name,
+          layer,
+          tiers: [...tiers],
+          edition: config.textureEditions?.[layer as keyof TextureResolutions],
+        });
     }
     if (config.ring?.textureResolutions?.length)
       out.push({
@@ -107,7 +121,7 @@ function declaredLayers(): {
   // exigeant que les deux vues declarent la meme echelle.
   const byKey = new Map<
     string,
-    { body: string; layer: string; tiers: TextureQuality[] }
+    { body: string; layer: string; tiers: TextureQuality[]; edition?: string }
   >();
   for (const entry of out) {
     const key = `${entry.body}/${entry.layer}`;
@@ -117,6 +131,16 @@ function declaredLayers(): {
     else byKey.set(key, entry);
   }
   return [...byKey.values()];
+}
+
+/** Le fichier d'un palier, avec l'édition éventuelle (`catalog.texturePath`). */
+function tierFile(row: LadderRow, tier: TextureQuality): string {
+  const edition = row.edition ? `__${row.edition}` : '';
+  return join(
+    TEXTURE_ROOT,
+    row.body,
+    `${row.body}_${row.layer}${edition}_${tier}.jpg`
+  );
 }
 
 const rowCases = ladder.rows.map((r) => [`${r.body}/${r.layer}`, r] as const);
@@ -145,6 +169,11 @@ describe('echelle de resolutions d une texture (lot 16)', () => {
       ).toBeDefined();
       // Le catalogue declare du plus fin au plus grossier, le releve l'inverse.
       expect([...declared!.tiers].sort()).toEqual([...row.shipped].sort());
+      // L'édition des fichiers mesurés est celle que le catalogue demande (GAL-CATALOG-EXCELLENCE-001) :
+      // sinon le client chargerait un autre fichier que celui qui a été mesuré.
+      expect(row.edition, `${row.body}/${layer} édition`).toBe(
+        declared!.edition
+      );
     }
   );
 
@@ -199,11 +228,7 @@ describe('echelle de resolutions d une texture (lot 16)', () => {
   it('chaque fichier livre a la taille de son palier', () => {
     for (const row of ladder.rows) {
       for (const tier of row.shipped) {
-        const path = join(
-          TEXTURE_ROOT,
-          row.body,
-          `${row.body}_${row.layer}_${tier}.jpg`
-        );
+        const path = tierFile(row, tier);
         const { width } = jpegSize(path);
         // Un anneau et un noyau cometaire gardent le ratio de leur source : seule la largeur
         // est un palier, et elle ne peut jamais DEPASSER la largeur nominale.
@@ -219,11 +244,7 @@ describe('echelle de resolutions d une texture (lot 16)', () => {
   it('le poids releve est celui des fichiers sur disque', () => {
     for (const row of ladder.rows) {
       const bytes = row.shipped.reduce(
-        (sum, tier) =>
-          sum +
-          statSync(
-            join(TEXTURE_ROOT, row.body, `${row.body}_${row.layer}_${tier}.jpg`)
-          ).size,
+        (sum, tier) => sum + statSync(tierFile(row, tier)).size,
         0
       );
       expect(bytes, `${row.body}/${row.layer}`).toBe(row.bytes);

@@ -227,7 +227,7 @@ export const fr: Record<MessageKey, string> = {
   'help.tip.time.text': 'molette pour voyager dans le temps, tap pour choisir',
   'credits.textures': 'Textures',
   'credits.textures.list':
-    'USGS Astrogeology / NASA-JPL (domaine public) · Solar System Scope (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0 ; l’édition 2016 en CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida : Philip Stooke / NASA PDS · Ryugu : ISAS/JAXA Hayabusa2 ONC (modifiée) · Lutetia, 67P : ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modifiées).',
+    'USGS Astrogeology / NASA-JPL (domaine public) · Solar System Scope (CC BY 4.0) · Jupiter, Saturne : Hubble OPAL, NASA, ESA, A.A. Simon, M.H. Wong (CC BY 4.0) · NOAA ETOPO 2022 · Sentinel-2 cloudless, EOX IT Services GmbH (CC BY-NC-SA 4.0 ; l’édition 2016 en CC BY 4.0) · IGN BD ORTHO® (Etalab 2.0) · Halley, Itokawa, Gaspra, Ida : Philip Stooke / NASA PDS · Ryugu : ISAS/JAXA Hayabusa2 ONC (modifiée) · Lutetia, 67P : ESA/Rosetta OSIRIS, ESA, H. Sierks (CC BY-NC 3.0 IGO, modifiées).',
   'credits.fictional': 'Surfaces fictives',
   'credits.fictional.list':
     'Les corps jamais cartographiés globalement ont une texture illustrative, pas une carte scientifique ; la fiche du corps le signale, et Sources les énumère.',
@@ -540,6 +540,13 @@ export const fr: Record<MessageKey, string> = {
   'bi.collapse': 'Afficher moins',
   'bi.live.label': 'Distance depuis vous',
   'bi.color': 'Couleur : {nature}',
+  'bi.surfaceNote':
+    "Cette carte est un instantané d'une atmosphère observée le {date} : elle montre ce jour-là, pas la date de la scène.",
+  'bi.surfaceNote.filled':
+    "Les latitudes qu'elle ne couvre pas sont complétées par la couleur moyenne mesurée de leurs bords, sans détail inventé.",
+  'bi.color.dated': 'Couleur : {nature}, {date}',
+  'bi.color.observedHint':
+    'Atmosphère observée le {date} : elle change, cette carte montre ce jour-là, pas la date de la scène.',
   'bi.color.natural': 'naturelle',
   'bi.color.natural.hint':
     'Couleurs en lumière visible, proches de ce que verrait l’œil.',
@@ -558,6 +565,9 @@ export const fr: Record<MessageKey, string> = {
   'bi.color.false-color': 'fausses couleurs',
   'bi.color.false-color.hint':
     'Couleurs attribuées à des bandes qui ne sont pas le rouge, le vert et le bleu visibles : ce ne sont pas celles que verrait l’œil.',
+  'bi.color.enhanced': 'couleur accentuée',
+  'bi.color.enhanced.hint':
+    'Bandes visibles rouge, verte et bleue, chacune étirée par le producteur : les teintes sont réelles, leur équilibre n’est pas celui de l’œil.',
   'bi.color.generated': 'générée',
   'bi.color.generated.hint':
     'Texture produite par ce projet : aucune sonde n’a imagé cette surface.',

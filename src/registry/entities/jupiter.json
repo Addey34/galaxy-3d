@@ -19,10 +19,12 @@
     "orbitalColor": "0xd89a5b",
     "textureResolutions": {
       "surface": [
-        "4k",
         "2k",
         "1k"
       ]
+    },
+    "textureEditions": {
+      "surface": "opal_2025a"
     },
     "realData": {
       "orbitalInclination": {

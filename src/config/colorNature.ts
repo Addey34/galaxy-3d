@@ -38,7 +38,7 @@ export const COLOR_NATURE_BY_BODY: ReadonlyMap<string, ColorNature> = new Map<
   ['ida', 'monochrome'],
   ['io', 'colorized'],
   ['itokawa', 'monochrome'],
-  ['jupiter', 'illustrative'],
+  ['jupiter', 'enhanced'],
   ['kerberos', 'generated'],
   ['lutetia', 'monochrome'],
   ['makemake', 'illustrative'],
@@ -59,7 +59,7 @@ export const COLOR_NATURE_BY_BODY: ReadonlyMap<string, ColorNature> = new Map<
   ['quaoar', 'generated'],
   ['rhea', 'monochrome'],
   ['ryugu', 'colorized'],
-  ['saturn', 'illustrative'],
+  ['saturn', 'enhanced'],
   ['sedna', 'generated'],
   ['stars', 'illustrative'],
   ['styx', 'generated'],
@@ -72,6 +72,20 @@ export const COLOR_NATURE_BY_BODY: ReadonlyMap<string, ColorNature> = new Map<
   ['uranus', 'illustrative'],
   ['venus', 'radar'],
   ['vesta', 'monochrome'],
+]);
+
+/**
+ * Le JOUR (UTC) où une surface qui est un INSTANTANÉ a été observée : une atmosphère change, la carte vaut à
+ * cette date et la fiche le dit (GAL-CATALOG-EXCELLENCE-001), ainsi que les latitudes complétées (`filled`).
+ * Copie des champs `observed.from` et `filled` des fiches
+ * `src/registry/products/textures/*-surface.json`, confrontée par `colorNature.test.ts`.
+ */
+export const SURFACE_OBSERVED_BY_BODY: ReadonlyMap<
+  string,
+  { readonly day: string; readonly filled: boolean }
+> = new Map([
+  ['jupiter', { day: '2025-12-11', filled: true }],
+  ['saturn', { day: '2025-08-29', filled: true }],
 ]);
 
 /** Nature de la couleur d'une surface, ou `undefined` pour un corps sans surface livrée. */
