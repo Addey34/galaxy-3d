@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { GAIA_ENABLED } from '../../scripts/generate-neighbours.mjs';
 import {
   archiveMatches,
   archivePlanetCount,
@@ -197,7 +198,12 @@ describe('la visite du voisinage solaire : chaque étape contre les données liv
     // L'archive donne à ces trois hôtes une distance (`sy_dist`, relue telle quelle dans le CSV de l'instantané du
     // 2026-11-03 : 5,675773, 5,921535 et 6,84 pc) qui diverge du catalogue des voisines (2,55, 3,79 et 3,52 pc, Gaia DR3).
     // La visite n'affiche JAMAIS la distance de l'archive ; ce test fait remarquer tout NOUVEL écart.
+    // Avec HYG seul (GAL-RIGHTS-SAFEGUARD-001), GJ 1061 est à 4,29 pc (parallaxe ancienne de Gliese)
+    // contre 3,67 pc dans l'archive (et 3,674 pc dans Gaia DR3) : écart CONNU, nommé à part.
     const KNOWN = new Set(['GJ 411', 'GJ 273', 'Gl 725 B']);
+    const KNOWN_HYG_ONLY = GAIA_ENABLED
+      ? new Set<string>()
+      : new Set(['GJ 1061']);
     const unexpected: string[] = [];
     for (const system of systems)
       for (const match of archiveMatches(system, exoplanets.systems)) {
@@ -207,7 +213,8 @@ describe('la visite du voisinage solaire : chaque étape contre les données liv
         if (
           host[3] !== null &&
           (host[3] < nearest * 0.9 || host[3] > farthest * 1.1) &&
-          !KNOWN.has(match.host)
+          !KNOWN.has(match.host) &&
+          !KNOWN_HYG_ONLY.has(match.host)
         )
           unexpected.push(`${match.host} : ${host[3]} pc`);
       }

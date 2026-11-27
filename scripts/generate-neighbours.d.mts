@@ -28,6 +28,8 @@ export interface GaiaCandidate {
 }
 
 export const MAX_DISTANCE_PC: number;
+/** GAL-RIGHTS-SAFEGUARD-001 : faux tant que l'ESA n'a pas répondu (fichier HYG seul). */
+export const GAIA_ENABLED: boolean;
 export const FIELDS: string[];
 export function displayName(star: HygStar): string;
 export function propagate(

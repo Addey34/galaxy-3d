@@ -250,7 +250,9 @@ export async function setupNeighbourCard(
     });
     // Le remerciement exigé par l'ESA, verbatim (en anglais, comme l'exige la source).
     acknowledgement.textContent =
-      primary[11] === 'gaia-dr3' ? file.source.gaia.acknowledgement : '';
+      primary[11] === 'gaia-dr3'
+        ? (file.source.gaia?.acknowledgement ?? '')
+        : '';
     acknowledgement.hidden = acknowledgement.textContent === '';
   }
 

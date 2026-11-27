@@ -51,7 +51,7 @@ for (const [label, viewport, hasTouch] of [
   test.describe(label, () => {
     test.use({ viewport, hasTouch });
 
-    test('nothing is loaded at start; opening from the settings shows the Sun-centred view, the scale and 48 systems', async ({
+    test('nothing is loaded at start; opening from the settings shows the Sun-centred view, the scale and 49 systems', async ({
       page,
     }) => {
       const requests: string[] = [];
@@ -74,7 +74,7 @@ for (const [label, viewport, hasTouch] of [
       await expect(view.locator('#stellar-scale')).toContainText(
         '1 unit = 1 parsec = 3.26 light-years'
       );
-      await expect(view.locator('#stellar-list button')).toHaveCount(48);
+      await expect(view.locator('#stellar-list button')).toHaveCount(49); // 48 avec Gaia, 49 avec HYG seul (GAL-RIGHTS-SAFEGUARD-001)
       // Un seul canevas (un seul renderer), la scène solaire est masquée et inerte.
       // La vue n'a ajouté aucun canevas : elle dessine sur celui du renderer de l'application.
       await expect(page.locator('canvas')).toHaveCount(canvases);
@@ -143,17 +143,18 @@ for (const [label, viewport, hasTouch] of [
         .locator('#stellar-list button', { hasText: /^Proxima Centauri/ })
         .click();
       const card = page.locator('#stellar-card');
-      await expect(card).toContainText(/4\.246\d* ± 0\.000\d+ light-years/);
+      // HYG seul (GAL-RIGHTS-SAFEGUARD-001) : 1,2959 pc, sans incertitude publiée.
+      await expect(card).toContainText(/4\.22\d* light-years/);
       const text = (await card.locator('dd').allTextContents()).join('|');
       const match = /(-?[\d.]+), (-?[\d.]+), (-?[\d.]+) pc/.exec(text);
       expect(match, text).not.toBeNull();
       const [x, y, z] = match!.slice(1).map(Number) as [number, number, number];
-      // Soleil à l'origine : la norme des trois coordonnées est la distance publiée, 1,302 pc.
+      // Soleil à l'origine : la norme des trois coordonnées est la distance publiée, 1,2959 pc (HYG).
       expect(Math.hypot(x, y, z)).toBeGreaterThan(1.29);
       expect(Math.hypot(x, y, z)).toBeLessThan(1.315);
       // Proxima est près du plan galactique (b ≈ −1,9°) : sa hauteur z est faible devant sa distance.
       expect(Math.abs(z)).toBeLessThan(0.06);
-      await expect(card).toContainText('Gaia DR3');
+      await expect(card).toContainText('HYG v4.4');
       await expect(page.locator('#stellar-view .sv-symbolic')).toContainText(
         'constant size'
       );
@@ -286,7 +287,8 @@ for (const [label, viewport, hasTouch] of [
         page.locator('#stellar-list button[aria-pressed="true"]')
       ).toContainText("Barnard's Star");
       await expect(page.locator('#stellar-card')).toContainText(
-        /5\.96\d* ± 0\.000\d+ light-years/
+        // HYG seul (GAL-RIGHTS-SAFEGUARD-001) : 1,8238 pc, soit 5,948 al, sans incertitude.
+        /5\.94\d* light-years/
       );
       await page.keyboard.press('Escape');
       await expect(page.locator('#stellar-view')).toHaveCount(0);
@@ -302,7 +304,9 @@ for (const [label, viewport, hasTouch] of [
         .click();
       const distanceAt = async (): Promise<number> => {
         const dds = await page.locator('#stellar-card dd').allTextContents();
-        const hit = dds.find((d) => /light-years/.test(d) && !/±/.test(d));
+        // La distance À LA DATE est la dernière ligne en années-lumière (la publiée vient avant, et
+        // HYG n'a pas d'incertitude qui la distinguerait).
+        const hit = dds.filter((d) => /light-years/.test(d)).at(-1);
         return Number(/([\d.]+) light-years/.exec(hit ?? '')![1]);
       };
       const now = await distanceAt();

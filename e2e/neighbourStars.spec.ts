@@ -49,7 +49,7 @@ for (const [label, viewport, hasTouch] of [
       await expect(page.locator('.neighbour-names')).toHaveCount(0);
     });
 
-    test('searching Proxima opens its card with the Gaia distance, units and provenance, no axe violation', async ({
+    test('searching Proxima opens its card with the HYG distance, units and provenance, no axe violation', async ({
       page,
     }) => {
       await boot(page);
@@ -63,14 +63,14 @@ for (const [label, viewport, hasTouch] of [
         'Proxima Centauri'
       );
       const facts = card.locator('.exo-facts');
-      // Gaia DR3 : parallaxe 768,07 mas, soit 4,2465 al, avec son incertitude (±).
-      await expect(facts).toContainText(/4\.246\d* ± 0\.000\d+ light-years/);
-      await expect(facts).toContainText(/268,\d{3} AU/);
-      await expect(facts).toContainText('2.69 km');
-      await expect(card).toContainText('Gaia DR3, source 5853498713190525696');
-      await expect(card).toContainText(
-        'This work has made use of data from the European Space Agency'
-      );
+      // GAL-RIGHTS-SAFEGUARD-001 : Gaia suspendu, HYG seul (1,2959 pc, soit 4,2267 al, sans incertitude).
+      await expect(facts).toContainText(/4\.22\d* light-years/);
+      await expect(facts).not.toContainText('±');
+      await expect(facts).toContainText(/267,\d{3} AU/);
+      await expect(facts).toContainText('2.67 km');
+      await expect(card).toContainText('HYG v4.4');
+      await expect(card).not.toContainText('Gaia');
+      await expect(card).not.toContainText('has made use of data');
       // Une seule surface contextuelle, et le corps suivi n'a pas changé.
       await expect(page.locator('#orbit-options')).toBeHidden();
       await expect(page).toHaveURL(/\/neptune\//);
@@ -155,7 +155,9 @@ for (const [label, viewport, hasTouch] of [
       await expect(card.locator('#neighbour-card-name')).toHaveText(
         'Proxima Centauri'
       );
-      await expect(card.locator('.exo-facts')).toContainText(/4\.246\d* ±/);
+      await expect(card.locator('.exo-facts')).toContainText(
+        /4\.22\d* light-years/
+      ); // HYG seul
       await expect(card.locator('.surface-close')).toBeFocused();
       // Fermée par Échap ; la scène n'a jamais quitté Neptune.
       await page.keyboard.press('Escape');
@@ -276,9 +278,9 @@ test.describe('lazy loading, rapid toggles, languages', () => {
     await expect(page.locator('#neighbour-card-name')).toHaveText(
       "Barnard's Star"
     );
-    // Barnard : 10,4″/an et il se rapproche ; la fiche le dit, sa source est Gaia.
+    // Barnard se rapproche ; la fiche le dit, sa source est HYG (Gaia suspendu).
     await expect(page.locator('#neighbour-card')).toContainText('approaching');
-    await expect(page.locator('#neighbour-card')).toContainText('Gaia DR3');
+    await expect(page.locator('#neighbour-card')).toContainText('HYG v4.4');
   });
 
   for (const [locale, light, unit, toggleLabel] of [

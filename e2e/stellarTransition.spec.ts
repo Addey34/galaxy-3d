@@ -206,7 +206,9 @@ test.describe('the change of scale', () => {
     await expect(
       page.locator('#stellar-list button[aria-pressed="true"]')
     ).toContainText("Barnard's Star");
-    await expect(page.locator('#stellar-card')).toContainText(/5\.96\d* ±/);
+    await expect(page.locator('#stellar-card')).toContainText(
+      /5\.94\d* light-years/
+    ); // HYG seul
   });
 
   test('the solar context is kept: same body and same URL after an interrupted transition', async ({

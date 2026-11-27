@@ -25,6 +25,15 @@
  *
  * REMERCIEMENT EXIGÉ par l'ESA (lu le 2026-11-22 sur la page « Credit and citation instructions »
  * de la documentation de Gaia DR3) : texte verbatim dans `source.gaia.acknowledgement`.
+ *
+ * GAIA SUSPENDU (GAL-RIGHTS-SAFEGUARD-001, 2026-11-27). Les valeurs de Gaia DR3 sont sous CC BY-NC
+ * 3.0 IGO, incompatible avec le partage à l'identique de HYG dans un même fichier, et l'usage non
+ * commercial du site est soumis à l'ESA (demande envoyée par le propriétaire). En attendant,
+ * `GAIA_ENABLED = false` : le fichier ne contient QUE HYG v4.4 (`source.gaia` vaut null, chaque ligne
+ * `origin: 'hyg-v44'`). Réversible : remettre `true` et relancer (le cache de l'ESA est gardé).
+ * Sans Gaia, le mouvement plafonné de HYG (Barnard) est GARDÉ et DÉCLARÉ comme borne inférieure
+ * (`source.neighbours.pmCapMasPerYear`), pour ne pas casser les liens vers l'étoile : sur la position
+ * à la date de la scène, l'écart est de 0,36″ par an depuis J2000,0 (moins de 10″ en 2026).
  */
 import { Buffer } from 'node:buffer';
 import { gunzipSync } from 'node:zlib';
@@ -37,6 +46,8 @@ const OUT = 'public/assets/sky/neighbours.json';
 const TAP = 'https://gea.esac.esa.int/tap-server/tap/sync';
 export const MAX_DISTANCE_PC = 5;
 const GAIA_EPOCH = 2016;
+/** Voir « GAIA SUSPENDU » en tête : faux tant que l'ESA n'a pas répondu. */
+export const GAIA_ENABLED = false;
 const HYG_PM_CAP = 9999.99;
 const RUWE_MAX = 1.4;
 const PARALLAX_SNR_MIN = 20;
@@ -309,11 +320,11 @@ async function main() {
     throw new Error(`${HYG_CACHE} absent : lancer d'abord pnpm stars:generate`);
   const hyg = readHygNeighbours(readFileSync(HYG_CACHE));
   let cache = {};
-  if (existsSync(GAIA_CACHE) && !args.includes('--refresh'))
+  if (GAIA_ENABLED && existsSync(GAIA_CACHE) && !args.includes('--refresh'))
     cache = JSON.parse(readFileSync(GAIA_CACHE, 'utf8'));
   let queried = 0;
   for (const star of hyg) {
-    if (cache[star.id]) continue;
+    if (!GAIA_ENABLED || cache[star.id]) continue;
     cache[star.id] = await queryGaia(star);
     queried += 1;
   }
@@ -326,8 +337,17 @@ async function main() {
   const rows = [];
   const notes = [];
   for (const star of [...hyg].sort((a, b) => a.vmag - b.vmag)) {
-    const { gaia, reason } = chooseGaia(star, cache[star.id], taken);
+    const { gaia, reason } = GAIA_ENABLED
+      ? chooseGaia(star, cache[star.id], taken)
+      : { gaia: null, reason: 'Gaia suspendu (droits en attente)' };
     if (gaia) taken.add(gaia.sourceId);
+    else if (
+      !GAIA_ENABLED &&
+      (Math.abs(star.pmRa) >= HYG_PM_CAP || Math.abs(star.pmDec) >= HYG_PM_CAP)
+    )
+      notes.push(
+        `${displayName(star)} : mouvement propre HYG plafonné, gardé comme borne inférieure`
+      );
     else if (
       Math.abs(star.pmRa) >= HYG_PM_CAP ||
       Math.abs(star.pmDec) >= HYG_PM_CAP
@@ -366,32 +386,41 @@ async function main() {
     );
   // Le défaut de HYG que ce fichier corrige : Barnard doit venir de Gaia, au-delà du plafond de HYG.
   const barnard = byName.get("Barnard's Star");
-  if (barnard[11] !== 'gaia-dr3' || !(Math.abs(barnard[9]) > HYG_PM_CAP))
+  if (
+    GAIA_ENABLED &&
+    (barnard[11] !== 'gaia-dr3' || !(Math.abs(barnard[9]) > HYG_PM_CAP))
+  )
     throw new Error('Barnard : mouvement propre non corrigé par Gaia');
+  if (!GAIA_ENABLED && rows.some((r) => r.row[11] !== 'hyg-v44'))
+    throw new Error('Gaia suspendu : une ligne ne vient pas de HYG');
 
   const file = {
     source: {
       neighbours: {
-        description:
-          'Étoiles à 5 pc ou moins selon HYG v4.4, distance et mouvement de Gaia DR3 quand la mesure est sûre',
+        description: GAIA_ENABLED
+          ? 'Étoiles à 5 pc ou moins selon HYG v4.4, distance et mouvement de Gaia DR3 quand la mesure est sûre'
+          : 'Étoiles à 5 pc ou moins selon HYG v4.4, valeurs de HYG seules (Gaia DR3 suspendu)',
         maxDistancePc: MAX_DISTANCE_PC,
         gaiaEpoch: GAIA_EPOCH,
+        pmCapMasPerYear: HYG_PM_CAP,
         selection: {
           ruweBelow: RUWE_MAX,
           parallaxSnrAbove: PARALLAX_SNR_MIN,
           hygAgreement: HYG_AGREEMENT,
         },
       },
-      gaia: {
-        id: 'gaia-dr3',
-        name: 'Gaia Data Release 3 (ESA)',
-        url: 'https://www.cosmos.esa.int/gaia',
-        archive: 'https://gea.esac.esa.int/archive/',
-        citationDoi: '10.1051/0004-6361/202243940',
-        acknowledgement: ACKNOWLEDGEMENT,
-        acknowledgementUrl:
-          'https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/',
-      },
+      gaia: GAIA_ENABLED
+        ? {
+            id: 'gaia-dr3',
+            name: 'Gaia Data Release 3 (ESA)',
+            url: 'https://www.cosmos.esa.int/gaia',
+            archive: 'https://gea.esac.esa.int/archive/',
+            citationDoi: '10.1051/0004-6361/202243940',
+            acknowledgement: ACKNOWLEDGEMENT,
+            acknowledgementUrl:
+              'https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/',
+          }
+        : null,
       hyg: {
         id: 'hyg-v44',
         name: 'HYG database v4.4 (Hipparcos, Yale Bright Star, Gliese)',

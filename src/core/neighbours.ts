@@ -37,7 +37,10 @@ export interface NeighbourFile {
       description: string;
       maxDistancePc: number;
       gaiaEpoch: number;
+      /** Plafond du mouvement propre de HYG : une valeur égale est une borne inférieure (Barnard). */
+      pmCapMasPerYear?: number;
     };
+    /** Null quand Gaia est suspendu (GAL-RIGHTS-SAFEGUARD-001) : toutes les lignes viennent de HYG. */
     gaia: {
       name: string;
       url: string;
@@ -45,7 +48,7 @@ export interface NeighbourFile {
       citationDoi: string;
       acknowledgement: string;
       acknowledgementUrl: string;
-    };
+    } | null;
     hyg: { name: string; url: string; license: string; licenseUrl: string };
   };
   fields: string[];

@@ -67,7 +67,7 @@ export const cardEn = {
   'nb.card.hint':
     'The marker shows the real direction of the star. The star itself is not drawn at its distance: the scene stops at the Solar System.',
   'nb.card.source':
-    'Sources: Gaia DR3 (ESA) and HYG v4.4 ({license}). Positions are those of J2000.0; the marker follows the proper motion to the date of the scene.',
+    'Source: HYG v4.4 ({license}). Positions are those of J2000.0; the marker follows the proper motion to the date of the scene.',
   'nb.card.opened': 'Nearby star {name}',
   'nb.unit.ly': 'ly',
   'nb.search.label': 'Find a nearby star',
