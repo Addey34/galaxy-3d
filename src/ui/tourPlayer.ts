@@ -12,7 +12,7 @@
 import { TOUR_CLEARANCE_CHANGED } from './tourClearance';
 import './tourPlayer.css';
 import type { ModeSwitcher } from './modeSwitcher';
-import { onLocaleChange, t, getLocale } from '@/i18n';
+import { onLocaleChange, t, getLocale, intlLocale } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
@@ -36,6 +36,24 @@ import type { SurfacePanelHandle } from './surfacePanel';
 import type { setupPlaceDive } from './placeDive';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import type { PlaybackControls } from './playback';
+import type { CraftOpener } from './craftAccess';
+import type CelestialObject from '@/components/celestial/CelestialObject';
+import { texturePath } from '@/config/catalog';
+import { craftModelFor } from '@/config/craftModels';
+import type { TextureQuality } from '@/types';
+import type { BodySurfaceEditions } from '@/core/surfaceEditions';
+import { formatIsoDay } from '@/core/dateText';
+import Logger from '@/utils/Logger';
+
+/**
+ * Ce que les grandes expéditions empruntent (GAL-TOUR-EXCELLENCE-002) : l'inspection 3D d'un engin,
+ * ouverte comme par le bouton de sa fiche, et le moteur des textures du corps, pour poser une
+ * observation datée comme le ferait la fiche. Ni l'une ni l'autre n'est dupliquée ici.
+ */
+export interface TourExpeditionHost {
+  openCraft: CraftOpener;
+  scene: { getBody(name: string): CelestialObject | undefined };
+}
 
 export interface TourPlayer {
   /**
@@ -89,7 +107,8 @@ export function setupTourPlayer(
    * l'ARIA et le plafond du lien. Une visite qui écrivait l'horloge en direct les laissait dire
    * une autre vitesse que celle qui s'appliquait, et remettait 1:1 en dur à la fin (GAL-PRODUCT-013).
    */
-  speed: Pick<PlaybackControls, 'borrowSpeed' | 'releaseSpeed'>
+  speed: Pick<PlaybackControls, 'borrowSpeed' | 'releaseSpeed'>,
+  expedition: TourExpeditionHost
 ): TourPlayer {
   const helpPopover = document.getElementById('help-popover');
   if (!helpPopover)
@@ -134,6 +153,13 @@ export function setupTourPlayer(
   progress.className = 'stour-progress';
   const caption = document.createElement('p');
   caption.className = 'stour-caption';
+  /**
+   * L'observation datée demandée n'a pas pu être posée (GAL-TOUR-EXCELLENCE-002) : la carte de la visite le
+   * DIT à côté de la légende qui suit, qui décrit l'observation demandée et non celle qui reste affichée.
+   */
+  const notice = document.createElement('p');
+  notice.className = 'stour-notice';
+  notice.hidden = true;
   const actions = document.createElement('div');
   actions.className = 'stour-actions';
   const pauseButton = document.createElement('button');
@@ -163,7 +189,7 @@ export function setupTourPlayer(
   outline.id = 'stour-outline';
   card.setAttribute('aria-describedby', outline.id);
 
-  card.append(outline, progress, caption, actions);
+  card.append(outline, progress, notice, caption, actions);
   document.body.append(backdrop, card);
 
   let active = false;
@@ -179,6 +205,19 @@ export function setupTourPlayer(
   let baseBeforeTour: SurfaceChoiceId | null = null;
   let advanceResolve: (() => void) | null = null;
   let currentScript: TourScript | null = null;
+  /**
+   * Vrai pendant une inspection 3D ouverte par la visite. La carte de la visite porte `aria-live` :
+   * l'inspection ne la masque pas (elle épargne les régions vivantes), donc la visite la retire
+   * elle-même, et lui laisse le clavier (Échap ferme l'INSPECTION, les flèches la font tourner).
+   */
+  let inspecting = false;
+  /** Les éditions de surface posées par la visite, rendues à leur défaut à la fin. */
+  const editionBodies = new Set<string>();
+  /** Les corps dont une édition demandée est encore EN VOL : la fin de visite la rend caduque. */
+  const editionsInFlight = new Set<string>();
+  /** L'échec d'une observation datée, dit dans la carte ; `null` quand rien n'est à signaler. */
+  let editionFailure: { date: string; shown: string } | 'generic' | null = null;
+  let editionCatalogue: Record<string, BodySurfaceEditions> | null = null;
 
   const waitForAdvance = (): Promise<void> =>
     new Promise((resolve) => {
@@ -227,8 +266,24 @@ export function setupTourPlayer(
   let currentStep: TourStep | null = null;
   let lastCaptionText = '';
 
+  const editionDay = (iso: string): string =>
+    formatIsoDay(iso.slice(0, 10), getLocale(), intlLocale());
+  const renderNotice = (): void => {
+    notice.hidden = editionFailure === null;
+    notice.textContent =
+      editionFailure === null
+        ? ''
+        : editionFailure === 'generic'
+          ? t('tours.edition.unavailableGeneric')
+          : t('tours.edition.unavailable', {
+              date: editionDay(editionFailure.date),
+              shown: editionDay(editionFailure.shown),
+            });
+  };
+
   const render = (index: number, step: TourStep): void => {
     if (!currentScript) return;
+    renderNotice();
     progress.textContent = t('tours.progress', {
       current: index + 1,
       total: currentScript.steps.length,
@@ -254,8 +309,11 @@ export function setupTourPlayer(
         caption.textContent = t('tours.status.speeding');
         nextButton.disabled = true;
         break;
+      case 'setMode':
       case 'diveTo':
       case 'setSurface':
+      case 'setEdition':
+      case 'inspectCraft':
       case 'wait':
         caption.textContent = lastCaptionText;
         nextButton.disabled = true;
@@ -332,9 +390,44 @@ export function setupTourPlayer(
     attributeFilter: ['hidden'],
   });
 
+  /**
+   * Rend l'édition par défaut de chaque corps dont la visite a changé la surface. Le bloc des éditions
+   * de la fiche le fait déjà quand la fiche quitte ce corps (mesuré au bureau et à 390 px : retirer cet
+   * appel ne change pas l'état final) ; celui-ci couvre une édition posée sur un corps que la fiche
+   * n'a jamais montré, ce que le schéma permet.
+   */
+  const restoreEditions = (): void => {
+    for (const body of editionBodies) {
+      const cat = editionCatalogue?.[body];
+      const object = expedition.scene.getBody(body);
+      if (!cat || !object) continue;
+      // Une demande encore EN VOL arriverait visite fermée : la demande du défaut, plus récente, la rend
+      // caduque (le moteur ne pose que la dernière, `CelestialObject.setLayerEdition`).
+      if (
+        !editionsInFlight.has(body) &&
+        object.appliedTextureBase(cat.layer)?.split('__')[1] ===
+          cat.defaultEdition
+      )
+        continue;
+      const e = cat.editions.find((x) => x.edition === cat.defaultEdition);
+      if (!e) continue;
+      void object.setLayerEdition(
+        cat.layer,
+        texturePath(body, cat.layer, cat.defaultEdition),
+        e.tiers as TextureQuality[]
+      );
+    }
+    editionBodies.clear();
+    editionsInFlight.clear();
+    editionFailure = null;
+    renderNotice();
+  };
+
   const finish = (): void => {
     active = false;
+    inspecting = false;
     hideOverlay();
+    restoreEditions();
     // La vitesse que le visiteur avait DEMANDÉE avant la visite, signe compris, plafond du lien
     // compris. Sans effet quand la visite n'a pas emprunté la vitesse : elle ne la touche pas.
     speed.releaseSpeed();
@@ -410,6 +503,8 @@ export function setupTourPlayer(
 
     const host: TourRuntimeHost = {
       flyTo: (body) => {
+        // Le signalement d'une observation manquante vaut pour la légende qui la suivait, pas pour la suite.
+        editionFailure = null;
         navigation.selectBody(body);
         // Sur téléphone la fiche que la sélection ouvre réduit la scène à une bande sous la carte
         // de visite (mesuré le 2026-11-19, 390 px : fiche y 52 à 224). La visite l'a ouverte
@@ -456,6 +551,79 @@ export function setupTourPlayer(
         return surface.setBase(base as SurfaceChoiceId);
       },
       waitForAdvance,
+      inspectCraft: async (craft) => {
+        // La carte se retire : l'inspection est une autre vue, plein écran, qui a son propre Échap.
+        // La fiche nomme la SONDE ; l'inspection ouvre un MODÈLE (un modèle peut servir deux sondes).
+        const model = craftModelFor(craft);
+        if (!model) return false;
+        releaseTrap?.();
+        releaseTrap = null;
+        backdrop.hidden = true;
+        card.hidden = true;
+        inspecting = true;
+        const opened = await expedition
+          .openCraft(model.id, null)
+          .catch(() => false);
+        if (!opened) returnFromInspection();
+        return opened;
+      },
+      isInspecting: () => {
+        const open = craftViewOpen();
+        if (!open && inspecting) returnFromInspection();
+        return open;
+      },
+      setEdition: async (body, edition) => {
+        // La visite qui demande : une réponse tardive n'agit jamais sur une visite fermée ou remplacée.
+        const run = signal;
+        let catalogue: Record<string, BodySurfaceEditions> | null;
+        try {
+          catalogue = editionCatalogue ??= (
+            await import('virtual:surface-edition-catalogue')
+          ).default;
+        } catch (error: unknown) {
+          // Le morceau du catalogue n'est pas arrivé : la visite continue et le dit.
+          Logger.warn('[tourPlayer] catalogue des éditions illisible', error);
+          catalogue = null;
+        }
+        if (run.cancelled) return false;
+        const cat = catalogue?.[body];
+        const wanted = cat?.editions.find((e) => e.edition === edition);
+        const object = expedition.scene.getBody(body);
+        if (!cat || !wanted || !object) {
+          editionFailure = 'generic';
+          renderNotice();
+          return false;
+        }
+        editionBodies.add(body);
+        editionsInFlight.add(body);
+        let ok = false;
+        try {
+          ok = await object.setLayerEdition(
+            cat.layer,
+            texturePath(body, cat.layer, edition),
+            wanted.tiers as TextureQuality[]
+          );
+        } catch (error: unknown) {
+          Logger.warn('[tourPlayer] édition non posée', error);
+        }
+        editionsInFlight.delete(body);
+        if (run.cancelled) return false;
+        if (ok) editionFailure = null;
+        else {
+          // La carte qui RESTE affichée, lue sur le moteur comme le fait la fiche.
+          const shownEdition =
+            object.appliedTextureBase(cat.layer)?.split('__')[1] ??
+            cat.defaultEdition;
+          const shown =
+            cat.editions.find((e) => e.edition === shownEdition) ??
+            cat.editions.find((e) => e.edition === cat.defaultEdition);
+          editionFailure = shown
+            ? { date: wanted.from, shown: shown.from }
+            : 'generic';
+        }
+        renderNotice();
+        return ok;
+      },
     };
 
     void runTour(
@@ -467,7 +635,22 @@ export function setupTourPlayer(
         render(index, step);
       },
       signal
-    ).then(finish);
+    ).then(finish, (error: unknown) => {
+      // Une étape qui lève ne doit jamais laisser la visite ouverte, ni le mode, la vitesse ou une édition
+      // empruntés : la sortie est la même que la fin normale.
+      Logger.warn('[tourPlayer] visite interrompue par une erreur', error);
+      finish();
+    });
+  };
+
+  /** La vue d'inspection est dans le document (`ui/craftInspector`, racine `#craft-view`). */
+  const craftViewOpen = (): boolean =>
+    document.getElementById('craft-view') !== null;
+  /** L'inspection est refermée : la carte revient, avec son piège à focus, sur « Pause ». */
+  const returnFromInspection = (): void => {
+    inspecting = false;
+    if (!active) return;
+    showOverlay();
   };
 
   const close = (): void => {
@@ -491,7 +674,8 @@ export function setupTourPlayer(
   closeButton.addEventListener('click', close);
   backdrop.addEventListener('click', close);
   document.addEventListener('keydown', (event) => {
-    if (!active) return;
+    // Pendant l'inspection, le clavier lui appartient (Échap la ferme, les flèches la font tourner).
+    if (!active || inspecting) return;
     if (event.key === 'Escape') {
       event.preventDefault();
       close();

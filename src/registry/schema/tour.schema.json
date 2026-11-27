@@ -294,6 +294,47 @@
               "ms"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "inspectCraft"
+              },
+              "craft": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              }
+            },
+            "required": [
+              "kind",
+              "craft"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "setEdition"
+              },
+              "body": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "edition": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$"
+              }
+            },
+            "required": [
+              "kind",
+              "body",
+              "edition"
+            ],
+            "additionalProperties": false
           }
         ]
       }

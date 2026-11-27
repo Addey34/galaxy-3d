@@ -603,6 +603,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "la lecture unique de l'index de la recherche (GAL-OBSERVATION-001), partagée par la palette typée (première frappe utile) et le bloc « Poursuivre l'observation » (première fiche) : aucun des deux n'est au démarrage. Rollup y range aussi le repli des accents (`core/textFold`, GAL-SCIENCE-022A), partagé par les mêmes deux morceaux, qui était avant un morceau `textFold` à lui (SUPERSEDED 2026-11-26).",
   },
   {
+    chunk: '_virtual_surface-edition-catalogue',
+    reason:
+      "le catalogue des observations datées des géantes (GAL-ATMOSPHERES-001, `virtual:surface-edition-catalogue`, nommé `virtual:surface-editions` jusqu'au 2026-11-27 : ce nom donnait un morceau que la garde des noms hachés prenait pour un hachage), devenu un morceau à part depuis que deux morceaux hors démarrage l'importent : le bloc de fiche (`cardBlocks`) et le lecteur de visites (`tourPlayer`, étape `setEdition` de GAL-TOUR-EXCELLENCE-002, import dynamique à la première étape). Rien au démarrage.",
+  },
+  {
     chunk: '_virtual_tour-catalogue',
     reason:
       "le catalogue léger des visites (identifiant, titre, corps et lieux rejoints), lu par le lecteur de visites et le bloc « Poursuivre l'observation » (GAL-OBSERVATION-001), tous deux chargés à la demande.",

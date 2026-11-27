@@ -1,0 +1,119 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "juno-jupiter",
+  "title": {
+    "en": "Juno at Jupiter: over the poles",
+    "fr": "Juno à Jupiter, par les pôles",
+    "es": "Juno en Júpiter, sobre los polos",
+    "pt-BR": "Juno em Júpiter, sobre os polos"
+  },
+  "steps": [
+    {
+      "kind": "setMode",
+      "mode": "explo"
+    },
+    {
+      "kind": "setTimeScale",
+      "scale": 1
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2016-07-05T02:55:34Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "jupiter",
+      "from": "juno",
+      "distanceRadii": 6
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "5 July 2016, 02:55:34 UTC. On the JPL Horizons trajectory, Juno stops having enough energy to escape: from this second it is a satellite of Jupiter, 78,444 km from its centre, at 56.8 km/s. Galaxy computes the instant from the trajectory. NASA describes a 35-minute engine burn whose end was confirmed on Earth at 03:53 UTC, once the signal had crossed the distance. The camera looks at Jupiter from the direction of the probe, from farther away.",
+        "fr": "5 juillet 2016, 02:55:34 UTC. Sur la trajectoire de JPL Horizons, Juno n’a plus assez d’énergie pour s’échapper : à partir de cette seconde, elle est un satellite de Jupiter, à 78 444 km de son centre, à 56,8 km/s. Galaxy calcule l’instant sur la trajectoire. La NASA décrit une combustion de 35 minutes dont la fin a été confirmée sur Terre à 03:53 UTC, le temps que le signal franchisse la distance. La caméra regarde Jupiter depuis la direction de la sonde, de plus loin.",
+        "es": "5 de julio de 2016, 02:55:34 UTC. En la trayectoria de JPL Horizons, Juno deja de tener energía suficiente para escapar: desde ese segundo es un satélite de Júpiter, a 78 444 km de su centro, a 56,8 km/s. Galaxy calcula el instante sobre la trayectoria. La NASA describe un encendido del motor de 35 minutos cuyo final se confirmó en la Tierra a las 03:53 UTC, el tiempo que tardó la señal en recorrer la distancia. La cámara mira Júpiter desde la dirección de la sonda, desde más lejos.",
+        "pt-BR": "5 de julho de 2016, 02:55:34 UTC. Na trajetória do JPL Horizons, a Juno deixa de ter energia suficiente para escapar: a partir desse segundo é um satélite de Júpiter, a 78 444 km do seu centro, a 56,8 km/s. O Galaxy calcula o instante sobre a trajetória. A NASA descreve uma queima do motor de 35 minutos cujo fim foi confirmado na Terra às 03:53 UTC, o tempo de o sinal percorrer a distância. A câmera olha Júpiter a partir da direção da sonda, de mais longe."
+      }
+    },
+    {
+      "kind": "setEdition",
+      "body": "jupiter",
+      "edition": "opal_2015a"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "The clouds shown are not Juno’s: they are a Hubble map (OPAL programme) from 19 January 2015, nearly a year and a half before the arrival, the closest of the observations Galaxy carries, in enhanced colour. An atmosphere changes: Jupiter’s card compares this map with those of 2020 and 2025.",
+        "fr": "Les nuages affichés ne sont pas ceux de Juno : c’est une carte de Hubble (programme OPAL) du 19 janvier 2015, près d’un an et demi avant l’arrivée, la plus proche des observations que Galaxy embarque, en couleur accentuée. Une atmosphère change : la fiche de Jupiter compare cette carte à celles de 2020 et de 2025.",
+        "es": "Las nubes que se ven no son las de Juno: es un mapa del Hubble (programa OPAL) del 19 de enero de 2015, casi un año y medio antes de la llegada, la más cercana de las observaciones que lleva Galaxy, en color realzado. Una atmósfera cambia: la ficha de Júpiter compara este mapa con los de 2020 y 2025.",
+        "pt-BR": "As nuvens exibidas não são as da Juno: é um mapa do Hubble (programa OPAL) de 19 de janeiro de 2015, quase um ano e meio antes da chegada, a mais próxima das observações que o Galaxy traz, em cor realçada. Uma atmosfera muda: a ficha de Júpiter compara este mapa com os de 2020 e 2025."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2016-08-27T12:50:44Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "jupiter",
+      "from": "juno",
+      "distanceRadii": 1.5
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "27 August 2016, 12:50:44 UTC: the first close pass after the orbit insertion, perijove 1 (NASA counts the insertion as perijove 0). Horizons puts Juno 75,633 km from the centre, 4,141 km more than the equatorial radius of 71,492 km, at 57.8 km/s. NASA speaks of about 4,200 km above the clouds: a neighbouring quantity, not the same one, because Jupiter is flattened. The camera stays at 1.5 radii, far above the probe.",
+        "fr": "27 août 2016, 12:50:44 UTC : premier passage au plus près après la mise en orbite, le périjove 1 (la NASA compte la mise en orbite comme le périjove 0). Horizons place Juno à 75 633 km du centre, 4 141 km de plus que le rayon équatorial de 71 492 km, à 57,8 km/s. La NASA parle d’environ 4 200 km au-dessus des nuages : une grandeur voisine, pas la même, car Jupiter est aplatie. La caméra reste à 1,5 rayon, bien au-dessus de la sonde.",
+        "es": "27 de agosto de 2016, 12:50:44 UTC: el primer paso más cercano tras la inserción en órbita, el perijovio 1 (la NASA cuenta la inserción como perijovio 0). Horizons sitúa a Juno a 75 633 km del centro, 4 141 km más que el radio ecuatorial de 71 492 km, a 57,8 km/s. La NASA habla de unos 4 200 km sobre las nubes: una magnitud vecina, no la misma, porque Júpiter está achatado. La cámara se queda a 1,5 radios, muy por encima de la sonda.",
+        "pt-BR": "27 de agosto de 2016, 12:50:44 UTC: a primeira passagem mais próxima após a inserção em órbita, o perijove 1 (a NASA conta a inserção como perijove 0). O Horizons coloca a Juno a 75 633 km do centro, 4 141 km a mais que o raio equatorial de 71 492 km, a 57,8 km/s. A NASA fala em cerca de 4 200 km acima das nuvens: uma grandeza vizinha, não a mesma, porque Júpiter é achatado. A câmera fica a 1,5 raio, bem acima da sonda."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2024-10-22T18:11:02Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "jupiter",
+      "from": "juno",
+      "distanceRadii": 1.5
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "22 October 2024, 18:11:02 UTC, perijove 66. The orbit has changed: in the perijove list derived from Horizons, 53.2 days separated perijoves 1 and 2, and 32.7 days separated perijoves 65 and 66. At this pass Juno is 255.6 km beyond the equatorial radius; Jupiter is flattened, so this gap is not a height above the clouds. The camera stays at 1.5 radii.",
+        "fr": "22 octobre 2024, 18:11:02 UTC, périjove 66. L’orbite a changé : dans la liste des périjoves dérivée d’Horizons, 53,2 jours séparaient les périjoves 1 et 2, et 32,7 jours les périjoves 65 et 66. À ce passage, Juno est 255,6 km au-delà du rayon équatorial ; Jupiter est aplatie, donc cet écart n’est pas une hauteur au-dessus des nuages. La caméra reste à 1,5 rayon.",
+        "es": "22 de octubre de 2024, 18:11:02 UTC, perijovio 66. La órbita ha cambiado: en la lista de perijovios derivada de Horizons, 53,2 días separaban los perijovios 1 y 2, y 32,7 días los perijovios 65 y 66. En este paso, Juno está 255,6 km más allá del radio ecuatorial; Júpiter está achatado, así que esa diferencia no es una altura sobre las nubes. La cámara se queda a 1,5 radios.",
+        "pt-BR": "22 de outubro de 2024, 18:11:02 UTC, perijove 66. A órbita mudou: na lista de perijoves derivada do Horizons, 53,2 dias separavam os perijoves 1 e 2, e 32,7 dias os perijoves 65 e 66. Nesta passagem, a Juno está 255,6 km além do raio equatorial; Júpiter é achatado, então essa diferença não é uma altura acima das nuvens. A câmera fica a 1,5 raio."
+      }
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Up close, the spacecraft itself: the 3D model published by NASA, a representative model that this project has not checked against engineering drawings. Its size here is a presentation scale, not the real one. Turn it with the mouse, a finger or the arrow keys, then close it (Escape or the button) to continue the tour.",
+        "fr": "De près, l’engin lui-même : le modèle 3D publié par la NASA, un modèle représentatif que ce projet n’a pas vérifié sur des plans d’ingénierie. Sa taille est ici une échelle de présentation, pas la vraie. Faites-le tourner à la souris, au doigt ou aux flèches, puis fermez-le (Échap ou le bouton) pour reprendre la visite.",
+        "es": "De cerca, la nave misma: el modelo 3D publicado por la NASA, un modelo representativo que este proyecto no ha comprobado con planos de ingeniería. Su tamaño aquí es una escala de presentación, no la real. Gírelo con el ratón, con el dedo o con las flechas, y ciérrelo (Escape o el botón) para seguir la visita.",
+        "pt-BR": "De perto, a própria nave: o modelo 3D publicado pela NASA, um modelo representativo que este projeto não verificou em plantas de engenharia. O tamanho aqui é uma escala de apresentação, não o real. Gire-o com o mouse, o dedo ou as setas e feche-o (Esc ou o botão) para continuar a visita."
+      }
+    },
+    {
+      "kind": "inspectCraft",
+      "craft": "juno"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "What this tour measured and what it represented: the instants, distances and speeds come from the Horizons trajectory and the perijove list derived from it; the camera directions from the probe’s computed position; the clouds from a dated Hubble map. The scene never showed Juno’s own images.",
+        "fr": "Ce que cette visite a mesuré et ce qu’elle a représenté : les instants, les distances et les vitesses viennent de la trajectoire d’Horizons et de la liste des périjoves qui en est dérivée ; les directions de la caméra, de la position calculée de la sonde ; les nuages, d’une carte datée de Hubble. La scène n’a jamais montré les images de Juno elle-même.",
+        "es": "Lo que esta visita midió y lo que representó: los instantes, las distancias y las velocidades vienen de la trayectoria de Horizons y de la lista de perijovios derivada de ella; las direcciones de la cámara, de la posición calculada de la sonda; las nubes, de un mapa fechado del Hubble. La escena nunca mostró las imágenes de la propia Juno.",
+        "pt-BR": "O que esta visita mediu e o que representou: os instantes, as distâncias e as velocidades vêm da trajetória do Horizons e da lista de perijoves derivada dela; as direções da câmera, da posição calculada da sonda; as nuvens, de um mapa datado do Hubble. A cena nunca mostrou as imagens da própria Juno."
+      }
+    }
+  ]
+}

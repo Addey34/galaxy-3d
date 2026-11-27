@@ -160,7 +160,7 @@ function stripRegistryNotes() {
  */
 const TOUR_CATALOGUE_ID = 'virtual:tour-catalogue';
 /** Les éditions datées des surfaces (GAL-ATMOSPHERES-001), dérivées des fiches : lues par la fiche du corps. */
-const SURFACE_EDITIONS_ID = 'virtual:surface-editions';
+const SURFACE_EDITIONS_ID = 'virtual:surface-edition-catalogue';
 
 function deriveRegistryText() {
   const PREFIX = 'virtual:registry-text/catalogue-';

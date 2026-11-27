@@ -57,7 +57,15 @@ export type TourStep =
   | { kind: 'setSurface'; base: string }
   // Sans `durationMs` : la légende attend un geste utilisateur (host.waitForAdvance()).
   | { kind: 'caption'; text: LocalizedText; durationMs?: number }
-  | { kind: 'wait'; ms: number };
+  | { kind: 'wait'; ms: number }
+  /**
+   * Ouvre l'inspection 3D d'un engin et attend que le visiteur la referme (GAL-TOUR-EXCELLENCE-002).
+   * Une inspection qui ne s'ouvre pas (modèle absent, chargement refusé) est sautée : une visite ne
+   * reste jamais bloquée.
+   */
+  | { kind: 'inspectCraft'; craft: string }
+  /** Montre une observation datée de la surface d'un corps ; l'hôte rend l'édition par défaut à la fin. */
+  | { kind: 'setEdition'; body: string; edition: string };
 
 export interface TourScript {
   id: string;
@@ -115,6 +123,12 @@ export interface TourRuntimeHost {
   setSurface(base: string): boolean;
   /** Résout quand l'utilisateur avance manuellement une légende sans durée, ou ferme le tour. */
   waitForAdvance(): Promise<void>;
+  /** Ouvre l'inspection ; résout `true` une fois la vue ouverte, `false` si elle ne s'ouvre pas. */
+  inspectCraft(craft: string): Promise<boolean>;
+  /** Vrai tant que l'inspection est ouverte. Même patron que `isFlying`. */
+  isInspecting(): boolean;
+  /** Pose l'édition ; résout quand la carte est posée (`false` si elle ne l'a pas été). */
+  setEdition(body: string, edition: string): Promise<boolean>;
 }
 
 export interface TourSignal {
@@ -185,6 +199,30 @@ async function waitUntil(
   const active = activeClock(signal);
   while (!predicate() && !signal.cancelled && active() < timeoutMs) {
     await sleep(POLL_MS);
+  }
+}
+
+/**
+ * Attend une promesse de l'hôte OU l'annulation de la visite, la première des deux (GAL-TOUR-EXCELLENCE-002).
+ * Une fermeture pendant le chargement d'une observation ou l'ouverture d'une inspection rend la main tout
+ * de suite au lieu d'attendre le réseau. La promesse abandonnée reste abonnée par `Promise.race` : un rejet
+ * tardif est traité, jamais signalé comme non traité (testé ; un `.catch` de plus ne changeait rien, mesuré).
+ * L'hôte, qui sait que la demande est caduque, n'en applique rien.
+ */
+async function untilSettledOrCancelled<T>(
+  promise: Promise<T>,
+  signal: TourSignal,
+  cancelledValue: T
+): Promise<T> {
+  let stop = false;
+  const cancelled = (async (): Promise<T> => {
+    while (!signal.cancelled && !stop) await sleep(POLL_MS);
+    return cancelledValue;
+  })();
+  try {
+    return await Promise.race([promise, cancelled]);
+  } finally {
+    stop = true;
   }
 }
 
@@ -282,6 +320,23 @@ export async function runTour(
         break;
       case 'wait':
         await delay(step.ms, signal);
+        break;
+      case 'inspectCraft':
+        if (
+          await untilSettledOrCancelled(
+            host.inspectCraft(step.craft),
+            signal,
+            false
+          )
+        )
+          await waitUntil(() => !host.isInspecting(), signal);
+        break;
+      case 'setEdition':
+        await untilSettledOrCancelled(
+          host.setEdition(step.body, step.edition),
+          signal,
+          false
+        );
         break;
       case 'caption':
         if (step.durationMs != null) {

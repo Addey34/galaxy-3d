@@ -321,6 +321,10 @@ export const ptBR: Record<MessageKey, string> = {
   'tours.status.flyingTo': 'Voando até {body}…',
   'tours.status.jumping': 'Salto no tempo…',
   'tours.status.speeding': 'Acelerando o tempo…',
+  'tours.edition.unavailable':
+    'Não foi possível carregar a observação de {date}: o mapa de {shown} continua na tela, então a legenda descreve uma observação que não está sendo exibida.',
+  'tours.edition.unavailableGeneric':
+    'Não foi possível carregar a observação datada: o mapa na tela não é o que a legenda descreve.',
 
   // ── Nudge visite guidée (premier passage en Explo) ──
   'exploNudge.text':

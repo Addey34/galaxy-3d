@@ -2,7 +2,7 @@
  * LES ÉDITIONS D'UNE SURFACE (GAL-ATMOSPHERES-001) : les observations datées d'une même couche, dérivées
  * des fiches du registre (`editions` des textures) et de l'édition par défaut de chaque corps
  * (`textureEditions`). Pur, sans entrée/sortie : le greffon `deriveRegistryText` (Node) l'appelle pour
- * servir `virtual:surface-editions`, et les tests l'importent tels quels. Imports relatifs seulement.
+ * servir `virtual:surface-edition-catalogue`, et les tests l'importent tels quels. Imports relatifs seulement.
  *
  * Ce que ce module NE fait pas : interpoler entre deux observations. Une atmosphère n'est connue qu'aux
  * dates observées ; entre elles, rien n'est montré d'autre qu'une observation, datée.

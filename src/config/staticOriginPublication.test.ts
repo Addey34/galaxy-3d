@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import publication from '../../scripts/static-origin-publication.json';
-import surfaceEditions from 'virtual:surface-editions';
+import surfaceEditions from 'virtual:surface-edition-catalogue';
 import { allBodies, texturePath } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import type { TextureResolutions } from '@/types';

@@ -165,7 +165,7 @@ const shippedTexture = z
      * TOUTES les éditions d'une couche qui en a plusieurs (GAL-ATMOSPHERES-001) : chaque observation datée,
      * sa source, sa résolution, la nature de sa couleur, ses paliers et la part de la surface complétée.
      * Les champs du haut de la fiche décrivent l'édition PAR DÉFAUT (`textureEditions` du corps), qui figure
-     * aussi ici. L'application en lit une copie dérivée (`virtual:surface-editions`).
+     * aussi ici. L'application en lit une copie dérivée (`virtual:surface-edition-catalogue`).
      */
     editions: z
       .array(

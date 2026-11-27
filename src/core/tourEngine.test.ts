@@ -28,6 +28,9 @@ function makeHost(overrides: Partial<TourRuntimeHost> = {}): TourRuntimeHost {
     isDatePending: vi.fn(() => false),
     setSurface: vi.fn(() => true),
     waitForAdvance: vi.fn(() => Promise.resolve()),
+    inspectCraft: vi.fn(() => Promise.resolve(true)),
+    isInspecting: vi.fn(() => false),
+    setEdition: vi.fn(() => Promise.resolve(true)),
     ...overrides,
   };
 }
@@ -748,5 +751,156 @@ describe('runTour : les durées sont du temps réel écoulé, pas des tours de p
     await run;
     expect(host.setTimeScale).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
+  });
+});
+
+describe('inspectCraft et setEdition (GAL-TOUR-EXCELLENCE-002)', () => {
+  it('attend que l’inspection soit refermée avant l’étape suivante', async () => {
+    vi.useFakeTimers();
+    let open = true;
+    const host = makeHost({ isInspecting: () => open });
+    const run = runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [
+          { kind: 'inspectCraft', craft: 'juno' },
+          { kind: 'setTimeScale', scale: 1 },
+        ],
+      },
+      host,
+      () => {},
+      makeSignal()
+    );
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(host.inspectCraft).toHaveBeenCalledWith('juno');
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    open = false;
+    await vi.advanceTimersByTimeAsync(100);
+    await run;
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('une inspection qui ne s’ouvre pas est sautée, la visite continue', async () => {
+    const host = makeHost({
+      inspectCraft: vi.fn(() => Promise.resolve(false)),
+      isInspecting: vi.fn(() => true),
+    });
+    await runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [
+          { kind: 'inspectCraft', craft: 'juno' },
+          { kind: 'setTimeScale', scale: 1 },
+        ],
+      },
+      host,
+      () => {},
+      makeSignal()
+    );
+    expect(host.isInspecting).not.toHaveBeenCalled();
+    expect(host.setTimeScale).toHaveBeenCalledTimes(1);
+  });
+
+  it('pose l’édition et attend qu’elle soit posée avant la légende', async () => {
+    let resolveEdition: (ok: boolean) => void = () => {};
+    const host = makeHost({
+      setEdition: vi.fn(
+        () =>
+          new Promise<boolean>((resolve) => {
+            resolveEdition = resolve;
+          })
+      ),
+    });
+    const seen: string[] = [];
+    const run = runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [
+          { kind: 'setEdition', body: 'jupiter', edition: 'opal_2015a' },
+          { kind: 'caption', text },
+        ],
+      },
+      host,
+      (_, step) => seen.push(step.kind),
+      makeSignal()
+    );
+    await Promise.resolve();
+    expect(host.setEdition).toHaveBeenCalledWith('jupiter', 'opal_2015a');
+    expect(seen).toEqual(['setEdition']);
+    resolveEdition(true);
+    await run;
+    expect(seen).toEqual(['setEdition', 'caption']);
+  });
+
+  it('une fermeture pendant une édition qui ne répond pas rend la main tout de suite', async () => {
+    vi.useFakeTimers();
+    const signal = makeSignal();
+    const host = makeHost({
+      setEdition: vi.fn(() => new Promise<boolean>(() => {})),
+    });
+    let done = false;
+    const run = runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [
+          { kind: 'setEdition', body: 'jupiter', edition: 'opal_2015a' },
+          { kind: 'setTimeScale', scale: 1 },
+        ],
+      },
+      host,
+      () => {},
+      signal
+    ).then(() => {
+      done = true;
+    });
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(done).toBe(false);
+    signal.cancelled = true;
+    await vi.advanceTimersByTimeAsync(100);
+    await run;
+    expect(done).toBe(true);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('une édition abandonnée qui échoue plus tard ne laisse aucun rejet non traité', async () => {
+    vi.useFakeTimers();
+    const signal = makeSignal();
+    let reject: (e: Error) => void = () => {};
+    const host = makeHost({
+      setEdition: vi.fn(
+        () =>
+          new Promise<boolean>((_, r) => {
+            reject = r;
+          })
+      ),
+    });
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    const run = runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [{ kind: 'setEdition', body: 'jupiter', edition: 'opal_2015a' }],
+      },
+      host,
+      () => {},
+      signal
+    );
+    await vi.advanceTimersByTimeAsync(100);
+    signal.cancelled = true;
+    await vi.advanceTimersByTimeAsync(100);
+    await run;
+    reject(new Error('chargement refusé après la fermeture'));
+    await vi.advanceTimersByTimeAsync(100);
+    vi.useRealTimers();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    process.off('unhandledRejection', unhandled);
+    expect(unhandled).not.toHaveBeenCalled();
   });
 });

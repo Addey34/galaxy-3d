@@ -143,6 +143,28 @@ const step = z.discriminatedUnion('kind', [
   z
     .object({ kind: z.literal('wait'), ms: z.number().int().positive() })
     .strict(),
+  /**
+   * `inspectCraft` et `setEdition` : ajoutées avec les grandes expéditions (GAL-TOUR-EXCELLENCE-002),
+   * parce que plusieurs visites en ont besoin et qu'aucune ne pouvait les atteindre.
+   *
+   * `inspectCraft` ouvre l'inspection 3D de l'engin (GAL-OBJECT-IMMERSION-001), la même vue que le
+   * bouton de sa fiche ; la visite attend que le visiteur la referme. L'engin doit avoir un modèle
+   * (`tourCapabilities.test.ts` le vérifie au registre des modèles) : aucune forme n'est inventée.
+   *
+   * `setEdition` montre une observation DATÉE de la surface d'un corps (les éditions OPAL de
+   * GAL-ATMOSPHERES-001), choisie par la visite comme le visiteur la choisirait dans la fiche.
+   * Elle existe pour ne PAS présenter la carte la plus récente comme contemporaine d'une mission
+   * ancienne : la visite montre l'observation la plus proche et la légende dit sa date. L'hôte
+   * rend l'édition par défaut à la fin.
+   */
+  z.object({ kind: z.literal('inspectCraft'), craft: targetName }).strict(),
+  z
+    .object({
+      kind: z.literal('setEdition'),
+      body: targetName,
+      edition: z.string().regex(/^[a-z0-9]+(_[a-z0-9]+)*$/),
+    })
+    .strict(),
 ]);
 
 /** Les deux formes d'événement qui dépendent d'un corps, cf. `AstronomicalEvent.body`. */

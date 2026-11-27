@@ -61,6 +61,10 @@ function toStep(step: TourStepRecord, where: string): TourStep {
         : { kind: 'caption', text: step.text, durationMs: step.durationMs };
     case 'wait':
       return { kind: 'wait', ms: step.ms };
+    case 'inspectCraft':
+      return { kind: 'inspectCraft', craft: step.craft };
+    case 'setEdition':
+      return { kind: 'setEdition', body: step.body, edition: step.edition };
   }
 }
 
