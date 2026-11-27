@@ -76,6 +76,15 @@
   text-transform: uppercase;
 }
 
+.stour-notice {
+  margin: 0.2rem 0 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border-left: 2px solid rgba(255, 196, 120, 0.85);
+  color: rgba(255, 226, 190, 0.95);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .stour-caption {
   margin: 0.2rem 0 0.8rem;
   color: rgba(205, 220, 245, 0.9);

@@ -835,4 +835,72 @@ describe('inspectCraft et setEdition (GAL-TOUR-EXCELLENCE-002)', () => {
     await run;
     expect(seen).toEqual(['setEdition', 'caption']);
   });
+
+  it('une fermeture pendant une édition qui ne répond pas rend la main tout de suite', async () => {
+    vi.useFakeTimers();
+    const signal = makeSignal();
+    const host = makeHost({
+      setEdition: vi.fn(() => new Promise<boolean>(() => {})),
+    });
+    let done = false;
+    const run = runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [
+          { kind: 'setEdition', body: 'jupiter', edition: 'opal_2015a' },
+          { kind: 'setTimeScale', scale: 1 },
+        ],
+      },
+      host,
+      () => {},
+      signal
+    ).then(() => {
+      done = true;
+    });
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(done).toBe(false);
+    signal.cancelled = true;
+    await vi.advanceTimersByTimeAsync(100);
+    await run;
+    expect(done).toBe(true);
+    expect(host.setTimeScale).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('une édition abandonnée qui échoue plus tard ne laisse aucun rejet non traité', async () => {
+    vi.useFakeTimers();
+    const signal = makeSignal();
+    let reject: (e: Error) => void = () => {};
+    const host = makeHost({
+      setEdition: vi.fn(
+        () =>
+          new Promise<boolean>((_, r) => {
+            reject = r;
+          })
+      ),
+    });
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    const run = runTour(
+      {
+        id: 't',
+        title: text,
+        steps: [{ kind: 'setEdition', body: 'jupiter', edition: 'opal_2015a' }],
+      },
+      host,
+      () => {},
+      signal
+    );
+    await vi.advanceTimersByTimeAsync(100);
+    signal.cancelled = true;
+    await vi.advanceTimersByTimeAsync(100);
+    await run;
+    reject(new Error('chargement refusé après la fermeture'));
+    await vi.advanceTimersByTimeAsync(100);
+    vi.useRealTimers();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    process.off('unhandledRejection', unhandled);
+    expect(unhandled).not.toHaveBeenCalled();
+  });
 });

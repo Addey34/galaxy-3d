@@ -202,6 +202,30 @@ async function waitUntil(
   }
 }
 
+/**
+ * Attend une promesse de l'hôte OU l'annulation de la visite, la première des deux (GAL-TOUR-EXCELLENCE-002).
+ * Une fermeture pendant le chargement d'une observation ou l'ouverture d'une inspection rend la main tout
+ * de suite au lieu d'attendre le réseau. La promesse abandonnée reste abonnée par `Promise.race` : un rejet
+ * tardif est traité, jamais signalé comme non traité (testé ; un `.catch` de plus ne changeait rien, mesuré).
+ * L'hôte, qui sait que la demande est caduque, n'en applique rien.
+ */
+async function untilSettledOrCancelled<T>(
+  promise: Promise<T>,
+  signal: TourSignal,
+  cancelledValue: T
+): Promise<T> {
+  let stop = false;
+  const cancelled = (async (): Promise<T> => {
+    while (!signal.cancelled && !stop) await sleep(POLL_MS);
+    return cancelledValue;
+  })();
+  try {
+    return await Promise.race([promise, cancelled]);
+  } finally {
+    stop = true;
+  }
+}
+
 /** Délai interruptible par annulation, et suspendu (pas annulé) pendant une pause. */
 async function delay(ms: number, signal: TourSignal): Promise<void> {
   const active = activeClock(signal);
@@ -298,11 +322,21 @@ export async function runTour(
         await delay(step.ms, signal);
         break;
       case 'inspectCraft':
-        if (await host.inspectCraft(step.craft))
+        if (
+          await untilSettledOrCancelled(
+            host.inspectCraft(step.craft),
+            signal,
+            false
+          )
+        )
           await waitUntil(() => !host.isInspecting(), signal);
         break;
       case 'setEdition':
-        await host.setEdition(step.body, step.edition);
+        await untilSettledOrCancelled(
+          host.setEdition(step.body, step.edition),
+          signal,
+          false
+        );
         break;
       case 'caption':
         if (step.durationMs != null) {

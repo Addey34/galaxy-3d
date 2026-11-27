@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
 import { reportFailureDiagnostics } from './failureDiagnostics';
 import { useAnimatedMotion } from './motion';
@@ -154,5 +154,131 @@ test.describe('mouvement non réduit', () => {
     expect(captions).toBeGreaterThanOrEqual(5);
     expect(inspections).toBe(1);
     await expectContextRestored(page);
+  });
+});
+
+/**
+ * L'OBSERVATION DATÉE QUI MANQUE (finalisation de GAL-TOUR-EXCELLENCE-002). Le service worker est bloqué :
+ * il servirait les textures et contournerait l'interception (même règle que `surfaceEditions.spec.ts`).
+ * Chaque édition que la SCÈNE montre est enregistrée, même une seule image, par le témoin de la fiche
+ * (`#surface-editions`, `data-scene-edition`, publié à chaque image, fiche ouverte ou fermée).
+ */
+test.describe('observation datée : indisponible, retardée, catalogue absent', () => {
+  test.use({ serviceWorkers: 'block' });
+
+  /** Jusqu'à la première légende de Juno (la fiche de Jupiter est ouverte), puis le témoin des éditions. */
+  async function toFirstCaption(page: Page): Promise<string[]> {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await boot(page, 'juno-jupiter');
+    await expect(page.locator('.stour-next')).toBeEnabled({
+      timeout: STEP_TIMEOUT,
+    });
+    await page.locator('#surface-editions').waitFor({ state: 'attached' });
+    await page.evaluate(() => {
+      const box = document.getElementById('surface-editions')!;
+      const seen: string[] = [];
+      (window as unknown as { __sceneEditions: string[] }).__sceneEditions =
+        seen;
+      new MutationObserver(() => {
+        seen.push(box.dataset['sceneEdition'] ?? '');
+      }).observe(box, {
+        attributes: true,
+        attributeFilter: ['data-scene-edition'],
+      });
+    });
+    return errors;
+  }
+  const sceneEditions = (page: Page): Promise<string[]> =>
+    page.evaluate(
+      () => (window as unknown as { __sceneEditions: string[] }).__sceneEditions
+    );
+
+  test('indisponible : la carte de visite le dit, la scène garde la carte affichée, la visite continue', async ({
+    page,
+  }) => {
+    test.setTimeout(300_000);
+    await page.route('**/jupiter_surface__opal_2015a_*', (route) =>
+      route.abort()
+    );
+    const errors = await toFirstCaption(page);
+    await page.locator('.stour-next').click();
+    const notice = page.locator('.stour-notice');
+    await expect(notice).toBeVisible({ timeout: STEP_TIMEOUT });
+    // L'échec est DIT : la date demandée, la carte qui reste, et que la légende ne décrit pas l'écran.
+    await expect(notice).toContainText('could not be loaded');
+    await expect(notice).toContainText('2015');
+    await expect(notice).toContainText('2025');
+    await expect(page.locator('.stour-caption')).toContainText(
+      '19 January 2015'
+    );
+    await expectJupiterEdition(page, 'opal_2025a');
+    expect(await sceneEditions(page)).not.toContain('opal_2015a');
+    // La visite continue jusqu'au bout ; le signalement ne suit pas les vols suivants.
+    await page.locator('.stour-next').click();
+    await expect(page.locator('.stour-next')).toBeEnabled({
+      timeout: STEP_TIMEOUT,
+    });
+    await expect(notice).toBeHidden();
+    const { inspections } = await playToEnd(page);
+    expect(inspections).toBe(1);
+    await expectContextRestored(page);
+    expect(errors).toEqual([]);
+  });
+
+  test('retardée puis Échap : la visite se ferme tout de suite, l’édition tardive ne se pose jamais', async ({
+    page,
+  }) => {
+    test.setTimeout(300_000);
+    const HOLD_MS = 8_000;
+    let released = false;
+    await page.route('**/jupiter_surface__opal_2015a_*', async (route) => {
+      await new Promise((r) => setTimeout(r, HOLD_MS));
+      released = true;
+      await route.continue().catch(() => {});
+    });
+    const errors = await toFirstCaption(page);
+    const requested = page.waitForRequest('**/jupiter_surface__opal_2015a_*');
+    await page.locator('.stour-next').click();
+    await requested;
+    const t0 = Date.now();
+    await page.keyboard.press('Escape');
+    // Fermée sans attendre le réseau (le chargement retenu dure 8 s).
+    await expect(page.locator('.stour-card')).toBeHidden({ timeout: 3_000 });
+    expect(Date.now() - t0).toBeLessThan(HOLD_MS);
+    expect(released).toBe(false);
+    await expectContextRestored(page);
+    // Le chargement retenu arrive après la fermeture : il ne doit rien poser.
+    await expect.poll(() => released, { timeout: HOLD_MS + 5_000 }).toBe(true);
+    await page.waitForTimeout(3_000);
+    expect(await sceneEditions(page)).not.toContain('opal_2015a');
+    await openJupiter(page);
+    await expectJupiterEdition(page, 'opal_2025a');
+    expect(errors).toEqual([]);
+  });
+
+  test('catalogue absent : la visite le dit et va au bout', async ({
+    page,
+  }) => {
+    test.setTimeout(300_000);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    // Le catalogue des éditions ne s'obtient pas (module refusé au chargement).
+    await page.route(/surface-edition-catalogue/, (route) => route.abort());
+    await boot(page, 'juno-jupiter');
+    let sawNotice = false;
+    const { inspections } = await playToEnd(page, async () => {
+      if (await page.locator('.stour-notice').isVisible()) {
+        await expect(page.locator('.stour-notice')).toContainText(
+          'could not be loaded'
+        );
+        sawNotice = true;
+      }
+    });
+    expect(sawNotice).toBe(true);
+    expect(inspections).toBe(1);
+    await expectContextRestored(page);
+    // Aucune promesse rejetée non traitée venue du lecteur.
+    expect(errors.filter((m) => /tour|edition/i.test(m))).toEqual([]);
   });
 });

@@ -341,6 +341,10 @@ export const en = {
   'tours.status.flyingTo': 'Flying to {body}…',
   'tours.status.jumping': 'Jumping through time…',
   'tours.status.speeding': 'Speeding up time…',
+  'tours.edition.unavailable':
+    'The observation of {date} could not be loaded: the map of {shown} stays on screen, so the caption describes an observation that is not displayed.',
+  'tours.edition.unavailableGeneric':
+    'The dated observation could not be loaded: the map on screen is not the one the caption describes.',
 
   // ── Nudge visite guidée (premier passage en Explo) ──
   'exploNudge.text': 'Try a guided tour to see exploration mode’s best side.',

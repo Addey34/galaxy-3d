@@ -12,7 +12,7 @@
 import { TOUR_CLEARANCE_CHANGED } from './tourClearance';
 import './tourPlayer.css';
 import type { ModeSwitcher } from './modeSwitcher';
-import { onLocaleChange, t, getLocale } from '@/i18n';
+import { onLocaleChange, t, getLocale, intlLocale } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
@@ -42,6 +42,8 @@ import { texturePath } from '@/config/catalog';
 import { craftModelFor } from '@/config/craftModels';
 import type { TextureQuality } from '@/types';
 import type { BodySurfaceEditions } from '@/core/surfaceEditions';
+import { formatIsoDay } from '@/core/dateText';
+import Logger from '@/utils/Logger';
 
 /**
  * Ce que les grandes expéditions empruntent (GAL-TOUR-EXCELLENCE-002) : l'inspection 3D d'un engin,
@@ -151,6 +153,13 @@ export function setupTourPlayer(
   progress.className = 'stour-progress';
   const caption = document.createElement('p');
   caption.className = 'stour-caption';
+  /**
+   * L'observation datée demandée n'a pas pu être posée (GAL-TOUR-EXCELLENCE-002) : la carte de la visite le
+   * DIT à côté de la légende qui suit, qui décrit l'observation demandée et non celle qui reste affichée.
+   */
+  const notice = document.createElement('p');
+  notice.className = 'stour-notice';
+  notice.hidden = true;
   const actions = document.createElement('div');
   actions.className = 'stour-actions';
   const pauseButton = document.createElement('button');
@@ -180,7 +189,7 @@ export function setupTourPlayer(
   outline.id = 'stour-outline';
   card.setAttribute('aria-describedby', outline.id);
 
-  card.append(outline, progress, caption, actions);
+  card.append(outline, progress, notice, caption, actions);
   document.body.append(backdrop, card);
 
   let active = false;
@@ -204,6 +213,10 @@ export function setupTourPlayer(
   let inspecting = false;
   /** Les éditions de surface posées par la visite, rendues à leur défaut à la fin. */
   const editionBodies = new Set<string>();
+  /** Les corps dont une édition demandée est encore EN VOL : la fin de visite la rend caduque. */
+  const editionsInFlight = new Set<string>();
+  /** L'échec d'une observation datée, dit dans la carte ; `null` quand rien n'est à signaler. */
+  let editionFailure: { date: string; shown: string } | 'generic' | null = null;
   let editionCatalogue: Record<string, BodySurfaceEditions> | null = null;
 
   const waitForAdvance = (): Promise<void> =>
@@ -253,8 +266,24 @@ export function setupTourPlayer(
   let currentStep: TourStep | null = null;
   let lastCaptionText = '';
 
+  const editionDay = (iso: string): string =>
+    formatIsoDay(iso.slice(0, 10), getLocale(), intlLocale());
+  const renderNotice = (): void => {
+    notice.hidden = editionFailure === null;
+    notice.textContent =
+      editionFailure === null
+        ? ''
+        : editionFailure === 'generic'
+          ? t('tours.edition.unavailableGeneric')
+          : t('tours.edition.unavailable', {
+              date: editionDay(editionFailure.date),
+              shown: editionDay(editionFailure.shown),
+            });
+  };
+
   const render = (index: number, step: TourStep): void => {
     if (!currentScript) return;
+    renderNotice();
     progress.textContent = t('tours.progress', {
       current: index + 1,
       total: currentScript.steps.length,
@@ -372,9 +401,12 @@ export function setupTourPlayer(
       const cat = editionCatalogue?.[body];
       const object = expedition.scene.getBody(body);
       if (!cat || !object) continue;
+      // Une demande encore EN VOL arriverait visite fermée : la demande du défaut, plus récente, la rend
+      // caduque (le moteur ne pose que la dernière, `CelestialObject.setLayerEdition`).
       if (
+        !editionsInFlight.has(body) &&
         object.appliedTextureBase(cat.layer)?.split('__')[1] ===
-        cat.defaultEdition
+          cat.defaultEdition
       )
         continue;
       const e = cat.editions.find((x) => x.edition === cat.defaultEdition);
@@ -386,6 +418,9 @@ export function setupTourPlayer(
       );
     }
     editionBodies.clear();
+    editionsInFlight.clear();
+    editionFailure = null;
+    renderNotice();
   };
 
   const finish = (): void => {
@@ -468,6 +503,8 @@ export function setupTourPlayer(
 
     const host: TourRuntimeHost = {
       flyTo: (body) => {
+        // Le signalement d'une observation manquante vaut pour la légende qui la suivait, pas pour la suite.
+        editionFailure = null;
         navigation.selectBody(body);
         // Sur téléphone la fiche que la sélection ouvre réduit la scène à une bande sous la carte
         // de visite (mesuré le 2026-11-19, 390 px : fiche y 52 à 224). La visite l'a ouverte
@@ -536,18 +573,56 @@ export function setupTourPlayer(
         return open;
       },
       setEdition: async (body, edition) => {
-        editionCatalogue ??= (await import('virtual:surface-edition-catalogue'))
-          .default;
-        const cat = editionCatalogue[body];
+        // La visite qui demande : une réponse tardive n'agit jamais sur une visite fermée ou remplacée.
+        const run = signal;
+        let catalogue: Record<string, BodySurfaceEditions> | null;
+        try {
+          catalogue = editionCatalogue ??= (
+            await import('virtual:surface-edition-catalogue')
+          ).default;
+        } catch (error: unknown) {
+          // Le morceau du catalogue n'est pas arrivé : la visite continue et le dit.
+          Logger.warn('[tourPlayer] catalogue des éditions illisible', error);
+          catalogue = null;
+        }
+        if (run.cancelled) return false;
+        const cat = catalogue?.[body];
         const wanted = cat?.editions.find((e) => e.edition === edition);
         const object = expedition.scene.getBody(body);
-        if (!cat || !wanted || !object || signal.cancelled) return false;
+        if (!cat || !wanted || !object) {
+          editionFailure = 'generic';
+          renderNotice();
+          return false;
+        }
         editionBodies.add(body);
-        return object.setLayerEdition(
-          cat.layer,
-          texturePath(body, cat.layer, edition),
-          wanted.tiers as TextureQuality[]
-        );
+        editionsInFlight.add(body);
+        let ok = false;
+        try {
+          ok = await object.setLayerEdition(
+            cat.layer,
+            texturePath(body, cat.layer, edition),
+            wanted.tiers as TextureQuality[]
+          );
+        } catch (error: unknown) {
+          Logger.warn('[tourPlayer] édition non posée', error);
+        }
+        editionsInFlight.delete(body);
+        if (run.cancelled) return false;
+        if (ok) editionFailure = null;
+        else {
+          // La carte qui RESTE affichée, lue sur le moteur comme le fait la fiche.
+          const shownEdition =
+            object.appliedTextureBase(cat.layer)?.split('__')[1] ??
+            cat.defaultEdition;
+          const shown =
+            cat.editions.find((e) => e.edition === shownEdition) ??
+            cat.editions.find((e) => e.edition === cat.defaultEdition);
+          editionFailure = shown
+            ? { date: wanted.from, shown: shown.from }
+            : 'generic';
+        }
+        renderNotice();
+        return ok;
       },
     };
 
@@ -560,7 +635,12 @@ export function setupTourPlayer(
         render(index, step);
       },
       signal
-    ).then(finish);
+    ).then(finish, (error: unknown) => {
+      // Une étape qui lève ne doit jamais laisser la visite ouverte, ni le mode, la vitesse ou une édition
+      // empruntés : la sortie est la même que la fin normale.
+      Logger.warn('[tourPlayer] visite interrompue par une erreur', error);
+      finish();
+    });
   };
 
   /** La vue d'inspection est dans le document (`ui/craftInspector`, racine `#craft-view`). */
