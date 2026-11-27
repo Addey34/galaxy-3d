@@ -8029,6 +8029,19 @@ on rouvre les Réglages, comme pour les autres fiches du ciel ; un champ dans la
 sans Gaia (Alpha Centauri : 4,32 al dans HYG) n'ont pas d'incertitude et peuvent différer de
 publications plus récentes ; un `--check` du générateur dira quand le fichier dérive.
 
+**Gaia suspendu (GAL-RIGHTS-SAFEGUARD-001, 2026-11-27).** Le fichier ne contient plus que HYG v4.4
+(CC BY-SA 4.0) : les valeurs de Gaia DR3 (CC BY-NC 3.0 IGO) ne se partagent pas sous la licence de HYG,
+et l'usage non commercial du site est soumis à l'ESA. Interrupteur unique `GAIA_ENABLED` dans
+`scripts/generate-neighbours.mjs` (faux) ; `source.gaia` vaut null, chaque ligne `origin: 'hyg-v44'`.
+Les tests propres à Gaia sont en attente (`skipIf(!GAIA_ENABLED)`) et repassent tels quels avec
+l'interrupteur vrai et le fichier de Gaia (mesuré : 82 tests verts). Ce que HYG seul change, mesuré :
+Proxima à 1,2959 pc au lieu de 1,302 et sans incertitude publiée ; GJ 1061 à 4,29 pc au lieu de 3,67
+(parallaxe ancienne de Gliese, écart à l'archive des exoplanètes nommé dans `stellarVisit.test.ts`) ;
+49 repères au lieu de 48 ; Barnard GARDÉE (liens et visite), son mouvement plafonné par HYG à
+9 999,99 mas/an déclaré borne inférieure (`source.neighbours.pmCapMasPerYear`), soit 10,03″/an au lieu
+de 10,39 (écart de position inférieur à 10″ en 2026, de 0,6° à 6 000 ans dans la visite). Le chemin
+du fichier ne change pas.
+
 ## Le voisinage solaire en 3D (GAL-UNIVERSE-002, 2026-11-22)
 
 Une vue À PART de la scène solaire : les 48 repères (61 étoiles) du voisinage à 5 parsecs, à leurs

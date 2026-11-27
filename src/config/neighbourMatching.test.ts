@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildRow,
   chooseGaia,
+  GAIA_ENABLED,
   propagate,
   type GaiaCandidate,
   type HygStar,
@@ -147,38 +148,47 @@ describe('les associations livrées', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('les composantes A et B des trois doubles confondues par la première version sont dans le bon sens', () => {
-    // Identifiants lus dans l'archive Gaia le 2026-11-22 : la composante la plus brillante de HYG
-    // (V) porte la source la plus brillante (G), et son mouvement propre est celui de HYG.
-    const expected: Array<[string, string, number, number]> = [
-      ['Gl 820A', '1872046609345556480', 4164, 3250],
-      ['Gl 820B', '1872046574983497216', 4106, 3156],
-      ['Struve 2398 A', '2154880616774131840', -1312, 1792],
-      ['Struve 2398 B', '2154880616774131712', -1400, 1863],
-      ['Groombridge 34', '385334230892516480', 2892, 412],
-      ['Gl 15B', '385334196532776576', 2863, 336],
-    ];
-    for (const [name, id, pmRa, pmDec] of expected) {
-      const row = byName.get(name)!;
-      expect(row[12], name).toBe(id);
-      expect(row[8], name).toBeCloseTo(pmRa, -1);
-      expect(row[9], name).toBeCloseTo(pmDec, -1);
+  it.skipIf(!GAIA_ENABLED)(
+    'les composantes A et B des trois doubles confondues par la première version sont dans le bon sens',
+    () => {
+      // Identifiants lus dans l'archive Gaia le 2026-11-22 : la composante la plus brillante de HYG
+      // (V) porte la source la plus brillante (G), et son mouvement propre est celui de HYG.
+      const expected: Array<[string, string, number, number]> = [
+        ['Gl 820A', '1872046609345556480', 4164, 3250],
+        ['Gl 820B', '1872046574983497216', 4106, 3156],
+        ['Struve 2398 A', '2154880616774131840', -1312, 1792],
+        ['Struve 2398 B', '2154880616774131712', -1400, 1863],
+        ['Groombridge 34', '385334230892516480', 2892, 412],
+        ['Gl 15B', '385334196532776576', 2863, 336],
+      ];
+      for (const [name, id, pmRa, pmDec] of expected) {
+        const row = byName.get(name)!;
+        expect(row[12], name).toBe(id);
+        expect(row[8], name).toBeCloseTo(pmRa, -1);
+        expect(row[9], name).toBeCloseTo(pmDec, -1);
+      }
     }
-  });
+  );
 
   it('Keid reste à HYG (la source Gaia retenue par la première version était une composante faible)', () => {
     expect(byName.get('Keid')![11]).toBe('hyg-v44');
   });
 
-  it('GJ 3618, manquée par un cône trop étroit, vient de Gaia (parallaxe 207 mas, soit 4,83 pc)', () => {
-    const row = byName.get('GJ 3618')!;
-    expect(row[11]).toBe('gaia-dr3');
-    expect(row[5]).toBeCloseTo(4.83, 2);
-  });
+  it.skipIf(!GAIA_ENABLED)(
+    'GJ 3618, manquée par un cône trop étroit, vient de Gaia (parallaxe 207 mas, soit 4,83 pc)',
+    () => {
+      const row = byName.get('GJ 3618')!;
+      expect(row[11]).toBe('gaia-dr3');
+      expect(row[5]).toBeCloseTo(4.83, 2);
+    }
+  );
 
-  it('Proxima est à 1,30197 pc, à 0,5 % de HYG (1,2959 pc) : la parallaxe affinée', () => {
-    expect(byName.get('Proxima Centauri')![5]).toBeCloseTo(1.30197, 4);
-  });
+  it.skipIf(!GAIA_ENABLED)(
+    'Proxima est à 1,30197 pc, à 0,5 % de HYG (1,2959 pc) : la parallaxe affinée',
+    () => {
+      expect(byName.get('Proxima Centauri')![5]).toBeCloseTo(1.30197, 4);
+    }
+  );
 
   it('valeurs manquantes : HYG sans incertitude ni identifiant, Gaia avec les deux', () => {
     for (const s of file.stars) {

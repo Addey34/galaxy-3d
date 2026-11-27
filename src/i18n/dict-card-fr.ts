@@ -59,7 +59,7 @@ export const cardFr: Record<CardMessageKey, string> = {
   'nb.card.hint':
     'Le repère montre la direction réelle de l’étoile. L’étoile n’est pas dessinée à sa distance : la scène s’arrête au Système solaire.',
   'nb.card.source':
-    'Sources : Gaia DR3 (ESA) et HYG v4.4 ({license}). Les positions sont celles de J2000,0 ; le repère suit le mouvement propre jusqu’à la date de la scène.',
+    'Source : HYG v4.4 ({license}). Les positions sont celles de J2000,0 ; le repère suit le mouvement propre jusqu’à la date de la scène.',
   'nb.card.opened': 'Étoile voisine {name}',
   'nb.unit.ly': 'al',
   'nb.search.label': 'Trouver une étoile voisine',

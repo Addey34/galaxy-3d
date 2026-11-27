@@ -539,24 +539,18 @@ It also lists the HEASARC tables (messier, mwsc, lbn, plnebulae, lmcextobj and s
 Harold Corwin's NGC/IC Positions and Notes (<http://haroldcorwin.net/ngcic/index.html>).
 
 **Nearby stars** (`public/assets/sky/neighbours.json`). The stars that the HYG database v4.4
-(see above, CC BY-SA 4.0) places at 5 parsecs or less, 61 of them, with the distance and the proper
-motion of Gaia DR3 (<https://www.cosmos.esa.int/gaia>, queried through the ESA Gaia archive TAP
-service by `scripts/generate-neighbours.mjs`) when the counterpart is reliable (parallax over 20
-sigma, RUWE below 1.4, and the same parallax, proper motion and brightness as HYG's star), and those of
-HYG otherwise (35 and 26 stars on 2026-11-22); each row says
-which (`origin`, and the Gaia `source_id`). The file is an adaptation of both and is shared under
-the licence of HYG (CC BY-SA 4.0). The ESA asks for this acknowledgement for any use of Gaia DR3
-data (<https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/>,
-read on 2026-11-22), shown in the help credits and on the card of each star measured by Gaia:
+(see above, CC BY-SA 4.0) places at 5 parsecs or less, 61 of them, with the values of HYG only
+(`scripts/generate-neighbours.mjs`). The file is an adaptation of HYG and is shared under the same
+licence (CC BY-SA 4.0). HYG caps proper motions at 9,999.99 mas/yr: for Barnard's Star the value is
+a lower bound, and the file says so (`pmCapMasPerYear`).
 
-> This work has made use of data from the European Space Agency (ESA) mission Gaia
-> (https://www.cosmos.esa.int/gaia), processed by the Gaia Data Processing and Analysis Consortium
-> (DPAC, https://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the DPAC has been
-> provided by national institutions, in particular the institutions participating in the Gaia
-> Multilateral Agreement.
-
-The reference paper is Gaia Collaboration, *Astronomy & Astrophysics* 674 (2023),
-<https://doi.org/10.1051/0004-6361/202243940>.
+Earlier versions of this file (from 2026-11-22 to the date of this change) also carried the
+distance and proper motion of Gaia DR3 for 35 stars and were described here as an adaptation of both
+shared under the licence of HYG. That description was wrong for the Gaia values: they remain under
+the licence of their source, CC BY-NC 3.0 IGO (ESA,
+<https://www.cosmos.esa.int/web/esdc/terms-and-conditions>), with the acknowledgement requested by
+ESA for Gaia DR3 (Gaia Collaboration, *Astronomy & Astrophysics* 674, 2023,
+<https://doi.org/10.1051/0004-6361/202243940>). The Gaia values are no longer published.
 
 **Earth weather layers** are fetched at runtime and are not bundled either:
 

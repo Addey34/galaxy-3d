@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { GAIA_ENABLED } from '../../scripts/generate-neighbours.mjs';
 import type { NeighbourFile, NeighbourRow } from './neighbours';
 import {
   clampMotionYears,
@@ -87,50 +88,53 @@ describe("l'espace stellaire : unités, origine, distances", () => {
   });
 });
 
-describe('les étoiles voisines aux bons endroits (témoins indépendants : Gaia DR3)', () => {
-  // Longitude et latitude galactiques (l, b) lues dans l'archive Gaia DR3 le 2026-11-22 pour les
-  // sources adoptées, à l'époque J2016,0 : c'est un calcul de Gaia, pas le nôtre.
-  const gaia: Array<[string, number, number]> = [
-    ['Proxima Centauri', 313.92549558326704, -1.9177544232946377],
-    ["Barnard's Star", 31.049417957939717, 14.08660366802383],
-  ];
-  for (const [name, l, b] of gaia)
-    it(`${name} : (l, b) à J2016 = Gaia, à 0,002° près, et la distance de la parallaxe`, () => {
-      const row = byName(name);
-      const g = galacticPosition(row, 16);
-      const [ll, bb] = lb(g);
-      expect(Math.abs(ll - l)).toBeLessThan(0.002);
-      expect(Math.abs(bb - b)).toBeLessThan(0.002);
-      // La distance à J2016 ne diffère de celle de J2000 que par la vitesse radiale (≤ 16 ans).
-      expect(Math.abs(distanceFromSunPc(g) - row[5])).toBeLessThan(0.002);
+describe.skipIf(!GAIA_ENABLED)(
+  'les étoiles voisines aux bons endroits (témoins indépendants : Gaia DR3)',
+  () => {
+    // Longitude et latitude galactiques (l, b) lues dans l'archive Gaia DR3 le 2026-11-22 pour les
+    // sources adoptées, à l'époque J2016,0 : c'est un calcul de Gaia, pas le nôtre.
+    const gaia: Array<[string, number, number]> = [
+      ['Proxima Centauri', 313.92549558326704, -1.9177544232946377],
+      ["Barnard's Star", 31.049417957939717, 14.08660366802383],
+    ];
+    for (const [name, l, b] of gaia)
+      it(`${name} : (l, b) à J2016 = Gaia, à 0,002° près, et la distance de la parallaxe`, () => {
+        const row = byName(name);
+        const g = galacticPosition(row, 16);
+        const [ll, bb] = lb(g);
+        expect(Math.abs(ll - l)).toBeLessThan(0.002);
+        expect(Math.abs(bb - b)).toBeLessThan(0.002);
+        // La distance à J2016 ne diffère de celle de J2000 que par la vitesse radiale (≤ 16 ans).
+        expect(Math.abs(distanceFromSunPc(g) - row[5])).toBeLessThan(0.002);
+      });
+
+    it('Proxima est à 4,25 années-lumière du Soleil, Alpha Centauri à 4,32, Barnard à 5,96', () => {
+      const ly = (n: string): number =>
+        parsecsToLightYears(
+          distanceFromSunPc(stellarScenePosition(byName(n), 0))
+        );
+      expect(ly('Proxima Centauri')).toBeCloseTo(4.2465, 3);
+      expect(ly('Rigil Kentaurus')).toBeCloseTo(4.32, 2);
+      expect(ly("Barnard's Star")).toBeCloseTo(5.963, 2);
     });
 
-  it('Proxima est à 4,25 années-lumière du Soleil, Alpha Centauri à 4,32, Barnard à 5,96', () => {
-    const ly = (n: string): number =>
-      parsecsToLightYears(
-        distanceFromSunPc(stellarScenePosition(byName(n), 0))
-      );
-    expect(ly('Proxima Centauri')).toBeCloseTo(4.2465, 3);
-    expect(ly('Rigil Kentaurus')).toBeCloseTo(4.32, 2);
-    expect(ly("Barnard's Star")).toBeCloseTo(5.963, 2);
-  });
-
-  it('Proxima est à environ 0,2 al d’α Cen A : la même région, comme dans le ciel', () => {
-    const a = stellarScenePosition(byName('Rigil Kentaurus'), 0);
-    const proxima = stellarScenePosition(byName('Proxima Centauri'), 0);
-    // Séparation publiée dans la littérature : ~0,2 al ; ici ~0,07 pc selon HYG pour α Cen.
-    const pc = separationPc(a, proxima);
-    expect(pc).toBeGreaterThan(0.01);
-    expect(pc).toBeLessThan(0.1);
-    // Alpha Centauri A et B, à la même distance et au même endroit à 0,001 pc près.
-    expect(
-      separationPc(
-        stellarScenePosition(byName('Rigil Kentaurus'), 0),
-        stellarScenePosition(byName('Toliman'), 0)
-      )
-    ).toBeLessThan(0.002);
-  });
-});
+    it('Proxima est à environ 0,2 al d’α Cen A : la même région, comme dans le ciel', () => {
+      const a = stellarScenePosition(byName('Rigil Kentaurus'), 0);
+      const proxima = stellarScenePosition(byName('Proxima Centauri'), 0);
+      // Séparation publiée dans la littérature : ~0,2 al ; ici ~0,07 pc selon HYG pour α Cen.
+      const pc = separationPc(a, proxima);
+      expect(pc).toBeGreaterThan(0.01);
+      expect(pc).toBeLessThan(0.1);
+      // Alpha Centauri A et B, à la même distance et au même endroit à 0,001 pc près.
+      expect(
+        separationPc(
+          stellarScenePosition(byName('Rigil Kentaurus'), 0),
+          stellarScenePosition(byName('Toliman'), 0)
+        )
+      ).toBeLessThan(0.002);
+    });
+  }
+);
 
 describe('mouvement rectiligne', () => {
   it('à J2000 la position ne dépend ni du mouvement propre ni de la vitesse radiale', () => {

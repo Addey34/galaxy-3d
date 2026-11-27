@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
+import { GAIA_ENABLED } from '../../../scripts/generate-neighbours.mjs';
 import type { NeighbourFile } from '@/core/neighbours';
 import { auToParsecs, ECLIPTIC_RINGS_AU } from '@/core/scaleTransition';
 import { distanceFromSunPc } from '@/core/stellarSpace';
@@ -30,10 +31,10 @@ function trackDisposals(scene: NeighbourhoodScene): {
 }
 
 describe('la scène du voisinage solaire', () => {
-  it('place un point par système (48 repères pour 61 étoiles), le Soleil à l’origine', () => {
+  it('place un point par système (48 repères pour 61 étoiles, 49 avec HYG seul), le Soleil à l’origine', () => {
     const scene = new NeighbourhoodScene(file.stars);
     expect(file.count).toBe(61);
-    expect(scene.systems).toHaveLength(48);
+    expect(scene.systems).toHaveLength(GAIA_ENABLED ? 48 : 49);
     const sun = scene.scene.getObjectByName('sun') as THREE.Points;
     const sunPosition = sun.geometry.getAttribute('position');
     expect([

@@ -59,7 +59,7 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'nb.card.hint':
     'O marcador mostra a direção real da estrela. A estrela não é desenhada à sua distância: a cena termina no Sistema Solar.',
   'nb.card.source':
-    'Fontes: Gaia DR3 (ESA) e HYG v4.4 ({license}). As posições são as de J2000,0; o marcador acompanha o movimento próprio até a data da cena.',
+    'Fonte: HYG v4.4 ({license}). As posições são as de J2000,0; o marcador acompanha o movimento próprio até a data da cena.',
   'nb.card.opened': 'Estrela próxima {name}',
   'nb.unit.ly': 'a.l.',
   'nb.search.label': 'Encontrar uma estrela próxima',

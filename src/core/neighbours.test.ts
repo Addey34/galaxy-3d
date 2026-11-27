@@ -16,6 +16,7 @@ import {
   type NeighbourRow,
 } from './neighbours';
 import { starDirection, yearsSinceJ2000 } from './starCatalogue';
+import { GAIA_ENABLED } from '../../scripts/generate-neighbours.mjs';
 
 const file = JSON.parse(
   readFileSync('public/assets/sky/neighbours.json', 'utf8')
@@ -51,41 +52,93 @@ describe('le fichier des étoiles voisines', () => {
         expect(s[6]).toBeNull();
       }
     }
-    // Les deux sources sont citées, avec le remerciement exigé verbatim par l'ESA.
-    expect(file.source.gaia.acknowledgement).toMatch(
-      /^This work has made use of data from the European Space Agency \(ESA\) mission Gaia/
-    );
     expect(file.source.hyg.license).toBe('CC-BY-SA-4.0');
+    if (GAIA_ENABLED)
+      // Les deux sources sont citées, avec le remerciement exigé verbatim par l'ESA.
+      expect(file.source.gaia?.acknowledgement).toMatch(
+        /^This work has made use of data from the European Space Agency \(ESA\) mission Gaia/
+      );
   });
 
-  it('corrige le plafond de HYG : le mouvement propre de Barnard dépasse 9 999,99 mas/an', () => {
-    const barnard = byName("Barnard's Star");
-    expect(barnard[11]).toBe('gaia-dr3');
-    expect(Math.abs(barnard[9])).toBeGreaterThan(10_000);
-    // Aucune ligne HYG ne porte la valeur plafonnée (le générateur les écarte).
-    for (const s of file.stars)
-      if (s[11] === 'hyg-v44') {
-        expect(Math.abs(s[8])).toBeLessThan(9999.99);
-        expect(Math.abs(s[9])).toBeLessThan(9999.99);
+  // GAL-RIGHTS-SAFEGUARD-001 : Gaia suspendu, le fichier ne contient que HYG (droits établis).
+  it.skipIf(GAIA_ENABLED)(
+    'Gaia suspendu : aucune valeur ni identifiant de Gaia, aucune notice de Gaia',
+    () => {
+      expect(file.source.gaia).toBeNull();
+      for (const s of file.stars) {
+        expect(s[11]).toBe('hyg-v44');
+        expect(s[12]).toBeNull();
       }
-  });
+      expect(JSON.stringify(file)).not.toMatch(/European Space Agency|DPAC/);
+    }
+  );
+
+  it.skipIf(GAIA_ENABLED)(
+    'Gaia suspendu : Barnard est gardée, son mouvement plafonné par HYG est déclaré borne inférieure',
+    () => {
+      const barnard = byName("Barnard's Star");
+      expect(Math.abs(barnard[9])).toBe(file.source.neighbours.pmCapMasPerYear);
+      expect(file.source.neighbours.pmCapMasPerYear).toBe(9999.99);
+    }
+  );
+
+  it.skipIf(!GAIA_ENABLED)(
+    'corrige le plafond de HYG : le mouvement propre de Barnard dépasse 9 999,99 mas/an',
+    () => {
+      const barnard = byName("Barnard's Star");
+      expect(barnard[11]).toBe('gaia-dr3');
+      expect(Math.abs(barnard[9])).toBeGreaterThan(10_000);
+      // Aucune ligne HYG ne porte la valeur plafonnée (le générateur les écarte).
+      for (const s of file.stars)
+        if (s[11] === 'hyg-v44') {
+          expect(Math.abs(s[8])).toBeLessThan(9999.99);
+          expect(Math.abs(s[9])).toBeLessThan(9999.99);
+        }
+    }
+  );
 });
 
 describe('distances', () => {
-  it('Proxima est à 4,25 al (Gaia DR3 : 768,07 mas), Barnard à 5,96, Sirius à 8,6', () => {
-    expect(distanceFacts(byName('Proxima Centauri')).lightYears).toBeCloseTo(
-      4.2465,
-      3
-    );
-    expect(distanceFacts(byName("Barnard's Star")).lightYears).toBeCloseTo(
-      5.963,
-      2
-    );
-    expect(distanceFacts(byName('Sirius')).lightYears).toBeCloseTo(8.6, 1);
+  it.skipIf(GAIA_ENABLED)(
+    'HYG seul : Proxima à 4,227 al (1,2959 pc), Barnard à 5,948, Sirius à 8,6',
+    () => {
+      expect(distanceFacts(byName('Proxima Centauri')).lightYears).toBeCloseTo(
+        4.2267,
+        3
+      );
+      expect(distanceFacts(byName("Barnard's Star")).lightYears).toBeCloseTo(
+        5.948,
+        2
+      );
+      expect(distanceFacts(byName('Sirius')).lightYears).toBeCloseTo(8.6, 1);
+      // 1 UA = 1 cm met Proxima à 2,67 km ; HYG ne publie aucune incertitude.
+      const proxima = distanceFacts(byName('Proxima Centauri'));
+      expect(proxima.au).toBeCloseTo(267_299, -2);
+      expect(proxima.kmAtOneCentimetre).toBeCloseTo(2.673, 2);
+      expect(proxima.lightYearsError).toBeNull();
+    }
+  );
+
+  it.skipIf(!GAIA_ENABLED)(
+    'Proxima est à 4,25 al (Gaia DR3 : 768,07 mas), Barnard à 5,96, Sirius à 8,6',
+    () => {
+      expect(distanceFacts(byName('Proxima Centauri')).lightYears).toBeCloseTo(
+        4.2465,
+        3
+      );
+      expect(distanceFacts(byName("Barnard's Star")).lightYears).toBeCloseTo(
+        5.963,
+        2
+      );
+      expect(distanceFacts(byName('Sirius')).lightYears).toBeCloseTo(8.6, 1);
+    }
+  );
+
+  it('1 pc vaut 206 264,8 UA', () => {
+    expect(AU_PER_PARSEC).toBeCloseTo(206_264.806, 3);
   });
 
-  it('1 pc vaut 206 264,8 UA, et 1 UA = 1 cm met Proxima à 2,7 km', () => {
-    expect(AU_PER_PARSEC).toBeCloseTo(206_264.806, 3);
+  it.skipIf(!GAIA_ENABLED)('1 UA = 1 cm met Proxima à 2,7 km (Gaia)', () => {
     const proxima = distanceFacts(byName('Proxima Centauri'));
     expect(proxima.au).toBeCloseTo(268_540, -2);
     expect(proxima.kmAtOneCentimetre).toBeCloseTo(2.685, 2);
@@ -93,6 +146,7 @@ describe('distances', () => {
 
   it("ne publie pas d'incertitude quand la source n'en donne pas", () => {
     expect(distanceFacts(byName('Sirius')).lightYearsError).toBeNull();
+    if (!GAIA_ENABLED) return;
     const proxima = distanceFacts(byName('Proxima Centauri'));
     expect(proxima.lightYearsError).toBeGreaterThan(0);
     expect(proxima.lightYearsError!).toBeLessThan(0.001);
@@ -115,12 +169,15 @@ describe('systèmes', () => {
     expect(alpha.members.some((m) => m[0] === 'Proxima Centauri')).toBe(false);
   });
 
-  it('61 étoiles, 48 repères : 13 systèmes à deux composantes se partagent un repère', () => {
+  it('61 étoiles, 48 repères (49 avec HYG seul) : les systèmes à deux composantes se partagent un repère', () => {
     // Le regroupement est voulu (séparation sous 60″, un repère fait 9 pixels) : la documentation
-    // et la fiche parlent d'étoiles ET de repères, jamais l'une pour l'autre.
+    // et la fiche parlent d'étoiles ET de repères, jamais l'une pour l'autre. Avec HYG seul (positions
+    // d'Hipparcos et de Gliese), une paire de plus dépasse le seuil : 49 repères, 12 paires (mesuré).
     expect(file.count).toBe(61);
-    expect(systems).toHaveLength(48);
-    expect(systems.filter((s) => s.members.length === 2)).toHaveLength(13);
+    expect(systems).toHaveLength(GAIA_ENABLED ? 48 : 49);
+    expect(systems.filter((s) => s.members.length === 2)).toHaveLength(
+      GAIA_ENABLED ? 13 : 12
+    );
     expect(systems.filter((s) => s.members.length > 2)).toHaveLength(0);
   });
 
@@ -169,7 +226,11 @@ describe('position, mouvement, texte', () => {
     const out = new Float64Array(3);
     starDirection(star, 0, out);
     const ra = (Math.atan2(out[1]!, out[0]!) * 180) / Math.PI;
-    expect(((ra % 360) + 360) % 360).toBeCloseTo(217.4289, 3);
+    // Gaia ramené à J2000 : 217,4289° ; HYG : 217,43977° (écart de 18″ sur le ciel, mesuré).
+    expect(((ra % 360) + 360) % 360).toBeCloseTo(
+      GAIA_ENABLED ? 217.4289 : 217.43977,
+      3
+    );
     const later = new Float64Array(3);
     // 26 ans après J2000 (2026) : environ 100″ de mouvement propre.
     starDirection(
@@ -189,7 +250,8 @@ describe('position, mouvement, texte', () => {
     );
     const fastest = rates.reduce((a, b) => (b[1] > a[1] ? b : a));
     expect(fastest[0]).toBe("Barnard's Star");
-    expect(fastest[1]).toBeCloseTo(10.39, 1);
+    // HYG plafonne la composante en déclinaison à 9 999,99 mas/an : 10,03″/an, borne inférieure.
+    expect(fastest[1]).toBeCloseTo(GAIA_ENABLED ? 10.39 : 10.03, 1);
   });
 
   it('sens de la vitesse radiale : Barnard se rapproche, inconnue → null', () => {
