@@ -132,6 +132,31 @@ export function followNearPlane(
 }
 
 /**
+ * Le même plan proche, quand une COQUE transparente vue de près est posée entre la caméra et le sol
+ * (GAL-EARTH-ATMOSPHERE-002) : la coque des nuages descend à 10 km d'altitude de représentation à l'approche
+ * (`core/cloudShellAltitude`), et la moitié de l'altitude AU-DESSUS DU SOL la coupait dès que la caméra
+ * passait sous ~20 km (mesuré aux îles Kerguelen : nuages présents à 22,5 km, absents à 11,2 km, la coque
+ * étant à 1,2 km devant la caméra pour un plan proche à 5,6 km). Tant que la caméra est AU-DESSUS de la coque,
+ * le plan proche reste à la moitié de la distance qui l'en sépare ; dessous, la coque n'est jamais plus près
+ * que sa hauteur au-dessus de la caméra, et la règle du sol suffit.
+ */
+export function followNearPlaneWithShell(
+  distance: number,
+  clearanceRadius: number,
+  shellRadius: number | null,
+  minimum: number
+): number {
+  const ground = followNearPlane(distance, clearanceRadius, minimum);
+  if (
+    shellRadius === null ||
+    !(shellRadius > clearanceRadius) ||
+    distance <= shellRadius
+  )
+    return ground;
+  return Math.min(ground, followNearPlane(distance, shellRadius, minimum));
+}
+
+/**
  * Écran de référence contre lequel le plancher d'approche est jugé.
  *
  * Le plancher doit être une propriété du CORPS, pas de la fenêtre : sinon la distance

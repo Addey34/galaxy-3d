@@ -485,7 +485,7 @@ export const en = {
   'weather.seaTemperature': 'Sea surface temperature (GHRSST)',
   'weather.thermalModel': 'Air temperature (model)',
   'weather.clouds.note':
-    "Real cloud cover from NASA satellite imagery (day's snapshot). Up close: VIIRS at 250 m, gaps filled by that day's MODIS Aqua fraction (~20 km, another pass). Drawn at a set altitude, not a measured one.",
+    "Real cloud cover from NASA satellite imagery (day's snapshot). Up close: VIIRS at 250 m, gaps filled by that day's MODIS Aqua fraction (~20 km, another pass). Very close, smoothed to what the screen can show of them (an average of the image, no detail added). Drawn at a set altitude, not a measured one.",
   'weather.cloudsModel.note':
     'Modelled cloud cover: gap-free worldwide, supports past and forecast; pick this for the present moment and time travel.',
   'weather.precip.note':

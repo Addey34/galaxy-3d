@@ -8716,3 +8716,32 @@ Une passe d'ergonomie sur ce qui était MESURÉ défaillant, sans refonte : rien
 - **Mesure de `device-readingLight`** : la luminance moyenne de la scène masque aussi `#formation-marker`, une légende passagère (« Olympus Mons · Mars ») qui faussait la comparaison de 5,5 niveaux sur iPhone ; l'assertion (`< 1.5`) est inchangée.
 - **Preuves** : `e2e/device-smallScreens.spec.ts` (iPhone SE et Pixel 7 paysage, sur les deux moteurs de `pnpm test:mobile` : cibles de 24 px, aucun nom sous une commande, crédits dans l'écran ; falsifié), suite `device-*` complète hors CI, scénarios du voisinage rejoués sur bureau et téléphone.
 - **Limites, écrites** : les liens au fil d'un texte gardent leur hauteur de ligne (exception de 2.5.8) ; en paysage, un nom d'étoile au bord de l'écran peut être coupé ; aucun téléphone réel (BrowserStack non utilisé pour ce lot).
+
+### La traversée de l'atmosphère : les nuages réels jusqu'à leur couche, et le plan proche devant elle (GAL-EARTH-ATMOSPHERE-002, 2026-11-27)
+
+**Ce que la descente montrait (mesuré, `scripts/measure-cloud-descent.mjs`, production, mêmes cadrages).** Aux îles Kerguelen (NOAA-21, 2026-11-20 07:30 UTC, couverture mesurée de 92 %), la caméra passait d'un plafond blanc continu à 41,8 km à un sol entièrement dégagé à 22,5 km, encore AU-DESSUS de la couche de représentation (10 km de près, `core/cloudShellAltitude`). Deux causes, chacune vérifiée :
+
+- **la règle d'effacement** (`core/dataMagnification`, texel de 250 m au-delà de 6 pixels) retirait la couche régionale dès ~27 km ;
+- **le plan proche** : la caméra le pose à la moitié de l'altitude AU-DESSUS DU SOL (`followNearPlane`), qui passait derrière la coque des nuages dès ~20 km d'altitude (à 11,2 km : coque à 1,2 km devant la caméra, plan proche à 5,6 km). Les nuages étaient coupés, sans erreur.
+
+**Les corrections.**
+
+- **Nuages de près** (`core/cloudNear`, `components/surface/cloudShellMaterial`) : l'alpha est aussi extrait d'un niveau de mipmap plus grossier de la MÊME tuile, choisi pour qu'un texel effectif tienne dans 3 pixels (au plus 6 niveaux, 16 km pour 250 m ; au-delà, la règle d'effacement reprend). C'est une moyenne de l'observation, jamais un détail ajouté. Gradients explicites (`2^lod / taille`) : multiplier les dérivées d'écran ne choisit pas le niveau voulu en grossissement (le niveau naturel y est négatif, ramené à 0).
+- **Porte MODIS** : l'extraction vraies couleurs prend la neige pour un nuage (limite déjà écrite en #580) ; de près, le prolongement posait un voile continu sur l'Himalaya (mesuré à l'Everest). Il n'est montré que là où la fraction nuageuse MODIS du même jour (tests infrarouges) voit un nuage ; sans couverture MODIS, la porte reste ouverte. La couche loin de la caméra n'est pas touchée.
+- **Plan proche devant la coque** (`core/surfaceApproach.followNearPlaneWithShell`, `CelestialObject.getNearShellRadius`, `CameraSystem`) : tant que la caméra est au-dessus de la coque des nuages VISIBLE, le plan proche reste à la moitié de la distance qui l'en sépare ; dessous, ou sans couche nuages, la règle du sol inchangée.
+- **Désactivable** : `?cloud-near=0` rend la règle d'effacement (A/B sur le même build). La note des nuages (`weather.clouds.note`, quatre langues) dit le lissage de près et l'altitude de représentation non mesurée.
+
+**Mesuré.**
+
+- Descentes avant (production) / après (build local), mêmes cadrages et dates : Kerguelen (océan, côte), Brasília (terre), Lisbonne (côte), Everest (montagne), et la Lune (Montes Alpes, témoin d'un autre corps : identique). La couche reste visible et continue jusqu'à la coque (Kerguelen 22,5 et 11,2 km, Brasília 22,4 et 12,1 km, Lisbonne 25,9 et 14,6 km) ; sous la coque, rien ne change.
+- Coût : même build, `?cloud-near=0` contre défaut. Rendu logiciel et processeur freiné ×4 : images par seconde identiques à chaque altitude (0,7 à 1,1 sur la plage des nuages). Pixel 7 émulé, processeur ×4 : 46,7 à 60,6 des deux côtés, sans écart systématique. Même nombre de carreaux (aucune requête en plus), mipmaps déjà générés (aucune mémoire en plus).
+
+**Limites, dites.**
+
+1. **Sous la coque, aucun plafond** : le moteur de tuiles ne sélectionne rien quand la caméra est à l'intérieur de la sphère qu'il sert (`radii <= lowest`). Un plafond nuageux vu par-dessous demanderait une sélection depuis l'intérieur dans le moteur PARTAGÉ : non entrepris.
+2. **Une seule altitude de représentation**, et aucune géométrie volumétrique : la structure interne d'un nuage n'est pas observée, rien ne la prétend.
+3. L'extraction est non linéaire : appliquée à une couleur moyennée, une moitié nuage et moitié océan donne un voile partiel, pas la moitié exacte de la couverture.
+4. **Neige en montagne** : la porte MODIS en retire une partie, pas tout (MODIS lui-même rapporte une fraction partielle sur la neige) ; mesuré à l'Everest entre 20 et 10 km.
+5. **Réseau retardé** (300 ms, 1,5 Mb/s, Brasília) : un carreau proche pas encore arrivé laisse une lacune à bord droit dans la couche, jusqu'à son arrivée (absente avec 8 s d'attente) ; avant, la couche proche n'était pas montrée du tout.
+6. Les petits traits sombres au bord lointain de la couche, à l'horizon, existaient déjà en production (mêmes cadrages) : non traités ici.
+7. Lumière atmosphérique (AC3) : aucun défaut mesuré dans ces descentes (ciel bleu et brume à l'horizon sous 10 km, `core/atmosphereScattering`), donc aucune modification.

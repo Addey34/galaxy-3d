@@ -231,6 +231,31 @@ describe('Explo : approche des corps sous-kilométriques', () => {
     const { cameraSystem, r } = followAt(6371, 1, 1.15);
     expect(cameraSystem.camera.near).toBeCloseTo(r * 0.075, 12);
   });
+
+  it('reste devant la coque des nuages quand la caméra est au-dessus (GAL-EARTH-ATMOSPHERE-002)', () => {
+    // La Terre à 11,2 km de la sphère, coque à 10 km : le near du sol (moitié de l'altitude) passait
+    // DERRIÈRE la coque, à 1,2 km devant la caméra, et les nuages disparaissaient sous ~20 km.
+    const { cameraSystem, r } = followAt(6371, 1, 1 + 11.2 / 6371);
+    const shell = r * (1 + 10 / 6371);
+    const groundNear = cameraSystem.camera.near;
+    const bodies = Reflect.get(cameraSystem, 'celestialBodies') as Record<
+      string,
+      Record<string, unknown>
+    >;
+    bodies['x']!['getNearShellRadius'] = () => shell;
+    (
+      cameraSystem as unknown as { _updateClipPlanes(): void }
+    )._updateClipPlanes();
+    const gap = r * (1 + 11.2 / 6371) - shell;
+    expect(groundNear).toBeGreaterThan(gap);
+    expect(cameraSystem.camera.near).toBeLessThan(gap);
+    // Sans coque visible, l'ancienne règle, à l'identique.
+    bodies['x']!['getNearShellRadius'] = () => null;
+    (
+      cameraSystem as unknown as { _updateClipPlanes(): void }
+    )._updateClipPlanes();
+    expect(cameraSystem.camera.near).toBe(groundNear);
+  });
 });
 
 /**

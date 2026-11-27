@@ -23,7 +23,10 @@ import {
 } from '@/core/viewAngles';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CAMERA_CONTROLS_SETTINGS, CAMERA_SETTINGS } from '@/config/engine';
-import { followNearPlane } from '@/core/surfaceApproach';
+import {
+  followNearPlane,
+  followNearPlaneWithShell,
+} from '@/core/surfaceApproach';
 import Logger from '@/utils/Logger';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
 import type { CameraDistance } from '@/types';
@@ -41,6 +44,8 @@ export interface CameraTarget {
   /** Le corps vient d'être ciblé : il peut commencer à charger ce qu'il lui faudra à l'arrivée. */
   prepareForApproach?(): void;
   getClearanceRadius?(mode: 'educ' | 'explo', toward?: THREE.Vector3): number;
+  /** Rayon de la coque transparente visible la plus basse (nuages), ou `null` : le plan proche reste devant. */
+  getNearShellRadius?(mode: 'educ' | 'explo'): number | null;
   /**
    * Plancher d'approche propre à cette cible, en multiples de son rayon, ou rien si elle
    * n'affiche aucune surface — une ancre d'objet d'instrument, un petit corps sans texture.
@@ -670,9 +675,12 @@ export class CameraSystem {
         0;
       // Moitié de l'altitude, et rien ne doit le relever : la règle et ce qu'elle a coûté
       // vivent dans `core/surfaceApproach.ts`, avec les mesures qui l'ont établie.
-      const near = followNearPlane(
+      // Et devant la coque des nuages quand la caméra est au-dessus (`core/surfaceApproach`).
+      const near = followNearPlaneWithShell(
         d,
         r,
+        this._target(this.currentTarget.name)?.getNearShellRadius?.('explo') ??
+          null,
         CAMERA_CONTROLS_SETTINGS.exploMinFloor
       );
       const far = Math.min(
