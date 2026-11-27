@@ -59,7 +59,9 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'nb.card.hint':
     'O marcador mostra a direção real da estrela. A estrela não é desenhada à sua distância: a cena termina no Sistema Solar.',
   'nb.card.source':
-    'Fontes: Gaia DR3 (ESA) e HYG v4.4 ({license}). As posições são as de J2000,0; o marcador acompanha o movimento próprio até a data da cena.',
+    'Fontes: Gaia DR3 (ESA, {gaiaLicense}) e HYG v4.4 ({hygLicense}), dois arquivos distintos, cada um com sua licença. As posições são as de J2000,0; o marcador acompanha o movimento próprio até a data da cena.',
+  'nb.card.source.hygOnly':
+    'Fonte: HYG v4.4 ({hygLicense}); o arquivo do Gaia DR3 não pôde ser lido. As posições são as de J2000,0; o marcador acompanha o movimento próprio até a data da cena.',
   'nb.card.opened': 'Estrela próxima {name}',
   'nb.unit.ly': 'a.l.',
   'nb.search.label': 'Encontrar uma estrela próxima',
@@ -616,5 +618,77 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'ed.loading': 'Carregando a observação de {date}…',
   'ed.unavailable':
     'A observação de {date} não pôde ser carregada: a de {shown} continua na tela.',
+  'vol.heading': 'Explorar mais longe',
+  'vol.scaleButton': '{pc} pc',
+  'vol.scaleLabel':
+    '{pc} pc: mostrar as estrelas até {pc} parsecs ({ly} anos-luz)',
+  'vol.neighbourhoodOnly':
+    'As 61 estrelas a menos de 5 pc. Escolha uma escala maior para carregar o catálogo Gaia de estrelas próximas.',
+  'vol.loading': 'Carregando as estrelas até {pc} pc…',
+  'vol.loaded':
+    '{count} estrelas mostradas até {pc} pc, além da vizinhança de 5 pc.',
+  'vol.failed':
+    'Não foi possível carregar todas as estrelas além de 5 pc: a vista fica em {pc} pc.',
+  'vol.coverage':
+    'Gaia Catalogue of Nearby Stars (Gaia EDR3, 2021): os objetos cuja distância mediana é de 100 pc ou menos. Não são todas as estrelas: faltam os objetos mais fracos, e as mais brilhantes, luminosas demais para o Gaia, vêm do Hipparcos.',
+  'vol.filter': 'Mostrar',
+  'vol.filter.all': 'Todas as estrelas',
+  'vol.filter.whiteDwarfs': 'Anãs brancas prováveis',
+  'vol.filter.exoplanetHosts': 'Hospedeiras de exoplanetas',
+  'vol.filter.radialVelocity': 'Com uma velocidade radial publicada',
+  'vol.search': 'Encontrar uma estrela com nome',
+  'vol.searchPlaceholder': 'Vega, 51 Peg, HD 10700…',
+  'vol.searchNone': 'Nenhuma estrela com nome corresponde.',
+  'vol.gaiaName': 'Gaia DR3 {id}',
+  'vol.unnamed': 'Estrela n.º {n} do volume',
+  'vol.distanceGcns':
+    '{pc} pc ({ly} al): mediana da distribuição de distância do GCNS, 68 % entre {lo} e {hi} pc',
+  'vol.distanceRel': '{pc} pc ({ly} al), ±{pct} % (GCNS)',
+  'vol.distancePlain': '{pc} pc ({ly} al)',
+  'vol.distanceHyg': '{pc} pc ({ly} al), pela paralaxe do Hipparcos',
+  'vol.distanceSimbad': '{pc} pc ({ly} al), pela paralaxe dada pelo SIMBAD',
+  'vol.magnitude': 'Magnitude aparente',
+  'vol.magG': 'G = {m} (Gaia)',
+  'vol.magV': 'V = {m} (Hipparcos)',
+  'vol.absMagnitude': 'Magnitude absoluta',
+  'vol.absMagValue': '{m}, calculada a partir da distância, sem extinção',
+  'vol.colour': 'Índice de cor',
+  'vol.colourBpRp': 'BP−RP = {c} (Gaia)',
+  'vol.colourBV': 'B−V = {c} (Hipparcos)',
+  'vol.notPublished': 'não publicado pela fonte',
+  'vol.parallax': 'Paralaxe',
+  'vol.parallaxValue': '{p} ± {e} mas',
+  'vol.parallaxPlain': '{p} mas',
+  'vol.tangential': 'Velocidade perpendicular à linha de visada',
+  'vol.tangentialValue':
+    '{v} km/s, calculada a partir do movimento próprio e da distância',
+  'vol.radial': 'Velocidade radial',
+  'vol.radialValue': '{v} ± {e} km/s (publicada)',
+  'vol.radialPlain': '{v} km/s (publicada)',
+  'vol.quality': 'Astrometria',
+  'vol.qualityValue':
+    'RUWE {ruwe}; confiável com probabilidade de {p} % (GCNS)',
+  'vol.whiteDwarf': 'Anã branca',
+  'vol.whiteDwarfValue': 'probabilidade {p} % (GCNS)',
+  'vol.exoplanets': 'Exoplanetas',
+  'vol.exoplanetsValue':
+    '{count} conhecido(s) em torno de {host} (NASA Exoplanet Archive, cruzado pelo número Gaia DR3)',
+  'vol.origin.gcns':
+    'Gaia DR3 {id}, no Gaia Catalogue of Nearby Stars (GCNS, CC BY-NC 4.0, construído com dados do Gaia da ESA, CC BY-NC 3.0 IGO).',
+  'vol.origin.hyg':
+    'Brilhante demais para o Gaia, listada pelo GCNS como ausente do EDR3: valores do Hipparcos (HYG v4.4, CC BY-SA 4.0).',
+  'vol.origin.simbad':
+    'Ausente do Gaia EDR3 (lista do GCNS, CC BY-NC 4.0) e não encontrada no Hipparcos: só posição e paralaxe do SIMBAD (CDS/SIMBAD); magnitude, cor e movimento não estão disponíveis aqui.',
+  'vol.nameHyg':
+    'Nome: HYG v4.4 (CC BY-SA 4.0), associado pelo Galaxy por posição e distância.',
+  'vol.noRadial':
+    'Nenhuma velocidade radial é publicada: quando o tempo avança, o movimento mostrado é só perpendicular à linha de visada.',
+  'vol.noMotion':
+    'Esta estrela não se move com o tempo aqui: seu movimento não está na fonte.',
+  'vol.symbolic':
+    'Além de 5 pc, cada estrela é um pequeno ponto: seu brilho segue sua magnitude absoluta e sua cor é indicativa (pelo índice de cor), nunca um tipo espectral.',
+  'vol.dataUnavailable':
+    'Não foi possível carregar parte dos dados (rede): escolha de novo para tentar outra vez.',
+  'vol.unknownStar': 'A estrela deste link não está no volume estelar.',
   'ed.announce': 'Observação de {date} exibida',
 };

@@ -46,3 +46,9 @@ export function buildRow(
   star: HygStar,
   gaia: GaiaCandidate | null
 ): (string | number | null)[];
+export function combine(
+  hygRows: ReadonlyArray<readonly unknown[]>,
+  gaiaRows: ReadonlyArray<readonly unknown[]>
+): { rows: Array<{ row: unknown[]; reason: string | null }>; notes: string[] };
+export const HYG_FIELDS: string[];
+export const GAIA_FIELDS: string[];

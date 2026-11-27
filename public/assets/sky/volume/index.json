@@ -1,0 +1,649 @@
+{
+ "$comment": "Écrit par `pnpm stellar:volume` (scripts/generate-stellar-volume.mjs). Ne pas éditer à la main. Index de Galaxy : un dossier par fournisseur, chacun sous SA licence ; assemblage à l’exécution par core/stellarVolumeAssembly.ts.",
+ "rights": "This index and the crossmatch files are written by Galaxy and contain only identifiers, file names, checksums and counts: no value of any catalogue. Each provider folder carries its own NOTICE.txt and licence.",
+ "format": {
+  "epochYear": 2016,
+  "recordBytes": 16,
+  "detailBytes": 24,
+  "detailBucket": 4096,
+  "positionScale": 300,
+  "velocityScale": 20,
+  "flags": {
+   "radialVelocity": 1,
+   "whiteDwarf": 2,
+   "exoplanetHost": 4,
+   "hyg": 8,
+   "simbadOnly": 16,
+   "colourBV": 32
+  },
+  "maxDistancePc": 100,
+  "frame": "ICRS equatorial, Sun at the origin, 1 unit = 1 pc; the client rotates to galactic (core/stellarSpace)"
+ },
+ "providers": {
+  "gcns": {
+   "name": "Gaia Catalogue of Nearby Stars (GCNS), Gaia EDR3",
+   "license": "CC-BY-NC-4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/4.0/",
+   "rightsHolder": "Gaia Catalogue of Nearby Stars © 2023 by Richard Smart, distributed by the GAVO Data Center; built on Gaia EDR3 data of ESA/Gaia/DPAC (ESA: CC BY-NC 3.0 IGO)",
+   "notice": "gcns/NOTICE.txt",
+   "sha256": "f5909e0bec4ee689edd92bde983b4eff1004da996cf4bb68aef1c774d3a87178",
+   "shells": [
+    {
+     "maxPc": 25,
+     "count": 5111,
+     "file": "gcns/stars-25.bin",
+     "bytes": 81776,
+     "sha256": "f90713f12498fd627cad7000a688dd1e911693532c11c136fcf8233d3297430e"
+    },
+    {
+     "maxPc": 50,
+     "count": 35075,
+     "file": "gcns/stars-50.bin",
+     "bytes": 561200,
+     "sha256": "1f472edf34501385240083408818bb11282c7bcdfea4fb49346c15b304398ce0"
+    },
+    {
+     "maxPc": 100,
+     "count": 260340,
+     "file": "gcns/stars-100.bin",
+     "bytes": 4165440,
+     "sha256": "374b83078fe1eab18c1d106dba7d5185fc3964c84b65aeee8c0d67bdd866e888"
+    }
+   ],
+   "details": [
+    {
+     "file": "gcns/details/000.bin",
+     "bytes": 98304,
+     "sha256": "f79189c023abc82ff1d50e41fd01452f9a03c1031329bf3aaf361060bdd2ae41"
+    },
+    {
+     "file": "gcns/details/001.bin",
+     "bytes": 98304,
+     "sha256": "ff080e65d7830cb776f74cec7d539ce9784891942ce671ad081230e007562c1c"
+    },
+    {
+     "file": "gcns/details/002.bin",
+     "bytes": 98304,
+     "sha256": "6b8b2b49fdb875ee0e2c6ac7acfae1c365b8e61304598e0da5ef172c72a50450"
+    },
+    {
+     "file": "gcns/details/003.bin",
+     "bytes": 98304,
+     "sha256": "c0be5b31086552da0c6f8ea2debbe2825fea043597ae4fcfcc915d2c2231e427"
+    },
+    {
+     "file": "gcns/details/004.bin",
+     "bytes": 98304,
+     "sha256": "232256d50e2f4280c4f87ad4d0ae8c7b5f0c42f02864d316b0013be52fff7313"
+    },
+    {
+     "file": "gcns/details/005.bin",
+     "bytes": 98304,
+     "sha256": "09f7150c369a4ddb55768919c8f5bd864500b385668b487afbe99e55e81a18e8"
+    },
+    {
+     "file": "gcns/details/006.bin",
+     "bytes": 98304,
+     "sha256": "e16f51a4433dac4ddb3b9e9a626b7901cd7b9c01aead17ac80dc685c7c5c5d59"
+    },
+    {
+     "file": "gcns/details/007.bin",
+     "bytes": 98304,
+     "sha256": "a51aa8e0b5b2c4d67339e96496accf58ec339d3cc255dd2a5bbe050ab46c3bfb"
+    },
+    {
+     "file": "gcns/details/008.bin",
+     "bytes": 98304,
+     "sha256": "1b6e7c8a74823968310ca377a665a024834b17f4220160f1a14bd5203d9ffb78"
+    },
+    {
+     "file": "gcns/details/009.bin",
+     "bytes": 98304,
+     "sha256": "4bd85b8de8456e1134f13b35022b5cf7da024977772efa35bb8da61eb6eedf8b"
+    },
+    {
+     "file": "gcns/details/010.bin",
+     "bytes": 98304,
+     "sha256": "54bd38465d8f9a3022e8c14676c2e7b1582aaf8047b0fb4a585bb5ad26eafc29"
+    },
+    {
+     "file": "gcns/details/011.bin",
+     "bytes": 98304,
+     "sha256": "f950f188b6e33c2c0c6c881ce1f0d9b62ddd77f14ea436d4d828d177a6fbf634"
+    },
+    {
+     "file": "gcns/details/012.bin",
+     "bytes": 98304,
+     "sha256": "044b8d31aed5b240fafe4735ac8e24e4607afb3303654f70fa49a6cb0e7f15bb"
+    },
+    {
+     "file": "gcns/details/013.bin",
+     "bytes": 98304,
+     "sha256": "dde8392f0e2620f78d5c781bbf9eaa5425f40a1d88d22f5517b4bd2f19c3087a"
+    },
+    {
+     "file": "gcns/details/014.bin",
+     "bytes": 98304,
+     "sha256": "75c5e74d41725259b3da23e7221ab3f063a2f57ba3edbad683074496ba8edf06"
+    },
+    {
+     "file": "gcns/details/015.bin",
+     "bytes": 98304,
+     "sha256": "8b6385ea738c83e43f775fa107cc57f8c1a098dc84d7607fc98cc348a0419a41"
+    },
+    {
+     "file": "gcns/details/016.bin",
+     "bytes": 98304,
+     "sha256": "999c3b1ef433e89e127dcf2d9bbddc5f2b8a9a64b72540125d7a5abe6e62c73a"
+    },
+    {
+     "file": "gcns/details/017.bin",
+     "bytes": 98304,
+     "sha256": "f33d915f91784817a1280efd888654934128f3574349f29832754b03f8c99472"
+    },
+    {
+     "file": "gcns/details/018.bin",
+     "bytes": 98304,
+     "sha256": "4e15353e485e18dc82d7791c7846d73bac72a00b32ca3ea3402f9a420e4dea4b"
+    },
+    {
+     "file": "gcns/details/019.bin",
+     "bytes": 98304,
+     "sha256": "213eefc218ff877d2ac607c659c757a40255e7be0c73e34d8d689dca6347c1b9"
+    },
+    {
+     "file": "gcns/details/020.bin",
+     "bytes": 98304,
+     "sha256": "2a49f12411ee534e04c670521fe40673dbcd6ab993fd190fa02f623f45d50d8a"
+    },
+    {
+     "file": "gcns/details/021.bin",
+     "bytes": 98304,
+     "sha256": "b05d233d90e11ac809b649a222b2fcc4d3dbf982a1eb61c9c611343335d61e04"
+    },
+    {
+     "file": "gcns/details/022.bin",
+     "bytes": 98304,
+     "sha256": "f2f3ba58cedae636ea5fe6055fb94dc82f0cd859070222edaba9eea9dc0db6e0"
+    },
+    {
+     "file": "gcns/details/023.bin",
+     "bytes": 98304,
+     "sha256": "4b8309187f2df5770fe1171446f421d2530672478bfe93033f490aab8e8495bf"
+    },
+    {
+     "file": "gcns/details/024.bin",
+     "bytes": 98304,
+     "sha256": "32d8ed26f6c1b2c28a50d08ac773a1cd181ba94d5e85659be695d2f651dbf210"
+    },
+    {
+     "file": "gcns/details/025.bin",
+     "bytes": 98304,
+     "sha256": "6d042dd2a849ef7c885e1a367a6a389ac17e8832be86f45996e802c5d04bcbe3"
+    },
+    {
+     "file": "gcns/details/026.bin",
+     "bytes": 98304,
+     "sha256": "c60e8fb1efd737ceccb03da5f403ffcbc32d2031ddf5d82702e1a30f48aa497d"
+    },
+    {
+     "file": "gcns/details/027.bin",
+     "bytes": 98304,
+     "sha256": "1ee47403a36f11284366ab9ae7b97f76bc98eda4742974a62bc731f2accdba82"
+    },
+    {
+     "file": "gcns/details/028.bin",
+     "bytes": 98304,
+     "sha256": "3f39943837a8e7be07d0fd81dbd15d526c8e84dddcac6e484a212acf3450a786"
+    },
+    {
+     "file": "gcns/details/029.bin",
+     "bytes": 98304,
+     "sha256": "2a58a85eb88c249fc3e3fc62669251e0efdfbe7a4a4d4c9309a80e259a22a64f"
+    },
+    {
+     "file": "gcns/details/030.bin",
+     "bytes": 98304,
+     "sha256": "55793acaab134744cd2141ff08cbfb1ec14452f56714e3f2e4a13c9dd59ea6ed"
+    },
+    {
+     "file": "gcns/details/031.bin",
+     "bytes": 98304,
+     "sha256": "685f211957474ea43ef517786dbfe5fb8bb64a10476818d05a2d924db4c510b4"
+    },
+    {
+     "file": "gcns/details/032.bin",
+     "bytes": 98304,
+     "sha256": "970247c3a7cfe3288c475e6e488c3644cdbf437543f70e3182f28f188cfafa0f"
+    },
+    {
+     "file": "gcns/details/033.bin",
+     "bytes": 98304,
+     "sha256": "505bd69804bcee3e56360c7d8b736b8091861720643eb58dde46dc3e9ca994b8"
+    },
+    {
+     "file": "gcns/details/034.bin",
+     "bytes": 98304,
+     "sha256": "556c9b3a4e67a2f1859e278e72868be1de709c660048ff329f250a13f1932c0d"
+    },
+    {
+     "file": "gcns/details/035.bin",
+     "bytes": 98304,
+     "sha256": "cdba23beea3aea2d639ea2bd62b1926eaa2b076c247931ff77543e81a908bdd6"
+    },
+    {
+     "file": "gcns/details/036.bin",
+     "bytes": 98304,
+     "sha256": "227b35d67c0cd9faec5755fdf553fabfe6f294fd2f8f2798ff4861a78c766cd9"
+    },
+    {
+     "file": "gcns/details/037.bin",
+     "bytes": 98304,
+     "sha256": "a55114e1ac73bf7f0c5e043a7eb6842362c995449342bd7d053a1b9d7fe8f267"
+    },
+    {
+     "file": "gcns/details/038.bin",
+     "bytes": 98304,
+     "sha256": "c2e06d1986361ec3a3a60b0a7b7566e3b484aa7955e7261efbda256c43f4d759"
+    },
+    {
+     "file": "gcns/details/039.bin",
+     "bytes": 98304,
+     "sha256": "f020dc64642b9e89846f63503a87134bf31204117e5134be839485a13c4e2a37"
+    },
+    {
+     "file": "gcns/details/040.bin",
+     "bytes": 98304,
+     "sha256": "09f908d12f9e800d7a90df1b4e65bcc777202c28201b10c93f094fce640c547b"
+    },
+    {
+     "file": "gcns/details/041.bin",
+     "bytes": 98304,
+     "sha256": "06f9ec9e4180f79f32b5e4e43f6af3c14dc79742c3f8574b469b9ceda6863626"
+    },
+    {
+     "file": "gcns/details/042.bin",
+     "bytes": 98304,
+     "sha256": "8e63aa013c12e77715a14cb0a30eaaac2d89adcd9c61e0980a1e15a3200ef5f2"
+    },
+    {
+     "file": "gcns/details/043.bin",
+     "bytes": 98304,
+     "sha256": "666c3770f36354fc95d8529b5f9b8e94b4f1a55a3161d7c259d407d593c0452b"
+    },
+    {
+     "file": "gcns/details/044.bin",
+     "bytes": 98304,
+     "sha256": "26153333715de7117b48a1a5e52dc852ae21884f801e101d825e88039dbf0ae5"
+    },
+    {
+     "file": "gcns/details/045.bin",
+     "bytes": 98304,
+     "sha256": "fba544bc283926674b68903843334a1033a3cc2076611bb85bb9df4759ffdcd1"
+    },
+    {
+     "file": "gcns/details/046.bin",
+     "bytes": 98304,
+     "sha256": "87dfc08398aff25c388628fa9a392cdeac0dad0ab506cc31ff560340b073fe99"
+    },
+    {
+     "file": "gcns/details/047.bin",
+     "bytes": 98304,
+     "sha256": "b2e2f53304b57e17a23d151108d0b1a4704d0c8a44f704f293e045fe20c0bf37"
+    },
+    {
+     "file": "gcns/details/048.bin",
+     "bytes": 98304,
+     "sha256": "fedd743ac22f9c8d3f112339e2527b9b3eb88d63b97ece1f2e8381ebe702acc4"
+    },
+    {
+     "file": "gcns/details/049.bin",
+     "bytes": 98304,
+     "sha256": "c76f442166d3945be13716bae64b64a1d668ad81d36ec2ea8f20ed148fb1bb9d"
+    },
+    {
+     "file": "gcns/details/050.bin",
+     "bytes": 98304,
+     "sha256": "88f9f950f3179c6b668ed33e6b1f0c8ed97156635c9ef6a20adf8f7768a4c36c"
+    },
+    {
+     "file": "gcns/details/051.bin",
+     "bytes": 98304,
+     "sha256": "3eec587dd1b90253c7ac9bb38898855881bda362343263ae3147263d946d1696"
+    },
+    {
+     "file": "gcns/details/052.bin",
+     "bytes": 98304,
+     "sha256": "4fd5ecfff3863e00e4da586ab124fd428e993bc7ad4d4f877d49adbf35cc992f"
+    },
+    {
+     "file": "gcns/details/053.bin",
+     "bytes": 98304,
+     "sha256": "44814bf8fb741cba3c1cf91f39a9c28dbe2c0d69a158072a730ada8a585bf846"
+    },
+    {
+     "file": "gcns/details/054.bin",
+     "bytes": 98304,
+     "sha256": "cecbe6485ef4229bf14ac87b483a3ec83ee1542af493140f8df8ec18f58689da"
+    },
+    {
+     "file": "gcns/details/055.bin",
+     "bytes": 98304,
+     "sha256": "c70ce7c33f9e2e200c774895cb91cfaf83d4308da5b47f2108d33423bab99d12"
+    },
+    {
+     "file": "gcns/details/056.bin",
+     "bytes": 98304,
+     "sha256": "e0ea9dc5cd9a55049b67e2659ebe2ce249aef5afcd283a433595d9c0970bd3c7"
+    },
+    {
+     "file": "gcns/details/057.bin",
+     "bytes": 98304,
+     "sha256": "0ceb7350bb771cccdd41e0aa267ec7a5b008c94c1a57ca6881cc8ee69e0ebd15"
+    },
+    {
+     "file": "gcns/details/058.bin",
+     "bytes": 98304,
+     "sha256": "88ecaf73eba14736274f52fd5d062eeaed058a8ff03f15c3a514ce4f228d2f51"
+    },
+    {
+     "file": "gcns/details/059.bin",
+     "bytes": 98304,
+     "sha256": "57fc23e3e283a27cc1e874eeb0c3c795046d6800acaa7a107960f1adf44e254c"
+    },
+    {
+     "file": "gcns/details/060.bin",
+     "bytes": 98304,
+     "sha256": "1f62791bf7c0e38e33f7e11d95f44ee67565d2b66bf7a6c3359cb65a8e1f3b36"
+    },
+    {
+     "file": "gcns/details/061.bin",
+     "bytes": 98304,
+     "sha256": "c57fea1cbc4f856d92ecd18bdf03ecdd80cf2fa2509f42a8a52b12fb1907fef2"
+    },
+    {
+     "file": "gcns/details/062.bin",
+     "bytes": 98304,
+     "sha256": "253c887b89bd2b3319cbbd46de0c719e6cf1b7b8151f33ddade6783320e356cc"
+    },
+    {
+     "file": "gcns/details/063.bin",
+     "bytes": 98304,
+     "sha256": "4dd394203e2c15d5a5303da12f14e01aac7ed04cb9735311a1d931d2d60f4a61"
+    },
+    {
+     "file": "gcns/details/064.bin",
+     "bytes": 98304,
+     "sha256": "c35cf31a3738c177d531eb1af1a26077175f873d4185c15346a80f981faa5eca"
+    },
+    {
+     "file": "gcns/details/065.bin",
+     "bytes": 98304,
+     "sha256": "e0dd2a0aa719f99e4d7af0c7bcfd728c3df5fcfa900ea396c68bf0d9c2ae81e6"
+    },
+    {
+     "file": "gcns/details/066.bin",
+     "bytes": 98304,
+     "sha256": "646cd137bc7bc93ee9fe5bf364b8ad0601cf7e70f829ae9f09b6de1086ea6c86"
+    },
+    {
+     "file": "gcns/details/067.bin",
+     "bytes": 98304,
+     "sha256": "4f3e5dd645ee532299cab60653162aa15f64cd963d1c4f422c9830fe0eda2903"
+    },
+    {
+     "file": "gcns/details/068.bin",
+     "bytes": 98304,
+     "sha256": "cc5d677480e4207da963048a70a9446036b8370fc9299b69a8437c614a5f85c6"
+    },
+    {
+     "file": "gcns/details/069.bin",
+     "bytes": 98304,
+     "sha256": "7e061f6cecd9b4824cc081e4fbc9be8dd03da639a516f024ab97004160aa7fc7"
+    },
+    {
+     "file": "gcns/details/070.bin",
+     "bytes": 98304,
+     "sha256": "81a297a23400d29b4ff6b2ac6d02fd0002f42fbc42eaef7c6da48629c67bb292"
+    },
+    {
+     "file": "gcns/details/071.bin",
+     "bytes": 98304,
+     "sha256": "050aaabc44a816aa814307aefb4c431df127cb8632ef62d01bdeda39617ec221"
+    },
+    {
+     "file": "gcns/details/072.bin",
+     "bytes": 98304,
+     "sha256": "94eb04c8039ec1a1a07336897807cf2ea02ce6d81d3f7ce9866930ac092b0322"
+    },
+    {
+     "file": "gcns/details/073.bin",
+     "bytes": 36432,
+     "sha256": "4e8ec2fdf9f3f898e71fb34ee778ec1e349101d0a65afdd62d5e6ca8ae926ba5"
+    }
+   ]
+  },
+  "gcnsMissing": {
+   "name": "GCNS list of objects missing from Gaia EDR3 (gcns.missing_10mas), values from SIMBAD",
+   "license": "CC-BY-NC-4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-nc/4.0/",
+   "rightsHolder": "GCNS © 2023 by Richard Smart, distributed by the GAVO Data Center (CC BY-NC 4.0); positions, parallaxes, identifiers and object types from SIMBAD, CDS, Strasbourg (cite CDS/SIMBAD)",
+   "notice": "gcns-missing/NOTICE.txt",
+   "file": "gcns-missing/missing.json",
+   "bytes": 54836,
+   "sha256": "71c347b106aa7db7dc772ca1ff82669c0fbaca754327e6e348268e061bc4cd5e"
+  },
+  "hyg": {
+   "name": "HYG database v4.4 (Hipparcos, Yale Bright Star, Gliese)",
+   "license": "CC-BY-SA-4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "rightsHolder": "HYG database by David Nash (astronexus)",
+   "notice": "hyg/NOTICE.txt",
+   "sha256": "d541f7eb4baa587a6482321eb6e58c72c61698c0d6a3e495ead4fd91b104831d",
+   "complement": {
+    "file": "hyg/complement.json",
+    "bytes": 74979,
+    "sha256": "4011ca318fc7cb58b7c55b90afe29b8b3f95e97be8921c3f085bad539eb004a9"
+   },
+   "names": {
+    "file": "hyg/names.json",
+    "bytes": 395532,
+    "sha256": "fcbc68ea5a1664e276c905916de67542e3fac8f5c35378f7419b982056669d9f"
+   }
+  },
+  "nasa": {
+   "name": "NASA Exoplanet Archive, Planetary Systems Composite Parameters (pscomppars)",
+   "license": "no licence stated; acknowledgement requested",
+   "licenseUrl": "https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html",
+   "rightsHolder": "NASA Exoplanet Archive, operated by the California Institute of Technology under contract with NASA",
+   "notice": "nasa/NOTICE.txt",
+   "file": "nasa/hosts.json",
+   "bytes": 42906,
+   "sha256": "3301fd2ddf7157cd1e6f7d1f5bf2b1f70e4fe11af9141f499bddcfce682abbeb"
+  }
+ },
+ "crossmatch": {
+  "structure": {
+   "file": "crossmatch.json",
+   "bytes": 22749,
+   "sha256": "de2d31bb4343e077937e4b0fe0407aef65e8bda88a854ccf12a2a5599f0c42a1"
+  },
+  "names": {
+   "file": "crossmatch-names.json",
+   "bytes": 293607,
+   "sha256": "3ba7eb6ca9c4fcbba41fe267acf7fbc15fcfdbb9baf2fdbf7863da3d371cf4a3"
+  }
+ },
+ "expected": {
+  "count": 301721,
+  "perShell": [
+   5377,
+   35410,
+   260934
+  ],
+  "counts": {
+   "gcns": 300480,
+   "hyg": 747,
+   "simbad": 494,
+   "exoplanetHosts": 1050,
+   "whiteDwarf": 16421,
+   "radialVelocity": 80779,
+   "hiddenNeighbours": 56,
+   "namedByHyg": 20392
+  }
+ },
+ "source": {
+  "gcns": {
+   "name": "Gaia Catalogue of Nearby Stars (GCNS), Gaia Early Data Release 3",
+   "citation": "Gaia Collaboration, Smart R. L. et al. 2021, A&A 649, A6, doi:10.1051/0004-6361/202039498",
+   "service": "https://dc.zah.uni-heidelberg.de/tap/sync (gcns.main, gcns.missing_10mas)",
+   "retrieved": "2026-11-27",
+   "selection": "dist_50 (median of the distance posterior) <= 100 pc; the GCNS also lists objects whose 1st percentile only is inside 100 pc, not kept here",
+   "acknowledgement": "This work has made use of data from the European Space Agency (ESA) mission Gaia (https://www.cosmos.esa.int/gaia), processed by the Gaia Data Processing and Analysis Consortium (DPAC, https://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the DPAC has been provided by national institutions, in particular the institutions participating in the Gaia Multilateral Agreement."
+  },
+  "exoplanets": {
+   "name": "NASA Exoplanet Archive, pscomppars (gaia_dr3_id)",
+   "service": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync",
+   "retrieved": "2026-11-27",
+   "acknowledgement": "This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program."
+  }
+ },
+ "witnesses": {
+  "physical": [
+   {
+    "name": "Vega",
+    "pc": [
+     7.4,
+     7.9
+    ]
+   },
+   {
+    "name": "Arcturus",
+    "pc": [
+     10.9,
+     11.6
+    ]
+   },
+   {
+    "name": "Altair",
+    "pc": [
+     5,
+     5.3
+    ]
+   },
+   {
+    "name": "Fomalhaut",
+    "pc": [
+     7.4,
+     7.9
+    ]
+   },
+   {
+    "name": "Pollux",
+    "pc": [
+     10,
+     10.7
+    ]
+   },
+   {
+    "name": "Aldebaran",
+    "pc": [
+     19.5,
+     21
+    ]
+   }
+  ],
+  "gcnsGalactic": [
+   {
+    "index": 22,
+    "sourceId": "6412596012146801152",
+    "distPc": 3.6951,
+    "galacticXyzPc": [
+     2.2536,
+     -0.9989,
+     -2.7528
+    ]
+   },
+   {
+    "index": 566,
+    "sourceId": "5439029627401396096",
+    "distPc": 12.0126,
+    "galacticXyzPc": [
+     -1.2461,
+     -11.5057,
+     3.2201
+    ]
+   },
+   {
+    "index": 4557,
+    "sourceId": "3705361680324471552",
+    "distPc": 24.0015,
+    "galacticXyzPc": [
+     5.005,
+     -8.0075,
+     22.0659
+    ]
+   },
+   {
+    "index": 16202,
+    "sourceId": "2377344185944929280",
+    "distPc": 37.0004,
+    "galacticXyzPc": [
+     -4.4002,
+     8.7858,
+     -35.6718
+    ]
+   },
+   {
+    "index": 37813,
+    "sourceId": "4149978790761302016",
+    "distPc": 49.001,
+    "galacticXyzPc": [
+     46.989,
+     12.4011,
+     6.2722
+    ]
+   },
+   {
+    "index": 71653,
+    "sourceId": "6488765264276267648",
+    "distPc": 61.0001,
+    "galacticXyzPc": [
+     26.3837,
+     -23.487,
+     -49.7321
+    ]
+   },
+   {
+    "index": 125367,
+    "sourceId": "5328806434281181696",
+    "distPc": 74.0002,
+    "galacticXyzPc": [
+     -3.4754,
+     -73.8967,
+     -1.7964
+    ]
+   },
+   {
+    "index": 207209,
+    "sourceId": "6751509098339433088",
+    "distPc": 88,
+    "galacticXyzPc": [
+     78.6589,
+     13.5002,
+     -37.0745
+    ]
+   },
+   {
+    "index": 291750,
+    "sourceId": "3448407183009041024",
+    "distPc": 99,
+    "galacticXyzPc": [
+     -98.766,
+     6.5428,
+     1.8613
+    ]
+   }
+  ]
+ }
+}

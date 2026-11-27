@@ -1,0 +1,10 @@
+NASA Exoplanet Archive, Planetary Systems Composite Parameters (pscomppars)
+
+File: hosts.json
+Source: https://exoplanetarchive.ipac.caltech.edu/TAP/sync (columns hostname, gaia_dr3_id)
+Terms: the archive states no licence; its acknowledgement page (https://exoplanetarchive.ipac.caltech.edu/docs/acknowledge.html) asks for this acknowledgement and for Christiansen et al. 2025 (PSJ) to be cited:
+This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.
+
+Changes made by Galaxy: one row per host with a Gaia DR3 identifier and a system distance <= 110 pc; the number of planets of a host is the number of its rows (pscomppars has one row per planet). No value from any other catalogue.
+
+Galaxy (https://galaxy.adrianguichard.dev) is a free educational visualisation. The software is under its own licence (PolyForm Noncommercial 1.0.0); the data in this folder are NOT covered by it and keep the licence stated here.

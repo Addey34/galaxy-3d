@@ -1,0 +1,12 @@
+GCNS list of possibly nearby objects missing from Gaia EDR3 (gcns.missing_10mas)
+
+File: missing.json
+Source: https://dc.g-vo.org/tableinfo/gcns.missing_10mas (TAP https://dc.zah.uni-heidelberg.de/tap/sync)
+Rights: Gaia Catalogue of Nearby Stars © 2023 by Richard Smart is licensed under CC BY-NC 4.0 (https://creativecommons.org/licenses/by-nc/4.0/)
+The columns main_id, ra, dec, plx_value and otype are, per the table description, taken from SIMBAD, operated at CDS, Strasbourg, France. The CDS terms (https://cds.unistra.fr/legals/, updated 2026-01-07) require citing the service: CDS/SIMBAD. Reference: Wenger et al. 2000, A&AS 143, 9.
+Citation: Gaia Collaboration, Smart R. L. et al. 2021, A&A 649, A6, doi:10.1051/0004-6361/202039498
+
+Changes made by Galaxy: columns main_id, ra, dec and plx_value copied as published, in table order (otype and plx_bibcode, not used, are left out). No value from any other catalogue.
+No warranty: the data are provided as is.
+
+Galaxy (https://galaxy.adrianguichard.dev) is a free educational visualisation. The software is under its own licence (PolyForm Noncommercial 1.0.0); the data in this folder are NOT covered by it and keep the licence stated here.

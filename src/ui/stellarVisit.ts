@@ -9,7 +9,7 @@
  * le curseur de temps, cadrer la caméra), et se défait avec elle. Le visiteur peut la quitter à tout moment
  * (la vue reste ouverte, libre) puis la reprendre à l'arrêt où il l'avait laissée.
  *
- * Aucun nombre n'est écrit dans un texte : `core/stellarVisit` les remplit depuis `neighbours.json` et
+ * Aucun nombre n'est écrit dans un texte : `core/stellarVisit` les remplit depuis le voisinage rapproché (`neighbours/`) et
  * `exoplanets.json`. Les planètes de l'archive sont des entrées de catalogue : rien n'en est dessiné.
  */
 import {

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { shippedNeighbours } from '@/core/neighboursTestFixture';
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import type { NeighbourFile } from '@/core/neighbours';
@@ -6,9 +6,7 @@ import { auToParsecs, ECLIPTIC_RINGS_AU } from '@/core/scaleTransition';
 import { distanceFromSunPc } from '@/core/stellarSpace';
 import { NeighbourhoodScene, spectralColour } from './NeighbourhoodScene';
 
-const file = JSON.parse(
-  readFileSync('public/assets/sky/neighbours.json', 'utf8')
-) as NeighbourFile;
+const file: NeighbourFile = shippedNeighbours();
 
 /** Chaque géométrie et chaque matériau du graphe de la scène, avec son compteur de `dispose`. */
 function trackDisposals(scene: NeighbourhoodScene): {

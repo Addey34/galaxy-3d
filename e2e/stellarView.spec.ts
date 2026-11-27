@@ -56,7 +56,7 @@ for (const [label, viewport, hasTouch] of [
     }) => {
       const requests: string[] = [];
       page.on('request', (r) => {
-        if (/stellarView|neighbours\.json/.test(r.url()))
+        if (/stellarView|sky\/neighbours\//.test(r.url()))
           requests.push(r.url());
       });
       await boot(page);
@@ -81,9 +81,13 @@ for (const [label, viewport, hasTouch] of [
       await expect(page.locator('.dock').first()).toBeHidden();
       await expect(page.locator('#stellar-back')).toBeFocused();
       expect(requests.some((u) => /stellarView/.test(u))).toBe(true);
-      expect(requests.filter((u) => /neighbours\.json/.test(u))).toHaveLength(
-        1
-      );
+      // Un fichier par fournisseur (HYG, Gaia DR3), chacun lu une fois.
+      expect(
+        requests
+          .filter((u) => /sky\/neighbours\//.test(u))
+          .map((u) => u.split('/').pop())
+          .sort()
+      ).toEqual(['gaia-dr3.json', 'hyg-v44.json']);
     });
 
     test('with a wider font, names stay readable: no two visible names overlap and most stars keep theirs', async ({

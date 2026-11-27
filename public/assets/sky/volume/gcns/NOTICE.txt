@@ -1,0 +1,17 @@
+Gaia Catalogue of Nearby Stars (GCNS), Gaia Early Data Release 3
+
+Files: stars-25.bin, stars-50.bin, stars-100.bin, details/NNN.bin
+Source: https://dc.g-vo.org/tableinfo/gcns.main (TAP https://dc.zah.uni-heidelberg.de/tap/sync, table gcns.main)
+Rights: Gaia Catalogue of Nearby Stars © 2023 by Richard Smart is licensed under CC BY-NC 4.0
+Licence: https://creativecommons.org/licenses/by-nc/4.0/
+Underlying data: Gaia EDR3, European Space Agency (ESA) mission Gaia, processed by the Gaia DPAC; ESA distributes Gaia archive data under CC BY-NC 3.0 IGO (https://creativecommons.org/licenses/by-nc/3.0/igo/), credit "ESA/Gaia/DPAC".
+Citation: Gaia Collaboration, Smart R. L. et al. 2021, A&A 649, A6, doi:10.1051/0004-6361/202039498
+This work is based in part on services provided by the GAVO data center.
+
+Acknowledgement requested by ESA:
+This work has made use of data from the European Space Agency (ESA) mission Gaia (https://www.cosmos.esa.int/gaia), processed by the Gaia Data Processing and Analysis Consortium (DPAC, https://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the DPAC has been provided by national institutions, in particular the institutions participating in the Gaia Multilateral Agreement.
+
+Changes made by Galaxy: rows of gcns.main with dist_50 <= 0.1 kpc only; position and velocity computed from ra, dec, dist_50, pmra, pmdec and adoptedrv (equatorial, epoch J2016.0) and quantised (pc x 300, km/s x 20); G magnitude x 10; BP-RP x 25; flags for a published radial velocity and wd_prob > 0.5; details (source_id, parallax, distance percentiles, RUWE, probabilities) quantised. No value from any other catalogue is in these files. Binary layout: src/core/stellarVolume.ts in the Galaxy repository.
+No warranty: the data are provided as is, as by the licensor.
+
+Galaxy (https://galaxy.adrianguichard.dev) is a free educational visualisation. The software is under its own licence (PolyForm Noncommercial 1.0.0); the data in this folder are NOT covered by it and keep the licence stated here.

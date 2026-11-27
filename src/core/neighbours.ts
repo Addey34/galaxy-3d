@@ -1,9 +1,10 @@
 /**
  * LES ÉTOILES VOISINES DU SOLEIL : le fichier livré et sa lecture. Pur, sans DOM ni Three.js.
  *
- * `public/assets/sky/neighbours.json` (`scripts/generate-neighbours.mjs`) liste les étoiles à 5 pc
- * ou moins, avec la distance et le mouvement de Gaia DR3 quand la mesure est sûre et ceux de HYG
- * sinon (`origin`). Une étoile devient une ligne du catalogue d'étoiles (`StarRow`) : elle a donc
+ * Deux fichiers, un par fournisseur (`public/assets/sky/neighbours/`, `scripts/generate-neighbours.mjs`) :
+ * les étoiles de HYG à 5 pc ou moins, et leurs contreparties de Gaia DR3. `combineNeighbours` (plus
+ * bas) les rapproche à l'exécution : distance et mouvement de Gaia DR3 quand la mesure est sûre, de
+ * HYG sinon (`origin`). Une étoile devient une ligne du catalogue d'étoiles (`StarRow`) : elle a donc
  * gratuitement sa direction à n'importe quelle date par son mouvement propre (`starDirection`).
  *
  * LA DISTANCE N'EST JAMAIS DESSINÉE. Comme les autres couches du ciel, un repère est une direction
@@ -31,24 +32,81 @@ export type NeighbourRow = readonly [
   gaiaSourceId: string | null,
 ];
 
+/**
+ * Les droits d'un fichier de fournisseur, écrits DANS le fichier : licence, titulaire, citation, ce que
+ * Galaxy a changé. Chaque fichier n'en porte qu'une : deux fournisseurs aux droits différents ne
+ * partagent jamais un fichier (GAL-UNIVERSE-008, séparation des données).
+ */
+export interface ProviderNotice {
+  id: string;
+  name: string;
+  url: string;
+  license: string;
+  licenseUrl: string;
+  rightsHolder: string;
+  retrieved: string;
+  changes: string;
+  citation?: string;
+  citationDoi?: string;
+  acknowledgement?: string;
+  acknowledgementUrl?: string;
+  via?: string;
+}
+
+/** Une étoile de HYG v4.4 à 5 pc ou moins (`neighbours/hyg-v44.json`), valeurs de HYG seules. */
+export type NeighbourHygRow = readonly [
+  hygId: string,
+  name: string,
+  ids: string | null,
+  spectral: string | null,
+  raDeg: number,
+  decDeg: number,
+  distPc: number,
+  vmag: number,
+  pmRaMas: number,
+  pmDecMas: number,
+  rvKms: number | null,
+];
+
+/** Une source de Gaia DR3 (`neighbours/gaia-dr3.json`), valeurs publiées par Gaia à J2016,0. */
+export type NeighbourGaiaRow = readonly [
+  sourceId: string,
+  raDeg: number,
+  decDeg: number,
+  parallaxMas: number,
+  parallaxErrorMas: number,
+  pmRaMas: number | null,
+  pmDecMas: number | null,
+  rvKms: number | null,
+  ruwe: number | null,
+  gMag: number | null,
+];
+
+export interface NeighbourHygFile {
+  provider: ProviderNotice;
+  maxDistancePc: number;
+  fields: string[];
+  stars: NeighbourHygRow[];
+}
+
+export interface NeighbourGaiaFile {
+  provider: ProviderNotice;
+  epoch: number;
+  fields: string[];
+  stars: NeighbourGaiaRow[];
+}
+
+/** Le voisinage tel que l'application le lit : les deux fournisseurs rapprochés à l'exécution. */
 export interface NeighbourFile {
   source: {
     neighbours: {
-      description: string;
       maxDistancePc: number;
       gaiaEpoch: number;
     };
-    gaia: {
-      name: string;
-      url: string;
-      archive: string;
-      citationDoi: string;
-      acknowledgement: string;
-      acknowledgementUrl: string;
-    };
-    hyg: { name: string; url: string; license: string; licenseUrl: string };
+    /** `null` : le fournisseur Gaia est absent ou désactivé ; toutes les lignes sont alors de HYG. */
+    gaia: ProviderNotice | null;
+    hyg: ProviderNotice;
   };
-  fields: string[];
   count: number;
   stars: NeighbourRow[];
 }
@@ -184,4 +242,195 @@ export function markerLabel(
 ): string {
   const primary = systemPrimary(system);
   return `${systemName(system)} · ${format(distanceFacts(primary).lightYears)}`;
+}
+
+/**
+ * LE RAPPROCHEMENT À L'EXÉCUTION (GAL-UNIVERSE-008, séparation des données). HYG et Gaia DR3 ne
+ * partagent aucun fichier : le client lit les deux et refait ici, avec les MÊMES règles que le
+ * générateur (`scripts/generate-neighbours.mjs`, comparées par `neighbourMatching.test.ts`), le choix de
+ * la contrepartie Gaia de chaque étoile de HYG : même cône autour de la position ramenée à 2016, même
+ * parallaxe minimale, puis parallaxe, mouvement propre et éclat concordants, RUWE et rapport signal sur
+ * bruit. Sans fichier Gaia, chaque étoile garde la ligne de HYG (sauf un mouvement plafonné, écarté).
+ */
+export const NEIGHBOUR_MATCHING = {
+  gaiaEpoch: 2016,
+  hygPmCapMas: 9999.99,
+  ruweMax: 1.4,
+  parallaxSnrMin: 20,
+  hygAgreement: 0.2,
+  coneDeg: 0.1,
+  censoredConeDeg: 0.15,
+  pmAgreement: 0.1,
+  pmFloorMas: 250,
+  magAgreement: 4,
+  /** La requête du générateur rend au plus 40 sources par cône, triées par parallaxe décroissante. */
+  maxCandidates: 40,
+} as const;
+
+/** Position → autre époque par le mouvement propre (mas/an, pmRa déjà × cos δ). */
+export function propagatePosition(
+  raDeg: number,
+  decDeg: number,
+  pmRa: number,
+  pmDec: number,
+  years: number
+): { raDeg: number; decDeg: number } {
+  const cosDec = Math.cos((decDeg * Math.PI) / 180);
+  return {
+    raDeg: raDeg + (pmRa * years) / 3.6e6 / cosDec,
+    decDeg: decDeg + (pmDec * years) / 3.6e6,
+  };
+}
+
+function separationDeg(
+  ra1: number,
+  dec1: number,
+  ra2: number,
+  dec2: number
+): number {
+  const x =
+    Math.sin(dec1 * RAD) * Math.sin(dec2 * RAD) +
+    Math.cos(dec1 * RAD) * Math.cos(dec2 * RAD) * Math.cos((ra1 - ra2) * RAD);
+  return Math.acos(Math.min(1, x)) / RAD;
+}
+
+const censoredPm = (h: NeighbourHygRow): boolean =>
+  Math.abs(h[8]) >= NEIGHBOUR_MATCHING.hygPmCapMas ||
+  Math.abs(h[9]) >= NEIGHBOUR_MATCHING.hygPmCapMas;
+
+/** Les sources de Gaia que le cône de recherche du générateur rend autour d'une étoile de HYG. */
+export function gaiaCandidates(
+  h: NeighbourHygRow,
+  gaia: readonly NeighbourGaiaRow[]
+): NeighbourGaiaRow[] {
+  const m = NEIGHBOUR_MATCHING;
+  const censored = censoredPm(h);
+  const at = censored
+    ? { raDeg: h[4], decDeg: h[5] }
+    : propagatePosition(h[4], h[5], h[8], h[9], m.gaiaEpoch - 2000);
+  const radius = censored ? m.censoredConeDeg : m.coneDeg;
+  const minParallax = Number(((1000 / h[6]) * 0.5).toFixed(2));
+  return gaia
+    .filter(
+      (g) =>
+        g[3] > minParallax &&
+        separationDeg(at.raDeg, at.decDeg, g[1], g[2]) < radius
+    )
+    .sort((a, b) => b[3] - a[3])
+    .slice(0, m.maxCandidates);
+}
+
+/** La contrepartie sûre de Gaia, ou `null` et la raison (mêmes règles que `chooseGaia` du générateur). */
+export function chooseGaiaCounterpart(
+  h: NeighbourHygRow,
+  candidates: readonly NeighbourGaiaRow[],
+  taken: ReadonlySet<string> = new Set()
+): { gaia: NeighbourGaiaRow | null; reason: string | null } {
+  const m = NEIGHBOUR_MATCHING;
+  const plxHyg = 1000 / h[6];
+  let best: NeighbourGaiaRow | null = null;
+  for (const c of candidates) {
+    if (taken.has(c[0])) continue;
+    if (Math.abs(c[3] - plxHyg) / plxHyg > m.hygAgreement) continue;
+    if (!censoredPm(h) && c[5] !== null && c[6] !== null) {
+      const total = Math.hypot(h[8], h[9]);
+      const gapPm = Math.hypot(c[5] - h[8], c[6] - h[9]);
+      if (gapPm > Math.max(m.pmFloorMas, m.pmAgreement * total)) continue;
+    }
+    if (c[9] === null || Math.abs(c[9] - h[7]) > m.magAgreement) continue;
+    if (!best || c[9] < best[9]!) best = c;
+  }
+  if (!best)
+    return { gaia: null, reason: 'aucune contrepartie Gaia cohérente' };
+  if (best[8] === null || best[8] >= m.ruweMax)
+    return { gaia: null, reason: `RUWE ${best[8]} (≥ ${m.ruweMax})` };
+  if (best[3] / best[4] < m.parallaxSnrMin)
+    return { gaia: null, reason: 'parallaxe à moins de 20 sigmas' };
+  if (best[5] === null || best[6] === null)
+    return { gaia: null, reason: 'mouvement propre absent' };
+  return { gaia: best, reason: null };
+}
+
+const roundTo = (v: number, digits: number): number =>
+  Number(v.toFixed(digits));
+
+/** La ligne affichée : valeurs de Gaia quand la contrepartie est sûre, sinon de HYG (`buildRow`). */
+export function neighbourRowOf(
+  h: NeighbourHygRow,
+  gaia: NeighbourGaiaRow | null
+): NeighbourRow {
+  if (gaia) {
+    const distPc = 1000 / gaia[3];
+    const back = propagatePosition(
+      gaia[1],
+      gaia[2],
+      gaia[5]!,
+      gaia[6]!,
+      2000 - NEIGHBOUR_MATCHING.gaiaEpoch
+    );
+    return [
+      h[1],
+      h[2],
+      h[3],
+      roundTo(back.raDeg, 6),
+      roundTo(back.decDeg, 6),
+      roundTo(distPc, 5),
+      roundTo((distPc * gaia[4]) / gaia[3], 5),
+      h[7],
+      roundTo(gaia[5]!, 2),
+      roundTo(gaia[6]!, 2),
+      gaia[7] ?? h[10],
+      'gaia-dr3',
+      gaia[0],
+    ];
+  }
+  return [
+    h[1],
+    h[2],
+    h[3],
+    roundTo(h[4], 6),
+    roundTo(h[5], 6),
+    h[6],
+    null,
+    h[7],
+    h[8],
+    h[9],
+    h[10],
+    'hyg-v44',
+    null,
+  ];
+}
+
+/** Rapproche les deux fournisseurs ; `gaia` absent : HYG seul (mouvements plafonnés écartés). */
+export function combineNeighbours(
+  hyg: NeighbourHygFile,
+  gaia: NeighbourGaiaFile | null
+): NeighbourFile {
+  const taken = new Set<string>();
+  const rows: NeighbourRow[] = [];
+  const pool = gaia?.stars ?? [];
+  // Du plus brillant au plus faible : la composante A d'un double prend la source la plus brillante.
+  for (const h of [...hyg.stars].sort((a, b) => a[7] - b[7])) {
+    const { gaia: match } = chooseGaiaCounterpart(
+      h,
+      gaiaCandidates(h, pool),
+      taken
+    );
+    if (match) taken.add(match[0]);
+    else if (censoredPm(h)) continue;
+    rows.push(neighbourRowOf(h, match));
+  }
+  rows.sort((a, b) => a[5] - b[5]);
+  return {
+    source: {
+      neighbours: {
+        maxDistancePc: hyg.maxDistancePc,
+        gaiaEpoch: NEIGHBOUR_MATCHING.gaiaEpoch,
+      },
+      gaia: gaia?.provider ?? null,
+      hyg: hyg.provider,
+    },
+    count: rows.length,
+    stars: rows,
+  };
 }

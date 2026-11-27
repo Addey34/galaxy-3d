@@ -245,12 +245,17 @@ export async function setupNeighbourCard(
       primary[11] === 'gaia-dr3'
         ? t('nb.card.origin.gaia', { id: primary[12] ?? '' })
         : t('nb.card.origin.hyg');
-    source.textContent = t('nb.card.source', {
-      license: file.source.hyg.license,
-    });
+    // Chaque fournisseur avec SA licence : deux fichiers, deux droits (GAL-UNIVERSE-008).
+    const gaia = file.source.gaia;
+    source.textContent = gaia
+      ? t('nb.card.source', {
+          gaiaLicense: gaia.license,
+          hygLicense: file.source.hyg.license,
+        })
+      : t('nb.card.source.hygOnly', { hygLicense: file.source.hyg.license });
     // Le remerciement exigé par l'ESA, verbatim (en anglais, comme l'exige la source).
     acknowledgement.textContent =
-      primary[11] === 'gaia-dr3' ? file.source.gaia.acknowledgement : '';
+      primary[11] === 'gaia-dr3' ? (gaia?.acknowledgement ?? '') : '';
     acknowledgement.hidden = acknowledgement.textContent === '';
   }
 

@@ -136,7 +136,7 @@ export async function scenarioDataUnavailable(
   page: Page,
   phrase: RegExp
 ): Promise<void> {
-  await page.route('**/neighbours.json', (route) =>
+  await page.route('**/sky/neighbours/hyg-v44.json', (route) =>
     route.fulfill({ status: 500, body: 'nope' })
   );
   await load(page, `${SOLAR}&view=neighbourhood&star=barnards-star`);

@@ -39,6 +39,7 @@ const DEFERRED_READERS: Record<string, string> = {
   'ui/neighbourCard.ts': 'neighbourCard',
   'ui/neighbourLayer.ts': 'neighbourLayer',
   'ui/stellarView.ts': 'stellarView',
+  'ui/stellarVolumePanel.ts': 'stellarView',
   'ui/stellarVisit.ts': 'stellarVisit',
   'ui/systemExplorer.ts': 'systemExplorer',
   'ui/systemView.ts': 'systemView',
