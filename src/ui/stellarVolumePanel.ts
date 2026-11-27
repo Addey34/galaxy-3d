@@ -127,8 +127,30 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
   let filter: VolumeFilter = 'all';
   let selected = -1;
   let detail: VolumeDetail | null = null;
-  let controller: AbortController | null = null;
-  const loading = new Map<number, Promise<void>>();
+  /** Les détails de l'étoile choisie n'ont pas pu être lus (réseau) : la fiche le dit, un nouveau choix réessaie. */
+  let detailFailed = false;
+  /**
+   * LA DERNIÈRE INTENTION DU VISITEUR, seule autorité (même règle que les éditions de surface,
+   * `surfaceEditionsBlock` : un compteur de demandes, la plus récente possède le changement). Chaque geste
+   * (échelle, choix, recherche, lien, Retour ou Suivant, choix d'une voisine) en prend un nouveau ; toute
+   * suite d'une attente vérifie qu'elle le possède encore avant de cadrer, d'annoncer, de montrer ou
+   * d'écrire l'adresse.
+   */
+  let intent = 0;
+  /** La vue est fermée : plus rien ne se crée, ne se cadre, ne s'annonce ni ne s'écrit. */
+  let disposed = false;
+  const owns = (token: number): boolean => !disposed && token === intent;
+  /** Annule tous les téléchargements de la session à sa fermeture. */
+  const lifecycle = new AbortController();
+  /**
+   * Les téléchargements de coquilles appartiennent à la COQUILLE, pas à l'intention qui les a lancés : deux
+   * intentions qui ont besoin de la même coquille (100 pc puis 50 pc, qui partagent celle de 50) partagent
+   * son téléchargement. Une coquille dont plus aucune intention n'a besoin est annulée.
+   */
+  const shellLoads = new Map<
+    number,
+    { promise: Promise<void>; controller: AbortController; done: boolean }
+  >();
 
   // ---- le DOM : commandes en tête du volet, fiche sous celle du système
   const box = el('section', 'sv-volume', 'stellar-volume');
@@ -207,70 +229,114 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
 
   const url = (file: string): string => `${VOLUME_BASE}${file}`;
 
+  /** Le manifeste, SANS effet de bord : une arrivée tardive après la fermeture ne crée rien. */
   const loadManifest = (): Promise<VolumeManifest> =>
-    (manifestRequest ??= fetcher(url('manifest.json'))
+    (manifestRequest ??= fetcher(url('manifest.json'), {
+      signal: lifecycle.signal,
+    })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<VolumeManifest>;
       })
-      .then((m) => {
-        manifest = m;
-        volume = new StellarVolume(m.flags, m.epochYear);
-        volume.setYears(host.yearsFromJ2000());
-        host.scene.scene.add(volume.group);
-        return m;
-      })
+      .then((m) => (manifest = m))
       .catch((error: unknown) => {
+        // Un refus n'est pas retenu : le geste suivant réessaie.
         manifestRequest = null;
         throw error;
       }));
 
-  const loadShell = (k: number, signal: AbortSignal): Promise<void> => {
-    const known = loading.get(k);
-    if (known) return known;
-    const m = manifest!;
+  /** La couche du volume dans la scène, créée par une intention vivante seulement. */
+  const ensureVolume = (m: VolumeManifest): StellarVolume | null => {
+    if (disposed) return null;
+    if (!volume) {
+      volume = new StellarVolume(m.flags, m.epochYear);
+      volume.setYears(host.yearsFromJ2000());
+      host.scene.scene.add(volume.group);
+    }
+    return volume;
+  };
+
+  const loadShell = (k: number, m: VolumeManifest): Promise<void> => {
+    const known = shellLoads.get(k);
+    if (known) return known.promise;
     const entry = m.shells[k]!;
-    const run = fetcher(url(entry.file), { signal })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.arrayBuffer();
-      })
-      .then((buffer) => {
-        volume?.addShell(decodeShell(buffer, m, entry));
-      })
-      .catch((error: unknown) => {
-        loading.delete(k);
-        throw error;
-      });
-    loading.set(k, run);
-    return run;
+    const controller = new AbortController();
+    const record = {
+      controller,
+      done: false,
+      promise: fetcher(url(entry.file), { signal: controller.signal })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.arrayBuffer();
+        })
+        .then((buffer) => {
+          // Une coquille arrivée est gardée (revenir à cette échelle sera immédiat) ; ce que la scène
+          // en MONTRE reste décidé par l'intention courante (`setRadius`).
+          if (disposed) return;
+          ensureVolume(m)?.addShell(decodeShell(buffer, m, entry));
+          record.done = true;
+        })
+        .catch((error: unknown) => {
+          shellLoads.delete(k);
+          throw error;
+        }),
+    };
+    // Le rejet est suivi par l'intention qui attend ; celui d'un téléchargement que personne n'attend
+    // plus (annulé) ne doit pas remonter comme une promesse rejetée non traitée.
+    record.promise.catch(() => {});
+    shellLoads.set(k, record);
+    return record.promise;
+  };
+
+  /** Annule les téléchargements en cours dont la nouvelle intention n'a pas besoin. */
+  const cancelUnneeded = (needed: readonly number[]): void => {
+    for (const [k, load] of shellLoads) {
+      if (load.done || needed.includes(k)) continue;
+      load.controller.abort();
+      shellLoads.delete(k);
+    }
   };
 
   const loadNames = (): Promise<Record<string, VolumeNameEntry> | null> =>
-    (namesRequest ??= fetcher(url(manifest?.names ?? 'names.json'))
+    (namesRequest ??= fetcher(url(manifest?.names ?? 'names.json'), {
+      signal: lifecycle.signal,
+    })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<Record<string, VolumeNameEntry>>;
       })
       .then((n) => (names = n))
       .catch((error: unknown) => {
-        Logger.warn('[stellarVolume] noms illisibles', error);
+        if (!disposed) Logger.warn('[stellarVolume] noms illisibles', error);
         namesRequest = null;
         return null;
       }));
 
-  const loadDetail = async (index: number): Promise<VolumeDetail | null> => {
+  /** Les détails d'une étoile ; un refus rend `failed` (jamais retenu : un nouveau choix réessaie). */
+  const loadDetail = async (
+    index: number
+  ): Promise<{ detail: VolumeDetail | null; failed: boolean }> => {
     const m = manifest;
-    if (!m) return null;
+    if (!m) return { detail: null, failed: true };
     const { bucket, local } = detailLocation(index, m.detailBucket);
     let buffer = details.get(bucket);
     if (!buffer) {
-      const res = await fetcher(url(m.details[bucket]!.file));
-      if (!res.ok) return null;
-      buffer = await res.arrayBuffer();
-      details.set(bucket, buffer);
+      try {
+        const res = await fetcher(url(m.details[bucket]!.file), {
+          signal: lifecycle.signal,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        buffer = await res.arrayBuffer();
+        details.set(bucket, buffer);
+      } catch (error: unknown) {
+        if (!disposed) Logger.warn('[stellarVolume] détails illisibles', error);
+        return { detail: null, failed: true };
+      }
     }
-    return decodeDetail(buffer, local, m.detailBytes);
+    return {
+      detail: decodeDetail(buffer, local, m.detailBytes),
+      failed: false,
+    };
   };
 
   const radiusOf = (s: VolumeScale): number => s;
@@ -341,10 +407,32 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
     renderCard();
   };
 
-  /** Change d'échelle : charge les coquilles nécessaires (annulant une demande précédente), cadre. */
-  const setScale = async (next: VolumeScale): Promise<boolean> => {
-    controller?.abort();
-    controller = null;
+  /** L'étoile choisie est-elle montrée à cette échelle ? */
+  const shownAt = (index: number, radiusPc: number): boolean => {
+    const at = volume?.shellOf(index);
+    return !!at && at.shell.maxPc <= radiusPc;
+  };
+
+  /** Retire le choix d'une étoile du volume : sélection, fiche, nom et adresse ensemble. */
+  const dropSelection = (): void => {
+    if (selected < 0) return;
+    selected = -1;
+    detail = null;
+    detailFailed = false;
+    volume?.select(-1);
+    renderCard();
+  };
+
+  /**
+   * Change d'échelle pour l'intention `token` : charge les coquilles nécessaires (en partageant celles qui
+   * sont déjà en route), annule celles dont plus personne n'a besoin, cadre. Une étoile choisie qui n'est
+   * plus montrée à la nouvelle échelle est retirée (scène, fiche, nom, adresse).
+   */
+  const setScaleFor = async (
+    next: VolumeScale,
+    token: number
+  ): Promise<boolean> => {
+    if (!owns(token)) return false;
     const previous = scale;
     scale = next;
     host.controls.maxDistance = Math.max(
@@ -360,37 +448,40 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
       next === 5 ? host.scene.extentPc * 2.1 : radiusOf(next) * 2.1
     );
     if (next === 5) {
+      cancelUnneeded([]);
       volume?.setRadius(5);
+      dropSelection();
       renderStatus('idle');
       host.syncAddress();
       host.layout();
       return true;
     }
-    const mine = new AbortController();
-    controller = mine;
+    if (manifest) cancelUnneeded(shellsFor(radiusOf(next), manifest));
+    if (selected >= 0 && !shownAt(selected, radiusOf(next))) dropSelection();
     renderStatus('loading');
     host.layout();
     try {
       const m = await loadManifest();
-      if (mine.signal.aborted) return false;
-      for (const k of shellsFor(radiusOf(next), m)) {
-        await loadShell(k, mine.signal);
-        if (mine.signal.aborted) return false;
+      if (!owns(token)) return false;
+      const needed = shellsFor(radiusOf(next), m);
+      cancelUnneeded(needed);
+      if (!ensureVolume(m)) return false;
+      for (const k of needed) {
+        await loadShell(k, m);
+        if (!owns(token)) return false;
         // Chaque coquille arrivée se montre tout de suite : la plus proche d'abord.
         volume?.setRadius(Math.min(radiusOf(next), m.shells[k]!.maxPc));
       }
       volume?.setRadius(radiusOf(next));
       volume?.setFilter(filter);
-      controller = null;
       renderStatus('idle');
       getAnnouncer().announce(status.textContent ?? '');
       host.syncAddress();
       host.layout();
       return true;
     } catch (error: unknown) {
-      if (mine.signal.aborted) return false;
+      if (!owns(token)) return false;
       Logger.warn('[stellarVolume] coquille illisible', error);
-      controller = null;
       // L'échelle revient à la plus grande coquille réellement posée.
       const loaded = volume?.loadedShells ?? [];
       const reached = (
@@ -402,6 +493,7 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
       ) as VolumeScale;
       scale = reached === next ? previous : reached;
       volume?.setRadius(radiusOf(scale));
+      if (selected >= 0 && !shownAt(selected, radiusOf(scale))) dropSelection();
       renderStatus('failed');
       getAnnouncer().announce(status.textContent ?? '');
       host.syncAddress();
@@ -409,6 +501,8 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
       return false;
     }
   };
+  const setScale = (next: VolumeScale): Promise<boolean> =>
+    setScaleFor(next, ++intent);
 
   // ---- la fiche
   function renderCard(): void {
@@ -609,6 +703,7 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
     if (!(f & flags.radialVelocity) && !(f & flags.simbadOnly))
       lines.push(t('vol.noRadial'));
     if (f & flags.simbadOnly) lines.push(t('vol.noMotion'));
+    if (detailFailed) lines.push(t('vol.dataUnavailable'));
     lines.push(t('vol.symbolic'));
     notes.replaceChildren(
       ...lines.map((line) => {
@@ -623,9 +718,15 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
     if (name) host.openSystem?.(name);
   });
 
-  const select = async (index: number, announce = true): Promise<void> => {
+  const selectFor = async (
+    index: number,
+    announce: boolean,
+    token: number
+  ): Promise<void> => {
+    if (!owns(token)) return;
     selected = index;
     detail = null;
+    detailFailed = false;
     volume?.select(index);
     if (index >= 0) host.deselectSystem();
     renderCard();
@@ -633,8 +734,9 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
     host.syncAddress();
     if (index < 0) return;
     const [, d] = await Promise.all([loadNames(), loadDetail(index)]);
-    if (selected !== index) return;
-    detail = d;
+    if (!owns(token) || selected !== index) return;
+    detail = d.detail;
+    detailFailed = d.failed;
     renderCard();
     host.syncAddress();
     if (announce) {
@@ -647,6 +749,8 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
       );
     }
   };
+  const select = (index: number, announce = true): Promise<void> =>
+    selectFor(index, announce, ++intent);
 
   // ---- recherche par nom
   let searchAt = 0;
@@ -682,33 +786,63 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
       })
     );
   };
-  search.addEventListener('focus', () => void loadNames().then(renderResults));
+  const showNamesFailure = (): void => {
+    const li = el('li', 'sv-note');
+    li.textContent = t('vol.dataUnavailable');
+    results.replaceChildren(li);
+  };
+  search.addEventListener(
+    'focus',
+    () =>
+      void loadNames().then((n) => {
+        if (disposed) return;
+        if (n) renderResults();
+        else if (search.value.trim().length >= 2) showNamesFailure();
+      })
+  );
   search.addEventListener('input', () => {
     const mine = ++searchAt;
-    void loadNames().then(() => {
-      if (mine === searchAt) renderResults();
+    void loadNames().then((n) => {
+      if (disposed || mine !== searchAt) return;
+      if (n) renderResults();
+      else showNamesFailure();
     });
   });
 
-  /** Choisit une étoile par son rang : charge l'échelle qui la contient, la cadre, la sélectionne. */
-  const focusStar = async (index: number): Promise<void> => {
-    const m = manifest ?? (await loadManifest());
+  /** Choisit une étoile par son rang : charge l'échelle qui la contient, la sélectionne, la cadre. */
+  const focusStarFor = async (index: number, token: number): Promise<void> => {
+    let m = manifest;
+    if (!m) {
+      try {
+        m = await loadManifest();
+      } catch {
+        if (!owns(token)) return;
+        renderStatus('failed');
+        getAnnouncer().announce(status.textContent ?? '');
+        return;
+      }
+    }
+    if (!owns(token)) return;
     const shellIndex = m.shells.findIndex(
       (s) => index >= s.start && index < s.start + s.count
     );
     if (shellIndex < 0) return;
     const need =
       VOLUME_SCALES_PC.find((pc) => pc >= m.shells[shellIndex]!.maxPc) ?? 100;
-    if (scale < need && !(await setScale(need))) return;
+    if (scale < need && !(await setScaleFor(need, token))) return;
+    if (!owns(token)) return;
     if (filter !== 'all') {
       filter = 'all';
       filterSelect.value = 'all';
       volume?.setFilter('all');
     }
-    await select(index);
+    await selectFor(index, true, token);
+    if (!owns(token)) return;
     const p = volume?.positionOf(index);
     if (p) host.frameOn(p, Math.max(2, distanceFromSunPc(p) * 0.35));
   };
+  const focusStar = (index: number): Promise<void> =>
+    focusStarFor(index, ++intent);
 
   filterSelect.addEventListener('change', () => {
     filter = filterSelect.value as VolumeFilter;
@@ -742,11 +876,9 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
     },
     select,
     clearSelection() {
-      if (selected < 0) return;
-      selected = -1;
-      detail = null;
-      volume?.select(-1);
-      renderCard();
+      // Choisir une voisine est une intention : un lien encore en chargement ne la remplacera pas.
+      intent++;
+      dropSelection();
     },
     setYears(years) {
       volume?.setYears(years);
@@ -802,39 +934,51 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
       return out;
     },
     async applyAddress(address) {
+      // Une adresse (lien, Retour, Suivant) est une intention comme une autre : un geste plus récent la
+      // remplace, même au milieu de son chargement.
+      const token = ++intent;
       const wanted = (VOLUME_SCALES_PC as readonly number[]).includes(
         address.vol ?? 5
       )
         ? ((address.vol ?? 5) as VolumeScale)
         : 5;
-      if (wanted !== scale) await setScale(wanted);
+      if (wanted !== scale) await setScaleFor(wanted, token);
+      if (!owns(token)) return;
       if (!address.vstar) {
-        if (selected >= 0) void select(-1, false);
+        if (selected >= 0) await selectFor(-1, false, token);
         return;
       }
-      const token = parseVolumeStarToken(address.vstar);
+      const star = parseVolumeStarToken(address.vstar);
       const m = manifest ?? (await loadManifest().catch(() => null));
-      if (!token || !m || token.index >= m.count) {
+      if (!owns(token)) return;
+      if (!star || !m || star.index >= m.count) {
         getAnnouncer().announce(t('vol.unknownStar'));
         return;
       }
       // Le rang est vérifié par l'identifiant Gaia ou le nom qu'il porte : un fichier regénéré ne
       // désigne jamais une AUTRE étoile en silence.
-      const [n, d] = await Promise.all([loadNames(), loadDetail(token.index)]);
-      const entry = n?.[String(token.index)];
+      const [n, d] = await Promise.all([loadNames(), loadDetail(star.index)]);
+      if (!owns(token)) return;
+      const entry = n?.[String(star.index)];
       const ok =
-        (d?.sourceId != null && d.sourceId === token.check) ||
-        (entry != null && starSlug(entry[0]) === token.check);
+        (d.detail?.sourceId != null && d.detail.sourceId === star.check) ||
+        (entry != null && starSlug(entry[0]) === star.check);
       if (!ok) {
-        getAnnouncer().announce(t('vol.unknownStar'));
+        getAnnouncer().announce(
+          t(d.failed && !entry ? 'vol.dataUnavailable' : 'vol.unknownStar')
+        );
         host.syncAddress();
         return;
       }
-      await focusStar(token.index);
+      await focusStarFor(star.index, token);
     },
     rerender: renderTexts,
     dispose() {
-      controller?.abort();
+      disposed = true;
+      intent++;
+      lifecycle.abort();
+      for (const load of shellLoads.values()) load.controller.abort();
+      shellLoads.clear();
       volume?.dispose();
       volume = null;
       box.remove();

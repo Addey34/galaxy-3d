@@ -125,8 +125,23 @@ test('un clic choisit l’étoile du volume sous le pointeur', async ({
   await findStar(page, 'Vega');
   const label = page.locator('.sv-label--volume');
   await expect(label).toBeVisible();
-  const sx = Number(await label.getAttribute('data-sx'));
-  const sy = Number(await label.getAttribute('data-sy'));
+  // La fiche paraît AVANT que la caméra cadre l'étoile : on attend que sa position écran ne bouge plus
+  // (l'arrivée du cadrage), jamais une durée.
+  const at = async (): Promise<string> =>
+    `${await label.getAttribute('data-sx')},${await label.getAttribute('data-sy')}`;
+  let last = '';
+  await expect
+    .poll(
+      async () => {
+        const now = await at();
+        const stable = now === last;
+        last = now;
+        return stable;
+      },
+      { intervals: [400], timeout: 20_000 }
+    )
+    .toBe(true);
+  const [sx, sy] = last.split(',').map(Number) as [number, number];
   // Désélectionner en choisissant une étoile du voisinage, puis recliquer Véga sur la surface.
   await page.locator('#stellar-list button').first().click();
   await expect(page.locator('#stellar-volume-card')).toBeHidden();
@@ -282,5 +297,177 @@ test.describe('téléphone', () => {
           ).length
     );
     expect(overflow).toBe(0);
+  });
+});
+
+/**
+ * LE CYCLE DE VIE (revue du CTO) : la dernière intention du visiteur garde seule l'autorité, une vue fermée
+ * ne crée, ne cadre, n'annonce ni n'écrit plus rien. Chaque scénario retarde ou refuse UNE ressource.
+ */
+test.describe('cycle de vie du volume', () => {
+  /** Toutes les annonces de l'`aria-live` unique, même remplacées dans sa file. */
+  async function recordAnnouncements(page: Page): Promise<void> {
+    await page.evaluate(() => {
+      const seen: string[] = [];
+      (window as unknown as { __announced: string[] }).__announced = seen;
+      const region = document.querySelector('p.sr-only[role="status"]')!;
+      new MutationObserver(() => seen.push(region.textContent ?? '')).observe(
+        region,
+        { childList: true, characterData: true, subtree: true }
+      );
+    });
+  }
+  const announced = (page: Page): Promise<string[]> =>
+    page.evaluate(
+      () => (window as unknown as { __announced: string[] }).__announced
+    );
+
+  test('fermée pendant le manifeste : son arrivée tardive ne crée, n’annonce ni n’écrit rien', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    let released = false;
+    await page.route('**/assets/sky/volume/manifest.json', async (route) => {
+      await new Promise((r) => setTimeout(r, 4_000));
+      released = true;
+      await route.continue().catch(() => {});
+    });
+    await openView(page);
+    await recordAnnouncements(page);
+    await page.locator('.sv-volume-scale[data-pc="25"]').click();
+    await expect(box(page)).toHaveAttribute('data-state', 'loading');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#stellar-view')).toHaveCount(0);
+    const urlAfterClose = page.url();
+    await expect.poll(() => released, { timeout: 20_000 }).toBe(true);
+    await page.waitForTimeout(3_000);
+    expect(page.url()).toBe(urlAfterClose);
+    expect(search(page).get('vol')).toBeNull();
+    await expect(page.locator('.sv-volume-labels')).toHaveCount(0);
+    expect((await announced(page)).some((a) => /stars shown/.test(a))).toBe(
+      false
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test('100 pc puis 50 pc pendant le téléchargement : la coquille commune est partagée, la suite annulée', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    const requested: string[] = [];
+    page.on('request', (r) => {
+      const m = /\/assets\/sky\/volume\/(stars-\d+\.bin)$/.exec(r.url());
+      if (m) requested.push(m[1]!);
+    });
+    await page.route('**/assets/sky/volume/stars-50.bin', async (route) => {
+      await new Promise((r) => setTimeout(r, 3_000));
+      await route.continue().catch(() => {});
+    });
+    await openView(page);
+    await chooseScale(page, 25);
+    await page.locator('.sv-volume-scale[data-pc="100"]').click();
+    await expect.poll(() => requested.includes('stars-50.bin')).toBe(true);
+    await page.locator('.sv-volume-scale[data-pc="50"]').click();
+    await expect(box(page)).toHaveAttribute('data-state', 'idle', {
+      timeout: 60_000,
+    });
+    await expect(box(page)).toHaveAttribute('data-scale', '50');
+    // Ce que la scène trace : les coquilles de 25 et 50 pc, jamais celle de 100 pc.
+    await expect(box(page)).toHaveAttribute('data-visible', '40787');
+    expect(requested.filter((f) => f === 'stars-50.bin')).toHaveLength(1);
+    expect(search(page).get('vol')).toBe('50');
+  });
+
+  test('retour à 5 pc avec une étoile du volume choisie : scène, fiche, nom et adresse la retirent ensemble', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    await openView(page);
+    await chooseScale(page, 25);
+    await findStar(page, 'Vega');
+    await expect(page.locator('.sv-label--volume')).toBeVisible();
+    await chooseScale(page, 5);
+    await expect(page.locator('#stellar-volume-card')).toBeHidden();
+    await expect(page.locator('#stellar-card')).toBeVisible();
+    await expect(page.locator('.sv-label--volume')).toBeHidden();
+    await expect(box(page)).toHaveAttribute('data-visible', '0');
+    expect(search(page).get('vstar')).toBeNull();
+    expect(search(page).get('vol')).toBeNull();
+  });
+
+  test('manifeste refusé puis accepté : l’échec est dit, le geste suivant réessaie', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.route('**/assets/sky/volume/manifest.json', (route) =>
+      route.abort()
+    );
+    await openView(page);
+    await page.locator('.sv-volume-scale[data-pc="25"]').click();
+    await expect(box(page)).toHaveAttribute('data-state', 'failed', {
+      timeout: 30_000,
+    });
+    await expect(page.locator('#stellar-volume-status')).toContainText(
+      'could not'
+    );
+    await page.unroute('**/assets/sky/volume/manifest.json');
+    await chooseScale(page, 25);
+    await expect(box(page)).toHaveAttribute('data-visible', '5377');
+    expect(errors).toEqual([]);
+  });
+
+  test('paquet de détails refusé : la fiche le dit, sans promesse rejetée ; un nouveau choix réessaie', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.route('**/assets/sky/volume/details/*.bin', (route) =>
+      route.abort()
+    );
+    await openView(page);
+    await chooseScale(page, 25);
+    await findStar(page, 'Vega');
+    const card = page.locator('#stellar-volume-card');
+    await expect(card).toContainText('could not be loaded');
+    await expect(card).not.toContainText('Parallax');
+    await page.unroute('**/assets/sky/volume/details/*.bin');
+    await findStar(page, 'Vega');
+    await expect(card).toContainText('Parallax');
+    await expect(card).not.toContainText('could not be loaded');
+    expect(errors).toEqual([]);
+  });
+
+  test('un lien retardé est remplacé par un choix plus récent, qui garde l’autorité', async ({
+    page,
+  }) => {
+    test.setTimeout(240_000);
+    // Les détails de Véga (paquet 000) arrivent avec 6 s de retard ; l'étoile choisie entre-temps est
+    // dans un autre paquet, donc servie tout de suite.
+    let released = false;
+    await page.route('**/assets/sky/volume/details/000.bin', async (route) => {
+      await new Promise((r) => setTimeout(r, 6_000));
+      released = true;
+      await route.continue().catch(() => {});
+    });
+    const other = Object.entries(NAMES).find(
+      ([i, e]) => Number(i) >= 4096 && Number(i) < 5377 && e.length === 1
+    )!;
+    const otherName = String(other[1][0]);
+    await openView(page, `&vol=25&vstar=${VEGA}.vega`);
+    await expect(box(page)).toHaveAttribute('data-state', 'idle', {
+      timeout: 60_000,
+    });
+    await findStar(page, otherName);
+    await expect.poll(() => released, { timeout: 20_000 }).toBe(true);
+    await page.waitForTimeout(2_000);
+    await expect(page.locator('#stellar-volume-card-title')).toHaveText(
+      otherName
+    );
+    expect(search(page).get('vstar')).toMatch(new RegExp(`^${other[0]}\\.`));
   });
 });

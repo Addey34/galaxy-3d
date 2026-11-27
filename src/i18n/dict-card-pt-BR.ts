@@ -682,6 +682,8 @@ export const cardPtBR: Record<CardMessageKey, string> = {
     'Esta estrela não se move com o tempo aqui: seu movimento não está na fonte.',
   'vol.symbolic':
     'Além de 5 pc, cada estrela é um pequeno ponto: seu brilho segue sua magnitude absoluta e sua cor é indicativa (pelo índice de cor), nunca um tipo espectral.',
+  'vol.dataUnavailable':
+    'Não foi possível carregar parte dos dados (rede): escolha de novo para tentar outra vez.',
   'vol.unknownStar': 'A estrela deste link não está no volume estelar.',
   'ed.announce': 'Observação de {date} exibida',
 };

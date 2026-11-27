@@ -687,6 +687,8 @@ export const cardFr: Record<CardMessageKey, string> = {
     'Cette étoile ne bouge pas avec le temps ici : son mouvement n’est pas dans la source.',
   'vol.symbolic':
     'Au-delà de 5 pc, chaque étoile est un petit point : sa luminosité suit sa magnitude absolue et sa couleur est indicative (d’après l’indice de couleur), jamais un type spectral.',
+  'vol.dataUnavailable':
+    'Une partie des données n’a pas pu être chargée (réseau) : choisissez de nouveau pour réessayer.',
   'vol.unknownStar': 'L’étoile de ce lien n’est pas dans le volume stellaire.',
   'ed.announce': 'Observation du {date} affichée',
 };

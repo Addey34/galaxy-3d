@@ -701,6 +701,8 @@ export const cardEn = {
     'This star does not move with time here: its motion is not in the source.',
   'vol.symbolic':
     'Beyond 5 pc, each star is a small point: its brightness follows its absolute magnitude and its colour is indicative (from the colour index), never a spectral type.',
+  'vol.dataUnavailable':
+    'Part of the data could not be loaded (network): choose again to retry.',
   'vol.unknownStar': 'The star of this link is not in the stellar volume.',
   'ed.announce': 'Observation of {date} shown',
 };
