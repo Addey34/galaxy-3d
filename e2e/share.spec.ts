@@ -33,6 +33,24 @@ test('share button copies the current permalink and confirms with a toast', asyn
   expect(clipboardText).not.toContain('body=mars');
 });
 
+test('the clipboard fallback gives the focus back instead of dropping it on <body>', async ({
+  page,
+}) => {
+  // Le presse-papier refuse (contexte non sécurisé, permission absente) : le bouton retombe sur la
+  // copie par un champ temporaire, qui prend le focus le temps de la sélection.
+  await page.addInitScript(() => {
+    navigator.clipboard.writeText = () =>
+      Promise.reject(new DOMException('refused', 'NotAllowedError'));
+  });
+  await page.goto('/?mode=explo&body=mars');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await page.locator('#share-btn').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#share-toast')).toBeVisible();
+  // Le clavier mène encore quelque part : le focus est revenu au bouton (incident stellarPermalink:89).
+  await expect(page.locator('#share-btn')).toBeFocused();
+});
+
 test('share captures the exact camera angle, and reopening the link restores it', async ({
   page,
 }) => {

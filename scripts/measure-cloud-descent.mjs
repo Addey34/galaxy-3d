@@ -8,7 +8,7 @@
  * molette et enregistre, à chaque cran : altitude de la caméra (sonde `?debug-surface`), une
  * capture PNG, l'état de la couche nuages et son badge de traçabilité.
  *
- * Conditions : VRAI GPU (`--use-angle=d3d11`, `--software` pour s'en passer), 1280 × 800, visites
+ * Conditions : VRAI GPU (`--use-angle=d3d11`, `--software` pour s'en passer, `--cpu 4` pour freiner), 1280 × 800, visites
  * coupées, date fixée. `--clouds on|off` : couche « nuages réels » cochée ou non (même descente).
  *
  * Usage :
@@ -41,6 +41,12 @@ const DEVICE = flag('--device', null);
 const DATE = flag('--date', '2026-11-20T16:30:00Z');
 const OUT = resolve(flag('--out', 'reports/cloud-descent/run'));
 const SOFTWARE = args.includes('--software');
+// `--cpu 4` : processeur freiné (CDP), pour reproduire un coureur lent (incident #588, GAL-EARTH-ATMOSPHERE-002).
+const CPU = Number(flag('--cpu', '1'));
+// `--slow-net` : réseau retardé (300 ms, 1,5 Mb/s), pour voir ce qui manque pendant l'arrivée des tuiles.
+const SLOW_NET = args.includes('--slow-net');
+// `--reduced-motion` : le visiteur a demandé le mouvement réduit (`prefers-reduced-motion: reduce`).
+const REDUCED_MOTION = args.includes('--reduced-motion');
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({
@@ -54,15 +60,27 @@ const browser = await chromium.launch({
 });
 const [vw, vh] = VIEWPORT.split('x').map(Number);
 // `--device "Pixel 7"` : écran, rapport de pixels et toucher émulés ; sinon une fenêtre de bureau.
-const context = await browser.newContext(
-  DEVICE ? { ...devices[DEVICE] } : { viewport: { width: vw, height: vh } }
-);
+const context = await browser.newContext({
+  ...(DEVICE ? devices[DEVICE] : { viewport: { width: vw, height: vh } }),
+  ...(REDUCED_MOTION ? { reducedMotion: 'reduce' } : {}),
+});
 await context.addInitScript(() => {
   localStorage.setItem('ssv-guided-tour-v1', '1');
   localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
   localStorage.setItem('ssv-locale', 'en');
 });
 const page = await context.newPage();
+if (CPU > 1 || SLOW_NET) {
+  const cdp = await context.newCDPSession(page);
+  if (CPU > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
+  if (SLOW_NET)
+    await cdp.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 300,
+      downloadThroughput: (1.5 * 1024 * 1024) / 8,
+      uploadThroughput: (0.75 * 1024 * 1024) / 8,
+    });
+}
 const consoleErrors = [];
 page.on('pageerror', (e) => consoleErrors.push(String(e).slice(0, 200)));
 const gibs = { ok: 0, failed: 0, urls: [] };

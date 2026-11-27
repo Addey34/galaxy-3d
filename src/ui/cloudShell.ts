@@ -16,6 +16,14 @@ import {
 } from '@/config/surfaceTilesets';
 import { cloudsOnScreen } from '@/core/cloudsOnScreen';
 import { cloudShellScale } from '@/core/cloudShellAltitude';
+import { cloudNearUniforms } from '@/components/surface/cloudShellMaterial';
+
+// Les nuages de près (GAL-EARTH-ATMOSPHERE-002) : `?cloud-near=0` rend la règle d'effacement (mesure A/B).
+cloudNearUniforms.uCloudNear.value =
+  typeof location !== 'undefined' &&
+  new URLSearchParams(location.search).get('cloud-near') === '0'
+    ? 0
+    : 1;
 
 /**
  * LES NUAGES RÉGIONAUX (GAL-EARTH-CLOUD-REGIONAL-001) : la couche mondiale (une image de 2 048 px, 19,7 km
@@ -182,9 +190,8 @@ export function createCloudShell(options: {
         hostFor = body;
       }
       // La coque descend vers une altitude réaliste quand la caméra approche (`core/cloudShellAltitude`).
-      host.setShellScale(
-        cloudShellScale((distanceInRadii - 1) * radiusKm, radiusKm, scale)
-      );
+      const cameraAltitudeKm = (distanceInRadii - 1) * radiusKm;
+      host.setShellScale(cloudShellScale(cameraAltitudeKm, radiusKm, scale));
       engine.attach(host, tileset, radiusKm * scale, null);
       engine.update(camera, viewportHeightPx);
       if ((engine.state?.painted ?? 0) > 0) source.painted = true;

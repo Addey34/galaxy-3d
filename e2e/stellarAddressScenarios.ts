@@ -69,8 +69,16 @@ const NON_DEFAULT_POSE = '&az=-137&pol=62&dist=0.035';
  * défaut : c'est ce que ce relevé attrape.
  */
 async function solarPose(page: Page): Promise<string> {
+  // Le toast du partage PRÉCÉDENT reste dans le document 2,45 s : l'attendre rendrait la main avant
+  // que CE partage ait fini (copie refusée puis repli, asynchrones), et sa fin tomberait sur l'étape
+  // suivante. Il est marqué ; `showToast` le remplace par un nouvel élément, seul attendu ici.
+  await page.evaluate(() =>
+    document.getElementById('share-toast')?.setAttribute('data-e2e-stale', '')
+  );
   await page.locator('#share-btn').click();
-  await expect(page.locator('#share-toast')).toBeVisible();
+  await expect(
+    page.locator('#share-toast:not([data-e2e-stale])')
+  ).toBeVisible();
   const p = search(page);
   return `${p.get('az')}|${p.get('pol')}|${p.get('dist')}`;
 }
@@ -168,6 +176,40 @@ export async function scenarioAddressFollows(page: Page): Promise<void> {
 }
 
 /**
+ * Le contrat d'ouverture (`ui/stellarView` : `open()` finit par `back.focus()`, comme une ouverture par
+ * les Réglages ou par un lien) : la vue rouverte par Suivant tient le focus sur « Retour », donc le
+ * clavier (Échap) lui parvient. `toBeFocused` attend la fin de l'ouverture dans le délai par défaut,
+ * sans jamais déplacer le focus : s'il échoue, c'est le produit qui a perdu le focus, et le test le
+ * dit ici plutôt que par une vue restée ouverte 30 s après Échap.
+ */
+async function expectOpenedFocus(page: Page): Promise<void> {
+  await expect(page.locator('#stellar-back')).toBeFocused();
+}
+
+/**
+ * Sonde PASSIVE pour la trace (incident `stellarPermalink.spec.ts:89`) : chaque sortie de focus est
+ * écrite à la console avec sa pile, que la trace Playwright conserve. Elle n'agit sur rien.
+ */
+async function watchFocus(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const name = (el: EventTarget | null): string =>
+      el instanceof HTMLElement
+        ? `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}`
+        : String(el);
+    document.addEventListener(
+      'focusout',
+      (event) => {
+        console.debug(
+          `[focus] ${name(event.target)} -> ${name(event.relatedTarget)} connected=${String((event.target as Node).isConnected)}`,
+          new Error('focusout').stack
+        );
+      },
+      true
+    );
+  });
+}
+
+/**
  * Le retour : Échap, le bouton, et Retour/Suivant du navigateur, sans recharger le document, sans
  * que le permalien du Système solaire soit rappelé (il relancerait le vol de la caméra), et sans
  * second renderer ni résidu.
@@ -181,6 +223,7 @@ export async function scenarioReturn(page: Page): Promise<void> {
   const pose = await solarPose(page);
   const canvases = await page.locator('canvas').count();
   const entries = await page.evaluate(() => window.history.length);
+  await watchFocus(page);
   await openFromSettings(page);
   await page
     .locator('#stellar-list button', { hasText: /^Barnard/ })
@@ -203,6 +246,7 @@ export async function scenarioReturn(page: Page): Promise<void> {
   // 2. Suivant : la même observation revient.
   await page.goForward();
   await expect(view(page)).toBeVisible({ timeout: 30_000 });
+  await expectOpenedFocus(page);
   await expect(pressed(page)).toContainText(/^Barnard/);
 
   // 3. Le bouton « Retour au Système solaire » : même résultat, l'entrée ajoutée est retirée.
@@ -215,6 +259,7 @@ export async function scenarioReturn(page: Page): Promise<void> {
   // 4. Suivant rouvre encore la vue, Échap la ferme.
   await page.goForward();
   await expect(view(page)).toBeVisible({ timeout: 30_000 });
+  await expectOpenedFocus(page);
   await page.keyboard.press('Escape');
   await expect(view(page)).toHaveCount(0);
   await expect.poll(() => search(page).get('view')).toBeNull();

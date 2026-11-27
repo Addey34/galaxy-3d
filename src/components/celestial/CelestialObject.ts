@@ -49,6 +49,7 @@ import {
   getRingShadowUniforms,
   getLayerTwilightWrap,
   getThermalUniforms,
+  LAYER_RADIUS_SCALE,
   LAYER_TERMINATOR_WRAP,
   type EclipseShadowUniforms,
   type PrecipUniforms,
@@ -741,6 +742,17 @@ export default class CelestialObject {
   }
 
   /** Rapproche la coque des nuages du sol (facteur sur son rayon construit), ou la rétablit (1). */
+  /** Rayon de la coque des nuages VISIBLE (échelle de descente comprise), ou `null` (GAL-EARTH-ATMOSPHERE-002). */
+  getNearShellRadius(mode: 'educ' | 'explo'): number | null {
+    const clouds = this.layers.get('clouds');
+    if (!clouds?.visible) return null;
+    return (
+      this.getFrameRadius(mode) *
+      (LAYER_RADIUS_SCALE['clouds'] ?? 1.01) *
+      clouds.scale.x
+    );
+  }
+
   setCloudShellScale(factor: number): void {
     this.layers.get('clouds')?.scale.setScalar(factor);
   }

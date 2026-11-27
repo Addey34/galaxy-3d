@@ -7,6 +7,7 @@ import {
   depthResolutionKm,
   facetDeviationKm,
   followNearPlane,
+  followNearPlaneWithShell,
   groundTexelKm,
   radiusFactorForAltitudeKm,
   screenPixelsPerKm,
@@ -240,5 +241,34 @@ describe('plancher d’approche', () => {
     const factor = radiusFactorForAltitudeKm(MOON_RADIUS_KM, 1);
     expect(altitudeKmForRadiusFactor(MOON_RADIUS_KM, factor)).toBeCloseTo(1, 9);
     expect(factor).toBeCloseTo(1.0005756, 7);
+  });
+});
+
+describe('le plan proche devant la coque des nuages (GAL-EARTH-ATMOSPHERE-002)', () => {
+  // Kerguelen, 2026-11-25 : sol (ellipsoïde) à 6 367,4 km, coque à 10 km au-dessus de la sphère de 6 371 km.
+  const ground = 6367.4;
+  const shell = 6381;
+  it('au-dessus de la coque, le plan proche reste devant elle (il la coupait sous ~20 km)', () => {
+    const camera = shell + 1.2;
+    const near = followNearPlaneWithShell(camera, ground, shell, 1e-6);
+    expect(near).toBeLessThan(camera - shell);
+    expect(near).toBeCloseTo(0.6, 6);
+    // L'ancienne règle, seule, passait derrière la coque.
+    expect(followNearPlane(camera, ground, 1e-6)).toBeGreaterThan(
+      camera - shell
+    );
+  });
+  it('sous la coque, ou sans coque visible, la règle du sol inchangée', () => {
+    expect(followNearPlaneWithShell(shell - 3, ground, shell, 1e-6)).toBe(
+      followNearPlane(shell - 3, ground, 1e-6)
+    );
+    expect(followNearPlaneWithShell(shell + 50, ground, null, 1e-6)).toBe(
+      followNearPlane(shell + 50, ground, 1e-6)
+    );
+  });
+  it('au contact de la coque, le plancher garde le plan proche positif', () => {
+    expect(followNearPlaneWithShell(shell + 1e-9, ground, shell, 1e-6)).toBe(
+      1e-6
+    );
   });
 });

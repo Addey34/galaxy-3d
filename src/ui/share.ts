@@ -44,18 +44,29 @@ async function copyToClipboard(url: string): Promise<boolean> {
   } catch {
     // navigator.clipboard indisponible (contexte non sécurisé, permission refusée) :
     // repli sur une sélection/exécution de copie legacy.
+    // Le champ temporaire prend le focus pour être sélectionné. Il le rend ensuite à l'élément qui
+    // le tenait : sinon le focus tombe sur <body> et le clavier ne mène plus rien. Ce repli arrive
+    // APRÈS un refus asynchrone : entre-temps une surface a pu s'ouvrir et prendre le focus (la vue
+    // stellaire rouverte par Suivant : incident `stellarPermalink.spec.ts:89`). C'est donc l'élément
+    // actif à ce moment-là qui le retrouve, pas celui du clic.
+    const previous =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const input = document.createElement('input');
     try {
-      const input = document.createElement('input');
       input.value = url;
       input.style.position = 'fixed';
       input.style.opacity = '0';
       document.body.appendChild(input);
       input.select();
-      const ok = document.execCommand('copy');
-      input.remove();
-      return ok;
+      return document.execCommand('copy');
     } catch {
       return false;
+    } finally {
+      input.remove();
+      if (previous?.isConnected && document.activeElement !== previous)
+        previous.focus({ preventScroll: true });
     }
   }
 }
