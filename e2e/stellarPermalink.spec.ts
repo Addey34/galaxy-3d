@@ -86,11 +86,32 @@ test.describe('desktop', () => {
     await scenarioAddressFollows(page);
   });
 
-  test('retour : bouton, Échap, Retour et Suivant du navigateur, sans recharger ni résidu', async ({
-    page,
-  }) => {
-    test.setTimeout(240_000);
-    await scenarioReturn(page);
+  test.describe('retour', () => {
+    // Incident récurrent (runs 45885343865 et 45916089589) : la configuration ne trace que le
+    // RÉESSAI (`on-first-retry`), et `test.use({ trace })` est refusé dans un groupe. La première
+    // tentative de CE test est donc tracée à la main, et sa trace gardée seulement si elle échoue.
+    test.beforeEach(async ({ context }, testInfo) => {
+      if (testInfo.retry === 0)
+        await context.tracing.start({
+          screenshots: true,
+          snapshots: true,
+          sources: true,
+        });
+    });
+    test.afterEach(async ({ context }, testInfo) => {
+      if (testInfo.retry !== 0) return;
+      const failed = testInfo.status !== testInfo.expectedStatus;
+      await context.tracing.stop(
+        failed ? { path: testInfo.outputPath('trace-first-attempt.zip') } : {}
+      );
+    });
+
+    test('retour : bouton, Échap, Retour et Suivant du navigateur, sans recharger ni résidu', async ({
+      page,
+    }) => {
+      test.setTimeout(240_000);
+      await scenarioReturn(page);
+    });
   });
 
   test('arrivé par un lien, fermer réécrit l’adresse sans retirer d’entrée', async ({

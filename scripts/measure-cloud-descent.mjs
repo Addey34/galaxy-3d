@@ -45,6 +45,8 @@ const SOFTWARE = args.includes('--software');
 const CPU = Number(flag('--cpu', '1'));
 // `--slow-net` : réseau retardé (300 ms, 1,5 Mb/s), pour voir ce qui manque pendant l'arrivée des tuiles.
 const SLOW_NET = args.includes('--slow-net');
+// `--reduced-motion` : le visiteur a demandé le mouvement réduit (`prefers-reduced-motion: reduce`).
+const REDUCED_MOTION = args.includes('--reduced-motion');
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({
@@ -58,9 +60,10 @@ const browser = await chromium.launch({
 });
 const [vw, vh] = VIEWPORT.split('x').map(Number);
 // `--device "Pixel 7"` : écran, rapport de pixels et toucher émulés ; sinon une fenêtre de bureau.
-const context = await browser.newContext(
-  DEVICE ? { ...devices[DEVICE] } : { viewport: { width: vw, height: vh } }
-);
+const context = await browser.newContext({
+  ...(DEVICE ? devices[DEVICE] : { viewport: { width: vw, height: vh } }),
+  ...(REDUCED_MOTION ? { reducedMotion: 'reduce' } : {}),
+});
 await context.addInitScript(() => {
   localStorage.setItem('ssv-guided-tour-v1', '1');
   localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
