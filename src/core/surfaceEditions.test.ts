@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import surfaceEditions from 'virtual:surface-editions';
+import surfaceEditions from 'virtual:surface-edition-catalogue';
 import { TEXTURE_PRODUCTS } from '@/registry/products';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { buildSurfaceEditions } from './surfaceEditions';

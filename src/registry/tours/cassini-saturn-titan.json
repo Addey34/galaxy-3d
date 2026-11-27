@@ -1,0 +1,131 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "cassini-saturn-titan",
+  "title": {
+    "en": "Cassini-Huygens: thirteen years at Saturn",
+    "fr": "Cassini-Huygens, treize ans à Saturne",
+    "es": "Cassini-Huygens, trece años en Saturno",
+    "pt-BR": "Cassini-Huygens, treze anos em Saturno"
+  },
+  "steps": [
+    {
+      "kind": "setMode",
+      "mode": "explo"
+    },
+    {
+      "kind": "setTimeScale",
+      "scale": 1
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2004-07-01T02:36:40Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "saturn",
+      "distanceRadii": 8
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "1 July 2004, 02:36:40 UTC. On the JPL Horizons trajectory, Cassini becomes bound to Saturn at this second, 80,261 km from its centre, at 30.7 km/s: Galaxy computes the instant from the trajectory. NASA describes the arrival: a passage through the gap between the F and G rings, a 96-minute main-engine burn, then a second ring crossing. The burn is still under way, so the camera does not claim the probe’s place: it frames Saturn.",
+        "fr": "1er juillet 2004, 02:36:40 UTC. Sur la trajectoire de JPL Horizons, Cassini devient liée à Saturne à cette seconde, à 80 261 km de son centre, à 30,7 km/s : Galaxy calcule l’instant sur la trajectoire. La NASA décrit l’arrivée : un passage dans l’intervalle entre les anneaux F et G, une combustion du moteur principal de 96 minutes, puis une seconde traversée des anneaux. La combustion est encore en cours : la caméra ne prétend pas occuper la place de la sonde, elle cadre Saturne.",
+        "es": "1 de julio de 2004, 02:36:40 UTC. En la trayectoria de JPL Horizons, la Cassini queda ligada a Saturno en ese segundo, a 80 261 km de su centro, a 30,7 km/s: Galaxy calcula el instante sobre la trayectoria. La NASA describe la llegada: un paso por el hueco entre los anillos F y G, un encendido del motor principal de 96 minutos y un segundo cruce de los anillos. El encendido sigue en curso, así que la cámara no pretende ocupar el lugar de la sonda: encuadra Saturno.",
+        "pt-BR": "1º de julho de 2004, 02:36:40 UTC. Na trajetória do JPL Horizons, a Cassini fica ligada a Saturno nesse segundo, a 80 261 km do seu centro, a 30,7 km/s: o Galaxy calcula o instante sobre a trajetória. A NASA descreve a chegada: uma passagem pelo intervalo entre os anéis F e G, uma queima do motor principal de 96 minutos e uma segunda travessia dos anéis. A queima ainda está em curso, então a câmera não finge ocupar o lugar da sonda: ela enquadra Saturno."
+      }
+    },
+    {
+      "kind": "setEdition",
+      "body": "saturn",
+      "edition": "opal_2018a"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Saturn’s clouds here are a Hubble map (OPAL programme) from 6 June 2018, nearly nine months after the end of Cassini: none of the maps Galaxy carries for Saturn dates from the mission, and this one is the closest to it.",
+        "fr": "Les nuages de Saturne sont ici une carte de Hubble (programme OPAL) du 6 juin 2018, près de neuf mois après la fin de Cassini : aucune des cartes de Saturne que Galaxy embarque ne date de la mission, et celle-ci en est la plus proche.",
+        "es": "Las nubes de Saturno son aquí un mapa del Hubble (programa OPAL) del 6 de junio de 2018, casi nueve meses después del final de la Cassini: ninguno de los mapas de Saturno que lleva Galaxy es de la misión, y este es el más cercano a ella.",
+        "pt-BR": "As nuvens de Saturno são aqui um mapa do Hubble (programa OPAL) de 6 de junho de 2018, quase nove meses após o fim da Cassini: nenhum dos mapas de Saturno que o Galaxy traz é da missão, e este é o mais próximo dela."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2005-01-14T12:00:00Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "titan",
+      "distanceRadii": 4
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "14 January 2005. The Huygens probe, built by ESA and carried by Cassini, descends through Titan’s atmosphere for 2 hours 28 minutes and lands: according to ESA, the first landing in the outer Solar System, at 10.3° S, 192.3° W. Galaxy does not draw Huygens; the camera looks at Titan on that day.",
+        "fr": "14 janvier 2005. La sonde Huygens, construite par l’ESA et portée par Cassini, descend dans l’atmosphère de Titan pendant 2 h 28 et se pose : selon l’ESA, le premier atterrissage dans le Système solaire extérieur, à 10,3° S, 192,3° O. Galaxy ne dessine pas Huygens ; la caméra regarde Titan ce jour-là.",
+        "es": "14 de enero de 2005. La sonda Huygens, construida por la ESA y llevada por la Cassini, desciende por la atmósfera de Titán durante 2 h 28 min y se posa: según la ESA, el primer aterrizaje en el Sistema Solar exterior, a 10,3° S, 192,3° O. Galaxy no dibuja la Huygens; la cámara mira Titán ese día.",
+        "pt-BR": "14 de janeiro de 2005. A sonda Huygens, construída pela ESA e levada pela Cassini, desce pela atmosfera de Titã durante 2 h 28 min e pousa: segundo a ESA, o primeiro pouso no Sistema Solar exterior, a 10,3° S, 192,3° O. O Galaxy não desenha a Huygens; a câmera olha Titã nesse dia."
+      }
+    },
+    {
+      "kind": "diveTo",
+      "place": "Shangri La",
+      "frameKm": 1500
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Shangri La, a dark region named by the IAU and catalogued at 10° S, 195° W. The Huygens site lies about 120 km from that point (computed from the two coordinates), on ground ESA compares to loose wet sand strewn with pebbles of water ice. The map is Cassini’s own: a controlled infrared mosaic at 702 m per pixel, far too coarse to show a pebble. Titan’s rotation is not dated in the scene: the place may appear on the night side, which says nothing about 14 January 2005.",
+        "fr": "Shangri La, une région sombre nommée par l’UAI et cataloguée à 10° S, 195° O. Le site de Huygens est à environ 120 km de ce point (calculé à partir des deux coordonnées), sur un sol que l’ESA compare à du sable humide et meuble, semé de galets de glace d’eau. La carte est celle de Cassini : une mosaïque infrarouge contrôlée à 702 m par pixel, bien trop grossière pour montrer un galet. La rotation de Titan n’est pas datée dans la scène : le lieu peut apparaître côté nuit, ce qui ne dit rien du 14 janvier 2005.",
+        "es": "Shangri La, una región oscura nombrada por la UAI y catalogada en 10° S, 195° O. El lugar de la Huygens está a unos 120 km de ese punto (calculado a partir de las dos coordenadas), en un suelo que la ESA compara con arena húmeda y suelta, sembrada de guijarros de hielo de agua. El mapa es el de la propia Cassini: un mosaico infrarrojo controlado a 702 m por píxel, demasiado grueso para mostrar un guijarro. La rotación de Titán no está fechada en la escena: el lugar puede aparecer en el lado nocturno, lo que no dice nada del 14 de enero de 2005.",
+        "pt-BR": "Shangri La, uma região escura nomeada pela UAI e catalogada em 10° S, 195° O. O local da Huygens fica a cerca de 120 km desse ponto (calculado a partir das duas coordenadas), num solo que a ESA compara a areia úmida e solta, salpicada de seixos de gelo de água. O mapa é o da própria Cassini: um mosaico infravermelho controlado a 702 m por pixel, grosso demais para mostrar um seixo. A rotação de Titã não é datada na cena: o local pode aparecer no lado noturno, o que não diz nada sobre 14 de janeiro de 2005."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2017-09-15T10:44:33Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "saturn",
+      "from": "cassini",
+      "distanceRadii": 1.5
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "15 September 2017. After 22 orbits threaded between the planet and its rings since April, Cassini dives into Saturn. NASA dates the loss of contact to about 10:31 UTC at Saturn; the last signal reached Earth some 83 minutes later. The Horizons trajectory, extended beyond, crosses the 1-bar level at 10:45:33 UTC: the scene opens one minute before, looking at Saturn from the direction of the probe, from 1.5 radii, much farther than the probe.",
+        "fr": "15 septembre 2017. Après 22 orbites glissées entre la planète et ses anneaux depuis avril, Cassini plonge dans Saturne. La NASA date la perte de contact vers 10:31 UTC à Saturne ; le dernier signal a atteint la Terre environ 83 minutes plus tard. La trajectoire d’Horizons, prolongée au-delà, franchit le niveau de 1 bar à 10:45:33 UTC : la scène s’ouvre une minute avant, en regardant Saturne depuis la direction de la sonde, à 1,5 rayon, bien plus loin qu’elle.",
+        "es": "15 de septiembre de 2017. Tras 22 órbitas deslizadas entre el planeta y sus anillos desde abril, la Cassini se zambulle en Saturno. La NASA fecha la pérdida de contacto hacia las 10:31 UTC en Saturno; la última señal llegó a la Tierra unos 83 minutos después. La trayectoria de Horizons, prolongada más allá, cruza el nivel de 1 bar a las 10:45:33 UTC: la escena se abre un minuto antes, mirando Saturno desde la dirección de la sonda, a 1,5 radios, mucho más lejos que ella.",
+        "pt-BR": "15 de setembro de 2017. Depois de 22 órbitas passadas entre o planeta e seus anéis desde abril, a Cassini mergulha em Saturno. A NASA data a perda de contato por volta das 10:31 UTC em Saturno; o último sinal chegou à Terra cerca de 83 minutos depois. A trajetória do Horizons, prolongada além, cruza o nível de 1 bar às 10:45:33 UTC: a cena abre um minuto antes, olhando Saturno a partir da direção da sonda, a 1,5 raio, bem mais longe do que ela."
+      }
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Up close, the spacecraft itself: the 3D model published by NASA, a representative model that this project has not checked against engineering drawings. Its size here is a presentation scale, not the real one. Turn it with the mouse, a finger or the arrow keys, then close it (Escape or the button) to continue the tour.",
+        "fr": "De près, l’engin lui-même : le modèle 3D publié par la NASA, un modèle représentatif que ce projet n’a pas vérifié sur des plans d’ingénierie. Sa taille est ici une échelle de présentation, pas la vraie. Faites-le tourner à la souris, au doigt ou aux flèches, puis fermez-le (Échap ou le bouton) pour reprendre la visite.",
+        "es": "De cerca, la nave misma: el modelo 3D publicado por la NASA, un modelo representativo que este proyecto no ha comprobado con planos de ingeniería. Su tamaño aquí es una escala de presentación, no la real. Gírelo con el ratón, con el dedo o con las flechas, y ciérrelo (Escape o el botón) para seguir la visita.",
+        "pt-BR": "De perto, a própria nave: o modelo 3D publicado pela NASA, um modelo representativo que este projeto não verificou em plantas de engenharia. O tamanho aqui é uma escala de apresentação, não o real. Gire-o com o mouse, o dedo ou as setas e feche-o (Esc ou o botão) para continuar a visita."
+      }
+    },
+    {
+      "kind": "inspectCraft",
+      "craft": "cassini"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "What this tour measured and what it represented: the instants and distances come from the Horizons trajectory; Titan’s surface from Cassini’s cameras; Saturn’s clouds from a Hubble map dated after the mission. The descent of Huygens and the end of Cassini are told with ESA’s and NASA’s figures, named as such.",
+        "fr": "Ce que cette visite a mesuré et ce qu’elle a représenté : les instants et les distances viennent de la trajectoire d’Horizons ; la surface de Titan, des caméras de Cassini ; les nuages de Saturne, d’une carte de Hubble datée d’après la mission. La descente de Huygens et la fin de Cassini sont racontées avec les chiffres de l’ESA et de la NASA, nommés comme tels.",
+        "es": "Lo que esta visita midió y lo que representó: los instantes y las distancias vienen de la trayectoria de Horizons; la superficie de Titán, de las cámaras de la Cassini; las nubes de Saturno, de un mapa del Hubble fechado después de la misión. El descenso de la Huygens y el final de la Cassini se cuentan con las cifras de la ESA y de la NASA, citadas como tales.",
+        "pt-BR": "O que esta visita mediu e o que representou: os instantes e as distâncias vêm da trajetória do Horizons; a superfície de Titã, das câmeras da Cassini; as nuvens de Saturno, de um mapa do Hubble datado de depois da missão. A descida da Huygens e o fim da Cassini são contados com os números da ESA e da NASA, citados como tais."
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import surfaceEditions from 'virtual:surface-editions';
+import surfaceEditions from 'virtual:surface-edition-catalogue';
 import { allBodies, ringTexturePath, texturePath } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import type { TextureQuality, TextureResolutions } from '@/types';

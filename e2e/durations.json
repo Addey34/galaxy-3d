@@ -91,8 +91,8 @@
     "e2e/satelliteLayer.spec.ts": 107,
     "e2e/satelliteSelection.spec.ts": 160,
     "e2e/satelliteTracking.spec.ts": 386,
-    "e2e/seaTemperature.spec.ts": 18,
     "e2e/search.spec.ts": 197,
+    "e2e/seaTemperature.spec.ts": 18,
     "e2e/settingsMobileLayout.spec.ts": 57,
     "e2e/settingsTabs.spec.ts": 100,
     "e2e/share.spec.ts": 49,
@@ -125,6 +125,7 @@
     "e2e/touch.spec.ts": 25,
     "e2e/tourApollo.spec.ts": 313,
     "e2e/tourDateContract.spec.ts": 160,
+    "e2e/tourExpeditions.spec.ts": 800,
     "e2e/tourPlayer.spec.ts": 689,
     "e2e/tourSpeed.spec.ts": 373,
     "e2e/units.spec.ts": 46,
@@ -138,6 +139,7 @@
     "e2e/giantSurfaces.spec.ts",
     "e2e/observation.spec.ts",
     "e2e/skySystemExplorer.spec.ts",
-    "e2e/surfaceEditions.spec.ts"
+    "e2e/surfaceEditions.spec.ts",
+    "e2e/tourExpeditions.spec.ts"
   ]
 }

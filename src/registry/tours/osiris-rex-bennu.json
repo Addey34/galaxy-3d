@@ -1,0 +1,119 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "osiris-rex-bennu",
+  "title": {
+    "en": "OSIRIS-REx: a sample from Bennu",
+    "fr": "OSIRIS-REx, un échantillon de Bennu",
+    "es": "OSIRIS-REx, una muestra de Bennu",
+    "pt-BR": "OSIRIS-REx, uma amostra de Bennu"
+  },
+  "steps": [
+    {
+      "kind": "setMode",
+      "mode": "explo"
+    },
+    {
+      "kind": "setTimeScale",
+      "scale": 1
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2018-12-31T19:44:02Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "bennu",
+      "from": "osiris-rex",
+      "distanceRadii": 8.7
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "31 December 2018, 19:44:02 UTC. On the JPL Horizons trajectory, OSIRIS-REx becomes bound to Bennu, 2.112 km from its centre, moving at 6.4 cm/s relative to it. NASA reports a single eight-second thruster burn at 19:43 UTC and a record: the smallest object ever orbited by a spacecraft. The camera is placed at about that distance, in the direction of the probe; Bennu is 484 m across (JPL).",
+        "fr": "31 décembre 2018, 19:44:02 UTC. Sur la trajectoire de JPL Horizons, OSIRIS-REx devient liée à Bennu, à 2,112 km de son centre, à 6,4 cm/s par rapport à lui. La NASA rapporte une seule poussée de huit secondes à 19:43 UTC et un record : le plus petit objet jamais mis en orbite par un engin spatial. La caméra est placée à peu près à cette distance, dans la direction de la sonde ; Bennu mesure 484 m de diamètre (JPL).",
+        "es": "31 de diciembre de 2018, 19:44:02 UTC. En la trayectoria de JPL Horizons, OSIRIS-REx queda ligada a Bennu, a 2,112 km de su centro, a 6,4 cm/s respecto a él. La NASA informa de un único encendido de ocho segundos a las 19:43 UTC y de un récord: el objeto más pequeño en torno al que ha orbitado una nave. La cámara se coloca a esa distancia aproximada, en la dirección de la sonda; Bennu mide 484 m de diámetro (JPL).",
+        "pt-BR": "31 de dezembro de 2018, 19:44:02 UTC. Na trajetória do JPL Horizons, a OSIRIS-REx fica ligada a Bennu, a 2,112 km do seu centro, a 6,4 cm/s em relação a ele. A NASA relata uma única queima de oito segundos às 19:43 UTC e um recorde: o menor objeto já orbitado por uma nave. A câmera é colocada mais ou menos a essa distância, na direção da sonda; Bennu mede 484 m de diâmetro (JPL)."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2020-10-20T21:50:11Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "bennu",
+      "from": "osiris-rex",
+      "distanceRadii": 3
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "20 October 2020, 21:50:11 UTC. The trajectory brings the probe 224 m from Bennu’s centre and holds that distance for six seconds before moving away: the touch of the sampling arm, read on the trajectory alone. Bennu is not a sphere: near the pole its surface is closer to the centre than its mean radius. NASA names the site Nightingale, in a crater near the north pole.",
+        "fr": "20 octobre 2020, 21:50:11 UTC. La trajectoire amène la sonde à 224 m du centre de Bennu et garde cette distance six secondes avant de repartir : le contact du bras de prélèvement, lu sur la seule trajectoire. Bennu n’est pas une sphère : près du pôle, sa surface est plus proche du centre que son rayon moyen. La NASA nomme le site Nightingale, dans un cratère proche du pôle nord.",
+        "es": "20 de octubre de 2020, 21:50:11 UTC. La trayectoria lleva la sonda a 224 m del centro de Bennu y mantiene esa distancia seis segundos antes de alejarse: el contacto del brazo de muestreo, leído solo en la trayectoria. Bennu no es una esfera: cerca del polo, su superficie está más cerca del centro que su radio medio. La NASA llama al lugar Nightingale, en un cráter cercano al polo norte.",
+        "pt-BR": "20 de outubro de 2020, 21:50:11 UTC. A trajetória leva a sonda a 224 m do centro de Bennu e mantém essa distância por seis segundos antes de se afastar: o toque do braço de coleta, lido apenas na trajetória. Bennu não é uma esfera: perto do polo, sua superfície está mais perto do centro que seu raio médio. A NASA chama o local de Nightingale, numa cratera perto do polo norte."
+      }
+    },
+    {
+      "kind": "diveTo",
+      "place": "Hokioi",
+      "frameKm": 0.3
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Hokioi, the crater named by the IAU at 55.1° N, which holds the Nightingale site according to NASA. The form is Bennu’s published shape model and the surface a mosaic from the probe’s own camera (OCAMS), in grey levels: the scene shows the place, not the grains that were collected. Bennu’s rotation is not dated in the scene: the light on the crater is not that of the day of the contact.",
+        "fr": "Hokioi, le cratère nommé par l’UAI à 55,1° N, qui abrite le site Nightingale selon la NASA. La forme est le modèle de forme publié de Bennu, et la surface une mosaïque de la caméra de la sonde elle-même (OCAMS), en niveaux de gris : la scène montre le lieu, pas les grains prélevés. La rotation de Bennu n’est pas datée dans la scène : la lumière sur le cratère n’est pas celle du jour du contact.",
+        "es": "Hokioi, el cráter nombrado por la UAI a 55,1° N, que alberga el lugar Nightingale según la NASA. La forma es el modelo de forma publicado de Bennu, y la superficie un mosaico de la cámara de la propia sonda (OCAMS), en escala de grises: la escena muestra el lugar, no los granos recogidos. La rotación de Bennu no está fechada en la escena: la luz sobre el cráter no es la del día del contacto.",
+        "pt-BR": "Hokioi, a cratera nomeada pela UAI a 55,1° N, que abriga o local Nightingale segundo a NASA. A forma é o modelo de forma publicado de Bennu, e a superfície um mosaico da câmera da própria sonda (OCAMS), em tons de cinza: a cena mostra o lugar, não os grãos coletados. A rotação de Bennu não é datada na cena: a luz sobre a cratera não é a do dia do contato."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "2023-09-24T14:44:48Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "earth",
+      "from": "osiris-rex",
+      "distanceRadii": 4
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "24 September 2023, 14:44:48 UTC: the probe passes 7,151 km from Earth’s centre (Horizons); the camera stays farther away. NASA had it release the sample capsule four hours earlier, about 102,000 km out, and the capsule landed in Utah at 14:52 UTC. The spacecraft itself carries on, renamed OSIRIS-APEX, towards the asteroid Apophis.",
+        "fr": "24 septembre 2023, 14:44:48 UTC : la sonde passe à 7 151 km du centre de la Terre (Horizons) ; la caméra reste plus loin. La NASA lui a fait larguer la capsule d’échantillon quatre heures plus tôt, à environ 102 000 km, et la capsule s’est posée dans l’Utah à 14:52 UTC. L’engin, lui, continue, rebaptisé OSIRIS-APEX, vers l’astéroïde Apophis.",
+        "es": "24 de septiembre de 2023, 14:44:48 UTC: la sonda pasa a 7 151 km del centro de la Tierra (Horizons); la cámara se queda más lejos. La NASA le hizo soltar la cápsula de muestras cuatro horas antes, a unos 102 000 km, y la cápsula se posó en Utah a las 14:52 UTC. La nave sigue su camino, rebautizada OSIRIS-APEX, hacia el asteroide Apofis.",
+        "pt-BR": "24 de setembro de 2023, 14:44:48 UTC: a sonda passa a 7 151 km do centro da Terra (Horizons); a câmera fica mais longe. A NASA a fez soltar a cápsula de amostras quatro horas antes, a cerca de 102 000 km, e a cápsula pousou em Utah às 14:52 UTC. A nave segue viagem, rebatizada OSIRIS-APEX, rumo ao asteroide Apófis."
+      }
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Up close, the spacecraft itself: the 3D model published by NASA, a representative model that this project has not checked against engineering drawings. Its size here is a presentation scale, not the real one. Turn it with the mouse, a finger or the arrow keys, then close it (Escape or the button) to continue the tour.",
+        "fr": "De près, l’engin lui-même : le modèle 3D publié par la NASA, un modèle représentatif que ce projet n’a pas vérifié sur des plans d’ingénierie. Sa taille est ici une échelle de présentation, pas la vraie. Faites-le tourner à la souris, au doigt ou aux flèches, puis fermez-le (Échap ou le bouton) pour reprendre la visite.",
+        "es": "De cerca, la nave misma: el modelo 3D publicado por la NASA, un modelo representativo que este proyecto no ha comprobado con planos de ingeniería. Su tamaño aquí es una escala de presentación, no la real. Gírelo con el ratón, con el dedo o con las flechas, y ciérrelo (Escape o el botón) para seguir la visita.",
+        "pt-BR": "De perto, a própria nave: o modelo 3D publicado pela NASA, um modelo representativo que este projeto não verificou em plantas de engenharia. O tamanho aqui é uma escala de apresentação, não o real. Gire-o com o mouse, o dedo ou as setas e feche-o (Esc ou o botão) para continuar a visita."
+      }
+    },
+    {
+      "kind": "inspectCraft",
+      "craft": "osiris-rex"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "What this tour measured and what it represented: the instants and distances come from the Horizons trajectory, including the six seconds of contact; Bennu’s form and surface from the mission itself; the operations (burn, site, capsule) are NASA’s account, named as such.",
+        "fr": "Ce que cette visite a mesuré et ce qu’elle a représenté : les instants et les distances viennent de la trajectoire d’Horizons, y compris les six secondes de contact ; la forme et la surface de Bennu, de la mission elle-même ; les opérations (poussée, site, capsule) sont le récit de la NASA, nommé comme tel.",
+        "es": "Lo que esta visita midió y lo que representó: los instantes y las distancias vienen de la trayectoria de Horizons, incluidos los seis segundos de contacto; la forma y la superficie de Bennu, de la propia misión; las operaciones (encendido, lugar, cápsula) son el relato de la NASA, citado como tal.",
+        "pt-BR": "O que esta visita mediu e o que representou: os instantes e as distâncias vêm da trajetória do Horizons, incluindo os seis segundos de contato; a forma e a superfície de Bennu, da própria missão; as operações (queima, local, cápsula) são o relato da NASA, citado como tal."
+      }
+    }
+  ]
+}

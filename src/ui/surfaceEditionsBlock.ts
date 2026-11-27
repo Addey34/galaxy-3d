@@ -1,6 +1,6 @@
 /**
  * LES OBSERVATIONS DE L'ATMOSPHÈRE D'UN CORPS (GAL-ATMOSPHERES-001), dans le morceau des blocs de fiche : il
- * n'agit pas avant qu'une fiche existe, et le catalogue des éditions (`virtual:surface-editions`, dérivé des
+ * n'agit pas avant qu'une fiche existe, et le catalogue des éditions (`virtual:surface-edition-catalogue`, dérivé des
  * fiches du registre) voyage avec lui, jamais au démarrage.
  *
  * Le visiteur choisit une observation datée (un groupe de boutons radio, au clavier par les flèches) et
@@ -15,7 +15,7 @@
  * l'édition par défaut revient : la scène reste celle que la fiche décrit.
  */
 import './surfaceEditionsBlock.css';
-import surfaceEditions from 'virtual:surface-editions';
+import surfaceEditions from 'virtual:surface-edition-catalogue';
 
 import { texturePath } from '@/config/catalog';
 import { formatIsoDay } from '@/core/dateText';

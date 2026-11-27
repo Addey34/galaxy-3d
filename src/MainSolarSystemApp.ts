@@ -344,8 +344,8 @@ function wireChrome(): {
 
     // L'inspection 3D d'un engin (GAL-OBJECT-IMMERSION-001) : chargée au premier bouton, jamais au démarrage.
     let craft: Promise<CraftInspector> | null = null;
-    const openCraft: CraftOpener = (id, opener) => {
-      void (craft ??= import('./ui/craftInspector')
+    const openCraft: CraftOpener = (id, opener) =>
+      (craft ??= import('./ui/craftInspector')
         .then((m) =>
           m.setupCraftInspector({
             animation: api.animationSystem,
@@ -356,8 +356,10 @@ function wireChrome(): {
         .catch((error: unknown) => {
           craft = null;
           throw error;
-        })).then((view) => view.open(id, opener));
-    };
+        })).then((view) => {
+        view.open(id, opener);
+        return view.isOpen;
+      });
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
@@ -967,7 +969,8 @@ function wireChrome(): {
       surfacePanel,
       placeDive,
       overlayCoordinator,
-      playback
+      playback,
+      { openCraft, scene: sceneSystem }
     );
     hideLoader();
     // La visite demandée remplace la découverte de premier passage, qui se superposerait à elle.

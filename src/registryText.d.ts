@@ -59,7 +59,7 @@ declare module 'virtual:tour-catalogue' {
 
 // Les éditions datées des surfaces (GAL-ATMOSPHERES-001), dérivées des fiches par le greffon ; lues par
 // le bloc des observations de la fiche, chargé à la demande.
-declare module 'virtual:surface-editions' {
+declare module 'virtual:surface-edition-catalogue' {
   import type { BodySurfaceEditions } from '@/core/surfaceEditions';
   const editions: Readonly<Record<string, BodySurfaceEditions>>;
   export default editions;

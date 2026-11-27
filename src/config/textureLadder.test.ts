@@ -11,7 +11,7 @@ import {
   tierForSourceWidth,
 } from '@/core/textureLadder';
 import { textureReviews } from '@/registry/products';
-import surfaceEditions from 'virtual:surface-editions';
+import surfaceEditions from 'virtual:surface-edition-catalogue';
 import { allBodies } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import { SMALL_BODIES } from './smallBodies';

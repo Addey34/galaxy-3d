@@ -1,0 +1,193 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "voyager2-giants",
+  "title": {
+    "en": "Voyager 2: the four giants",
+    "fr": "Voyager 2, les quatre géantes",
+    "es": "Voyager 2, los cuatro gigantes",
+    "pt-BR": "Voyager 2, os quatro gigantes"
+  },
+  "steps": [
+    {
+      "kind": "setMode",
+      "mode": "explo"
+    },
+    {
+      "kind": "setTimeScale",
+      "scale": 1
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Voyager 2 left Earth on 20 August 1977. A planetary alignment that recurs about every 175 years let it fly past Jupiter, Saturn, Uranus and Neptune in turn, and it is still the only spacecraft to have visited the last two (NASA). Each stop of this tour is the instant of closest approach computed from its JPL Horizons trajectory.",
+        "fr": "Voyager 2 a quitté la Terre le 20 août 1977. Un alignement des planètes qui revient environ tous les 175 ans lui a permis de survoler tour à tour Jupiter, Saturne, Uranus et Neptune, et elle reste le seul engin à avoir visité les deux dernières (NASA). Chaque arrêt de cette visite est l’instant du plus près calculé sur sa trajectoire de JPL Horizons.",
+        "es": "La Voyager 2 salió de la Tierra el 20 de agosto de 1977. Una alineación de los planetas que se repite cada 175 años aproximadamente le permitió sobrevolar por turno Júpiter, Saturno, Urano y Neptuno, y sigue siendo la única nave que ha visitado los dos últimos (NASA). Cada parada de esta visita es el instante de máximo acercamiento calculado sobre su trayectoria de JPL Horizons.",
+        "pt-BR": "A Voyager 2 deixou a Terra em 20 de agosto de 1977. Um alinhamento dos planetas que se repete a cada 175 anos, aproximadamente, permitiu-lhe sobrevoar sucessivamente Júpiter, Saturno, Urano e Netuno, e ela continua sendo a única nave a ter visitado os dois últimos (NASA). Cada parada desta visita é o instante de maior aproximação calculado na sua trajetória do JPL Horizons."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "1979-07-09T22:29:01Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "jupiter",
+      "from": "voyager2",
+      "distanceRadii": 10.1
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "9 July 1979, 22:29:01 UTC: Jupiter, 721,375 km from its centre, passed at 20.2 km/s relative to the planet. The camera is placed at that distance, in the direction of the probe. The planet’s gravity bends the trajectory: this is the gravity assist that sends Voyager 2 on to Saturn.",
+        "fr": "9 juillet 1979, 22:29:01 UTC : Jupiter, à 721 375 km de son centre, frôlée à 20,2 km/s par rapport à la planète. La caméra est placée à cette distance, dans la direction de la sonde. La gravité de la planète courbe la trajectoire : c’est l’assistance gravitationnelle qui envoie Voyager 2 vers Saturne.",
+        "es": "9 de julio de 1979, 22:29:01 UTC: Júpiter, a 721 375 km de su centro, rozado a 20,2 km/s respecto al planeta. La cámara se coloca a esa distancia, en la dirección de la sonda. La gravedad del planeta curva la trayectoria: es la asistencia gravitatoria que envía a la Voyager 2 hacia Saturno.",
+        "pt-BR": "9 de julho de 1979, 22:29:01 UTC: Júpiter, a 721 375 km do seu centro, sobrevoado a 20,2 km/s em relação ao planeta. A câmera é colocada a essa distância, na direção da sonda. A gravidade do planeta curva a trajetória: é a assistência gravitacional que envia a Voyager 2 para Saturno."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "1981-08-26T03:24:05Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "saturn",
+      "from": "voyager2",
+      "distanceRadii": 2.67
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "26 August 1981, 03:24:05 UTC: Saturn, 160,691 km from its centre, at 24.2 km/s. Voyager 1 had passed nine and a half months earlier, 184,030 km from the centre (Horizons, 12 November 1980). The camera stands at the probe’s distance, 2.67 Saturn radii.",
+        "fr": "26 août 1981, 03:24:05 UTC : Saturne, à 160 691 km de son centre, à 24,2 km/s. Voyager 1 était passée neuf mois et demi plus tôt, à 184 030 km du centre (Horizons, 12 novembre 1980). La caméra se tient à la distance de la sonde, 2,67 rayons de Saturne.",
+        "es": "26 de agosto de 1981, 03:24:05 UTC: Saturno, a 160 691 km de su centro, a 24,2 km/s. La Voyager 1 había pasado nueve meses y medio antes, a 184 030 km del centro (Horizons, 12 de noviembre de 1980). La cámara se sitúa a la distancia de la sonda, 2,67 radios de Saturno.",
+        "pt-BR": "26 de agosto de 1981, 03:24:05 UTC: Saturno, a 160 691 km do seu centro, a 24,2 km/s. A Voyager 1 tinha passado nove meses e meio antes, a 184 030 km do centro (Horizons, 12 de novembro de 1980). A câmera fica à distância da sonda, 2,67 raios de Saturno."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "1986-01-24T17:58:51Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "uranus",
+      "from": "voyager2",
+      "distanceRadii": 4.19
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "24 January 1986, 17:58:51 UTC: Uranus, 107,154 km from its centre, at 18.0 km/s. Seen from the direction of the probe at this instant, the planet is a thin crescent: Voyager 2 is passing over its night side.",
+        "fr": "24 janvier 1986, 17:58:51 UTC : Uranus, à 107 154 km de son centre, à 18,0 km/s. Vue depuis la direction de la sonde à cet instant, la planète est un mince croissant : Voyager 2 passe au-dessus de sa face de nuit.",
+        "es": "24 de enero de 1986, 17:58:51 UTC: Urano, a 107 154 km de su centro, a 18,0 km/s. Visto desde la dirección de la sonda en ese instante, el planeta es una fina media luna: la Voyager 2 pasa sobre su cara nocturna.",
+        "pt-BR": "24 de janeiro de 1986, 17:58:51 UTC: Urano, a 107 154 km do seu centro, a 18,0 km/s. Visto da direção da sonda nesse instante, o planeta é um fino crescente: a Voyager 2 passa sobre o seu lado noturno."
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "uranus",
+      "from": "earth",
+      "distanceRadii": 4
+    },
+    {
+      "kind": "setEdition",
+      "body": "uranus",
+      "edition": "opal_2015a"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "The same planet seen from the direction of Earth, where Hubble observes it. The disc shown is not what Voyager 2 saw: it is a Hubble map (OPAL programme) from 12 September 2015, nearly 30 years later, the oldest of the observations Galaxy carries for Uranus.",
+        "fr": "La même planète vue depuis la direction de la Terre, d’où Hubble l’observe. Le disque affiché n’est pas ce qu’a vu Voyager 2 : c’est une carte de Hubble (programme OPAL) du 12 septembre 2015, près de 30 ans plus tard, la plus ancienne des observations d’Uranus que Galaxy embarque.",
+        "es": "El mismo planeta visto desde la dirección de la Tierra, desde donde lo observa el Hubble. El disco que se ve no es lo que vio la Voyager 2: es un mapa del Hubble (programa OPAL) del 12 de septiembre de 2015, casi 30 años después, la más antigua de las observaciones de Urano que lleva Galaxy.",
+        "pt-BR": "O mesmo planeta visto da direção da Terra, de onde o Hubble o observa. O disco exibido não é o que a Voyager 2 viu: é um mapa do Hubble (programa OPAL) de 12 de setembro de 2015, quase 30 anos depois, a mais antiga das observações de Urano que o Galaxy traz."
+      }
+    },
+    {
+      "kind": "jumpToDate",
+      "date": {
+        "$date": "1989-08-25T03:55:40Z"
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "neptune",
+      "from": "voyager2",
+      "distanceRadii": 1.5
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "25 August 1989, 03:55:40 UTC: Neptune, 29,236 km from its centre, at 27.3 km/s, the closest of the four passes. The camera stays farther away, at 1.5 radii, in the direction of the probe: from there Neptune shows almost only its night side.",
+        "fr": "25 août 1989, 03:55:40 UTC : Neptune, à 29 236 km de son centre, à 27,3 km/s, le plus proche des quatre passages. La caméra reste plus loin, à 1,5 rayon, dans la direction de la sonde : de là, Neptune ne montre presque que sa face de nuit.",
+        "es": "25 de agosto de 1989, 03:55:40 UTC: Neptuno, a 29 236 km de su centro, a 27,3 km/s, el más cercano de los cuatro pasos. La cámara se queda más lejos, a 1,5 radios, en la dirección de la sonda: desde allí Neptuno muestra casi solo su cara nocturna.",
+        "pt-BR": "25 de agosto de 1989, 03:55:40 UTC: Netuno, a 29 236 km do seu centro, a 27,3 km/s, a mais próxima das quatro passagens. A câmera fica mais longe, a 1,5 raio, na direção da sonda: dali Netuno mostra quase só o seu lado noturno."
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "neptune",
+      "from": "earth",
+      "distanceRadii": 4
+    },
+    {
+      "kind": "setEdition",
+      "body": "neptune",
+      "edition": "opal_2015a"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Seen from the direction of Earth. Voyager 2 photographed a storm on Neptune, the Great Dark Spot, which was gone in Hubble’s 1994 images (NASA). The map shown, taken by Hubble on 18 September 2015, does not have it: it is not a view from 1989.",
+        "fr": "Vue depuis la direction de la Terre. Voyager 2 a photographié une tempête sur Neptune, la Grande Tache sombre, qui avait disparu des images de Hubble en 1994 (NASA). La carte affichée, prise par Hubble le 18 septembre 2015, ne la montre pas : ce n’est pas une vue de 1989.",
+        "es": "Visto desde la dirección de la Tierra. La Voyager 2 fotografió una tormenta en Neptuno, la Gran Mancha Oscura, que ya no aparecía en las imágenes del Hubble de 1994 (NASA). El mapa que se ve, tomado por el Hubble el 18 de septiembre de 2015, no la muestra: no es una vista de 1989.",
+        "pt-BR": "Visto da direção da Terra. A Voyager 2 fotografou uma tempestade em Netuno, a Grande Mancha Escura, que já tinha desaparecido das imagens do Hubble em 1994 (NASA). O mapa exibido, feito pelo Hubble em 18 de setembro de 2015, não a mostra: não é uma vista de 1989."
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "triton"
+    },
+    {
+      "kind": "diveTo",
+      "place": "Hili",
+      "frameKm": 900
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Triton, Neptune’s largest moon. Here the surface does come from the mission: a mosaic assembled from Voyager 2 images taken between June and September 1989, in false colour, its gaps filled. Hili is one of the two features on Triton that the IAU classifies as plumes. Triton’s rotation is not dated in the scene: the light on this place is not that of 1989.",
+        "fr": "Triton, la plus grande lune de Neptune. Ici, la surface vient bien de la mission : une mosaïque assemblée à partir d’images de Voyager 2 prises entre juin et septembre 1989, en fausses couleurs, ses lacunes comblées. Hili est l’une des deux formations de Triton que l’UAI classe comme panaches. La rotation de Triton n’est pas datée dans la scène : la lumière sur ce lieu n’est pas celle de 1989.",
+        "es": "Tritón, la mayor luna de Neptuno. Aquí la superficie sí viene de la misión: un mosaico montado con imágenes de la Voyager 2 tomadas entre junio y septiembre de 1989, en falso color, con sus huecos rellenados. Hili es una de las dos formaciones de Tritón que la UAI clasifica como penachos. La rotación de Tritón no está fechada en la escena: la luz sobre este lugar no es la de 1989.",
+        "pt-BR": "Tritão, a maior lua de Netuno. Aqui a superfície vem, sim, da missão: um mosaico montado com imagens da Voyager 2 feitas entre junho e setembro de 1989, em cores falsas, com as lacunas preenchidas. Hili é uma das duas formações de Tritão que a UAI classifica como plumas. A rotação de Tritão não é datada na cena: a luz sobre este lugar não é a de 1989."
+      }
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Up close, the spacecraft itself: the 3D model published by NASA, a representative model that this project has not checked against engineering drawings. Its size here is a presentation scale, not the real one. Turn it with the mouse, a finger or the arrow keys, then close it (Escape or the button) to continue the tour.",
+        "fr": "De près, l’engin lui-même : le modèle 3D publié par la NASA, un modèle représentatif que ce projet n’a pas vérifié sur des plans d’ingénierie. Sa taille est ici une échelle de présentation, pas la vraie. Faites-le tourner à la souris, au doigt ou aux flèches, puis fermez-le (Échap ou le bouton) pour reprendre la visite.",
+        "es": "De cerca, la nave misma: el modelo 3D publicado por la NASA, un modelo representativo que este proyecto no ha comprobado con planos de ingeniería. Su tamaño aquí es una escala de presentación, no la real. Gírelo con el ratón, con el dedo o con las flechas, y ciérrelo (Escape o el botón) para seguir la visita.",
+        "pt-BR": "De perto, a própria nave: o modelo 3D publicado pela NASA, um modelo representativo que este projeto não verificou em plantas de engenharia. O tamanho aqui é uma escala de apresentação, não o real. Gire-o com o mouse, o dedo ou as setas e feche-o (Esc ou o botão) para continuar a visita."
+      }
+    },
+    {
+      "kind": "inspectCraft",
+      "craft": "voyager2"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "What this tour measured and what it represented: the instants, distances and speeds come from the Horizons trajectories; the camera directions from the probe’s position computed between those states; the giants’ clouds from dated Hubble maps, never from 1979 to 1989; Triton’s surface from Voyager 2 itself.",
+        "fr": "Ce que cette visite a mesuré et ce qu’elle a représenté : les instants, les distances et les vitesses viennent des trajectoires d’Horizons ; les directions de la caméra, de la position de la sonde calculée entre ces états ; les nuages des géantes, de cartes datées de Hubble, jamais de 1979 à 1989 ; la surface de Triton, de Voyager 2 elle-même.",
+        "es": "Lo que esta visita midió y lo que representó: los instantes, las distancias y las velocidades vienen de las trayectorias de Horizons; las direcciones de la cámara, de la posición de la sonda calculada entre esos estados; las nubes de los gigantes, de mapas fechados del Hubble, nunca de 1979 a 1989; la superficie de Tritón, de la propia Voyager 2.",
+        "pt-BR": "O que esta visita mediu e o que representou: os instantes, as distâncias e as velocidades vêm das trajetórias do Horizons; as direções da câmera, da posição da sonda calculada entre esses estados; as nuvens dos gigantes, de mapas datados do Hubble, nunca de 1979 a 1989; a superfície de Tritão, da própria Voyager 2."
+      }
+    }
+  ]
+}
