@@ -123,6 +123,8 @@ export function setupSkyLayerToggles(
         ...host,
         coordinator: environment.coordinator,
         simulationDate: environment.simulationDate,
+        // Une étoile du volume étendu qui héberge des exoplanètes mène à leur exploration (GAL-UNIVERSE-008).
+        openSystem: (name: string) => openSystem(name),
       })
     )).then((view) => {
       if (view) view.open(focus, fromAddress, visit);

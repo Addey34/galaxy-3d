@@ -40,6 +40,7 @@
     "exoplanets:generate": "node scripts/generate-exoplanets.mjs",
     "exoplanets:systems": "node scripts/generate-exoplanet-systems.mjs",
     "neighbours:generate": "node scripts/generate-neighbours.mjs",
+    "stellar:volume": "node scripts/generate-stellar-volume.mjs",
     "deepsky:generate": "node scripts/generate-deepsky.mjs",
     "meteors:generate": "node scripts/generate-meteors.mjs",
     "shapes:generate": "node scripts/generate-shape-models.mjs",

@@ -635,6 +635,73 @@ export const cardEn = {
   'ed.loading': 'Loading the observation of {date}…',
   'ed.unavailable':
     'The observation of {date} could not be loaded: the one of {shown} stays on screen.',
+  'vol.heading': 'Explore farther',
+  'vol.scaleButton': '{pc} pc',
+  'vol.scaleLabel':
+    '{pc} pc: show the stars up to {pc} parsecs ({ly} light-years)',
+  'vol.neighbourhoodOnly':
+    'The 61 stars within 5 pc. Choose a larger scale to load the Gaia catalogue of nearby stars.',
+  'vol.loading': 'Loading the stars up to {pc} pc…',
+  'vol.loaded':
+    '{count} stars shown up to {pc} pc, beyond the 5 pc neighbourhood.',
+  'vol.failed':
+    'The stars beyond 5 pc could not all be loaded: the view stays at {pc} pc.',
+  'vol.coverage':
+    'Gaia Catalogue of Nearby Stars (Gaia EDR3, 2021): the objects whose median distance is within 100 pc. It is not every star: the faintest objects are missing, and the brightest, too bright for Gaia, come from Hipparcos.',
+  'vol.filter': 'Show',
+  'vol.filter.all': 'All the stars',
+  'vol.filter.whiteDwarfs': 'Probable white dwarfs',
+  'vol.filter.exoplanetHosts': 'Exoplanet hosts',
+  'vol.filter.radialVelocity': 'With a published radial velocity',
+  'vol.search': 'Find a named star',
+  'vol.searchPlaceholder': 'Vega, 51 Peg, HD 10700…',
+  'vol.searchNone': 'No named star matches.',
+  'vol.gaiaName': 'Gaia DR3 {id}',
+  'vol.unnamed': 'Star no. {n} of the volume',
+  'vol.distanceGcns':
+    '{pc} pc ({ly} ly): median of the GCNS distance distribution, 68 % between {lo} and {hi} pc',
+  'vol.distanceRel': '{pc} pc ({ly} ly), ±{pct} % (GCNS)',
+  'vol.distancePlain': '{pc} pc ({ly} ly)',
+  'vol.distanceHyg': '{pc} pc ({ly} ly), from the Hipparcos parallax',
+  'vol.distanceSimbad': '{pc} pc ({ly} ly), from the parallax listed by SIMBAD',
+  'vol.magnitude': 'Apparent magnitude',
+  'vol.magG': 'G = {m} (Gaia)',
+  'vol.magV': 'V = {m} (Hipparcos)',
+  'vol.absMagnitude': 'Absolute magnitude',
+  'vol.absMagValue': '{m}, computed from the distance, without extinction',
+  'vol.colour': 'Colour index',
+  'vol.colourBpRp': 'BP−RP = {c} (Gaia)',
+  'vol.colourBV': 'B−V = {c} (Hipparcos)',
+  'vol.notPublished': 'not published by the source',
+  'vol.parallax': 'Parallax',
+  'vol.parallaxValue': '{p} ± {e} mas',
+  'vol.parallaxPlain': '{p} mas',
+  'vol.tangential': 'Speed across the line of sight',
+  'vol.tangentialValue':
+    '{v} km/s, computed from the proper motion and the distance',
+  'vol.radial': 'Radial velocity',
+  'vol.radialValue': '{v} ± {e} km/s (published)',
+  'vol.radialPlain': '{v} km/s (published)',
+  'vol.quality': 'Astrometry',
+  'vol.qualityValue':
+    'RUWE {ruwe}; reliable with a probability of {p} % (GCNS)',
+  'vol.whiteDwarf': 'White dwarf',
+  'vol.whiteDwarfValue': 'probability {p} % (GCNS)',
+  'vol.exoplanets': 'Exoplanets',
+  'vol.exoplanetsValue':
+    '{count} known around {host} (NASA Exoplanet Archive, matched by the Gaia DR3 number)',
+  'vol.origin.gcns': 'Gaia DR3 {id}, in the Gaia Catalogue of Nearby Stars.',
+  'vol.origin.hyg':
+    'Too bright for Gaia, listed by the GCNS as missing from EDR3: Hipparcos values (HYG v4.4).',
+  'vol.origin.simbad':
+    'Missing from Gaia EDR3 (GCNS list) and not found in Hipparcos: position and parallax from SIMBAD only; magnitude, colour and motion are not available here.',
+  'vol.noRadial':
+    'No radial velocity is published: when time moves, the motion shown is across the line of sight only.',
+  'vol.noMotion':
+    'This star does not move with time here: its motion is not in the source.',
+  'vol.symbolic':
+    'Beyond 5 pc, each star is a small point: its brightness follows its absolute magnitude and its colour is indicative (from the colour index), never a spectral type.',
+  'vol.unknownStar': 'The star of this link is not in the stellar volume.',
   'ed.announce': 'Observation of {date} shown',
 };
 

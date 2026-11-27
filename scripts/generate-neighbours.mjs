@@ -72,7 +72,7 @@ const ALPHA_CEN = ['Rigil Kentaurus', 'Toliman'];
 
 const LY_PER_PC = 3.261563777;
 
-function parseCsv(text) {
+export function parseCsv(text) {
   const rows = [];
   let row = [];
   let field = '';

@@ -618,5 +618,73 @@ export const cardEs: Record<CardMessageKey, string> = {
   'ed.loading': 'Cargando la observación del {date}…',
   'ed.unavailable':
     'No se pudo cargar la observación del {date}: la del {shown} sigue en pantalla.',
+  'vol.heading': 'Explorar más lejos',
+  'vol.scaleButton': '{pc} pc',
+  'vol.scaleLabel':
+    '{pc} pc: mostrar las estrellas hasta {pc} pársecs ({ly} años luz)',
+  'vol.neighbourhoodOnly':
+    'Las 61 estrellas a menos de 5 pc. Elija una escala mayor para cargar el catálogo Gaia de estrellas cercanas.',
+  'vol.loading': 'Cargando las estrellas hasta {pc} pc…',
+  'vol.loaded':
+    '{count} estrellas mostradas hasta {pc} pc, más allá de la vecindad de 5 pc.',
+  'vol.failed':
+    'No se pudieron cargar todas las estrellas más allá de 5 pc: la vista se queda en {pc} pc.',
+  'vol.coverage':
+    'Gaia Catalogue of Nearby Stars (Gaia EDR3, 2021): los objetos cuya distancia mediana es de 100 pc o menos. No son todas las estrellas: faltan los objetos más débiles, y las más brillantes, demasiado luminosas para Gaia, vienen de Hipparcos.',
+  'vol.filter': 'Mostrar',
+  'vol.filter.all': 'Todas las estrellas',
+  'vol.filter.whiteDwarfs': 'Enanas blancas probables',
+  'vol.filter.exoplanetHosts': 'Anfitrionas de exoplanetas',
+  'vol.filter.radialVelocity': 'Con una velocidad radial publicada',
+  'vol.search': 'Buscar una estrella con nombre',
+  'vol.searchPlaceholder': 'Vega, 51 Peg, HD 10700…',
+  'vol.searchNone': 'Ninguna estrella con nombre coincide.',
+  'vol.gaiaName': 'Gaia DR3 {id}',
+  'vol.unnamed': 'Estrella n.º {n} del volumen',
+  'vol.distanceGcns':
+    '{pc} pc ({ly} al): mediana de la distribución de distancia del GCNS, 68 % entre {lo} y {hi} pc',
+  'vol.distanceRel': '{pc} pc ({ly} al), ±{pct} % (GCNS)',
+  'vol.distancePlain': '{pc} pc ({ly} al)',
+  'vol.distanceHyg': '{pc} pc ({ly} al), según la paralaje de Hipparcos',
+  'vol.distanceSimbad': '{pc} pc ({ly} al), según la paralaje que da SIMBAD',
+  'vol.magnitude': 'Magnitud aparente',
+  'vol.magG': 'G = {m} (Gaia)',
+  'vol.magV': 'V = {m} (Hipparcos)',
+  'vol.absMagnitude': 'Magnitud absoluta',
+  'vol.absMagValue': '{m}, calculada a partir de la distancia, sin extinción',
+  'vol.colour': 'Índice de color',
+  'vol.colourBpRp': 'BP−RP = {c} (Gaia)',
+  'vol.colourBV': 'B−V = {c} (Hipparcos)',
+  'vol.notPublished': 'no publicado por la fuente',
+  'vol.parallax': 'Paralaje',
+  'vol.parallaxValue': '{p} ± {e} mas',
+  'vol.parallaxPlain': '{p} mas',
+  'vol.tangential': 'Velocidad perpendicular a la visual',
+  'vol.tangentialValue':
+    '{v} km/s, calculada a partir del movimiento propio y la distancia',
+  'vol.radial': 'Velocidad radial',
+  'vol.radialValue': '{v} ± {e} km/s (publicada)',
+  'vol.radialPlain': '{v} km/s (publicada)',
+  'vol.quality': 'Astrometría',
+  'vol.qualityValue':
+    'RUWE {ruwe}; fiable con una probabilidad del {p} % (GCNS)',
+  'vol.whiteDwarf': 'Enana blanca',
+  'vol.whiteDwarfValue': 'probabilidad {p} % (GCNS)',
+  'vol.exoplanets': 'Exoplanetas',
+  'vol.exoplanetsValue':
+    '{count} conocido(s) alrededor de {host} (NASA Exoplanet Archive, cruzado por el número Gaia DR3)',
+  'vol.origin.gcns': 'Gaia DR3 {id}, en el Gaia Catalogue of Nearby Stars.',
+  'vol.origin.hyg':
+    'Demasiado brillante para Gaia, listada por el GCNS como ausente de EDR3: valores de Hipparcos (HYG v4.4).',
+  'vol.origin.simbad':
+    'Ausente de Gaia EDR3 (lista del GCNS) y no encontrada en Hipparcos: solo posición y paralaje de SIMBAD; magnitud, color y movimiento no están disponibles aquí.',
+  'vol.noRadial':
+    'No se publica velocidad radial: al mover el tiempo, el movimiento mostrado es solo perpendicular a la visual.',
+  'vol.noMotion':
+    'Esta estrella no se mueve con el tiempo aquí: su movimiento no está en la fuente.',
+  'vol.symbolic':
+    'Más allá de 5 pc, cada estrella es un pequeño punto: su brillo sigue su magnitud absoluta y su color es indicativo (según el índice de color), nunca un tipo espectral.',
+  'vol.unknownStar':
+    'La estrella de este enlace no está en el volumen estelar.',
   'ed.announce': 'Observación del {date} mostrada',
 };

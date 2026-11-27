@@ -367,3 +367,57 @@ describe('l’adresse d’un système choisi dans le ciel (GAL-UNIVERSE-007)', (
     );
   });
 });
+
+describe('le volume étendu dans l’adresse (GAL-UNIVERSE-008)', () => {
+  it('lit `vol` (25, 50 ou 100) et ignore toute autre valeur', () => {
+    expect(parseStellarAddress('?view=neighbourhood&vol=50')?.vol).toBe(50);
+    expect(
+      parseStellarAddress('?view=neighbourhood&vol=5')?.vol
+    ).toBeUndefined();
+    expect(
+      parseStellarAddress('?view=neighbourhood&vol=75')?.vol
+    ).toBeUndefined();
+    expect(
+      parseStellarAddress('?view=neighbourhood&vol=abc')?.vol
+    ).toBeUndefined();
+  });
+
+  it('lit `vstar` quand il a la forme d’un jeton, et le dit (null) sinon', () => {
+    expect(
+      parseStellarAddress('?view=neighbourhood&vstar=129.vega')?.vstar
+    ).toBe('129.vega');
+    expect(
+      parseStellarAddress('?view=neighbourhood&vstar=8.5164707970261890560')
+        ?.vstar
+    ).toBe('8.5164707970261890560');
+    expect(
+      parseStellarAddress('?view=neighbourhood&vstar=vega')?.vstar
+    ).toBeNull();
+    expect(
+      parseStellarAddress('?view=neighbourhood&vstar=1.<script>')?.vstar
+    ).toBeNull();
+  });
+
+  it('sans la vue, `vol` et `vstar` ne signifient rien', () => {
+    expect(parseStellarAddress('?vol=100&vstar=129.vega')).toBeNull();
+  });
+
+  it('écrit `vol` et `vstar`, jamais 5 pc, et les efface avec la vue', () => {
+    const written = serializeStellarAddress('?body=earth', {
+      vol: 100,
+      vstar: '129.vega',
+    });
+    const params = new URLSearchParams(written);
+    expect(params.get('vol')).toBe('100');
+    expect(params.get('vstar')).toBe('129.vega');
+    expect(
+      new URLSearchParams(
+        serializeStellarAddress('?body=earth', { vol: 5 })
+      ).get('vol')
+    ).toBeNull();
+    const closed = new URLSearchParams(serializeStellarAddress(written, null));
+    expect(closed.get('vol')).toBeNull();
+    expect(closed.get('vstar')).toBeNull();
+    expect(closed.get('body')).toBe('earth');
+  });
+});

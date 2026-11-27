@@ -66,6 +66,18 @@ const UNTRANSLATABLE = [
  * d'exceptions qui couvre autre chose que ce qu'elle dit.
  */
 const IDENTICAL_TO_ENGLISH: Record<string, string> = {
+  // GAL-UNIVERSE-008 : symboles, unités et désignations de catalogue, les mêmes dans toutes les langues.
+  'vol.scaleButton': 'une distance et son unité (pc), sans mot',
+  'vol.gaiaName':
+    'désignation de catalogue (Gaia DR3 et un numéro), jamais traduite',
+  'vol.magG': 'symbole de bande (G), valeur et nom de mission',
+  'vol.magV': 'symbole de bande (V), valeur et nom de mission',
+  'vol.colourBpRp': 'indice de couleur (BP−RP), valeur et nom de mission',
+  'vol.colourBV': 'indice de couleur (B−V), valeur et nom de mission',
+  'vol.parallaxValue': 'une valeur, son incertitude et son unité (mas)',
+  'vol.parallaxPlain': 'une valeur et son unité (mas)',
+  'vol.searchPlaceholder':
+    'exemples de noms de catalogue (Vega, 51 Peg, HD 10700), seul le français écrit Véga',
   // Bornes de légende : un nombre et une unité du SI, rien à traduire.
   // « Transit » est aussi le terme français de la méthode de détection.
   'exo.method.transit': '« transit » est aussi le terme français',

@@ -102,8 +102,41 @@
   gap: var(--sp-1);
 }
 .sv-stage[hidden],
-.sv-skip[hidden] {
+.sv-skip[hidden],
+/* Une fiche cachée le reste : la règle `display: grid` de `.sv-card` l'emportait sur l'attribut (vu sur
+   téléphone : la fiche du voisinage restait au-dessus de celle d'une étoile du volume). */
+.sv-card[hidden],
+.sv-volume-tools[hidden],
+.sv-volume-coverage[hidden] {
   display: none;
+}
+
+/* Le volume étendu (GAL-UNIVERSE-008) : échelles, filtre, recherche. */
+.sv-volume {
+  display: grid;
+  gap: var(--sp-2);
+}
+.sv-volume-scales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.sv-volume-scale[aria-pressed='true'] {
+  border-color: var(--accent, #8cffb2);
+}
+.sv-volume-tools {
+  display: grid;
+  gap: var(--sp-1, 4px);
+}
+.sv-volume-filter,
+.sv-volume-search {
+  width: 100%;
+  min-height: 2.25rem;
+  box-sizing: border-box;
+}
+.sv-volume-results {
+  max-height: 12rem;
+  overflow-y: auto;
 }
 .sv-stage p {
   margin: 0;

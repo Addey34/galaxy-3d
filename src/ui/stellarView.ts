@@ -72,6 +72,8 @@ import {
   type MaskedElement,
 } from './stellarMask';
 import './stellarView.css';
+import { el, fact, fixed, number } from './stellarDom';
+import { createVolumePanel, type VolumePanel } from './stellarVolumePanel';
 
 export const NEIGHBOURS_URL = '/assets/sky/neighbours.json';
 /** Rayon de capture d'un clic ou d'un tap, en pixels. */
@@ -96,6 +98,11 @@ export interface StellarHost {
    * à l'arrivée. Absent ou nul : la direction d'ouverture.
    */
   gaze?: () => readonly [number, number, number] | null;
+  /**
+   * Ouvre l'exploration d'un hôte d'exoplanètes du ciel (`ui/systemView`, GAL-UNIVERSE-007) : la fiche
+   * d'une étoile du volume étendu qui en héberge y mène (GAL-UNIVERSE-008). Absent : pas de bouton.
+   */
+  openSystem?: (host: string) => void;
 }
 
 /**
@@ -140,38 +147,6 @@ export interface StellarView {
   readonly isOpen: boolean;
 }
 
-function number(value: number, digits: number): string {
-  return new Intl.NumberFormat(getLocale(), {
-    maximumSignificantDigits: digits,
-  }).format(value);
-}
-
-function fixed(value: number, digits: number): string {
-  return new Intl.NumberFormat(getLocale(), {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(value);
-}
-
-function el<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className?: string,
-  id?: string
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (id) node.id = id;
-  return node;
-}
-
-function fact(label: string, value: string): HTMLElement[] {
-  const dt = el('dt');
-  dt.textContent = label;
-  const dd = el('dd');
-  dd.textContent = value;
-  return [dt, dd];
-}
-
 export async function setupStellarView(
   host: StellarHost,
   fetchImpl: typeof fetch = fetch
@@ -209,6 +184,8 @@ export async function setupStellarView(
       step?: number;
       explore?: boolean;
       planet?: string | null;
+      vol?: number;
+      vstar?: string | null;
     } | null,
     how: 'push' | 'replace'
   ): void => {
@@ -232,6 +209,8 @@ export async function setupStellarView(
     const viewOnly = baseAddress !== null && solarNow() === baseAddress;
     // L'exploration d'un système suit l'historique comme la vue elle-même (GAL-UNIVERSE-006).
     if (opened && address) opened.followExplore(address);
+    // Le volume étendu suit l'historique comme le reste de l'observation (GAL-UNIVERSE-008).
+    if (opened && address) opened.followVolume(address);
     if (opened && !address) opened.close(true);
     else if (!opened && address) {
       open(undefined, true);
@@ -254,6 +233,10 @@ export async function setupStellarView(
     close(viaHistory?: boolean): void;
     /** Ouvre ou ferme l'exploration selon l'adresse ramenée par un Retour ou un Suivant. */
     followExplore(address: ReturnType<typeof parseStellarAddress>): void;
+    /** Échelle et étoile du volume étendu ramenées par un Retour ou un Suivant. */
+    followVolume(
+      address: NonNullable<ReturnType<typeof parseStellarAddress>>
+    ): void;
   }
 
   function open(focus?: string, fromAddress = false, visit = false): void {
@@ -303,6 +286,8 @@ export async function setupStellarView(
     const timeWindow = motionWindow(sceneYears, TIME_STEP_YEARS);
     let offsetYears = 0;
     let current = -1;
+    /** Le volume étendu (GAL-UNIVERSE-008) : créé une fois le cadrage prêt, plus bas. */
+    let volumePanel: VolumePanel | null = null;
 
     // ---- le DOM de la vue
     const root = el('section', 'stellar-view', 'stellar-view');
@@ -692,6 +677,7 @@ export async function setupStellarView(
             ? { visit: visitAddress.id, step: visitAddress.step }
             : {}),
           ...(exploring ? { explore: true, planet: exploredPlanet } : {}),
+          ...(volumePanel?.address() ?? {}),
         },
         'replace'
       );
@@ -717,6 +703,7 @@ export async function setupStellarView(
     time.addEventListener('input', () => {
       offsetYears = Number(time.value);
       scene.setYears(yearsNow());
+      volumePanel?.setYears(yearsNow());
       renderTime();
       renderCard();
       syncAddress();
@@ -796,6 +783,8 @@ export async function setupStellarView(
     function select(index: number, announce = true): void {
       current = index;
       scene.setSelected(index);
+      // Une étoile du voisinage et une étoile du volume ne sont jamais choisies ensemble.
+      if (index >= 0) volumePanel?.clearSelection();
       for (const b of Array.from(list.querySelectorAll('button')))
         b.setAttribute(
           'aria-pressed',
@@ -846,6 +835,18 @@ export async function setupStellarView(
         PICK_RADIUS_PX
       );
       if (index >= 0) select(index);
+      else {
+        // Les 61 voisines passent d'abord (points de 10 px) ; sinon l'étoile du volume la plus proche.
+        const v =
+          volumePanel?.pick(
+            event.clientX - rect.left,
+            event.clientY - rect.top,
+            rect.width,
+            rect.height,
+            PICK_RADIUS_PX
+          ) ?? -1;
+        if (v >= 0) void volumePanel?.select(v);
+      }
     };
     const wheel = (): void => endTransition();
     surface.addEventListener('pointerdown', down);
@@ -951,7 +952,10 @@ export async function setupStellarView(
     cleanups.push(
       onLocaleChange(() => {
         void loadDeferredMessages().then(() => {
-          if (opened === session) pointerRender();
+          if (opened === session) {
+            pointerRender();
+            volumePanel?.rerender();
+          }
         });
       })
     );
@@ -975,16 +979,23 @@ export async function setupStellarView(
       renderField();
       scene.render(host.renderer);
       updateLabels();
+      volumePanel?.frame(window.innerWidth, window.innerHeight);
     });
 
     // ---- la visite guidée : un morceau à part, chargé au premier usage, qui ne touche la vue que par ce contrôleur
     const closers: Array<() => void> = [];
     let archive: Promise<ExoplanetFile | null> | null = null;
-    const frameOn = (index: number, distancePc: number): void => {
-      endTransition();
-      const target = new THREE.Vector3(
-        ...(index >= 0 ? scene.positionOf(index) : [0, 0, 0])
+    const frameOn = (index: number, distancePc: number): void =>
+      frameOnPoint(
+        index >= 0 ? scene.positionOf(index) : [0, 0, 0],
+        distancePc
       );
+    const frameOnPoint = (
+      point: readonly [number, number, number],
+      distancePc: number
+    ): void => {
+      endTransition();
+      const target = new THREE.Vector3(...point);
       const offset = scene.camera.position.clone().sub(controls.target);
       if (offset.lengthSq() < 1e-12) offset.set(...homeDir);
       offset.setLength(distancePc);
@@ -1019,6 +1030,44 @@ export async function setupStellarView(
       scene.fitClipping(scene.camera.position.distanceTo(controls.target));
       if (p >= 1) glide = null;
     };
+
+    // ---- le volume étendu (GAL-UNIVERSE-008) : commandes, fiche, données à la demande
+    volumePanel = createVolumePanel({
+      scene,
+      controls,
+      renderer: host.renderer,
+      side,
+      systemCard: card,
+      labels,
+      yearsFromJ2000: yearsNow,
+      deselectSystem: () => {
+        if (current >= 0) select(-1, false);
+      },
+      frameOn: frameOnPoint,
+      syncAddress: () => syncAddress(),
+      layout: () => layout(),
+      ...(host.openSystem
+        ? {
+            openSystem: (name: string) => {
+              // Fermer la vue d'abord : son entrée d'historique est retirée par un « Retour », asynchrone.
+              // L'exploration ne s'ouvre qu'une fois ce Retour arrivé, sinon il retirerait SON entrée.
+              const viaBack = pushed;
+              session.close();
+              if (viaBack)
+                window.addEventListener(
+                  'popstate',
+                  () => host.openSystem?.(name),
+                  { once: true }
+                );
+              else host.openSystem?.(name);
+            },
+          }
+        : {}),
+    });
+    closers.push(() => {
+      volumePanel?.dispose();
+      volumePanel = null;
+    });
     const controller: VisitController = {
       systems,
       root,
@@ -1189,6 +1238,12 @@ export async function setupStellarView(
       cleanups,
       inert,
       opener,
+      followVolume(address) {
+        void volumePanel?.applyAddress({
+          ...(address.vol ? { vol: address.vol } : {}),
+          ...(address.vstar ? { vstar: address.vstar } : {}),
+        });
+      },
       followExplore(address) {
         if (!address) return;
         if (exploring && !address.explore) exploring.close(true);
@@ -1278,6 +1333,14 @@ export async function setupStellarView(
     }
     addressLive = true;
     getAnnouncer().announce(t('st.opened', { n: String(systems.length) }));
+    // Le volume étendu demandé par l'adresse (`vol=`, `vstar=`) : chargé seulement alors.
+    if (requested?.vstar === null)
+      getAnnouncer().announce(t('vol.unknownStar'));
+    if (requested && (requested.vol || requested.vstar))
+      void volumePanel?.applyAddress({
+        ...(requested.vol ? { vol: requested.vol } : {}),
+        ...(requested.vstar ? { vstar: requested.vstar } : {}),
+      });
     // La visite demandée par l'adresse (`visit=` et `step=`) ou par le bouton des réglages : elle fixe l'étoile
     // et le temps de chaque étape, donc elle passe après la mise en place de l'adresse.
     if (requested?.visit !== undefined && requested.visit !== null)

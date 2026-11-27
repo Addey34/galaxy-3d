@@ -44,7 +44,15 @@ export const STELLAR_KEYS = [
   'explore',
   'planet',
   'host',
+  'vol',
+  'vstar',
 ] as const;
+
+/** Les échelles du volume étendu qu'une adresse peut demander (GAL-UNIVERSE-008) ; 5 pc n'est pas écrit. */
+export const VOLUME_ADDRESS_SCALES = [25, 50, 100] as const;
+
+/** Le jeton d'une étoile du volume : rang global, puis identifiant Gaia DR3 ou nom normalisé. */
+const VOLUME_STAR_SHAPE = /^\d{1,7}\.[a-z0-9]+(-[a-z0-9]+)*$/;
 
 /** La valeur de `view` pour un système choisi dans le CIEL (GAL-UNIVERSE-007). */
 export const SYSTEM_VIEW_VALUE = 'system';
@@ -81,6 +89,13 @@ export interface StellarAddress {
    * d'un identifiant (l'appelant le dit). Lue seulement avec `explore`.
    */
   planet?: string | null;
+  /** L'échelle du volume étendu (25, 50 ou 100 pc), ou `undefined` (le voisinage à 5 pc). */
+  vol?: number;
+  /**
+   * L'étoile du volume choisie, telle qu'elle est écrite ; `null` quand elle n'a pas la FORME d'un jeton
+   * (l'appelant le dit). Le rang du jeton est VÉRIFIÉ par l'identifiant qu'il porte (`ui/stellarVolumePanel`).
+   */
+  vstar?: string | null;
 }
 
 /**
@@ -152,6 +167,20 @@ export function parseStellarAddress(search: string): StellarAddress | null {
           : null;
     }
   }
+  const vol = params.get('vol');
+  if (
+    vol !== null &&
+    (VOLUME_ADDRESS_SCALES as readonly number[]).includes(Number(vol))
+  )
+    address.vol = Number(vol);
+  const vstar = params.get('vstar');
+  if (vstar !== null) {
+    const wanted = vstar.trim().toLowerCase();
+    address.vstar =
+      wanted.length <= MAX_STAR_LENGTH + 8 && VOLUME_STAR_SHAPE.test(wanted)
+        ? wanted
+        : null;
+  }
   return address;
 }
 
@@ -169,6 +198,8 @@ export function serializeStellarAddress(
     step?: number;
     explore?: boolean;
     planet?: string | null;
+    vol?: number;
+    vstar?: string | null;
   } | null
 ): string {
   const params = new URLSearchParams(search);
@@ -188,6 +219,12 @@ export function serializeStellarAddress(
       params.set('explore', '1');
       if (address.planet) params.set('planet', address.planet);
     }
+    if (
+      address.vol &&
+      (VOLUME_ADDRESS_SCALES as readonly number[]).includes(address.vol)
+    )
+      params.set('vol', String(address.vol));
+    if (address.vstar) params.set('vstar', address.vstar);
   }
   const query = params.toString();
   return query ? `?${query}` : '';

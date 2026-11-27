@@ -620,5 +620,73 @@ export const cardFr: Record<CardMessageKey, string> = {
   'ed.loading': 'Chargement de l’observation du {date}…',
   'ed.unavailable':
     'L’observation du {date} n’a pas pu être chargée : celle du {shown} reste affichée.',
+  'vol.heading': 'Explorer plus loin',
+  'vol.scaleButton': '{pc} pc',
+  'vol.scaleLabel':
+    '{pc} pc : montrer les étoiles jusqu’à {pc} parsecs ({ly} années-lumière)',
+  'vol.neighbourhoodOnly':
+    'Les 61 étoiles à moins de 5 pc. Choisissez une échelle plus grande pour charger le catalogue Gaia des étoiles proches.',
+  'vol.loading': 'Chargement des étoiles jusqu’à {pc} pc…',
+  'vol.loaded':
+    '{count} étoiles montrées jusqu’à {pc} pc, au-delà du voisinage à 5 pc.',
+  'vol.failed':
+    'Les étoiles au-delà de 5 pc n’ont pas toutes pu être chargées : la vue reste à {pc} pc.',
+  'vol.coverage':
+    'Gaia Catalogue of Nearby Stars (Gaia EDR3, 2021) : les objets dont la distance médiane est à 100 pc ou moins. Ce ne sont pas toutes les étoiles : les objets les plus faibles manquent, et les plus brillantes, trop lumineuses pour Gaia, viennent d’Hipparcos.',
+  'vol.filter': 'Montrer',
+  'vol.filter.all': 'Toutes les étoiles',
+  'vol.filter.whiteDwarfs': 'Naines blanches probables',
+  'vol.filter.exoplanetHosts': 'Hôtes d’exoplanètes',
+  'vol.filter.radialVelocity': 'Avec une vitesse radiale publiée',
+  'vol.search': 'Trouver une étoile nommée',
+  'vol.searchPlaceholder': 'Véga, 51 Peg, HD 10700…',
+  'vol.searchNone': 'Aucune étoile nommée ne correspond.',
+  'vol.gaiaName': 'Gaia DR3 {id}',
+  'vol.unnamed': 'Étoile n° {n} du volume',
+  'vol.distanceGcns':
+    '{pc} pc ({ly} al) : médiane de la distribution de distance du GCNS, 68 % entre {lo} et {hi} pc',
+  'vol.distanceRel': '{pc} pc ({ly} al), ±{pct} % (GCNS)',
+  'vol.distancePlain': '{pc} pc ({ly} al)',
+  'vol.distanceHyg': '{pc} pc ({ly} al), d’après la parallaxe d’Hipparcos',
+  'vol.distanceSimbad':
+    '{pc} pc ({ly} al), d’après la parallaxe donnée par SIMBAD',
+  'vol.magnitude': 'Magnitude apparente',
+  'vol.magG': 'G = {m} (Gaia)',
+  'vol.magV': 'V = {m} (Hipparcos)',
+  'vol.absMagnitude': 'Magnitude absolue',
+  'vol.absMagValue': '{m}, calculée d’après la distance, sans extinction',
+  'vol.colour': 'Indice de couleur',
+  'vol.colourBpRp': 'BP−RP = {c} (Gaia)',
+  'vol.colourBV': 'B−V = {c} (Hipparcos)',
+  'vol.notPublished': 'non publié par la source',
+  'vol.parallax': 'Parallaxe',
+  'vol.parallaxValue': '{p} ± {e} mas',
+  'vol.parallaxPlain': '{p} mas',
+  'vol.tangential': 'Vitesse perpendiculaire à la ligne de visée',
+  'vol.tangentialValue':
+    '{v} km/s, calculée d’après le mouvement propre et la distance',
+  'vol.radial': 'Vitesse radiale',
+  'vol.radialValue': '{v} ± {e} km/s (publiée)',
+  'vol.radialPlain': '{v} km/s (publiée)',
+  'vol.quality': 'Astrométrie',
+  'vol.qualityValue':
+    'RUWE {ruwe} ; fiable avec une probabilité de {p} % (GCNS)',
+  'vol.whiteDwarf': 'Naine blanche',
+  'vol.whiteDwarfValue': 'probabilité {p} % (GCNS)',
+  'vol.exoplanets': 'Exoplanètes',
+  'vol.exoplanetsValue':
+    '{count} connue(s) autour de {host} (NASA Exoplanet Archive, rapprochée par le numéro Gaia DR3)',
+  'vol.origin.gcns': 'Gaia DR3 {id}, dans le Gaia Catalogue of Nearby Stars.',
+  'vol.origin.hyg':
+    'Trop brillante pour Gaia, listée par le GCNS comme absente d’EDR3 : valeurs d’Hipparcos (HYG v4.4).',
+  'vol.origin.simbad':
+    'Absente de Gaia EDR3 (liste du GCNS) et introuvable dans Hipparcos : position et parallaxe de SIMBAD seulement ; magnitude, couleur et mouvement ne sont pas disponibles ici.',
+  'vol.noRadial':
+    'Aucune vitesse radiale n’est publiée : quand le temps avance, le mouvement montré est perpendiculaire à la ligne de visée seulement.',
+  'vol.noMotion':
+    'Cette étoile ne bouge pas avec le temps ici : son mouvement n’est pas dans la source.',
+  'vol.symbolic':
+    'Au-delà de 5 pc, chaque étoile est un petit point : sa luminosité suit sa magnitude absolue et sa couleur est indicative (d’après l’indice de couleur), jamais un type spectral.',
+  'vol.unknownStar': 'L’étoile de ce lien n’est pas dans le volume stellaire.',
   'ed.announce': 'Observation du {date} affichée',
 };
