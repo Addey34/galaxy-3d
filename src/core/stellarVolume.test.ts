@@ -1,11 +1,6 @@
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  decodeDetail,
-  decodeShell,
-  detailLocation,
   epochDistancePc,
   indicativeClass,
   matchesFilter,
@@ -23,6 +18,10 @@ import {
   STELLAR_MOTION_LIMIT_YEARS,
 } from './stellarSpace';
 import type { NeighbourRow } from './neighbours';
+import {
+  assembleShippedVolume,
+  rawVolumeFile,
+} from './stellarVolumeTestFixture';
 
 /**
  * LE VOLUME STELLAIRE LIVRÉ (GAL-UNIVERSE-008), relu tel que le client le lit. Les témoins sont d'une
@@ -30,19 +29,11 @@ import type { NeighbourRow } from './neighbours';
  * chaque objet (`xcoord_50`…), confrontées à notre rotation ; (2) des distances physiques connues ;
  * (3) le code du voisinage à 5 pc, appliqué à la même étoile.
  */
-const DIR = resolve(import.meta.dirname, '../../public/assets/sky/volume');
-const manifest = JSON.parse(
-  readFileSync(resolve(DIR, 'manifest.json'), 'utf-8')
-) as VolumeManifest;
-const names = JSON.parse(
-  readFileSync(resolve(DIR, 'names.json'), 'utf-8')
-) as Record<string, VolumeNameEntry>;
-const raw = (file: string): Buffer => readFileSync(resolve(DIR, file));
-const arrayBuffer = (b: Buffer): ArrayBuffer =>
-  b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
-const shells: VolumeShell[] = manifest.shells.map((s) =>
-  decodeShell(arrayBuffer(raw(s.file)), manifest, s)
-);
+const volume = assembleShippedVolume();
+const manifest: VolumeManifest = volume.assembly.manifest;
+const names: Record<string, VolumeNameEntry> = volume.names;
+const shells: VolumeShell[] = volume.shells;
+const index = volume.index;
 /** La coquille et le rang local d'une étoile de rang global. */
 const locate = (index: number): { shell: VolumeShell; local: number } => {
   const shell = shells.find(
@@ -51,10 +42,21 @@ const locate = (index: number): { shell: VolumeShell; local: number } => {
   return { shell, local: index - shell.start };
 };
 
-describe('les fichiers livrés', () => {
-  it('chaque fichier a la taille et l’empreinte que le manifeste annonce', () => {
-    for (const f of [...manifest.shells, ...manifest.details]) {
-      const b = raw(f.file);
+describe('les fichiers livrés, un dossier par fournisseur', () => {
+  it('chaque fichier a la taille et l’empreinte que l’index annonce', () => {
+    const P = index.providers;
+    const entries = [
+      ...P.gcns.shells,
+      ...P.gcns.details,
+      P.gcnsMissing,
+      P.hyg.complement,
+      P.hyg.names,
+      P.nasa,
+      index.crossmatch.structure,
+      index.crossmatch.names,
+    ];
+    for (const f of entries) {
+      const b = rawVolumeFile(f.file);
       expect(b.length, f.file).toBe(f.bytes);
       expect(createHash('sha256').update(b).digest('hex'), f.file).toBe(
         f.sha256
@@ -80,12 +82,21 @@ describe('les fichiers livrés', () => {
     expect(manifest.count).toBeGreaterThan(300_000);
   });
 
-  it('les paquets de détails couvrent chaque étoile', () => {
-    const total = manifest.details.reduce(
-      (sum, d) => sum + d.bytes / manifest.detailBytes,
+  it('l’assemblage rend exactement ce que le générateur annonce (comptes par coquille et par origine)', () => {
+    expect(manifest.count).toBe(index.expected.count);
+    expect(shells.map((s) => s.count)).toEqual(index.expected.perShell);
+    for (const key of ['gcns', 'hyg', 'simbad', 'exoplanetHosts'])
+      expect(manifest.counts[key], key).toBe(index.expected.counts[key]);
+    expect(volume.fromHyg.size).toBe(index.expected.counts['namedByHyg']);
+  });
+
+  it('les paquets de détails du GCNS couvrent chaque étoile du GCNS', () => {
+    const P = index.providers.gcns;
+    const total = P.details.reduce(
+      (sum, d) => sum + d.bytes / index.format.detailBytes,
       0
     );
-    expect(total).toBe(manifest.count);
+    expect(total).toBe(P.shells.reduce((n, s) => n + s.count, 0));
   });
 });
 
@@ -93,23 +104,15 @@ describe('le repère : notre rotation contre les coordonnées galactiques des au
   it.each(manifest.witnesses.gcnsGalactic.map((w) => [w.distPc, w] as const))(
     'à %s pc',
     (_, w) => {
-      const { shell, local } = locate(w.index);
+      // Le rang du témoin est celui du GCNS ; l'assemblage le place dans la disposition globale.
+      const at = volume.assembly.globalIndexOf(w.index);
+      const { shell, local } = locate(at);
       const p = shell.epochPositions;
       // Scène → galactique : X = x, Y = z, Z = −y.
       const galactic = [p[local * 3]!, -p[local * 3 + 2]!, p[local * 3 + 1]!];
       for (let k = 0; k < 3; k++)
         expect(Math.abs(galactic[k]! - w.galacticXyzPc[k]!)).toBeLessThan(0.01);
-      const detail = decodeDetail(
-        arrayBuffer(
-          raw(
-            manifest.details[
-              detailLocation(w.index, manifest.detailBucket).bucket
-            ]!.file
-          )
-        ),
-        detailLocation(w.index, manifest.detailBucket).local,
-        manifest.detailBytes
-      );
+      const detail = volume.detailOf(at)!;
       expect(detail.sourceId).toBe(w.sourceId);
     }
   );
@@ -136,12 +139,7 @@ describe('les témoins physiques, retrouvés par leur nom', () => {
     expect(spectralOf(names[String(index)])).toMatch(/^A0/);
     const { shell, local } = locate(index);
     expect(shell.flags[local]! & manifest.flags.hyg).toBeTruthy();
-    const loc = detailLocation(index, manifest.detailBucket);
-    const detail = decodeDetail(
-      arrayBuffer(raw(manifest.details[loc.bucket]!.file)),
-      loc.local,
-      manifest.detailBytes
-    );
+    const detail = volume.detailOf(index)!;
     expect(detail.sourceId).toBeNull();
   });
 });
@@ -223,9 +221,11 @@ describe('ce que la vue en tire', () => {
           if (matchesFilter(s.flags[i]!, filter, manifest.flags)) n++;
         return sum + n;
       }, 0);
-    expect(count('whiteDwarfs')).toBe(manifest.counts['whiteDwarf']);
+    expect(count('whiteDwarfs')).toBe(index.expected.counts['whiteDwarf']);
     expect(count('exoplanetHosts')).toBe(manifest.counts['exoplanetHosts']);
-    expect(count('radialVelocity')).toBe(manifest.counts['radialVelocity']);
+    expect(count('radialVelocity')).toBe(
+      index.expected.counts['radialVelocity']
+    );
     expect(count('all')).toBe(manifest.count);
   });
 

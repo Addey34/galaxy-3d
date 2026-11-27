@@ -59,7 +59,9 @@ export const cardEs: Record<CardMessageKey, string> = {
   'nb.card.hint':
     'El marcador muestra la dirección real de la estrella. La estrella no se dibuja a su distancia: la escena termina en el Sistema Solar.',
   'nb.card.source':
-    'Fuentes: Gaia DR3 (ESA) y HYG v4.4 ({license}). Las posiciones son las de J2000,0; el marcador sigue el movimiento propio hasta la fecha de la escena.',
+    'Fuentes: Gaia DR3 (ESA, {gaiaLicense}) y HYG v4.4 ({hygLicense}), dos archivos distintos, cada uno con su licencia. Las posiciones son las de J2000,0; el marcador sigue el movimiento propio hasta la fecha de la escena.',
+  'nb.card.source.hygOnly':
+    'Fuente: HYG v4.4 ({hygLicense}); no se pudo leer el archivo de Gaia DR3. Las posiciones son las de J2000,0; el marcador sigue el movimiento propio hasta la fecha de la escena.',
   'nb.card.opened': 'Estrella cercana {name}',
   'nb.unit.ly': 'al',
   'nb.search.label': 'Buscar una estrella cercana',
@@ -673,11 +675,14 @@ export const cardEs: Record<CardMessageKey, string> = {
   'vol.exoplanets': 'Exoplanetas',
   'vol.exoplanetsValue':
     '{count} conocido(s) alrededor de {host} (NASA Exoplanet Archive, cruzado por el número Gaia DR3)',
-  'vol.origin.gcns': 'Gaia DR3 {id}, en el Gaia Catalogue of Nearby Stars.',
+  'vol.origin.gcns':
+    'Gaia DR3 {id}, en el Gaia Catalogue of Nearby Stars (GCNS, CC BY-NC 4.0, construido con datos de Gaia de la ESA, CC BY-NC 3.0 IGO).',
   'vol.origin.hyg':
-    'Demasiado brillante para Gaia, listada por el GCNS como ausente de EDR3: valores de Hipparcos (HYG v4.4).',
+    'Demasiado brillante para Gaia, listada por el GCNS como ausente de EDR3: valores de Hipparcos (HYG v4.4, CC BY-SA 4.0).',
   'vol.origin.simbad':
-    'Ausente de Gaia EDR3 (lista del GCNS) y no encontrada en Hipparcos: solo posición y paralaje de SIMBAD; magnitud, color y movimiento no están disponibles aquí.',
+    'Ausente de Gaia EDR3 (lista del GCNS, CC BY-NC 4.0) y no encontrada en Hipparcos: solo posición y paralaje de SIMBAD (CDS/SIMBAD); magnitud, color y movimiento no están disponibles aquí.',
+  'vol.nameHyg':
+    'Nombre: HYG v4.4 (CC BY-SA 4.0), asociado por Galaxy por posición y distancia.',
   'vol.noRadial':
     'No se publica velocidad radial: al mover el tiempo, el movimiento mostrado es solo perpendicular a la visual.',
   'vol.noMotion':

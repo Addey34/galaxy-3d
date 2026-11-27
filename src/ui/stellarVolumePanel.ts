@@ -21,7 +21,6 @@ import {
   colourIndexOf,
   decodeDetail,
   decodeShell,
-  detailLocation,
   hostOf,
   spectralOf,
   epochDistancePc,
@@ -43,6 +42,17 @@ import {
   type Vec3,
 } from '@/core/stellarSpace';
 import { starSlug } from '@/core/stellarPermalink';
+import {
+  assembleVolume,
+  type CrossmatchFile,
+  type CrossmatchNamesFile,
+  type HygComplementFile,
+  type HygNamesFile,
+  type MissingFile,
+  type NasaHostsFile,
+  type VolumeAssembly,
+  type VolumeIndex,
+} from '@/core/stellarVolumeAssembly';
 import { getLocale, t } from '@/i18n';
 import Logger from '@/utils/Logger';
 import { getAnnouncer } from './announcer';
@@ -119,10 +129,16 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
   let manifest: VolumeManifest | null = null;
   let manifestRequest: Promise<VolumeManifest> | null = null;
   let volume: StellarVolume | null = null;
+  /** L'assemblage des fournisseurs (`core/stellarVolumeAssembly`) : un dossier par licence. */
+  let assembly: VolumeAssembly | null = null;
+  /** Les fichiers des noms de HYG et de leur table, ou `null` si HYG est désactivé. */
+  let hygNameFiles: { names: string; pairs: string } | null = null;
   let names: Record<string, VolumeNameEntry> | null = null;
+  /** Les rangs dont le nom vient de HYG (la fiche le dit, avec sa licence). */
+  let namedByHyg: ReadonlySet<number> = new Set();
   let namesRequest: Promise<Record<string, VolumeNameEntry> | null> | null =
     null;
-  const details = new Map<number, ArrayBuffer>();
+  const details = new Map<string, ArrayBuffer>();
   let scale: VolumeScale = 5;
   let filter: VolumeFilter = 'all';
   let selected = -1;
@@ -229,16 +245,63 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
 
   const url = (file: string): string => `${VOLUME_BASE}${file}`;
 
-  /** Le manifeste, SANS effet de bord : une arrivée tardive après la fermeture ne crée rien. */
+  /** Un fichier JSON d'un fournisseur ; `null` s'il est illisible (sa part manque, le reste tourne). */
+  const optionalJson = <T>(file: string): Promise<T | null> =>
+    fetcher(url(file), { signal: lifecycle.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<T>;
+      })
+      .catch((error: unknown) => {
+        if (!disposed) Logger.warn(`[stellarVolume] ${file} illisible`, error);
+        return null;
+      });
+
+  /**
+   * L'index des fournisseurs, puis les petits fichiers dont l'assemblage a besoin, SANS effet de bord :
+   * une arrivée tardive après la fermeture ne crée rien. Un fournisseur désactivé n'est pas lu.
+   */
   const loadManifest = (): Promise<VolumeManifest> =>
-    (manifestRequest ??= fetcher(url('manifest.json'), {
+    (manifestRequest ??= fetcher(url('index.json'), {
       signal: lifecycle.signal,
     })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<VolumeManifest>;
+        return res.json() as Promise<VolumeIndex>;
       })
-      .then((m) => (manifest = m))
+      .then(async (index) => {
+        const P = index.providers;
+        const on = (p: { enabled?: boolean }): boolean => p.enabled !== false;
+        const [missing, hygComplement, nasa, crossmatch] = await Promise.all([
+          on(P.gcnsMissing)
+            ? optionalJson<MissingFile>(P.gcnsMissing.file)
+            : null,
+          on(P.hyg)
+            ? optionalJson<HygComplementFile>(P.hyg.complement.file)
+            : null,
+          on(P.nasa) ? optionalJson<NasaHostsFile>(P.nasa.file) : null,
+          optionalJson<CrossmatchFile>(index.crossmatch.structure.file),
+        ]);
+        if (disposed) throw new Error('vue fermée');
+        const built = assembleVolume({
+          index,
+          gcns: on(P.gcns),
+          missing,
+          hygComplement,
+          nasa,
+          crossmatch,
+        });
+        if (built.missingParts.length > 0)
+          Logger.warn(
+            `[stellarVolume] fournisseurs absents : ${built.missingParts.join(', ')}`
+          );
+        assembly = built;
+        hygNameFiles = on(P.hyg)
+          ? { names: P.hyg.names.file, pairs: index.crossmatch.names.file }
+          : null;
+        manifest = built.manifest;
+        return built.manifest;
+      })
       .catch((error: unknown) => {
         // Un refus n'est pas retenu : le geste suivant réessaie.
         manifestRequest = null;
@@ -260,20 +323,27 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
     const known = shellLoads.get(k);
     if (known) return known.promise;
     const entry = m.shells[k]!;
+    const built = assembly!;
+    const file = built.gcnsShellFile(k);
     const controller = new AbortController();
     const record = {
       controller,
       done: false,
-      promise: fetcher(url(entry.file), { signal: controller.signal })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.arrayBuffer();
-        })
+      promise: (file
+        ? fetcher(url(file), { signal: controller.signal }).then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.arrayBuffer();
+          })
+        : Promise.resolve(null)
+      )
         .then((buffer) => {
           // Une coquille arrivée est gardée (revenir à cette échelle sera immédiat) ; ce que la scène
-          // en MONTRE reste décidé par l'intention courante (`setRadius`).
+          // en MONTRE reste décidé par l'intention courante (`setRadius`). L'assemblage y ajoute les
+          // absentes de Gaia et les hôtes, et en retire les doublons du voisinage.
           if (disposed) return;
-          ensureVolume(m)?.addShell(decodeShell(buffer, m, entry));
+          ensureVolume(m)?.addShell(
+            decodeShell(built.shellBuffer(k, buffer), m, entry)
+          );
           record.done = true;
         })
         .catch((error: unknown) => {
@@ -297,44 +367,65 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
     }
   };
 
+  /**
+   * Les noms : ceux que l'assemblage connaît déjà (absentes de Gaia, hôtes) et ceux de HYG, par la table
+   * de correspondance de Galaxy. Un refus rend `null` (jamais retenu : le geste suivant relit).
+   */
   const loadNames = (): Promise<Record<string, VolumeNameEntry> | null> =>
-    (namesRequest ??= fetcher(url(manifest?.names ?? 'names.json'), {
-      signal: lifecycle.signal,
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<Record<string, VolumeNameEntry>>;
-      })
-      .then((n) => (names = n))
-      .catch((error: unknown) => {
-        if (!disposed) Logger.warn('[stellarVolume] noms illisibles', error);
+    (namesRequest ??= (async () => {
+      const built =
+        assembly ??
+        (await loadManifest().then(
+          () => assembly,
+          () => null
+        ));
+      if (!built || disposed) {
         namesRequest = null;
         return null;
-      }));
+      }
+      if (!hygNameFiles) {
+        names = built.baseNames;
+        return names;
+      }
+      const [hygNames, pairs] = await Promise.all([
+        optionalJson<HygNamesFile>(hygNameFiles.names),
+        optionalJson<CrossmatchNamesFile>(hygNameFiles.pairs),
+      ]);
+      if (!hygNames || !pairs) {
+        namesRequest = null;
+        return null;
+      }
+      const result = built.withHygNames(hygNames, pairs);
+      names = result.names;
+      namedByHyg = result.fromHyg;
+      return names;
+    })());
 
   /** Les détails d'une étoile ; un refus rend `failed` (jamais retenu : un nouveau choix réessaie). */
   const loadDetail = async (
     index: number
   ): Promise<{ detail: VolumeDetail | null; failed: boolean }> => {
     const m = manifest;
-    if (!m) return { detail: null, failed: true };
-    const { bucket, local } = detailLocation(index, m.detailBucket);
-    let buffer = details.get(bucket);
+    const source = assembly?.detailSource(index) ?? null;
+    if (!m || !source) return { detail: null, failed: true };
+    if (source.kind === 'known')
+      return { detail: source.detail, failed: false };
+    let buffer = details.get(source.file);
     if (!buffer) {
       try {
-        const res = await fetcher(url(m.details[bucket]!.file), {
+        const res = await fetcher(url(source.file), {
           signal: lifecycle.signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         buffer = await res.arrayBuffer();
-        details.set(bucket, buffer);
+        details.set(source.file, buffer);
       } catch (error: unknown) {
         if (!disposed) Logger.warn('[stellarVolume] détails illisibles', error);
         return { detail: null, failed: true };
       }
     }
     return {
-      detail: decodeDetail(buffer, local, m.detailBytes),
+      detail: decodeDetail(buffer, source.local, m.detailBytes),
       failed: false,
     };
   };
@@ -700,6 +791,8 @@ export function createVolumePanel(host: VolumePanelHost): VolumePanel {
           ? t('vol.origin.simbad')
           : t('vol.origin.gcns', { id: detail?.sourceId ?? '…' }),
     ];
+    // Un nom venu de HYG garde sa source et SA licence, distincte de celle du GCNS.
+    if (namedByHyg.has(selected)) lines.push(t('vol.nameHyg'));
     if (!(f & flags.radialVelocity) && !(f & flags.simbadOnly))
       lines.push(t('vol.noRadial'));
     if (f & flags.simbadOnly) lines.push(t('vol.noMotion'));

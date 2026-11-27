@@ -538,15 +538,23 @@ merges:
 It also lists the HEASARC tables (messier, mwsc, lbn, plnebulae, lmcextobj and smcclustrs) and
 Harold Corwin's NGC/IC Positions and Notes (<http://haroldcorwin.net/ngcic/index.html>).
 
-**Nearby stars** (`public/assets/sky/neighbours.json`). The stars that the HYG database v4.4
-(see above, CC BY-SA 4.0) places at 5 parsecs or less, 61 of them, with the distance and the proper
-motion of Gaia DR3 (<https://www.cosmos.esa.int/gaia>, queried through the ESA Gaia archive TAP
-service by `scripts/generate-neighbours.mjs`) when the counterpart is reliable (parallax over 20
-sigma, RUWE below 1.4, and the same parallax, proper motion and brightness as HYG's star), and those of
-HYG otherwise (35 and 26 stars on 2026-11-22); each row says
-which (`origin`, and the Gaia `source_id`). The file is an adaptation of both and is shared under
-the licence of HYG (CC BY-SA 4.0). The ESA asks for this acknowledgement for any use of Gaia DR3
-data (<https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/>,
+**Nearby stars** (`public/assets/sky/neighbours/`). Two files, one per source, each under its own
+licence; no file mixes them (since 2026-11-27: before that date a single `neighbours.json` combined
+both, see below).
+
+- `hyg-v44.json`: the rows of the HYG database v4.4 (see above) at 5 parsecs or less, HYG values
+  only, an adaptation shared under CC BY-SA 4.0 (<https://creativecommons.org/licenses/by-sa/4.0/>).
+- `gaia-dr3.json`: the Gaia DR3 sources that are the counterparts of those stars, columns copied as
+  published at epoch J2016.0, under the licence of the ESA science archives, CC BY-NC 3.0 IGO
+  (<https://creativecommons.org/licenses/by-nc/3.0/igo/>, <https://www.cosmos.esa.int/web/esdc/terms-and-conditions>,
+  read on 2026-11-27). The values were read by source identifier from the GAVO data center
+  (`gaia.dr3lite`, a republication of Gaia DR3), the ESA archive TAP service being unavailable that day.
+
+The app matches the two files when it runs (`src/core/neighbours.ts`): a Gaia counterpart is adopted
+when it is reliable (parallax over 20 sigma, RUWE below 1.4, and the same parallax, proper motion and
+brightness as HYG's star), otherwise the star keeps HYG's values. The ESA asks for this
+acknowledgement for any use of Gaia DR3 data
+(<https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/>,
 read on 2026-11-22), shown in the help credits and on the card of each star measured by Gaia:
 
 > This work has made use of data from the European Space Agency (ESA) mission Gaia
@@ -557,6 +565,37 @@ read on 2026-11-22), shown in the help credits and on the card of each star meas
 
 The reference paper is Gaia Collaboration, *Astronomy & Astrophysics* 674 (2023),
 <https://doi.org/10.1051/0004-6361/202243940>.
+
+**Stellar volume to 100 pc** (`public/assets/sky/volume/`). One folder per source, each with a
+`NOTICE.txt` that states its licence, its rights holder and what Galaxy changed:
+
+- `gcns/`: the Gaia Catalogue of Nearby Stars (Gaia Collaboration, Smart R. L. et al. 2021,
+  *A&A* 649, A6, <https://doi.org/10.1051/0004-6361/202039498>), table `gcns.main` of the GAVO data
+  center (<https://dc.g-vo.org/tableinfo/gcns.main>): "Gaia Catalogue of Nearby Stars © 2023 by
+  Richard Smart is licensed under CC BY-NC 4.0" (<https://creativecommons.org/licenses/by-nc/4.0/>,
+  read on 2026-11-27). It is built on Gaia EDR3 data of ESA (CC BY-NC 3.0 IGO); the ESA
+  acknowledgement above applies. This work is based in part on services provided by the GAVO data
+  center.
+- `gcns-missing/`: the GCNS table `gcns.missing_10mas` (same rights line, CC BY-NC 4.0), objects
+  missing from Gaia EDR3, whose identifiers, positions, parallaxes and object types come from SIMBAD,
+  operated at CDS, Strasbourg, France; the CDS terms (<https://cds.unistra.fr/legals/>, updated
+  2026-01-07) require citing the service, "CDS/SIMBAD".
+- `hyg/`: rows of the HYG database v4.4 for the stars too bright for Gaia, and the names of HYG
+  matched to stars of the GCNS, an adaptation shared under CC BY-SA 4.0.
+- `nasa/`: the exoplanet hosts of the NASA Exoplanet Archive (table `pscomppars`, its acknowledgement
+  above).
+- `index.json`, `crossmatch.json`, `crossmatch-names.json`: written by Galaxy; they contain only
+  identifiers, row numbers, checksums and counts, no value of any catalogue.
+
+The app assembles these folders when it runs (`src/core/stellarVolumeAssembly.ts`). The licence of
+the Galaxy software (PolyForm Noncommercial 1.0.0) does not apply to these data, which keep their own
+licences.
+
+*Earlier versions.* Before 2026-11-27, `neighbours.json` (in the history of `main` since
+GAL-UNIVERSE-001) and the first commits of the stellar volume combined values of sources under
+different licences in the same file, and this notice said the neighbours file was shared under
+CC BY-SA 4.0. That statement was wrong for the Gaia values: each value in those files remains under
+the licence of its source (Gaia: CC BY-NC 3.0 IGO; GCNS: CC BY-NC 4.0; HYG: CC BY-SA 4.0).
 
 **Earth weather layers** are fetched at runtime and are not bundled either:
 

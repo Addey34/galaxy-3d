@@ -59,7 +59,9 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'nb.card.hint':
     'O marcador mostra a direção real da estrela. A estrela não é desenhada à sua distância: a cena termina no Sistema Solar.',
   'nb.card.source':
-    'Fontes: Gaia DR3 (ESA) e HYG v4.4 ({license}). As posições são as de J2000,0; o marcador acompanha o movimento próprio até a data da cena.',
+    'Fontes: Gaia DR3 (ESA, {gaiaLicense}) e HYG v4.4 ({hygLicense}), dois arquivos distintos, cada um com sua licença. As posições são as de J2000,0; o marcador acompanha o movimento próprio até a data da cena.',
+  'nb.card.source.hygOnly':
+    'Fonte: HYG v4.4 ({hygLicense}); o arquivo do Gaia DR3 não pôde ser lido. As posições são as de J2000,0; o marcador acompanha o movimento próprio até a data da cena.',
   'nb.card.opened': 'Estrela próxima {name}',
   'nb.unit.ly': 'a.l.',
   'nb.search.label': 'Encontrar uma estrela próxima',
@@ -671,11 +673,14 @@ export const cardPtBR: Record<CardMessageKey, string> = {
   'vol.exoplanets': 'Exoplanetas',
   'vol.exoplanetsValue':
     '{count} conhecido(s) em torno de {host} (NASA Exoplanet Archive, cruzado pelo número Gaia DR3)',
-  'vol.origin.gcns': 'Gaia DR3 {id}, no Gaia Catalogue of Nearby Stars.',
+  'vol.origin.gcns':
+    'Gaia DR3 {id}, no Gaia Catalogue of Nearby Stars (GCNS, CC BY-NC 4.0, construído com dados do Gaia da ESA, CC BY-NC 3.0 IGO).',
   'vol.origin.hyg':
-    'Brilhante demais para o Gaia, listada pelo GCNS como ausente do EDR3: valores do Hipparcos (HYG v4.4).',
+    'Brilhante demais para o Gaia, listada pelo GCNS como ausente do EDR3: valores do Hipparcos (HYG v4.4, CC BY-SA 4.0).',
   'vol.origin.simbad':
-    'Ausente do Gaia EDR3 (lista do GCNS) e não encontrada no Hipparcos: só posição e paralaxe do SIMBAD; magnitude, cor e movimento não estão disponíveis aqui.',
+    'Ausente do Gaia EDR3 (lista do GCNS, CC BY-NC 4.0) e não encontrada no Hipparcos: só posição e paralaxe do SIMBAD (CDS/SIMBAD); magnitude, cor e movimento não estão disponíveis aqui.',
+  'vol.nameHyg':
+    'Nome: HYG v4.4 (CC BY-SA 4.0), associado pelo Galaxy por posição e distância.',
   'vol.noRadial':
     'Nenhuma velocidade radial é publicada: quando o tempo avança, o movimento mostrado é só perpendicular à linha de visada.',
   'vol.noMotion':

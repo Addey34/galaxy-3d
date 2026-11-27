@@ -510,7 +510,12 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
     chunk: 'neighbourLayer',
     reason:
-      'la couche des étoiles voisines (GAL-UNIVERSE-001) : repères (`NeighbourMarkers`) et noms avec leur distance, importée par `ui/skyLayerToggles` à la première activation de la case « Étoiles voisines », éteinte au démarrage. Elle lit `sky/neighbours.json` une seule fois.',
+      'la couche des étoiles voisines (GAL-UNIVERSE-001) : repères (`NeighbourMarkers`) et noms avec leur distance, importée par `ui/skyLayerToggles` à la première activation de la case « Étoiles voisines », éteinte au démarrage. Elle lit les deux fichiers du voisinage (`sky/neighbours/`, HYG et Gaia DR3) une seule fois.',
+  },
+  {
+    chunk: 'neighbourData',
+    reason:
+      "la lecture des deux fichiers du voisinage, un par fournisseur (`ui/neighbourData`, GAL-UNIVERSE-008 : HYG v4.4 et Gaia DR3, chacun sous sa licence) et leur rapprochement à l'exécution, partagée par `neighbourLayer`, `stellarView` et `systemView`, des morceaux hors démarrage : Rollup en fait un morceau commun qui ne se charge qu'avec eux.",
   },
   {
     chunk: 'neighbourCard',

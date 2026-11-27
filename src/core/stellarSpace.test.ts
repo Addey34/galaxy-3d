@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { shippedNeighbours } from './neighboursTestFixture';
 import { describe, expect, it } from 'vitest';
 import type { NeighbourFile, NeighbourRow } from './neighbours';
 import {
@@ -20,9 +20,7 @@ import {
   type Vec3,
 } from './stellarSpace';
 
-const file = JSON.parse(
-  readFileSync('public/assets/sky/neighbours.json', 'utf8')
-) as NeighbourFile;
+const file: NeighbourFile = shippedNeighbours();
 const byName = (name: string): NeighbourRow => {
   const row = file.stars.find((s) => s[0] === name);
   if (!row) throw new Error(`absent : ${name}`);

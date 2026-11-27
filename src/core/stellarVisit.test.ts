@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { shippedNeighbours } from './neighboursTestFixture';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -21,7 +22,7 @@ import { STELLAR_VISITS } from '@/registry/stellar-visits';
 const ROOT = resolve(import.meta.dirname, '../..');
 const read = <T>(file: string): T =>
   JSON.parse(readFileSync(resolve(ROOT, file), 'utf8')) as T;
-const neighbours = read<NeighbourFile>('public/assets/sky/neighbours.json');
+const neighbours: NeighbourFile = shippedNeighbours();
 const exoplanets = read<ExoplanetFile>('public/assets/sky/exoplanets.json');
 const systems = groupSystems(neighbours.stars);
 const format: Formatter = {

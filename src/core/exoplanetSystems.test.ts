@@ -1,4 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
+import { shippedNeighbours } from './neighboursTestFixture';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -31,9 +32,7 @@ import {
 } from './neighbours';
 
 const ROOT = join(process.cwd(), 'public/assets/sky');
-const neighbours = JSON.parse(
-  readFileSync(join(ROOT, 'neighbours.json'), 'utf8')
-) as NeighbourFile;
+const neighbours: NeighbourFile = shippedNeighbours();
 const archive = JSON.parse(
   readFileSync(join(ROOT, 'exoplanets.json'), 'utf8')
 ) as ExoplanetFile;

@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { shippedNeighbours } from './neighboursTestFixture';
 import { describe, expect, it } from 'vitest';
 import {
   parseStellarAddress,
@@ -11,9 +12,7 @@ import {
   starSlug,
 } from './stellarPermalink';
 
-const file = JSON.parse(
-  readFileSync('public/assets/sky/neighbours.json', 'utf-8')
-) as { stars: Array<[string, ...unknown[]]> };
+const file = shippedNeighbours();
 const names = file.stars.map((row) => row[0]);
 
 describe('starSlug', () => {

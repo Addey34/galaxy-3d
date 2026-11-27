@@ -1,0 +1,12 @@
+HYG database v4.4 (Hipparcos, Yale Bright Star, Gliese catalogues)
+
+Files: complement.json, names.json
+Source: https://codeberg.org/astronexus/hyg (data/hyg/CURRENT/hyg_v44.csv.gz)
+Creator: David Nash (astronexus), HYG database
+Licence: Creative Commons Attribution-ShareAlike 4.0 International, https://creativecommons.org/licenses/by-sa/4.0/ (the HYG README: "Versions since v4.0 are licensed as above (CC-BY-SA 4.0)")
+
+Changes made by Galaxy: complement.json keeps the HYG rows of the stars that the GCNS lists as missing from Gaia EDR3 (columns id, a display name, spect, ra and dec converted from radians to degrees, dist, mag, ci, pmra, pmdec, rv with 0 written as null); names.json keeps id and a display name (proper, else Bayer or Flamsteed with the constellation, else gl, HD or HIP) of the HYG rows that Galaxy identified with a star of the GCNS. The choice of rows used positions and distances from the GCNS, but no value of another catalogue is in these files.
+These files are an adaptation of HYG v4.4 and are shared under the same licence, CC BY-SA 4.0.
+No warranty: the data are provided as is.
+
+Galaxy (https://galaxy.adrianguichard.dev) is a free educational visualisation. The software is under its own licence (PolyForm Noncommercial 1.0.0); the data in this folder are NOT covered by it and keep the licence stated here.

@@ -3,7 +3,7 @@
  * RIEN d'autre. Module PUR (ni DOM ni Three.js).
  *
  * Règle de rigueur : aucun nombre n'est écrit dans un texte de visite. Les phrases portent des
- * emplacements (`{ly}`, `{pm}`…) que ce module remplit à partir des fichiers livrés (`neighbours.json`,
+ * emplacements (`{ly}`, `{pm}`…) que ce module remplit à partir des fichiers livrés (le voisinage rapproché de `neighbours/`,
  * `exoplanets.json`), et une étape choisit son étoile par une RÈGLE LUE dans les données (« la plus
  * proche », « le plus grand mouvement propre ») ou par son nom, jamais par un rang. Ainsi un texte ne
  * peut pas affirmer ce que les données ne disent pas, et un test confronte chaque étape aux fichiers.

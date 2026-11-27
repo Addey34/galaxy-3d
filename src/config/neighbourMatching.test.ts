@@ -1,13 +1,18 @@
-import { readFileSync } from 'node:fs';
+import {
+  readGaiaNeighbourFile,
+  readHygNeighbourFile,
+  shippedNeighbours,
+} from '@/core/neighboursTestFixture';
 import { describe, expect, it } from 'vitest';
 import {
   buildRow,
   chooseGaia,
+  combine,
   propagate,
   type GaiaCandidate,
   type HygStar,
 } from '../../scripts/generate-neighbours.mjs';
-import type { NeighbourFile } from '@/core/neighbours';
+import { combineNeighbours, type NeighbourFile } from '@/core/neighbours';
 
 /**
  * LES ASSOCIATIONS HYG → GAIA DR3 (GAL-UNIVERSE-001-QUAL, lot B). Une étoile n'est adoptée de Gaia
@@ -137,9 +142,7 @@ describe('retour de J2016 à J2000 et unités', () => {
 });
 
 describe('les associations livrées', () => {
-  const file = JSON.parse(
-    readFileSync('public/assets/sky/neighbours.json', 'utf8')
-  ) as NeighbourFile;
+  const file: NeighbourFile = shippedNeighbours();
   const byName = new Map(file.stars.map((s) => [s[0], s]));
 
   it("aucune source Gaia n'est adoptée deux fois", () => {
@@ -195,5 +198,35 @@ describe('les associations livrées', () => {
       expect(s[3]).toBeGreaterThanOrEqual(0);
       expect(s[3]).toBeLessThan(360);
     }
+  });
+});
+
+describe('le rapprochement à l’exécution (GAL-UNIVERSE-008, deux fichiers, deux licences)', () => {
+  const hyg = readHygNeighbourFile();
+  const gaia = readGaiaNeighbourFile();
+
+  it('le client et le générateur rapprochent les deux fichiers de la même façon, ligne pour ligne', () => {
+    const client = combineNeighbours(hyg, gaia).stars;
+    const generator = combine(hyg.stars, gaia.stars).rows.map((r) => r.row);
+    expect(client).toEqual(generator);
+    expect(client).toHaveLength(61);
+  });
+
+  it('chaque fichier ne porte que son fournisseur et sa licence', () => {
+    expect(hyg.provider.license).toBe('CC-BY-SA-4.0');
+    expect(gaia.provider.license).toBe('CC-BY-NC-3.0-IGO');
+    expect(hyg.fields).not.toContain('sourceId');
+    expect(gaia.fields).not.toContain('name');
+    // Aucune source Gaia du fichier n'est inutilisée : la sélection est exactement les contreparties.
+    const used = new Set(combineNeighbours(hyg, gaia).stars.map((s) => s[12]));
+    for (const g of gaia.stars) expect(used.has(g[0]), g[0]).toBe(true);
+  });
+
+  it('sans Gaia, le voisinage reste lisible : lignes de HYG, mouvement plafonné écarté', () => {
+    const alone = combineNeighbours(hyg, null);
+    expect(alone.source.gaia).toBeNull();
+    expect(alone.stars.every((s) => s[11] === 'hyg-v44')).toBe(true);
+    expect(alone.stars.map((s) => s[0])).not.toContain("Barnard's Star");
+    expect(alone.stars[0]![0]).toBe('Proxima Centauri');
   });
 });

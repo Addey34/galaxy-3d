@@ -13,6 +13,7 @@
  * reçoivent donc rien. Mouvement réduit : pas d'amortissement. Clavier complet : flèches, + et -,
  * Origine, Échap. Une liste des étoiles (boutons) donne le même accès que le clic, sans la souris.
  */
+import { loadNeighbours } from './neighbourData';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { NeighbourhoodScene } from '@/components/stellar/NeighbourhoodScene';
@@ -75,7 +76,6 @@ import './stellarView.css';
 import { el, fact, fixed, number } from './stellarDom';
 import { createVolumePanel, type VolumePanel } from './stellarVolumePanel';
 
-export const NEIGHBOURS_URL = '/assets/sky/neighbours.json';
 /** Rayon de capture d'un clic ou d'un tap, en pixels. */
 const PICK_RADIUS_PX = 22;
 const CLICK_MOVE_TOLERANCE = 5;
@@ -153,11 +153,8 @@ export async function setupStellarView(
 ): Promise<StellarView | null> {
   let file: NeighbourFile;
   try {
-    const res = await fetchImpl(NEIGHBOURS_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    file = (await res.json()) as NeighbourFile;
-    if (!Array.isArray(file.stars) || file.stars.length === 0)
-      throw new Error('fichier vide');
+    file = await loadNeighbours(fetchImpl);
+    if (file.stars.length === 0) throw new Error('fichier vide');
   } catch (err) {
     Logger.warn('[stellarView] étoiles voisines illisibles', err);
     return null;

@@ -8,6 +8,7 @@
  * date de la scène ; une étoile qui bouge de 10″ par an (Barnard) s'est déplacée de plus de 4′
  * depuis J2000.
  */
+import { loadNeighbours } from './neighbourData';
 import type * as THREE from 'three';
 import type { Starfield } from '@/components/celestial/Starfield';
 import {
@@ -27,7 +28,6 @@ import { getLocale, onLocaleChange, t } from '@/i18n';
 import Logger from '@/utils/Logger';
 import { createSkyLabelLayer, type SkyLabelLayer } from './skyLabels';
 
-export const NEIGHBOURS_URL = '/assets/sky/neighbours.json';
 const NAMES_CLASS = 'neighbour-names';
 /** Les repères se replacent au plus toutes les 500 ms : `setYears` ignore moins de 3 mois d'écart. */
 const REFRESH_MS = 500;
@@ -51,11 +51,8 @@ export async function setupNeighbourLayer(
 ): Promise<NeighbourLayer | null> {
   let file: NeighbourFile;
   try {
-    const res = await fetchImpl(NEIGHBOURS_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    file = (await res.json()) as NeighbourFile;
-    if (!Array.isArray(file.stars) || file.stars.length === 0)
-      throw new Error('fichier vide');
+    file = await loadNeighbours(fetchImpl);
+    if (file.stars.length === 0) throw new Error('fichier vide');
   } catch (err) {
     Logger.warn('[neighbourLayer] étoiles voisines illisibles', err);
     return null;

@@ -11,6 +11,7 @@
  * Un hôte du ciel qui est une étoile du voisinage s'explore avec ses composantes du catalogue
  * (`neighbourSystemOf`, même règle que la visite) ; les autres sont connus de l'archive seule.
  */
+import { loadNeighbours } from './neighbourData';
 import type * as THREE from 'three';
 import type { ExoplanetFile, ExoplanetSystem } from '@/core/exoplanets';
 import {
@@ -40,7 +41,6 @@ import type { SystemExplorer } from './systemExplorer';
 import './stellarView.css';
 
 const EXOPLANETS_URL = '/assets/sky/exoplanets.json';
-const NEIGHBOURS_URL = '/assets/sky/neighbours.json';
 
 export interface SystemViewHost {
   animation: {
@@ -90,15 +90,10 @@ export async function setupSystemView(
     }));
   let neighbours: Promise<NeighbourFile | null> | null = null;
   const readNeighbours = (): Promise<NeighbourFile | null> =>
-    (neighbours ??= fetchImpl(NEIGHBOURS_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<NeighbourFile>;
-      })
-      .catch(() => {
-        neighbours = null;
-        return null;
-      }));
+    (neighbours ??= loadNeighbours(fetchImpl).catch(() => {
+      neighbours = null;
+      return null;
+    }));
 
   interface Session {
     host: string;

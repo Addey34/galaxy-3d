@@ -67,7 +67,9 @@ export const cardEn = {
   'nb.card.hint':
     'The marker shows the real direction of the star. The star itself is not drawn at its distance: the scene stops at the Solar System.',
   'nb.card.source':
-    'Sources: Gaia DR3 (ESA) and HYG v4.4 ({license}). Positions are those of J2000.0; the marker follows the proper motion to the date of the scene.',
+    'Sources: Gaia DR3 (ESA, {gaiaLicense}) and HYG v4.4 ({hygLicense}), two separate files, each under its own licence. Positions are those of J2000.0; the marker follows the proper motion to the date of the scene.',
+  'nb.card.source.hygOnly':
+    'Source: HYG v4.4 ({hygLicense}); the Gaia DR3 file could not be read. Positions are those of J2000.0; the marker follows the proper motion to the date of the scene.',
   'nb.card.opened': 'Nearby star {name}',
   'nb.unit.ly': 'ly',
   'nb.search.label': 'Find a nearby star',
@@ -690,11 +692,14 @@ export const cardEn = {
   'vol.exoplanets': 'Exoplanets',
   'vol.exoplanetsValue':
     '{count} known around {host} (NASA Exoplanet Archive, matched by the Gaia DR3 number)',
-  'vol.origin.gcns': 'Gaia DR3 {id}, in the Gaia Catalogue of Nearby Stars.',
+  'vol.origin.gcns':
+    'Gaia DR3 {id}, in the Gaia Catalogue of Nearby Stars (GCNS, CC BY-NC 4.0, built on ESA Gaia data, CC BY-NC 3.0 IGO).',
   'vol.origin.hyg':
-    'Too bright for Gaia, listed by the GCNS as missing from EDR3: Hipparcos values (HYG v4.4).',
+    'Too bright for Gaia, listed by the GCNS as missing from EDR3: Hipparcos values (HYG v4.4, CC BY-SA 4.0).',
   'vol.origin.simbad':
-    'Missing from Gaia EDR3 (GCNS list) and not found in Hipparcos: position and parallax from SIMBAD only; magnitude, colour and motion are not available here.',
+    'Missing from Gaia EDR3 (GCNS list, CC BY-NC 4.0) and not found in Hipparcos: position and parallax from SIMBAD only (CDS/SIMBAD); magnitude, colour and motion are not available here.',
+  'vol.nameHyg':
+    'Name: HYG v4.4 (CC BY-SA 4.0), matched by Galaxy on position and distance.',
   'vol.noRadial':
     'No radial velocity is published: when time moves, the motion shown is across the line of sight only.',
   'vol.noMotion':

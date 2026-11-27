@@ -2,7 +2,7 @@
  * L'ARCHITECTURE D'UN SYSTÈME STELLAIRE (GAL-UNIVERSE-006). Pur, sans DOM ni Three.js.
  *
  * Un système exploré se construit à partir de deux sources déjà intégrées, sans rien inventer :
- *  - les COMPOSANTES stellaires : le catalogue des voisines (`neighbours.json` : position, distance,
+ *  - les COMPOSANTES stellaires : le catalogue des voisines (`neighbours/`, rapproché par `combineNeighbours` : position, distance,
  *    type spectral ; Gaia DR3 ou HYG) ;
  *  - les PLANÈTES et les paramètres de l'étoile hôte : l'instantané détaillé de la NASA Exoplanet
  *    Archive (`public/assets/sky/systems/*.json`, `scripts/generate-exoplanet-systems.mjs`), où chaque

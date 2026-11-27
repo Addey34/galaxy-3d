@@ -24,17 +24,32 @@
  * de point zéro (−0,017 mas pour Gaia DR3 : 0,002 % à 750 mas, sous l'incertitude affichée).
  *
  * REMERCIEMENT EXIGÉ par l'ESA (lu le 2026-11-22 sur la page « Credit and citation instructions »
- * de la documentation de Gaia DR3) : texte verbatim dans `source.gaia.acknowledgement`.
+ * de la documentation de Gaia DR3) : texte verbatim dans `provider.acknowledgement` du fichier Gaia.
+ *
+ * DEUX FICHIERS, UN PAR FOURNISSEUR (GAL-UNIVERSE-008, séparation des données, 2026-11-27). HYG
+ * (CC BY-SA 4.0) et Gaia DR3 (CC BY-NC 3.0 IGO) n'ont pas les mêmes droits : aucun fichier ne les
+ * mêle plus. `neighbours/hyg-v44.json` porte les lignes de HYG seules, `neighbours/gaia-dr3.json` les
+ * sources de Gaia seules (valeurs publiées, J2016,0), chacun avec sa licence. Le CLIENT rapproche les
+ * deux à l'exécution (`core/neighbours.ts`, `combineNeighbours`), avec les règles de `chooseGaia` ;
+ * ce script fait le même rapprochement (`combine`) pour ses témoins, et un test compare les deux.
+ * Les contreparties sont choisies dans les cônes de l'archive de l'ESA (cache `gaia.json`) quand ce
+ * cache existe ; sinon on reprend les identifiants déjà choisis (cache `gaia-dr3-counterparts.csv`).
+ * Leurs valeurs sont lues par identifiant au TAP de GAVO (`gaia.dr3lite`, republication de Gaia DR3),
+ * car le TAP de l'ESA rendait une page HTML le 2026-11-27 : mouvements propres en simple précision,
+ * écart mesuré au plus 0,01 mas/an avec l'archive de l'ESA (4 étoiles sur 35).
  */
 import { Buffer } from 'node:buffer';
 import { gunzipSync } from 'node:zlib';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { sameIgnoringReadDates } from './drift-compare.mjs';
 
 const HYG_CACHE = '.cache/star-catalogue/hyg_v44.csv.gz';
 const GAIA_CACHE = '.cache/neighbours/gaia.json';
-const OUT = 'public/assets/sky/neighbours.json';
+const COUNTERPARTS_CACHE = '.cache/neighbours/gaia-dr3-counterparts.csv';
+const OUT_DIR = 'public/assets/sky/neighbours';
 const TAP = 'https://gea.esac.esa.int/tap-server/tap/sync';
+const GAVO = 'https://dc.zah.uni-heidelberg.de/tap/sync';
 export const MAX_DISTANCE_PC = 5;
 const GAIA_EPOCH = 2016;
 const HYG_PM_CAP = 9999.99;
@@ -247,8 +262,8 @@ export function buildRow(star, gaia) {
       2000 - GAIA_EPOCH
     );
     return [
-      displayName(star),
-      otherIds(star),
+      star.name ?? displayName(star),
+      star.ids !== undefined ? star.ids : otherIds(star),
       star.spect,
       round(back.raDeg, 6),
       round(back.decDeg, 6),
@@ -263,8 +278,8 @@ export function buildRow(star, gaia) {
     ];
   }
   return [
-    displayName(star),
-    otherIds(star),
+    star.name ?? displayName(star),
+    star.ids !== undefined ? star.ids : otherIds(star),
     star.spect,
     round(star.raDeg, 6),
     round(star.decDeg, 6),
@@ -303,46 +318,246 @@ export const FIELDS = [
   'gaiaSourceId',
 ];
 
+/** Champs du fichier HYG du voisinage (valeurs de HYG seules). */
+export const HYG_FIELDS = [
+  'hygId',
+  'name',
+  'ids',
+  'spectral',
+  'raDeg',
+  'decDeg',
+  'distPc',
+  'vmag',
+  'pmRaMas',
+  'pmDecMas',
+  'rvKms',
+];
+/** Champs du fichier Gaia du voisinage (valeurs publiées par Gaia DR3, J2016,0). */
+export const GAIA_FIELDS = [
+  'sourceId',
+  'raDeg',
+  'decDeg',
+  'parallaxMas',
+  'parallaxErrorMas',
+  'pmRaMas',
+  'pmDecMas',
+  'rvKms',
+  'ruwe',
+  'gMag',
+];
+
+/** Une étoile de HYG, ligne du fichier du fournisseur. HYG écrit 0 pour une vitesse radiale inconnue. */
+export function hygProviderRow(star) {
+  const rv = star.rv !== 0 && Number.isFinite(star.rv) ? star.rv : null;
+  return [
+    star.id,
+    displayName(star),
+    otherIds(star),
+    star.spect,
+    star.raDeg,
+    star.decDeg,
+    star.distPc,
+    star.vmag,
+    star.pmRa,
+    star.pmDec,
+    rv,
+  ];
+}
+
+export const gaiaProviderRow = (g) => [
+  g.sourceId,
+  g.ra,
+  g.dec,
+  g.parallax,
+  g.parallaxError,
+  g.pmRa,
+  g.pmDec,
+  g.rv,
+  g.ruwe,
+  g.gMag,
+];
+
+const hygFromRow = (r) => ({
+  id: r[0],
+  name: r[1],
+  ids: r[2],
+  spect: r[3],
+  raDeg: r[4],
+  decDeg: r[5],
+  distPc: r[6],
+  vmag: r[7],
+  pmRa: r[8],
+  pmDec: r[9],
+  rv: r[10] ?? 0,
+});
+const gaiaFromRow = (r) => ({
+  sourceId: r[0],
+  ra: r[1],
+  dec: r[2],
+  parallax: r[3],
+  parallaxError: r[4],
+  pmRa: r[5],
+  pmDec: r[6],
+  rv: r[7],
+  ruwe: r[8],
+  gMag: r[9],
+});
+
+function separationDeg(ra1, dec1, ra2, dec2) {
+  const d = Math.PI / 180;
+  const x =
+    Math.sin(dec1 * d) * Math.sin(dec2 * d) +
+    Math.cos(dec1 * d) * Math.cos(dec2 * d) * Math.cos((ra1 - ra2) * d);
+  return Math.acos(Math.min(1, x)) / d;
+}
+
+/** Ce que le cône de `queryGaia` rend parmi `gaia` : même centre, même rayon, même parallaxe minimale. */
+export function coneCandidates(star, gaia) {
+  const censored = censoredPm(star);
+  const at = censored
+    ? { raDeg: star.raDeg, decDeg: star.decDeg }
+    : propagate(
+        star.raDeg,
+        star.decDeg,
+        star.pmRa,
+        star.pmDec,
+        GAIA_EPOCH - 2000
+      );
+  const radius = censored ? 0.15 : CONE_DEG;
+  const minParallax = Number(((1000 / star.distPc) * 0.5).toFixed(2));
+  return gaia
+    .filter(
+      (g) =>
+        g.parallax > minParallax &&
+        separationDeg(at.raDeg, at.decDeg, g.ra, g.dec) < radius
+    )
+    .sort((a, b) => b.parallax - a.parallax)
+    .slice(0, 40);
+}
+
+/**
+ * Le rapprochement des deux fichiers de fournisseur, tel que le client le fait (`combineNeighbours`) :
+ * rend les lignes affichées, triées par distance adoptée, et les étoiles écartées.
+ */
+export function combine(hygRows, gaiaRows) {
+  const gaia = gaiaRows.map(gaiaFromRow);
+  const taken = new Set();
+  const rows = [];
+  const notes = [];
+  for (const star of hygRows.map(hygFromRow).sort((a, b) => a.vmag - b.vmag)) {
+    const { gaia: match, reason } = chooseGaia(
+      star,
+      coneCandidates(star, gaia),
+      taken
+    );
+    if (match) taken.add(match.sourceId);
+    else if (censoredPm(star)) {
+      // Un mouvement plafonné sans contrepartie Gaia : la valeur est fausse, la ligne est écartée.
+      notes.push(
+        `${star.name} : écartée (mouvement propre HYG plafonné, ${reason})`
+      );
+      continue;
+    }
+    rows.push({ row: buildRow(star, match), reason });
+  }
+  // Triées par la distance ADOPTÉE (Gaia quand elle est sûre), pas par celle de HYG.
+  rows.sort((x, y) => x.row[5] - y.row[5]);
+  return { rows, notes };
+}
+
+/** Les valeurs de Gaia DR3 des contreparties, lues par identifiant (cache, sinon TAP de GAVO). */
+async function readCounterparts(ids, refresh) {
+  if (!refresh && existsSync(COUNTERPARTS_CACHE)) {
+    const cached = parseGaiaCsv(readFileSync(COUNTERPARTS_CACHE, 'utf8'));
+    const have = new Set(cached.map((g) => g.sourceId));
+    if (ids === null || ids.every((id) => have.has(id)))
+      return cached.filter((g) => ids === null || ids.includes(g.sourceId));
+  }
+  if (ids === null)
+    throw new Error(
+      `${COUNTERPARTS_CACHE} absent et aucun cône Gaia en cache : lancer avec --refresh`
+    );
+  const res = await fetch(GAVO, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      REQUEST: 'doQuery',
+      LANG: 'ADQL',
+      FORMAT: 'csv',
+      QUERY: `SELECT source_id,ra,dec,parallax,parallax_error,pmra,pmdec,radial_velocity,ruwe,phot_g_mean_mag FROM gaia.dr3lite WHERE source_id IN (${ids.join(',')})`,
+    }),
+  });
+  const text = await res.text();
+  if (!res.ok || !text.startsWith('source_id,'))
+    throw new Error(`GAVO gaia.dr3lite : réponse inattendue (${res.status})`);
+  mkdirSync('.cache/neighbours', { recursive: true });
+  writeFileSync(COUNTERPARTS_CACHE, text);
+  writeFileSync(
+    `${COUNTERPARTS_CACHE}.retrieved`,
+    new Date().toISOString().slice(0, 10)
+  );
+  return parseGaiaCsv(text);
+}
+
+function parseGaiaCsv(text) {
+  const [head, ...lines] = parseCsv(text);
+  if (!head || head[0] !== 'source_id')
+    throw new Error('contreparties Gaia : en-tête inattendu');
+  return lines.map((l) => ({
+    sourceId: l[0],
+    ra: Number(l[1]),
+    dec: Number(l[2]),
+    parallax: Number(l[3]),
+    parallaxError: Number(l[4]),
+    pmRa: l[5] === '' ? null : Number(l[5]),
+    pmDec: l[6] === '' ? null : Number(l[6]),
+    rv: l[7] === '' ? null : Number(l[7]),
+    ruwe: l[8] === '' ? null : Number(l[8]),
+    gMag: l[9] === '' ? null : Number(l[9]),
+  }));
+}
+
+const retrievedOf = (file, fallback) =>
+  existsSync(`${file}.retrieved`)
+    ? readFileSync(`${file}.retrieved`, 'utf8').trim()
+    : fallback;
+
 async function main() {
   const args = process.argv.slice(2);
   if (!existsSync(HYG_CACHE))
     throw new Error(`${HYG_CACHE} absent : lancer d'abord pnpm stars:generate`);
   const hyg = readHygNeighbours(readFileSync(HYG_CACHE));
-  let cache = {};
-  if (existsSync(GAIA_CACHE) && !args.includes('--refresh'))
-    cache = JSON.parse(readFileSync(GAIA_CACHE, 'utf8'));
-  let queried = 0;
-  for (const star of hyg) {
-    if (cache[star.id]) continue;
-    cache[star.id] = await queryGaia(star);
-    queried += 1;
-  }
-  if (queried > 0) {
-    mkdirSync('.cache/neighbours', { recursive: true });
-    writeFileSync(GAIA_CACHE, JSON.stringify(cache));
-  }
-
-  const taken = new Set();
-  const rows = [];
-  const notes = [];
-  for (const star of [...hyg].sort((a, b) => a.vmag - b.vmag)) {
-    const { gaia, reason } = chooseGaia(star, cache[star.id], taken);
-    if (gaia) taken.add(gaia.sourceId);
-    else if (
-      Math.abs(star.pmRa) >= HYG_PM_CAP ||
-      Math.abs(star.pmDec) >= HYG_PM_CAP
-    ) {
-      // Un mouvement plafonné sans contrepartie Gaia : la valeur est fausse, la ligne est écartée.
-      notes.push(
-        `${displayName(star)} : écartée (mouvement propre HYG plafonné, ${reason})`
-      );
-      continue;
+  const refresh = args.includes('--refresh');
+  // Les contreparties : choisies dans les cônes de l'ESA quand ils sont en cache (ou --refresh),
+  // sinon les identifiants déjà retenus (cache des contreparties).
+  let ids = null;
+  if (existsSync(GAIA_CACHE) || refresh) {
+    let cache = {};
+    if (existsSync(GAIA_CACHE) && !refresh)
+      cache = JSON.parse(readFileSync(GAIA_CACHE, 'utf8'));
+    let queried = 0;
+    for (const star of hyg) {
+      if (cache[star.id]) continue;
+      cache[star.id] = await queryGaia(star);
+      queried += 1;
     }
-    rows.push({ row: buildRow(star, gaia), reason });
+    if (queried > 0) {
+      mkdirSync('.cache/neighbours', { recursive: true });
+      writeFileSync(GAIA_CACHE, JSON.stringify(cache));
+    }
+    const taken = new Set();
+    for (const star of [...hyg].sort((a, b) => a.vmag - b.vmag)) {
+      const { gaia } = chooseGaia(star, cache[star.id], taken);
+      if (gaia) taken.add(gaia.sourceId);
+    }
+    ids = [...taken].sort();
   }
-
-  // Triées par la distance ADOPTÉE (Gaia quand elle est sûre), pas par celle de HYG.
-  rows.sort((x, y) => x.row[5] - y.row[5]);
+  const counterparts = (await readCounterparts(ids, refresh)).sort((a, b) =>
+    a.sourceId < b.sourceId ? -1 : 1
+  );
+  const hygRows = hyg.map(hygProviderRow);
+  const gaiaRows = counterparts.map(gaiaProviderRow);
+  const { rows, notes } = combine(hygRows, gaiaRows);
 
   // Témoins : échec bruyant si une jointure, une unité ou un tri dérive.
   const byName = new Map(rows.map((r) => [r.row[0], r.row]));
@@ -369,42 +584,47 @@ async function main() {
   if (barnard[11] !== 'gaia-dr3' || !(Math.abs(barnard[9]) > HYG_PM_CAP))
     throw new Error('Barnard : mouvement propre non corrigé par Gaia');
 
-  const file = {
-    source: {
-      neighbours: {
-        description:
-          'Étoiles à 5 pc ou moins selon HYG v4.4, distance et mouvement de Gaia DR3 quand la mesure est sûre',
-        maxDistancePc: MAX_DISTANCE_PC,
-        gaiaEpoch: GAIA_EPOCH,
-        selection: {
-          ruweBelow: RUWE_MAX,
-          parallaxSnrAbove: PARALLAX_SNR_MIN,
-          hygAgreement: HYG_AGREEMENT,
-        },
-      },
-      gaia: {
-        id: 'gaia-dr3',
-        name: 'Gaia Data Release 3 (ESA)',
-        url: 'https://www.cosmos.esa.int/gaia',
-        archive: 'https://gea.esac.esa.int/archive/',
-        citationDoi: '10.1051/0004-6361/202243940',
-        acknowledgement: ACKNOWLEDGEMENT,
-        acknowledgementUrl:
-          'https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/',
-      },
-      hyg: {
-        id: 'hyg-v44',
-        name: 'HYG database v4.4 (Hipparcos, Yale Bright Star, Gliese)',
-        url: 'https://codeberg.org/astronexus/hyg',
-        license: 'CC-BY-SA-4.0',
-        licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
-      },
+  const hygFile = {
+    provider: {
+      id: 'hyg-v44',
+      name: 'HYG database v4.4 (Hipparcos, Yale Bright Star, Gliese)',
+      url: 'https://codeberg.org/astronexus/hyg',
+      license: 'CC-BY-SA-4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+      rightsHolder: 'David Nash (astronexus), HYG database',
+      retrieved: retrievedOf(HYG_CACHE, '2026-11-22'),
+      changes:
+        'Rows of HYG v4.4 with dist <= 5 pc only; right ascension and declination converted from radians to degrees; display name chosen from proper, gl or hip; a radial velocity of 0 (unknown in HYG) written as null. No value from any other catalogue. This file is shared under CC BY-SA 4.0.',
     },
-    fields: FIELDS,
-    count: rows.length,
-    stars: rows.map((r) => r.row),
+    maxDistancePc: MAX_DISTANCE_PC,
+    fields: HYG_FIELDS,
+    stars: hygRows,
   };
-  const text = `${JSON.stringify(file)}\n`;
+  const gaiaFile = {
+    provider: {
+      id: 'gaia-dr3',
+      name: 'Gaia Data Release 3 (ESA)',
+      url: 'https://www.cosmos.esa.int/gaia',
+      license: 'CC-BY-NC-3.0-IGO',
+      licenseUrl: 'https://creativecommons.org/licenses/by-nc/3.0/igo/',
+      rightsHolder: 'European Space Agency (ESA), Gaia DPAC',
+      retrieved: retrievedOf(COUNTERPARTS_CACHE, '2026-11-27'),
+      via: `${GAVO} (gaia.dr3lite, Gaia DR3 republished by the GAVO data center)`,
+      citationDoi: '10.1051/0004-6361/202243940',
+      acknowledgement: ACKNOWLEDGEMENT,
+      acknowledgementUrl:
+        'https://gea.esac.esa.int/archive/documentation/GDR3/Miscellaneous/sec_credit_and_citation_instructions/',
+      changes:
+        'Selected sources of gaia_source (the counterparts of the HYG stars within 5 pc), columns copied as published at epoch J2016.0. No value from any other catalogue. This file is shared under CC BY-NC 3.0 IGO.',
+    },
+    epoch: GAIA_EPOCH,
+    fields: GAIA_FIELDS,
+    stars: gaiaRows,
+  };
+  const files = new Map([
+    ['hyg-v44.json', `${JSON.stringify(hygFile)}\n`],
+    ['gaia-dr3.json', `${JSON.stringify(gaiaFile)}\n`],
+  ]);
   console.log(
     `${rows.length} étoiles ; Gaia : ${rows.filter((r) => r.row[11] === 'gaia-dr3').length}, HYG seul : ${rows.filter((r) => r.row[11] === 'hyg-v44').length}`
   );
@@ -412,16 +632,27 @@ async function main() {
     console.log(`  HYG seul : ${r.row[0]} (${r.reason})`);
   for (const n of notes) console.log(`  ${n}`);
   if (args.includes('--check')) {
-    const current = existsSync(OUT) ? readFileSync(OUT, 'utf8') : '';
-    if (current !== text) {
-      console.error(`${OUT} n'est plus celui que ce script écrirait`);
+    const drift = [...files].filter(([name, text]) => {
+      const path = `${OUT_DIR}/${name}`;
+      return (
+        !existsSync(path) ||
+        !sameIgnoringReadDates(readFileSync(path, 'utf8'), text)
+      );
+    });
+    if (drift.length) {
+      console.error(
+        `${drift.map(([n]) => n).join(', ')} : plus ceux que ce script écrirait`
+      );
       process.exit(1);
     }
     console.log('à jour');
     return;
   }
-  writeFileSync(OUT, text);
-  console.log(`écrit ${OUT} (${Buffer.byteLength(text)} o)`);
+  mkdirSync(OUT_DIR, { recursive: true });
+  for (const [name, text] of files) {
+    writeFileSync(`${OUT_DIR}/${name}`, text);
+    console.log(`écrit ${OUT_DIR}/${name} (${Buffer.byteLength(text)} o)`);
+  }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href)

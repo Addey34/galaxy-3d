@@ -193,7 +193,7 @@ test.describe('lazy loading, rapid toggles, languages', () => {
   const requestsFor = (page: Page): string[] => {
     const seen: string[] = [];
     page.on('request', (r) => {
-      if (r.url().includes('/assets/sky/neighbours.json')) seen.push(r.url());
+      if (r.url().includes('/assets/sky/neighbours/')) seen.push(r.url());
     });
     return seen;
   };
@@ -204,7 +204,7 @@ test.describe('lazy loading, rapid toggles, languages', () => {
     await openSettingsTab(page, 'scene');
   }
 
-  test('layer off: the file is never requested; on: exactly once, however often it is toggled', async ({
+  test('layer off: the files are never requested; on: each exactly once, however often it is toggled', async ({
     page,
   }) => {
     const seen = requestsFor(page);
@@ -219,7 +219,11 @@ test.describe('lazy loading, rapid toggles, languages', () => {
     await page.locator('#neighbours-toggle').uncheck();
     await page.locator('#neighbours-toggle').check();
     await expect(page.locator('#neighbour-search-row')).toBeVisible();
-    expect(seen).toHaveLength(1);
+    // Un fichier par fournisseur (HYG, Gaia DR3), chacun lu une seule fois.
+    expect(seen.map((u) => u.split('/').pop()).sort()).toEqual([
+      'gaia-dr3.json',
+      'hyg-v44.json',
+    ]);
   });
 
   test('three clicks in a row, before the file arrives: the last one wins (on)', async ({

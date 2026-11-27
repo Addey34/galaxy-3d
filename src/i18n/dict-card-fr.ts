@@ -59,7 +59,9 @@ export const cardFr: Record<CardMessageKey, string> = {
   'nb.card.hint':
     'Le repère montre la direction réelle de l’étoile. L’étoile n’est pas dessinée à sa distance : la scène s’arrête au Système solaire.',
   'nb.card.source':
-    'Sources : Gaia DR3 (ESA) et HYG v4.4 ({license}). Les positions sont celles de J2000,0 ; le repère suit le mouvement propre jusqu’à la date de la scène.',
+    'Sources : Gaia DR3 (ESA, {gaiaLicense}) et HYG v4.4 ({hygLicense}), deux fichiers distincts, chacun sous sa licence. Les positions sont celles de J2000,0 ; le repère suit le mouvement propre jusqu’à la date de la scène.',
+  'nb.card.source.hygOnly':
+    'Source : HYG v4.4 ({hygLicense}) ; le fichier de Gaia DR3 n’a pas pu être lu. Les positions sont celles de J2000,0 ; le repère suit le mouvement propre jusqu’à la date de la scène.',
   'nb.card.opened': 'Étoile voisine {name}',
   'nb.unit.ly': 'al',
   'nb.search.label': 'Trouver une étoile voisine',
@@ -676,11 +678,14 @@ export const cardFr: Record<CardMessageKey, string> = {
   'vol.exoplanets': 'Exoplanètes',
   'vol.exoplanetsValue':
     '{count} connue(s) autour de {host} (NASA Exoplanet Archive, rapprochée par le numéro Gaia DR3)',
-  'vol.origin.gcns': 'Gaia DR3 {id}, dans le Gaia Catalogue of Nearby Stars.',
+  'vol.origin.gcns':
+    'Gaia DR3 {id}, dans le Gaia Catalogue of Nearby Stars (GCNS, CC BY-NC 4.0, construit sur les données Gaia de l’ESA, CC BY-NC 3.0 IGO).',
   'vol.origin.hyg':
-    'Trop brillante pour Gaia, listée par le GCNS comme absente d’EDR3 : valeurs d’Hipparcos (HYG v4.4).',
+    'Trop brillante pour Gaia, listée par le GCNS comme absente d’EDR3 : valeurs d’Hipparcos (HYG v4.4, CC BY-SA 4.0).',
   'vol.origin.simbad':
-    'Absente de Gaia EDR3 (liste du GCNS) et introuvable dans Hipparcos : position et parallaxe de SIMBAD seulement ; magnitude, couleur et mouvement ne sont pas disponibles ici.',
+    'Absente de Gaia EDR3 (liste du GCNS, CC BY-NC 4.0) et introuvable dans Hipparcos : position et parallaxe de SIMBAD seulement (CDS/SIMBAD) ; magnitude, couleur et mouvement ne sont pas disponibles ici.',
+  'vol.nameHyg':
+    'Nom : HYG v4.4 (CC BY-SA 4.0), rapproché par Galaxy sur la position et la distance.',
   'vol.noRadial':
     'Aucune vitesse radiale n’est publiée : quand le temps avance, le mouvement montré est perpendiculaire à la ligne de visée seulement.',
   'vol.noMotion':

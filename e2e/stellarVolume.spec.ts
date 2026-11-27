@@ -1,10 +1,14 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
 import { reportFailureDiagnostics } from './failureDiagnostics';
 import { openSettingsTab } from './settingsTab';
+import { assembleVolume } from '../src/core/stellarVolumeAssembly';
+import { starSlug } from '../src/core/stellarPermalink';
+import {
+  shippedVolumeSources,
+  volumeJson,
+} from '../src/core/stellarVolumeTestFixture';
 
 /**
  * LE VOLUME STELLAIRE ÉTENDU (GAL-UNIVERSE-008) dans la vue du voisinage : échelles 5, 25, 50, 100 pc,
@@ -12,12 +16,49 @@ import { openSettingsTab } from './settingsTab';
  * interrompu ou refusé, adresse partageable, Retour et Suivant du navigateur, accessibilité. Les rangs
  * des étoiles témoins sont LUS dans `names.json` : un fichier regénéré ne casse pas le test en silence.
  */
-const NAMES = JSON.parse(
-  readFileSync(
-    resolve(import.meta.dirname, '../public/assets/sky/volume/names.json'),
-    'utf-8'
-  )
-) as Record<string, (string | number | null)[]>;
+/**
+ * Les noms et les rangs tels que le client les assemble (un dossier par fournisseur, tables de Galaxy) :
+ * le test les calcule avec le même module, à partir des fichiers livrés.
+ */
+const ASSEMBLY = assembleVolume(shippedVolumeSources());
+const NAMED = (() => {
+  const index = shippedVolumeSources().index;
+  return ASSEMBLY.withHygNames(
+    volumeJson(index.providers.hyg.names.file),
+    volumeJson(index.crossmatch.names.file)
+  );
+})();
+const NAMES = NAMED.names as Record<string, (string | number | null)[]>;
+/**
+ * Une étoile du GCNS nommée par HYG, dans la coquille de 25 pc et dans le paquet de détails `bucket` du
+ * GCNS, au nom unique (la recherche la trouve seule) : ses détails viennent du réseau, contrairement à
+ * Véga (absente de Gaia, détails connus sans paquet).
+ */
+function gcnsNamedStar(bucket: number): { index: number; name: string } {
+  const counts = new Map<string, number>();
+  for (const e of Object.values(NAMES))
+    counts.set(String(e[0]), (counts.get(String(e[0])) ?? 0) + 1);
+  for (const at of [...NAMED.fromHyg].sort((a, b) => a - b)) {
+    const g = ASSEMBLY.gcnsIndexOf(at);
+    const name = String(NAMES[String(at)]![0]);
+    if (
+      at < ASSEMBLY.manifest.shells[0]!.count &&
+      Math.floor(g / ASSEMBLY.manifest.detailBucket) === bucket &&
+      counts.get(name) === 1 &&
+      NAMES[String(at)]!.length === 1 &&
+      /^[A-Za-z0-9 ]{5,}$/.test(name)
+    )
+      return { index: at, name };
+  }
+  throw new Error(`aucune étoile nommée dans le paquet ${bucket}`);
+}
+/** Les fichiers lus à la première échelle : l'index, puis les petits fichiers de l'assemblage. */
+const FIRST_LOAD = [
+  'crossmatch.json',
+  'gcns-missing/missing.json',
+  'hyg/complement.json',
+  'nasa/hosts.json',
+];
 const indexOf = (name: string): number =>
   Number(Object.entries(NAMES).find(([, e]) => e[0] === name)![0]);
 const VEGA = indexOf('Vega');
@@ -77,15 +118,17 @@ test('rien du volume à l’ouverture ; chaque échelle charge sa coquille, et s
   await expect(box(page)).toHaveAttribute('data-scale', '5');
   expect(requests).toEqual([]);
   await chooseScale(page, 25);
-  expect(requests).toEqual(['manifest.json', 'stars-25.bin']);
+  // L'index d'abord, puis (en parallèle) les petits fichiers de l'assemblage, puis la coquille du GCNS.
+  expect(requests[0]).toBe('index.json');
+  expect(requests.slice(1, 5).sort()).toEqual(FIRST_LOAD);
+  expect(requests.slice(5)).toEqual(['gcns/stars-25.bin']);
   expect(search(page).get('vol')).toBe('25');
   await expect(page.locator('#stellar-volume-status')).toContainText('5,377');
   await chooseScale(page, 100);
-  expect(requests).toEqual([
-    'manifest.json',
-    'stars-25.bin',
-    'stars-50.bin',
-    'stars-100.bin',
+  expect(requests.slice(5)).toEqual([
+    'gcns/stars-25.bin',
+    'gcns/stars-50.bin',
+    'gcns/stars-100.bin',
   ]);
   await expect(page.locator('#stellar-volume-status')).toContainText('301,721');
   await expect(box(page)).toHaveAttribute('data-visible', '301721');
@@ -93,7 +136,7 @@ test('rien du volume à l’ouverture ; chaque échelle charge sa coquille, et s
   await chooseScale(page, 5);
   expect(search(page).get('vol')).toBeNull();
   await chooseScale(page, 50);
-  expect(requests).toHaveLength(4);
+  expect(requests).toHaveLength(8);
 });
 
 test('la recherche trouve Véga, la fiche dit sa source, l’adresse la partage et la rouvre', async ({
@@ -185,12 +228,12 @@ test('un chargement remplacé est annulé ; un chargement refusé est dit, l’�
 }) => {
   test.setTimeout(240_000);
   let released = false;
-  await page.route('**/assets/sky/volume/stars-100.bin', async (route) => {
+  await page.route('**/assets/sky/volume/gcns/stars-100.bin', async (route) => {
     await new Promise((r) => setTimeout(r, 6_000));
     released = true;
     await route.continue().catch(() => {});
   });
-  await page.route('**/assets/sky/volume/stars-50.bin', (route) =>
+  await page.route('**/assets/sky/volume/gcns/stars-50.bin', (route) =>
     route.abort()
   );
   await openView(page);
@@ -206,7 +249,7 @@ test('un chargement remplacé est annulé ; un chargement refusé est dit, l’�
   );
   expect(search(page).get('vol')).toBe('25');
   // 100 pc demandé puis remplacé par 5 pc avant d'arriver : rien ne se pose ensuite.
-  await page.unroute('**/assets/sky/volume/stars-50.bin');
+  await page.unroute('**/assets/sky/volume/gcns/stars-50.bin');
   await page.locator('.sv-volume-scale[data-pc="100"]').click();
   await chooseScale(page, 5);
   await expect.poll(() => released, { timeout: 20_000 }).toBe(true);
@@ -329,7 +372,7 @@ test.describe('cycle de vie du volume', () => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     let released = false;
-    await page.route('**/assets/sky/volume/manifest.json', async (route) => {
+    await page.route('**/assets/sky/volume/index.json', async (route) => {
       await new Promise((r) => setTimeout(r, 4_000));
       released = true;
       await route.continue().catch(() => {});
@@ -358,13 +401,16 @@ test.describe('cycle de vie du volume', () => {
     test.setTimeout(240_000);
     const requested: string[] = [];
     page.on('request', (r) => {
-      const m = /\/assets\/sky\/volume\/(stars-\d+\.bin)$/.exec(r.url());
+      const m = /\/assets\/sky\/volume\/gcns\/(stars-\d+\.bin)$/.exec(r.url());
       if (m) requested.push(m[1]!);
     });
-    await page.route('**/assets/sky/volume/stars-50.bin', async (route) => {
-      await new Promise((r) => setTimeout(r, 3_000));
-      await route.continue().catch(() => {});
-    });
+    await page.route(
+      '**/assets/sky/volume/gcns/stars-50.bin',
+      async (route) => {
+        await new Promise((r) => setTimeout(r, 3_000));
+        await route.continue().catch(() => {});
+      }
+    );
     await openView(page);
     await chooseScale(page, 25);
     await page.locator('.sv-volume-scale[data-pc="100"]').click();
@@ -403,7 +449,7 @@ test.describe('cycle de vie du volume', () => {
     test.setTimeout(240_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.route('**/assets/sky/volume/manifest.json', (route) =>
+    await page.route('**/assets/sky/volume/index.json', (route) =>
       route.abort()
     );
     await openView(page);
@@ -414,7 +460,7 @@ test.describe('cycle de vie du volume', () => {
     await expect(page.locator('#stellar-volume-status')).toContainText(
       'could not'
     );
-    await page.unroute('**/assets/sky/volume/manifest.json');
+    await page.unroute('**/assets/sky/volume/index.json');
     await chooseScale(page, 25);
     await expect(box(page)).toHaveAttribute('data-visible', '5377');
     expect(errors).toEqual([]);
@@ -426,17 +472,20 @@ test.describe('cycle de vie du volume', () => {
     test.setTimeout(240_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.route('**/assets/sky/volume/details/*.bin', (route) =>
+    await page.route('**/assets/sky/volume/gcns/details/*.bin', (route) =>
       route.abort()
     );
+    const star = gcnsNamedStar(0);
     await openView(page);
     await chooseScale(page, 25);
-    await findStar(page, 'Vega');
+    await findStar(page, star.name);
     const card = page.locator('#stellar-volume-card');
     await expect(card).toContainText('could not be loaded');
     await expect(card).not.toContainText('Parallax');
-    await page.unroute('**/assets/sky/volume/details/*.bin');
-    await findStar(page, 'Vega');
+    // Le nom vient de HYG : la fiche le dit, avec sa licence.
+    await expect(card).toContainText('Name: HYG v4.4 (CC BY-SA 4.0)');
+    await page.unroute('**/assets/sky/volume/gcns/details/*.bin');
+    await findStar(page, star.name);
     await expect(card).toContainText('Parallax');
     await expect(card).not.toContainText('could not be loaded');
     expect(errors).toEqual([]);
@@ -446,19 +495,24 @@ test.describe('cycle de vie du volume', () => {
     page,
   }) => {
     test.setTimeout(240_000);
-    // Les détails de Véga (paquet 000) arrivent avec 6 s de retard ; l'étoile choisie entre-temps est
-    // dans un autre paquet, donc servie tout de suite.
+    // Les détails de l'étoile du lien (paquet 000 du GCNS) arrivent avec 6 s de retard ; l'étoile choisie
+    // entre-temps est dans un autre paquet, donc servie tout de suite.
     let released = false;
-    await page.route('**/assets/sky/volume/details/000.bin', async (route) => {
-      await new Promise((r) => setTimeout(r, 6_000));
-      released = true;
-      await route.continue().catch(() => {});
-    });
-    const other = Object.entries(NAMES).find(
-      ([i, e]) => Number(i) >= 4096 && Number(i) < 5377 && e.length === 1
-    )!;
-    const otherName = String(other[1][0]);
-    await openView(page, `&vol=25&vstar=${VEGA}.vega`);
+    await page.route(
+      '**/assets/sky/volume/gcns/details/000.bin',
+      async (route) => {
+        await new Promise((r) => setTimeout(r, 6_000));
+        released = true;
+        await route.continue().catch(() => {});
+      }
+    );
+    const linked = gcnsNamedStar(0);
+    const other = gcnsNamedStar(1);
+    const otherName = other.name;
+    await openView(
+      page,
+      `&vol=25&vstar=${linked.index}.${starSlug(linked.name)}`
+    );
     await expect(box(page)).toHaveAttribute('data-state', 'idle', {
       timeout: 60_000,
     });
@@ -468,6 +522,6 @@ test.describe('cycle de vie du volume', () => {
     await expect(page.locator('#stellar-volume-card-title')).toHaveText(
       otherName
     );
-    expect(search(page).get('vstar')).toMatch(new RegExp(`^${other[0]}\\.`));
+    expect(search(page).get('vstar')).toMatch(new RegExp(`^${other.index}\\.`));
   });
 });

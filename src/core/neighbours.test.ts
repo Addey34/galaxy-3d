@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { shippedNeighbours } from './neighboursTestFixture';
 import { describe, expect, it } from 'vitest';
 import {
   approach,
@@ -17,9 +17,7 @@ import {
 } from './neighbours';
 import { starDirection, yearsSinceJ2000 } from './starCatalogue';
 
-const file = JSON.parse(
-  readFileSync('public/assets/sky/neighbours.json', 'utf8')
-) as NeighbourFile;
+const file: NeighbourFile = shippedNeighbours();
 const byName = (name: string): NeighbourRow => {
   const row = file.stars.find((s) => s[0] === name);
   if (!row) throw new Error(`absent : ${name}`);
@@ -29,7 +27,6 @@ const byName = (name: string): NeighbourRow => {
 describe('le fichier des étoiles voisines', () => {
   it('suit son propre en-tête et ne dépasse pas sa borne de distance', () => {
     expect(file.count).toBe(file.stars.length);
-    expect(file.fields).toHaveLength(file.stars[0]!.length);
     for (const s of file.stars)
       expect(s[5]).toBeLessThanOrEqual(file.source.neighbours.maxDistancePc);
   });
@@ -51,8 +48,9 @@ describe('le fichier des étoiles voisines', () => {
         expect(s[6]).toBeNull();
       }
     }
-    // Les deux sources sont citées, avec le remerciement exigé verbatim par l'ESA.
-    expect(file.source.gaia.acknowledgement).toMatch(
+    // Les deux sources sont citées, chacune avec SA licence, et le remerciement exigé verbatim par l'ESA.
+    expect(file.source.gaia!.license).toBe('CC-BY-NC-3.0-IGO');
+    expect(file.source.gaia!.acknowledgement).toMatch(
       /^This work has made use of data from the European Space Agency \(ESA\) mission Gaia/
     );
     expect(file.source.hyg.license).toBe('CC-BY-SA-4.0');
