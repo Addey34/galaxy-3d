@@ -19,9 +19,10 @@
  * moitié exacte de la couverture ; (2) la couche reste à une seule altitude de représentation
  * (`core/cloudShellAltitude`, 10 km de près), qui n'est PAS une mesure de hauteur de nuage.
  *
- * SOUS LA COQUE, rien : le moteur de tuiles ne sélectionne aucun carreau quand la caméra est à l'intérieur de
- * la sphère qu'il sert (`PlanetarySurfaceEngine.update`, `radii <= lowest`). Un plafond nuageux vu par-dessous
- * demanderait une sélection depuis l'intérieur dans le moteur PARTAGÉ : non entrepris, dit comme limite.
+ * SOUS LA COQUE (GAL-EARTH-ATMOSPHERE-003) : la coque se déclare servie de l'intérieur
+ * (`SurfaceHost.interiorGroundRatio`), et le moteur partagé la sélectionne tant que la caméra est au-dessus du
+ * sol ; la même règle de près vaut pour le plafond vu d'en dessous. SUPERSEDED 2026-11-28 : « sous la coque,
+ * rien, non entrepris ».
  */
 
 /** Pixels d'écran visés par texel effectif de près (le début du fondu de grossissement : net, sans carré). */

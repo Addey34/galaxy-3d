@@ -624,8 +624,11 @@ export class CameraSystem {
       (this.currentTarget?.group.userData['radius'] as number | undefined) ??
       0;
     const tilt = horizonTiltRad(distance, ground, this.camera.fov);
-    if (tilt > 0) this.camera.rotateX(tilt * this._tiltShare);
+    if (tilt > 0) this.camera.rotateX(tilt * this._tiltShare + this.skyTiltRad);
   }
+
+  /** Visée relevée EN PLUS de l'horizon (radians), posée par la sonde `?debug-surface` seulement (mesure du ciel). */
+  skyTiltRad = 0;
 
   /**
    * Near/far adaptatifs en mode Explo. À vraie échelle, une planète est un mesh minuscule

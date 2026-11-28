@@ -467,7 +467,7 @@ export const fr: Record<MessageKey, string> = {
   'weather.seaTemperature': 'Température de la mer (GHRSST)',
   'weather.thermalModel': 'Température (modèle)',
   'weather.clouds.note':
-    "Couverture nuageuse réelle, imagerie satellite NASA (image du jour). De près : VIIRS à 250 m, trous comblés par la fraction MODIS Aqua du jour (~20 km, autre passage). Très près, lissés à ce que l'écran peut en montrer (une moyenne de l'image, aucun détail ajouté). Dessinés à une altitude fixée, non mesurée.",
+    "Couverture nuageuse réelle, imagerie satellite NASA (image du jour). De près : VIIRS à 250 m, trous comblés par la fraction MODIS Aqua du jour (~20 km, autre passage). Très près, lissés à ce que l'écran peut en montrer (une moyenne de l'image, aucun détail ajouté). Dessinés à une altitude fixée, non mesurée. Vus d'en dessous, éclairés comme leur sommet : une approximation, leur épaisseur n'est pas observée.",
   'weather.cloudsModel.note':
     'Couverture nuageuse modélisée : mondiale sans trou, gère passé et prévision ; à choisir pour le moment présent et le voyage dans le temps.',
   'weather.precip.note':

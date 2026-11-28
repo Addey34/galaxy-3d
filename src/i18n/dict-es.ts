@@ -478,7 +478,7 @@ export const es: Record<MessageKey, string> = {
   'weather.seaTemperature': 'Temperatura del mar (GHRSST)',
   'weather.thermalModel': 'Temperatura del aire (modelo)',
   'weather.clouds.note':
-    'Cobertura nubosa real, imagen de satélite de la NASA (imagen del día). De cerca: VIIRS a 250 m, huecos completados por la fracción MODIS Aqua del día (~20 km, otra pasada). Muy de cerca, suavizadas a lo que la pantalla puede mostrar (un promedio de la imagen, sin detalle añadido). Dibujadas a una altitud fijada, no medida.',
+    'Cobertura nubosa real, imagen de satélite de la NASA (imagen del día). De cerca: VIIRS a 250 m, huecos completados por la fracción MODIS Aqua del día (~20 km, otra pasada). Muy de cerca, suavizadas a lo que la pantalla puede mostrar (un promedio de la imagen, sin detalle añadido). Dibujadas a una altitud fijada, no medida. Vistas desde abajo, iluminadas como su cima: una aproximación, su espesor no se observa.',
   'weather.cloudsModel.note':
     'Cobertura nubosa modelizada: mundial sin huecos, admite pasado y previsión; elíjala para el momento presente y el viaje en el tiempo.',
   'weather.precip.note':

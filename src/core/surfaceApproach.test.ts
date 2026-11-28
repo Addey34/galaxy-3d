@@ -258,12 +258,25 @@ describe('le plan proche devant la coque des nuages (GAL-EARTH-ATMOSPHERE-002)',
       camera - shell
     );
   });
-  it('sous la coque, ou sans coque visible, la règle du sol inchangée', () => {
-    expect(followNearPlaneWithShell(shell - 3, ground, shell, 1e-6)).toBe(
-      followNearPlane(shell - 3, ground, 1e-6)
+  it('sous la coque loin d’elle, ou sans coque visible, la règle du sol inchangée', () => {
+    // Caméra à 3 km sous la coque et 10,6 km au-dessus du sol : la moitié de l'altitude (5,3 km) dépasse la
+    // moitié de la distance à la coque (1,5 km) : c'est le cas suivant. Ici la caméra est près du SOL.
+    const nearGround = ground + 1;
+    expect(followNearPlaneWithShell(nearGround, ground, shell, 1e-6)).toBe(
+      followNearPlane(nearGround, ground, 1e-6)
     );
     expect(followNearPlaneWithShell(shell + 50, ground, null, 1e-6)).toBe(
       followNearPlane(shell + 50, ground, 1e-6)
+    );
+  });
+  it('sous la coque près d’elle, le plan proche reste devant le plafond (GAL-EARTH-ATMOSPHERE-003)', () => {
+    // Caméra à 1 km sous la coque : la règle du sol (moitié de 12,6 km d'altitude) coupait le plafond vu d'en dessous.
+    const camera = shell - 1;
+    expect(followNearPlane(camera, ground, 1e-6)).toBeGreaterThan(1);
+    const near = followNearPlaneWithShell(camera, ground, shell, 1e-6);
+    expect(near).toBeCloseTo(0.5, 6);
+    expect(followNearPlaneWithShell(shell - 1e-9, ground, shell, 1e-6)).toBe(
+      1e-6
     );
   });
   it('au contact de la coque, le plancher garde le plan proche positif', () => {

@@ -122,6 +122,20 @@ export const REGIONAL_CLOUDS_GLSL = `
         #endif`;
 
 /**
+ * VU D'EN DESSOUS (GAL-EARTH-ATMOSPHERE-003). Un matériau transparent en double face est dessiné par Three en DEUX
+ * passes, faces arrière puis faces avant ; dans la passe arrière, `FLIP_SIDED` retourne la normale dans le shader de
+ * sommets. C'est la passe qui dessine le dessous de la coque : un nuage vu du sol en plein jour n'y recevait que la
+ * lumière ambiante (plafond noir sous un ciel bleu, mesuré : N·L du Soleil à 0 en dessous, 0,87 au-dessus, même
+ * lieu, même heure). La normale garde ici le sens de la face éclairée (vers l'extérieur) dans les deux passes : le
+ * dessous prend l'éclairage du dessus. C'est une APPROXIMATION, dite comme telle : l'épaisseur des nuages n'est pas
+ * observée, et rien ne prétend calculer la lumière qui les traverse.
+ */
+export const UNDERSIDE_NORMAL_VERTEX_GLSL = `
+        #ifdef FLIP_SIDED
+          transformedNormal = - transformedNormal;
+        #endif`;
+
+/**
  * Les nuages de près (`core/cloudNear`) : `uCloudNear` vaut 1, ou 0 par `?cloud-near=0` (retour à la règle
  * d'effacement, mesure A/B sur le même build). Partagé par tous les carreaux.
  */
@@ -194,6 +208,10 @@ export function createRegionalCloudMaterial(
       .replace(
         '#include <begin_vertex>',
         '#include <begin_vertex>' + MAGNIFICATION_VERTEX_GLSL
+      )
+      .replace(
+        '#include <defaultnormal_vertex>',
+        '#include <defaultnormal_vertex>' + UNDERSIDE_NORMAL_VERTEX_GLSL
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -215,6 +233,6 @@ export function createRegionalCloudMaterial(
       );
   });
   const previousKey = material.customProgramCacheKey.bind(material);
-  material.customProgramCacheKey = () => `${previousKey()}-regional-clouds-v3`;
+  material.customProgramCacheKey = () => `${previousKey()}-regional-clouds-v4`;
   return material;
 }

@@ -137,8 +137,13 @@ export function followNearPlane(
  * (`core/cloudShellAltitude`), et la moitié de l'altitude AU-DESSUS DU SOL la coupait dès que la caméra
  * passait sous ~20 km (mesuré aux îles Kerguelen : nuages présents à 22,5 km, absents à 11,2 km, la coque
  * étant à 1,2 km devant la caméra pour un plan proche à 5,6 km). Tant que la caméra est AU-DESSUS de la coque,
- * le plan proche reste à la moitié de la distance qui l'en sépare ; dessous, la coque n'est jamais plus près
- * que sa hauteur au-dessus de la caméra, et la règle du sol suffit.
+ * le plan proche reste à la moitié de la distance qui l'en sépare.
+ *
+ * DESSOUS (GAL-EARTH-ATMOSPHERE-003, la coque est désormais servie de l'intérieur) : la coque n'est jamais plus
+ * près que sa hauteur au-dessus de la caméra, mais la moitié de l'altitude au-dessus du sol peut la dépasser
+ * (caméra à 9 km, coque à 10 km : plan proche à 4,5 km, plafond à 1 km coupé). Le plan proche reste donc aussi
+ * à la moitié de la distance qui sépare la caméra de la coque. SUPERSEDED 2026-11-27 : « dessous, la règle du
+ * sol suffit ».
  */
 export function followNearPlaneWithShell(
   distance: number,
@@ -147,12 +152,9 @@ export function followNearPlaneWithShell(
   minimum: number
 ): number {
   const ground = followNearPlane(distance, clearanceRadius, minimum);
-  if (
-    shellRadius === null ||
-    !(shellRadius > clearanceRadius) ||
-    distance <= shellRadius
-  )
-    return ground;
+  if (shellRadius === null || !(shellRadius > clearanceRadius)) return ground;
+  if (distance <= shellRadius)
+    return Math.min(ground, Math.max((shellRadius - distance) * 0.5, minimum));
   return Math.min(ground, followNearPlane(distance, shellRadius, minimum));
 }
 

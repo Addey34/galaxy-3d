@@ -777,6 +777,7 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
         maxTiles: software ? 12 : 40,
         maxConcurrentLoads: software ? 2 : 4,
       },
+      interior: !software,
     });
     chooseTileset = createDatedChooser({
       date: () => api.orbitalMechanics.simulationDate,

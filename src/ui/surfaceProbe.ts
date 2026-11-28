@@ -74,6 +74,11 @@ export function setupSurfaceProbe(api: PublicAPI): () => void {
   let fps = 0;
 
   const update = (): void => {
+    // Mesure du ciel vu du sol (GAL-EARTH-ATMOSPHERE-003) : `window.__lookUpDeg` relève la visée de ce
+    // nombre de degrés au-dessus du cadrage d'horizon. Sonde seulement : aucun visiteur ne la voit.
+    const lookUp = (window as unknown as { __lookUpDeg?: number }).__lookUpDeg;
+    api.cameraSystem.skyTiltRad =
+      typeof lookUp === 'number' ? (lookUp * Math.PI) / 180 : 0;
     frames += 1;
     const now = performance.now();
     if (now - windowStart >= 1000) {
