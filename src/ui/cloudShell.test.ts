@@ -13,7 +13,9 @@ import { createCloudShellHost } from '@/components/surface/CloudShellHost';
 import {
   REGIONAL_CLOUDS_GLSL,
   REGIONAL_EXTRACTION_GLSL,
+  createRegionalCloudMaterial,
   tileOceanTransform,
+  UNDERSIDE_NORMAL_VERTEX_GLSL,
 } from '@/components/surface/cloudShellMaterial';
 import { REAL_CLOUDS_PARS_GLSL } from '@/config/layerConfig';
 import { WMTS_EQUIRECTANGULAR_2x1 } from '@/core/tilePyramid';
@@ -117,6 +119,27 @@ describe('la façade de la coque', () => {
     expect(scales.at(-1)).toBe(1);
   });
 
+  it('se déclare servie de l’intérieur, le sol compté sur l’ellipsoïde (GAL-EARTH-ATMOSPHERE-003)', () => {
+    // Aux Kerguelen l'ellipsoïde passe 3,7 km sous la sphère moyenne : compté sur la sphère, le plafond se
+    // retirait à 2 km au-dessus du sol réel (mesuré). Le sol est le plus petit demi-axe, comme pour le moteur.
+    const body = { ...earth(), figure: { a: 1, b: 0.99665, c: 1 } };
+    const host = createCloudShellHost(body, { scale: 1.01 });
+    expect(host.interiorGroundRatio?.()).toBeCloseTo(0.99665 / 1.01, 9);
+    host.setShellScale(0.9917);
+    expect(host.interiorGroundRatio?.()).toBeCloseTo(
+      0.99665 / (1.01 * 0.9917),
+      9
+    );
+    // Sans figure, la sphère ; `?cloud-interior=0` (A/B) : aucune déclaration, comportement d'avant.
+    expect(
+      createCloudShellHost(earth(), { scale: 1.01 }).interiorGroundRatio?.()
+    ).toBeCloseTo(1 / 1.01, 9);
+    expect(
+      createCloudShellHost(earth(), { scale: 1.01, interior: false })
+        .interiorGroundRatio
+    ).toBeUndefined();
+  });
+
   it('ne borne JAMAIS la caméra : la finesse des nuages n’est pas déclarée au corps', () => {
     const host = createCloudShellHost(earth(), { scale: 1.01 });
     expect(host.setStreamedImageryWidth(131072)).toBe(false);
@@ -125,6 +148,32 @@ describe('la façade de la coque', () => {
 });
 
 describe('le matériau régional', () => {
+  it('vu d’en dessous, garde la normale de la face éclairée dans la passe des faces arrière (GAL-EARTH-ATMOSPHERE-003)', () => {
+    // Three dessine un matériau transparent double face en deux passes ; dans la passe arrière, `FLIP_SIDED`
+    // retournait la normale et le plafond vu du sol était noir en plein jour (N·L à 0, mesuré).
+    const material = createRegionalCloudMaterial(
+      undefined,
+      new Proxy({}, { get: () => ({ value: null }) }) as never
+    );
+    const shader = {
+      uniforms: {},
+      vertexShader: THREE.ShaderLib.physical.vertexShader,
+      fragmentShader: THREE.ShaderLib.physical.fragmentShader,
+    } as unknown as THREE.WebGLProgramParametersWithUniforms;
+    material.onBeforeCompile(shader, {
+      capabilities: { isWebGL2: true },
+      extensions: { has: () => true },
+    } as never);
+    const vertex = shader.vertexShader;
+    const at = vertex.indexOf('#include <defaultnormal_vertex>');
+    expect(at).toBeGreaterThan(-1);
+    expect(vertex.slice(at)).toContain(UNDERSIDE_NORMAL_VERTEX_GLSL);
+    expect(UNDERSIDE_NORMAL_VERTEX_GLSL).toMatch(
+      /#ifdef FLIP_SIDED\s+transformedNormal = - transformedNormal;/
+    );
+    expect(material.side).toBe(THREE.DoubleSide);
+  });
+
   it('reprend l’extraction commune, avec le masque d’eau dans le repère du carreau', () => {
     expect(REGIONAL_EXTRACTION_GLSL).not.toBe(REAL_CLOUDS_PARS_GLSL);
     expect(REGIONAL_EXTRACTION_GLSL).toContain('uCloudTile.zw');
@@ -226,6 +275,30 @@ describe('le pilote des nuages régionaux', () => {
     };
     for (let i = 0; i < 3; i += 1) shell.drive(body, 6371, 1.4, camera, 800);
     expect(new Set(attached).size).toBe(2);
+  });
+
+  it('sert le plafond vu d’en dessous avec un GPU, jamais en rendu logiciel (GAL-EARTH-ATMOSPHERE-003)', () => {
+    const hosts = (interior: boolean | undefined) => {
+      const { engine } = stubEngine();
+      const shell = createCloudShell({
+        budget: { maxTiles: 8, maxConcurrentLoads: 2 },
+        engine,
+        ...(interior === undefined ? {} : { interior }),
+      });
+      cloudsOnScreen.value = true;
+      cloudsOnScreen.source = {
+        id: 'VIIRS_NOAA21_CorrectedReflectance_TrueColor:2026-11-20',
+        day: '2026-11-20',
+      };
+      shell.drive(body, 6371, 1.0005, camera, 800);
+      const host = (engine.attach as ReturnType<typeof vi.fn>).mock
+        .calls[0]![0] as { interiorGroundRatio?: () => number };
+      shell.dispose();
+      return host;
+    };
+    expect(typeof hosts(undefined).interiorGroundRatio).toBe('function');
+    expect(typeof hosts(true).interiorGroundRatio).toBe('function');
+    expect(hosts(false).interiorGroundRatio).toBeUndefined();
   });
 
   it('se retire quand les nuages ne sont plus à l’écran, trop loin, ou sans fiche à 250 m', () => {

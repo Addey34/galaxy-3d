@@ -141,6 +141,14 @@ export interface SurfaceHost {
    * ne jamais passer sous le relief. Optionnel : un hôte d'essai peut l'ignorer.
    */
   setMeasuredGroundRadiusKm?(km: number | null): void;
+  /**
+   * OBSERVÉE AUSSI DE L'INTÉRIEUR (GAL-EARTH-ATMOSPHERE-003) : une coque posée AU-DESSUS d'un sol (les
+   * nuages) se voit encore quand la caméra passe dessous. L'hôte rend alors le rayon de ce sol en rapport
+   * au rayon RENDU de la coque (moins de 1) ; le moteur continue de sélectionner tant que la caméra est
+   * au-dessus de ce sol, avec l'horizon du sol vu de l'intérieur. Absent (le sol, tous les corps) : rien
+   * ne change, la caméra sous la sphère servie détache tout.
+   */
+  interiorGroundRatio?(): number;
 }
 
 /** Un jeu de hauteurs prêt à l'emploi : la fiche, et son manifeste déjà lu. */
@@ -888,7 +896,15 @@ export class PlanetarySurfaceEngine {
         ? this._measuredGroundKm / this._radiusKm
         : 1
     );
-    if (radii > TILE_ENGINE_ENTER_RADII || radii <= lowest) {
+    // Sous la sphère servie, seule une coque qui le DÉCLARE (`interiorGroundRatio`) reste servie, et
+    // seulement tant que la caméra est au-dessus de son sol.
+    const interiorGround =
+      radii <= lowest ? (host.interiorGroundRatio?.() ?? null) : null;
+    if (
+      radii > TILE_ENGINE_ENTER_RADII ||
+      (radii <= lowest &&
+        (interiorGround === null || !(radii > interiorGround)))
+    ) {
       this._clear();
       return;
     }
@@ -923,7 +939,13 @@ export class PlanetarySurfaceEngine {
     );
     const regionalMax = Math.max(tileset.maxLevel, ...regionalLevels.values());
     const tiles = selectTiles(
-      this._tileView(camera, viewportHeightPx, centre, kmPerUnit),
+      this._tileView(
+        camera,
+        viewportHeightPx,
+        centre,
+        kmPerUnit,
+        interiorGround !== null ? { groundRatio: interiorGround, radii } : null
+      ),
       {
         shape: tileset.matrix,
         maxLevel: regionalMax,
@@ -1344,7 +1366,8 @@ export class PlanetarySurfaceEngine {
     camera: THREE.PerspectiveCamera,
     viewportHeightPx: number,
     centre: { latitudeDeg: number; longitudeDeg: number },
-    kmPerUnit: number
+    kmPerUnit: number,
+    interior: { groundRatio: number; radii: number } | null = null
   ): TileView {
     const host = this._host!;
     const tileset = this._tileset!;
@@ -1372,9 +1395,14 @@ export class PlanetarySurfaceEngine {
       this._measuredGroundKm ?? this._radiusKm,
       cameraKm
     );
-    const horizon =
-      Math.acos(Math.min(1, groundKm / cameraKm)) +
-      Math.acos(groundKm / (groundKm + HIGHEST_RELIEF_KM));
+    // De l'INTÉRIEUR d'une coque (`interiorGroundRatio`) : la coque n'est cachée que par le SOL. Le rayon
+    // rasant le sol touche la coque à acos(g/d) + acos(g/R) du nadir (g sol, d caméra, R coque = 1), en
+    // rayons rendus de la coque ; un relief qui dépasse le sol ne cache pas plus loin, il est ignoré.
+    const horizon = interior
+      ? Math.acos(Math.min(1, interior.groundRatio / interior.radii)) +
+        Math.acos(Math.min(1, interior.groundRatio))
+      : Math.acos(Math.min(1, groundKm / cameraKm)) +
+        Math.acos(groundKm / (groundKm + HIGHEST_RELIEF_KM));
     const pxPerKm = (distanceKm: number) =>
       screenPixelsPerKm({
         altitudeKm: Math.max(distanceKm, 1e-6),

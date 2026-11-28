@@ -35,6 +35,8 @@ export function createCloudShellHost(
   options: {
     /** Rapport du rayon de la coque à celui du corps (1,01 pour les nuages). */
     scale: number;
+    /** Servie aussi de l'intérieur (le plafond vu d'en dessous) ; faux par `?cloud-interior=0`. */
+    interior?: boolean;
   }
 ): CloudShellHost {
   // Les carreaux vont dans UN groupe à eux, enfant du parent qui tourne : son échelle rapproche la coque
@@ -80,6 +82,18 @@ export function createCloudShellHost(
     setStreamedImageryWidth: () => false,
     shippedSurfaceWidthPx: () => 2048,
     setSurfaceShellScale: () => undefined,
+    // Le plafond se voit aussi d'en dessous (GAL-EARTH-ATMOSPHERE-003). Le sol se compte sur le plus petit demi-axe
+    // de l'ellipsoïde, comme le moteur le fait pour le sol : aux Kerguelen (49° S) il passe 3,7 km SOUS la sphère
+    // moyenne, et la sphère retirait le plafond à 2 km au-dessus du sol réel (mesuré).
+    ...(options.interior === false
+      ? {}
+      : {
+          interiorGroundRatio: () => {
+            const f = earth.figure;
+            const lowest = f ? Math.min(f.a, f.b, f.c) : 1;
+            return lowest / (options.scale * shellScale);
+          },
+        }),
     setShellScale: (factor) => {
       shellScale = factor;
       tiles.scale.setScalar(factor);

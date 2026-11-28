@@ -1,4 +1,4 @@
-/* global console, process, document, localStorage, Event, URL */
+/* global console, process, document, localStorage, Event, URL, window */
 /**
  * DESCENTE SUR UNE RÉGION RÉELLEMENT NUAGEUSE (GAL-EARTH-CLOUD-IMMERSION-001, 2026-11-24).
  *
@@ -10,6 +10,11 @@
  *
  * Conditions : VRAI GPU (`--use-angle=d3d11`, `--software` pour s'en passer, `--cpu 4` pour freiner), 1280 × 800, visites
  * coupées, date fixée. `--clouds on|off` : couche « nuages réels » cochée ou non (même descente).
+ *
+ * GAL-EARTH-ATMOSPHERE-003 : `--perf` (durées d'image médiane et p95 et mémoire du pilote par cran, sonde
+ * `?debug-perf`), `--min-alt 0.3` (descendre jusque-là, km ; 2 par défaut), `--look-up 0,30,60,85` (au plus bas,
+ * visée relevée de ces degrés au-dessus du cadrage d'horizon, une capture chacune), `--ascend 12` (remontée, même
+ * nombre de crans de molette en sens inverse, captures `u..`).
  *
  * Usage :
  *   node scripts/measure-cloud-descent.mjs --origin http://localhost:4275 --place Brasília \
@@ -47,6 +52,13 @@ const CPU = Number(flag('--cpu', '1'));
 const SLOW_NET = args.includes('--slow-net');
 // `--reduced-motion` : le visiteur a demandé le mouvement réduit (`prefers-reduced-motion: reduce`).
 const REDUCED_MOTION = args.includes('--reduced-motion');
+const PERF = args.includes('--perf');
+const MIN_ALT = Number(flag('--min-alt', '2'));
+const LOOK_UP = (flag('--look-up', '') || '')
+  .split(',')
+  .filter(Boolean)
+  .map(Number);
+const ASCEND = Number(flag('--ascend', '0'));
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({
@@ -106,7 +118,7 @@ page.on('response', (r) => {
 });
 
 await page.goto(
-  `${ORIGIN}/?debug-surface${QUERY}&mode=${MODE}&body=earth&date=${DATE}`,
+  `${ORIGIN}/?debug-surface${PERF ? '&debug-perf' : ''}${QUERY}&mode=${MODE}&body=earth&date=${DATE}`,
   {
     timeout: 180_000,
   }
@@ -175,25 +187,44 @@ const altitude = () =>
 const cbox = await page.locator('canvas').first().boundingBox();
 await page.mouse.move(cbox.x + cbox.width / 2, cbox.y + cbox.height / 2);
 const frames = [];
-for (let i = 0; i <= STEPS; i += 1) {
-  if (i > 0) {
-    await page.mouse.wheel(0, WHEEL);
-    await page.waitForTimeout(SETTLE);
-    await page
-      .waitForFunction(
-        () =>
-          document.querySelector('canvas')?.dataset['sceneMoving'] !== '1' &&
-          document.querySelector('canvas')?.dataset['texturesLoading'] ===
-            '0' &&
-          (document.querySelector('canvas')?.dataset['surfaceBusy'] ?? '0') ===
-            '0',
-        null,
-        { timeout: 30_000 }
-      )
-      .catch(() => {});
-  }
+const settle = () =>
+  page
+    .waitForFunction(
+      () =>
+        document.querySelector('canvas')?.dataset['sceneMoving'] !== '1' &&
+        document.querySelector('canvas')?.dataset['texturesLoading'] === '0' &&
+        (document.querySelector('canvas')?.dataset['surfaceBusy'] ?? '0') ===
+          '0',
+      null,
+      { timeout: 30_000 }
+    )
+    .catch(() => {});
+const perfSample = async () => {
+  if (!PERF) return null;
+  await page.evaluate(() => window.perfProbe?.reset());
+  await page.waitForTimeout(2000);
+  return page.evaluate(() => {
+    const s = window.perfProbe?.snapshot();
+    return s
+      ? {
+          p50Ms: s.frames.p50Ms,
+          p95Ms: s.frames.p95Ms,
+          frames: s.frames.count,
+          textureMiB: Math.round((s.textures.bytes / 1048576) * 10) / 10,
+          textures: s.textures.count,
+          geometryMiB: Math.round((s.geometries.bytes / 1048576) * 10) / 10,
+          driverMiB: s.driver
+            ? Math.round((s.driver.total / 1048576) * 10) / 10
+            : null,
+          triangles: s.triangles,
+          drawCalls: s.drawCalls ?? null,
+        }
+      : null;
+  });
+};
+const capture = async (tag) => {
   const alt = await altitude();
-  const name = `f${String(i).padStart(2, '0')}_${alt === null ? 'na' : alt.toFixed(1)}km.png`;
+  const name = `${tag}_${alt === null ? 'na' : alt.toFixed(2)}km.png`;
   await page.screenshot({ path: resolve(OUT, name) });
   const fps = await page.evaluate(() => {
     const t = (document.getElementById('surface-probe')?.innerText ?? '')
@@ -204,16 +235,50 @@ for (let i = 0; i <= STEPS; i += 1) {
   const shell = await page.evaluate(
     () => document.querySelector('canvas')?.dataset['cloudShell'] ?? null
   );
+  const perf = await perfSample();
   frames.push({
-    i,
+    tag,
     altKm: alt,
     file: name,
     fps,
     shell,
+    perf,
+    gibs: gibs.ok,
     net: JSON.parse(JSON.stringify(net)),
   });
-  console.log(name);
-  if (alt !== null && alt < 2) break;
+  console.log(
+    name,
+    shell ?? '',
+    perf ? `p50 ${perf.p50Ms} p95 ${perf.p95Ms}` : ''
+  );
+  return alt;
+};
+for (let i = 0; i <= STEPS; i += 1) {
+  if (i > 0) {
+    await page.mouse.wheel(0, WHEEL);
+    await page.waitForTimeout(SETTLE);
+    await settle();
+  }
+  const alt = await capture(`f${String(i).padStart(2, '0')}`);
+  if (alt !== null && alt < MIN_ALT) break;
+}
+// Au plus bas : la visée relevée vers le ciel (sonde `?debug-surface`, `window.__lookUpDeg`).
+for (const deg of LOOK_UP) {
+  await page.evaluate((d) => {
+    window.__lookUpDeg = d;
+  }, deg);
+  await page.waitForTimeout(SETTLE);
+  await settle();
+  await capture(`sky${String(deg).padStart(2, '0')}`);
+}
+await page.evaluate(() => {
+  window.__lookUpDeg = 0;
+});
+for (let i = 1; i <= ASCEND; i += 1) {
+  await page.mouse.wheel(0, -WHEEL);
+  await page.waitForTimeout(SETTLE);
+  await settle();
+  await capture(`u${String(i).padStart(2, '0')}`);
 }
 writeFileSync(
   resolve(OUT, 'run.json'),

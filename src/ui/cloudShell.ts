@@ -25,6 +25,11 @@ cloudNearUniforms.uCloudNear.value =
     ? 0
     : 1;
 
+// Le plafond vu d'en dessous (GAL-EARTH-ATMOSPHERE-003) : `?cloud-interior=0` le retire (mesure A/B sur le même build).
+const CLOUD_INTERIOR =
+  typeof location === 'undefined' ||
+  new URLSearchParams(location.search).get('cloud-interior') !== '0';
+
 /**
  * LES NUAGES RÉGIONAUX (GAL-EARTH-CLOUD-REGIONAL-001) : la couche mondiale (une image de 2 048 px, 19,7 km
  * par texel) s'efface dès que son texel dépasse quelques pixels d'écran. Cette couche reprend la MÊME
@@ -94,6 +99,11 @@ export function createCloudShell(options: {
   engine?: PlanetarySurfaceEngine;
   /** Horloge, en millisecondes (par défaut `performance.now`). */
   now?: () => number;
+  /**
+   * Le plafond vu d'en dessous (GAL-EARTH-ATMOSPHERE-003). Faux en RENDU LOGICIEL : un voile transparent plein écran
+   * y doublait le temps d'image (412 → 1 017 ms vers le ciel, Kerguelen, mesuré), sur un repli déjà à ~1 image/s.
+   */
+  interior?: boolean;
 }): CloudShell {
   const now = options.now ?? (() => performance.now());
   // Succès et échecs des requêtes de tuiles de la source COURANTE : c'est le signal d'une panne.
@@ -186,7 +196,10 @@ export function createCloudShell(options: {
       const scale = LAYER_RADIUS_SCALE['clouds'] ?? 1.01;
       if (!host || hostFor !== body) {
         host?.dispose();
-        host = createCloudShellHost(body, { scale });
+        host = createCloudShellHost(body, {
+          scale,
+          interior: CLOUD_INTERIOR && options.interior !== false,
+        });
         hostFor = body;
       }
       // La coque descend vers une altitude réaliste quand la caméra approche (`core/cloudShellAltitude`).

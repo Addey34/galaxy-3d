@@ -418,6 +418,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "les nuages régionaux (2026-11-24, GAL-EARTH-CLOUD-REGIONAL-001) : le second moteur de tuiles posé sur la coque des nuages, sa façade d'hôte et son matériau, importés par `ui/surfacePanel` avec le moteur d'imagerie, donc seulement quand la caméra approche la Terre. Ni le démarrage ni une vue lointaine ne le chargent.",
   },
   {
+    chunk: 'skyLook',
+    reason:
+      "« regarder le ciel » près du sol (2026-11-28, GAL-EARTH-ATMOSPHERE-003) : le curseur de visée, importé par `ui/surfacePanel` la première fois que le cadrage d'horizon devient fort (caméra près du sol d'un corps), jamais au démarrage ni de loin.",
+  },
+  {
     chunk: 'stellarVisit',
     reason:
       "la visite guidée du voisinage solaire (2026-11-24, GAL-UNIVERSE-005) : le panneau, les sept arrêts avec leurs quatre langues et le calcul des nombres depuis `neighbours.json` et `exoplanets.json`, importé par `ui/stellarView` au premier clic sur « Visite guidée » ou à l'ouverture d'une adresse `visit=`. Ni le démarrage ni la vue sans visite ne le chargent.",

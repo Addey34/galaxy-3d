@@ -636,6 +636,12 @@ export const cardEn = {
   'ed.unavailable':
     'The observation of {date} could not be loaded: the one of {shown} stays on screen.',
   'ed.announce': 'Observation of {date} shown',
+  'sky.look.label': 'Look up',
+  'sky.look.value': 'raised {deg}°',
+  'sky.look.reset': 'Horizon',
+  'sky.look.resetHint': 'Back to the horizon',
+  'sky.look.hint':
+    'Raise the view towards the sky (arrow keys); the camera does not move.',
 };
 
 export type CardMessageKey = keyof typeof cardEn;
