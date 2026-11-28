@@ -258,13 +258,19 @@ export function parseHeightManifest(raw: unknown): HeightManifest {
       levels?: unknown;
       global?: unknown;
       bounds?: unknown;
+      filled?: { fraction?: unknown };
     };
     const levels = Array.isArray(record.levels)
       ? (record.levels as unknown[]).map((level) =>
           number(level, `couverture ${rank} : niveau`, 0)
         )
       : [number(record.level, `couverture ${rank} : niveau`, 0)];
-    if (record.global === true) return { levels };
+    const fraction = record.filled?.fraction;
+    const filled =
+      typeof fraction === 'number' && fraction > 0 && fraction < 1
+        ? { filledFraction: fraction }
+        : {};
+    if (record.global === true) return { levels, ...filled };
     const bounds = record.bounds as
       | { west?: unknown; east?: unknown; south?: unknown; north?: unknown }
       | undefined;

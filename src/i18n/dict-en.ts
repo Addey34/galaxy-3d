@@ -443,6 +443,8 @@ export const en = {
   'surface.relief.headline': 'Relief {title} at {resolution}/pixel',
   'surface.relief.area': 'named area {name}',
   'surface.relief.acquired': 'heights measured from {from} to {to}',
+  'surface.relief.filled':
+    '{percent}% of the surface without measurement, filled by interpolation',
   'surface.buildings.headline':
     '3D buildings: {count}. Height colour shows where it comes from. Roofs are drawn flat.',
   'surface.buildings.origin.measured': 'measured',

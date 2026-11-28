@@ -305,6 +305,107 @@
         }
       },
       "areas": []
+    },
+    {
+      "id": "mercury-messenger-usgs-dem",
+      "body": "mercury",
+      "output": "public/assets/height-tiles/mercury",
+      "base": {
+        "level": 4,
+        "projectedGeoTiff": "https://planetarymaps.usgs.gov/mosaic/Mercury_Messenger_USGS_DEM_Global_665m_v2.tif"
+      },
+      "areas": [
+        {
+          "id": "caloris-planitia",
+          "name": "Caloris Planitia",
+          "gazetteerFeatureId": 979,
+          "centre": {
+            "latitudeDeg": 31.653,
+            "longitudeDeg": 161.985
+          },
+          "diameterKm": 1500,
+          "levels": [
+            5
+          ],
+          "fromBase": true,
+          "fullExtent": true
+        },
+        {
+          "id": "rachmaninoff",
+          "name": "Rachmaninoff",
+          "gazetteerFeatureId": 14653,
+          "centre": {
+            "latitudeDeg": 27.661,
+            "longitudeDeg": 57.37
+          },
+          "diameterKm": 305,
+          "levels": [
+            5,
+            6
+          ],
+          "fromBase": true
+        },
+        {
+          "id": "beethoven",
+          "name": "Beethoven",
+          "gazetteerFeatureId": 660,
+          "centre": {
+            "latitudeDeg": -20.862,
+            "longitudeDeg": -124.21
+          },
+          "diameterKm": 630,
+          "levels": [
+            5
+          ],
+          "fromBase": true,
+          "fullExtent": true
+        },
+        {
+          "id": "discovery-rupes",
+          "name": "Discovery Rupes",
+          "gazetteerFeatureId": 1548,
+          "centre": {
+            "latitudeDeg": -54.7,
+            "longitudeDeg": -37.241
+          },
+          "diameterKm": 412,
+          "levels": [
+            5,
+            6
+          ],
+          "fromBase": true,
+          "fullExtent": true
+        },
+        {
+          "id": "kuiper",
+          "name": "Kuiper",
+          "gazetteerFeatureId": 3140,
+          "centre": {
+            "latitudeDeg": -11.336,
+            "longitudeDeg": -31.32
+          },
+          "diameterKm": 62,
+          "levels": [
+            5,
+            6
+          ],
+          "fromBase": true
+        }
+      ]
+    },
+    {
+      "id": "venus-magellan-gtdr",
+      "body": "venus",
+      "output": "public/assets/height-tiles/venus",
+      "base": {
+        "level": 4,
+        "gtdr": {
+          "directory": "https://pds-geosciences.wustl.edu/mgn/mgn-v-gxdr-v1/mg_3002/gtdr/sinus",
+          "framelets": 32,
+          "columns": 8,
+          "cacheFolder": "venus-gtdr-sinus"
+        }
+      }
     }
   ]
 }

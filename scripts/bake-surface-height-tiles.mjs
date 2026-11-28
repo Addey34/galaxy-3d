@@ -50,7 +50,14 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 import { levelWater, WATER_RULE } from './earth-water-level.mjs';
-import { geoTiffGrid } from './geotiff-grid.mjs';
+import { geoTiffGrid, readTiffTags } from './geotiff-grid.mjs';
+import {
+  fillHoles,
+  parseGtdrLabel,
+  projectedEquirectangularGrid,
+  readInt16Strips,
+  reprojectGtdrSinusoidal,
+} from './height-sources.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TARGETS = join(ROOT, 'scripts', 'surface-height-targets.json');
@@ -769,12 +776,22 @@ function encodeTile(level, row, column, values, quantum, offset) {
  * remparts est et ouest de Tycho (43° sud) HORS de l'aire, c'est-à-dire exactement le morceau
  * qu'on vient y chercher.
  */
-function areaSpanDeg(diameterKm, radiusKm, latitudeDeg) {
+function areaSpanDeg(diameterKm, radiusKm, latitudeDeg, fullExtent = false) {
   const kmPerDegree = (2 * Math.PI * radiusKm) / 360;
   const half = ((diameterKm / 2) * 1.25) / kmPerDegree;
-  const latitude = Math.min(2, Math.max(0.5, half));
+  // Le plafond (2° x 3°) borne le coût des aires de la Lune et de Mars, toutes petites. Une aire qui le
+  // DÉCLARE (`fullExtent`, GAL-PLANETARY-RELIEF-001 : Caloris Planitia fait 1 500 km) prend son diamètre
+  // publié entier ; les autres ne changent pas.
+  const latitude = fullExtent
+    ? Math.max(0.5, half)
+    : Math.min(2, Math.max(0.5, half));
   const cos = Math.max(0.2, Math.cos((latitudeDeg * Math.PI) / 180));
-  return { latitude, longitude: Math.min(3, latitude / cos) };
+  return {
+    latitude,
+    longitude: fullExtent
+      ? Math.min(180, latitude / cos)
+      : Math.min(3, latitude / cos),
+  };
 }
 
 function tilesForBox(grid, level, box) {
@@ -872,6 +889,117 @@ async function loadPdsBase(set, cacheDir) {
     samples,
     water: null,
     geoid: null,
+  };
+}
+
+/**
+ * LE SOCLE D'UN GEOTIFF PROJETÉ (GAL-PLANETARY-RELIEF-001, Mercure) : équirectangulaire en mètres, entiers
+ * 16 bits mis à l'échelle, emprise et méridien central lus dans les balises (`height-sources.mjs`). Les
+ * hauteurs sont rapportées à la sphère DÉCLARÉE par la source (2 439,4 km pour Mercure) : c'est elle que le
+ * manifeste annonce, comme pour les étiquettes PDS. Un trou serait comblé ET déclaré (`filled`).
+ */
+async function loadProjectedGeoTiffBase(set, cacheDir) {
+  const url = set.base.projectedGeoTiff;
+  const name = url.split('/').pop();
+  const bytes = await cachedFile(url, cacheDir);
+  const grid = projectedEquirectangularGrid(readTiffTags(bytes), name);
+  const raw = readInt16Strips(bytes, grid, name);
+  const samples = new Float32Array(raw.length);
+  const missing = new Uint8Array(raw.length);
+  for (let k = 0; k < raw.length; k += 1) {
+    if (grid.noData !== undefined && raw[k] === grid.noData) missing[k] = 1;
+    else samples[k] = raw[k] * grid.quantumMetres;
+  }
+  const filled = fillHoles(samples, missing, grid.width, grid.height);
+  console.log(
+    `source ${name} : ${grid.width} x ${grid.height} à ${grid.pixelsPerDegree} px/degré, ` +
+      `ouest ${grid.westDeg}° (méridien central ${grid.centerLongDeg}°), quantum ${grid.quantumMetres} m, ` +
+      `sphère ${grid.radiusKm} km, ${filled.holes} échantillons sans mesure`
+  );
+  const baseLabel = {
+    productId: name,
+    coordinateSystem: `Équirectangulaire, sphère de ${grid.radiusKm} km, longitudes Est`,
+    pixelsPerDegree: grid.pixelsPerDegree,
+    westDeg: grid.westDeg,
+    eastDeg: grid.eastDeg,
+    northDeg: grid.northDeg,
+    southDeg: grid.southDeg,
+    lines: grid.height,
+    lineSamples: grid.width,
+    // Les échantillons sont déjà en mètres (flottants) : le quantum des TUILES est celui de la source.
+    quantumMetres: 1,
+    tileQuantumMetres: grid.quantumMetres,
+    radiusKm: grid.radiusKm,
+  };
+  return {
+    baseLabel,
+    baseDem: new DemGrid(baseLabel, samples),
+    samples,
+    water: null,
+    geoid: null,
+    filled,
+  };
+}
+
+/**
+ * LE SOCLE DU GTDR DE MAGELLAN (GAL-PLANETARY-RELIEF-001, Vénus) : les 32 trames sinusoïdales, réassemblées
+ * et reprojetées en équirectangulaire (`height-sources.mjs`, équations de `dsmap.lbl`), les trous comblés et
+ * leur part DÉCLARÉE. Hauteurs rapportées à la sphère des étiquettes (6 051,0 km).
+ */
+async function loadGtdrBase(set, cacheDir) {
+  const source = set.base.gtdr;
+  const dir = join(cacheDir, source.cacheFolder);
+  const framelets = [];
+  for (let k = 1; k <= source.framelets; k += 1) {
+    const stem = `f${String(k).padStart(2, '0')}`;
+    const labelText = (
+      await cachedFile(`${source.directory}/${stem}.lbl`, dir)
+    ).toString('latin1');
+    const label = parseGtdrLabel(labelText, `${stem}.lbl`);
+    const file = await cachedFile(`${source.directory}/${stem}.img`, dir);
+    const at = (label.imageRecord - 1) * label.recordBytes;
+    const count = label.lines * label.lineSamples;
+    if (file.length < at + count * 2)
+      throw new Error(
+        `${stem}.img : ${file.length} octets, attendu ${at} + ${count * 2}`
+      );
+    const samples = new Uint16Array(count);
+    for (let n = 0; n < count; n += 1)
+      samples[n] = file.readUInt16LE(at + n * 2);
+    framelets.push({ label, samples });
+  }
+  const datumKm = framelets[0].label.radiusKm;
+  const grid = reprojectGtdrSinusoidal(framelets, {
+    columns: source.columns,
+    datumKm,
+  });
+  const filled = fillHoles(grid.values, grid.missing, grid.width, grid.height);
+  console.log(
+    `source ${framelets[0].label.dataSetId} : ${source.framelets} trames sinusoïdales reprojetées en ` +
+      `${grid.width} x ${grid.height} à ${grid.pixelsPerDegree} px/degré, sphère ${datumKm} km ; ` +
+      `${filled.holes} cellules sans mesure comblées (${(100 * filled.filledFraction).toFixed(2)} % de l'aire)`
+  );
+  const baseLabel = {
+    productId: framelets[0].label.dataSetId,
+    coordinateSystem: `Sinusoïdale (GTDR) reprojetée en équirectangulaire, sphère de ${datumKm} km, longitudes Est`,
+    pixelsPerDegree: grid.pixelsPerDegree,
+    westDeg: -180,
+    eastDeg: 180,
+    northDeg: 90,
+    southDeg: -90,
+    lines: grid.height,
+    lineSamples: grid.width,
+    quantumMetres: 1,
+    tileQuantumMetres: framelets[0].label.scalingMetres,
+    radiusKm: datumKm,
+  };
+  return {
+    baseLabel,
+    baseDem: new DemGrid(baseLabel, grid.values),
+    samples: grid.values,
+    water: null,
+    geoid: null,
+    filled,
   };
 }
 
@@ -1137,9 +1265,14 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     water,
     geoid,
     fine: fineContext,
+    filled,
   } = set.base.geotiff
     ? await loadGeoTiffBase(set, cacheDir)
-    : await loadPdsBase(set, cacheDir);
+    : set.base.projectedGeoTiff
+      ? await loadProjectedGeoTiffBase(set, cacheDir)
+      : set.base.gtdr
+        ? await loadGtdrBase(set, cacheDir)
+        : await loadPdsBase(set, cacheDir);
   const poles = {
     north: baseDem.rowMean(0),
     south: baseDem.rowMean(baseLabel.lines - 1),
@@ -1149,7 +1282,9 @@ async function bakeSet(set, { cacheDir, dryRun }) {
       `sud ${poles.south.toFixed(1)} m`
   );
 
-  const quantum = baseLabel.quantumMetres;
+  // Le quantum des TUILES : celui de la source (0,5 m pour Mercure, 1 m pour le GTDR), même quand ses
+  // échantillons ont été convertis en mètres flottants pour la lecture.
+  const quantum = baseLabel.tileQuantumMetres ?? baseLabel.quantumMetres;
   const entries = [];
   const coverage = [];
   let minElevation = Number.POSITIVE_INFINITY;
@@ -1232,6 +1367,16 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     global: true,
     sourcePixelsPerDegree: baseLabel.pixelsPerDegree,
     sourceProductId: baseLabel.productId,
+    // Les trous de la source, comblés ET déclarés : jamais une mesure (`height-sources.fillHoles`).
+    ...(filled && filled.holes > 0
+      ? {
+          filled: {
+            fraction: Number(filled.filledFraction.toFixed(4)),
+            samples: filled.holes,
+            rule: 'pyramide push-pull : moyenne des échantillons mesurés voisins, aucun détail ajouté',
+          },
+        }
+      : {}),
   });
 
   // ETOPO 15″ SUR LES GRANDS RELIEFS (lot 48, pas 8). À 60″, à 3 km du sol, les crêtes sont rondes
@@ -1569,14 +1714,19 @@ async function bakeSet(set, { cacheDir, dryRun }) {
 
   // Aires nommées.
   for (const area of set.areas ?? []) {
-    const label = parseLabel(
-      await fetchLabel(area.label, area.image),
-      area.label.split('/').pop()
-    );
+    // Une aire « fromBase » (Mercure) relit la source du socle, plus fine que lui : même fichier, mêmes
+    // échantillons, d'autres niveaux. Les autres ont leur propre étiquette PDS.
+    const label = area.fromBase
+      ? baseLabel
+      : parseLabel(
+          await fetchLabel(area.label, area.image),
+          area.label.split('/').pop()
+        );
     const span = areaSpanDeg(
       area.diameterKm,
       baseLabel.radiusKm,
-      area.centre.latitudeDeg
+      area.centre.latitudeDeg,
+      area.fullExtent === true
     );
     // L'emprise est bornée par celle de la source : le rempart sud de Tycho touche la limite du
     // fichier régional (45° sud), et déborder rendrait des hauteurs recopiées du dernier
@@ -1601,110 +1751,129 @@ async function bakeSet(set, { cacheDir, dryRun }) {
       north: Math.min(label.northDeg, area.centre.latitudeDeg + span.latitude),
       south: Math.max(label.southDeg, area.centre.latitudeDeg - span.latitude),
     };
-    const tiles = area.levels.flatMap((level) => tilesForBox(grid, level, box));
-    if (tiles.length === 0)
-      throw new Error(
-        `aire ${area.id} : aucune tuile dans l'emprise demandée, la cible ou la source est fausse`
+    // UNE AIRE QUI FRANCHIT L'ANTIMÉRIDIEN (Caloris Planitia, centrée à 162° E sur 52° de large) se coupe en DEUX
+    // boîtes, deux entrées de couverture du même nom : en une seule, son emprise devenait la bande entière de
+    // −180° à 180°, et l'application y aurait cherché des tuiles jamais cuites (vu au premier essai, 2026-11-28).
+    const parts =
+      box.east > 180
+        ? [
+            { ...box, east: 180 },
+            { ...box, west: -180, east: box.east - 360 },
+          ]
+        : box.west < -180
+          ? [
+              { ...box, west: box.west + 360, east: 180 },
+              { ...box, west: -180 },
+            ]
+          : [box];
+    for (const part of parts) {
+      const tiles = area.levels.flatMap((level) =>
+        tilesForBox(grid, level, part)
       );
-    // Emprise RÉELLE : celle des tuiles cuites, pas celle du carré demandé. C'est elle que
-    // l'application consultera pour savoir si une tuile d'imagerie est couverte.
-    const finest = Math.max(...area.levels);
-    const finestTiles = tilesForBox(grid, finest, box);
-    const bounds = finestTiles.reduce(
-      (acc, tile) => {
-        const b = tileBounds(grid, tile.level, tile.row, tile.column);
-        return {
-          west: Math.min(acc.west, b.west),
-          east: Math.max(acc.east, b.east),
-          south: Math.min(acc.south, b.south),
-          north: Math.max(acc.north, b.north),
-        };
-      },
-      {
-        west: Number.POSITIVE_INFINITY,
-        east: Number.NEGATIVE_INFINITY,
-        south: Number.POSITIVE_INFINITY,
-        north: Number.NEGATIVE_INFINITY,
-      }
-    );
-    console.log(
-      `aire ${area.id} (${area.name}) : ${tiles.length} tuiles, ` +
-        `emprise ${bounds.west.toFixed(3)}…${bounds.east.toFixed(3)}° x ` +
-        `${bounds.south.toFixed(3)}…${bounds.north.toFixed(3)}°, source ${label.productId}`
-    );
+      if (tiles.length === 0)
+        throw new Error(
+          `aire ${area.id} : aucune tuile dans l'emprise demandée, la cible ou la source est fausse`
+        );
+      // Emprise RÉELLE : celle des tuiles cuites, pas celle du carré demandé. C'est elle que
+      // l'application consultera pour savoir si une tuile d'imagerie est couverte.
+      const finest = Math.max(...area.levels);
+      const finestTiles = tilesForBox(grid, finest, part);
+      const bounds = finestTiles.reduce(
+        (acc, tile) => {
+          const b = tileBounds(grid, tile.level, tile.row, tile.column);
+          return {
+            west: Math.min(acc.west, b.west),
+            east: Math.max(acc.east, b.east),
+            south: Math.min(acc.south, b.south),
+            north: Math.max(acc.north, b.north),
+          };
+        },
+        {
+          west: Number.POSITIVE_INFINITY,
+          east: Number.NEGATIVE_INFINITY,
+          south: Number.POSITIVE_INFINITY,
+          north: Number.NEGATIVE_INFINITY,
+        }
+      );
+      console.log(
+        `aire ${area.id} (${area.name}) : ${tiles.length} tuiles, ` +
+          `emprise ${bounds.west.toFixed(3)}…${bounds.east.toFixed(3)}° x ` +
+          `${bounds.south.toFixed(3)}…${bounds.north.toFixed(3)}°, source ${label.productId}`
+      );
 
-    // Fenêtre de source à lire, avec une marge d'un échantillon pour l'interpolation.
-    const ppd = label.pixelsPerDegree;
-    const west = normaliseEast(bounds.west, label.westDeg);
-    const east = normaliseEast(bounds.east, label.westDeg);
-    if (
-      west < label.westDeg ||
-      east > label.eastDeg ||
-      bounds.north > label.northDeg ||
-      bounds.south < label.southDeg
-    )
-      throw new Error(
-        `aire ${area.id} : l'emprise déborde la source ${label.productId}`
+      // Fenêtre de source à lire, avec une marge d'un échantillon pour l'interpolation.
+      const ppd = label.pixelsPerDegree;
+      const west = normaliseEast(bounds.west, label.westDeg);
+      const east = normaliseEast(bounds.east, label.westDeg);
+      if (
+        west < label.westDeg ||
+        east > label.eastDeg ||
+        bounds.north > label.northDeg ||
+        bounds.south < label.southDeg
+      )
+        throw new Error(
+          `aire ${area.id} : l'emprise déborde la source ${label.productId}`
+        );
+      // La marge d'un échantillon sert à l'interpolation ; au bord réel de la source elle n'existe
+      // pas, et `DemGrid.rawAt` borne alors sur la dernière ligne ou colonne lue.
+      const column = Math.max(0, Math.floor((west - label.westDeg) * ppd) - 1);
+      const columnEnd = Math.min(
+        label.lineSamples,
+        Math.ceil((east - label.westDeg) * ppd) + 1
       );
-    // La marge d'un échantillon sert à l'interpolation ; au bord réel de la source elle n'existe
-    // pas, et `DemGrid.rawAt` borne alors sur la dernière ligne ou colonne lue.
-    const column = Math.max(0, Math.floor((west - label.westDeg) * ppd) - 1);
-    const columnEnd = Math.min(
-      label.lineSamples,
-      Math.ceil((east - label.westDeg) * ppd) + 1
-    );
-    const row = Math.max(
-      0,
-      Math.floor((label.northDeg - bounds.north) * ppd) - 1
-    );
-    const rowEnd = Math.min(
-      label.lines,
-      Math.ceil((label.northDeg - bounds.south) * ppd) + 1
-    );
-    const window = {
-      column,
-      row,
-      columns: columnEnd - column,
-      rows: rowEnd - row,
-    };
-    // Une aire qui lit le MÊME fichier que le socle (Cérès : un seul modèle global à 60 px/degré)
-    // reprend la grille déjà en mémoire. La lire par plages serait inutile, et l'archive de Dawn
-    // refuse les requêtes multi-plages (HTTP 200, le fichier entier).
-    const dem =
-      area.image === set.base.image
-        ? baseDem
-        : new DemGrid(
-            label,
-            await fetchWindow(
-              area.image,
+      const row = Math.max(
+        0,
+        Math.floor((label.northDeg - bounds.north) * ppd) - 1
+      );
+      const rowEnd = Math.min(
+        label.lines,
+        Math.ceil((label.northDeg - bounds.south) * ppd) + 1
+      );
+      const window = {
+        column,
+        row,
+        columns: columnEnd - column,
+        rows: rowEnd - row,
+      };
+      // Une aire qui lit le MÊME fichier que le socle (Cérès : un seul modèle global à 60 px/degré)
+      // reprend la grille déjà en mémoire. La lire par plages serait inutile, et l'archive de Dawn
+      // refuse les requêtes multi-plages (HTTP 200, le fichier entier).
+      const dem =
+        area.fromBase || area.image === set.base.image
+          ? baseDem
+          : new DemGrid(
               label,
-              window,
-              cacheDir,
-              `${set.id}-${area.id}-${window.column}-${window.row}-${window.columns}x${window.rows}`
-            ),
-            window
-          );
-    for (const tile of tiles)
-      emit(
-        tile.level,
-        tile.row,
-        tile.column,
-        bakeTile(dem, grid, tile.level, tile.row, tile.column, quantum, poles)
-      );
-    coverage.push({
-      level: finest,
-      levels: [...area.levels].sort((a, b) => a - b),
-      area: {
-        id: area.id,
-        name: area.name,
-        gazetteerFeatureId: area.gazetteerFeatureId,
-        centre: area.centre,
-        diameterKm: area.diameterKm,
-      },
-      bounds,
-      sourcePixelsPerDegree: label.pixelsPerDegree,
-      sourceProductId: label.productId,
-    });
+              await fetchWindow(
+                area.image,
+                label,
+                window,
+                cacheDir,
+                `${set.id}-${area.id}-${window.column}-${window.row}-${window.columns}x${window.rows}`
+              ),
+              window
+            );
+      for (const tile of tiles)
+        emit(
+          tile.level,
+          tile.row,
+          tile.column,
+          bakeTile(dem, grid, tile.level, tile.row, tile.column, quantum, poles)
+        );
+      coverage.push({
+        level: finest,
+        levels: [...area.levels].sort((a, b) => a - b),
+        area: {
+          id: area.id,
+          name: area.name,
+          gazetteerFeatureId: area.gazetteerFeatureId,
+          centre: area.centre,
+          diameterKm: area.diameterKm,
+        },
+        bounds,
+        sourcePixelsPerDegree: label.pixelsPerDegree,
+        sourceProductId: label.productId,
+      });
+    }
   }
 
   // Hachage du CONTENU : il nomme le répertoire, donc une cuisson différente donne des adresses

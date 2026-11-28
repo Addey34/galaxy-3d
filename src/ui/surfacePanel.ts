@@ -377,6 +377,13 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
           to: formatMonth(reliefState.acquired.to),
         })
       );
+      // Les trous de la source, comblés et DITS (GAL-PLANETARY-RELIEF-001) : jamais une mesure.
+      if (reliefState.filledFraction !== null)
+        reliefParts.push(
+          t('surface.relief.filled', {
+            percent: decimals(reliefState.filledFraction * 100, 1),
+          })
+        );
       relief.textContent = reliefParts.join(' · ');
       badge.dataset['relief'] = String(reliefState.level);
       badge.dataset['reliefM'] = reliefState.groundResolutionM.toFixed(1);

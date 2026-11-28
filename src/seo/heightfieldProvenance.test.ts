@@ -46,6 +46,33 @@ describe('relief de /sources : socle, boîtes de grand relief, aires nommées', 
     expect(p.areas).toEqual([{ name: 'Tycho', level: 8 }]);
   });
 
+  it('une aire coupée à l’antiméridien reste UNE formation, et la part comblée est lue (GAL-PLANETARY-RELIEF-001)', () => {
+    const p = heightfieldProvenance(product, {
+      matrix,
+      tiles: 1,
+      bytes: 1,
+      coverage: [
+        { level: 4, global: true, filled: { fraction: 0.0259 } },
+        { level: 5, area: { name: 'Caloris Planitia' } },
+        { level: 5, area: { name: 'Caloris Planitia' } },
+        { level: 6, levels: [5, 6], area: { name: 'Rachmaninoff' } },
+      ],
+    });
+    expect(p.areas.map((a) => a.name)).toEqual([
+      'Caloris Planitia',
+      'Rachmaninoff',
+    ]);
+    expect(p.filledFraction).toBe(0.0259);
+    expect(
+      heightfieldProvenance(product, {
+        matrix,
+        tiles: 1,
+        bytes: 1,
+        coverage: [{ level: 4, global: true }],
+      }).filledFraction
+    ).toBeNull();
+  });
+
   it.each(['earth', 'earth-trek'])('sur le manifeste livré de %s', (set) => {
     const manifest = JSON.parse(
       readFileSync(

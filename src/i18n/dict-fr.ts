@@ -421,6 +421,8 @@ export const fr: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relief {title} à {resolution}/pixel',
   'surface.relief.area': 'aire nommée {name}',
   'surface.relief.acquired': 'hauteurs mesurées entre {from} et {to}',
+  'surface.relief.filled':
+    '{percent} % de la surface sans mesure, comblés par interpolation',
   'surface.buildings.headline':
     "Bâtiments 3D : {count}. La couleur de la hauteur dit d'où elle vient. Les toits sont dessinés plats.",
   'surface.buildings.origin.measured': 'mesurée',

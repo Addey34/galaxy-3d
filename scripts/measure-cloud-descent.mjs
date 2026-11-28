@@ -235,6 +235,20 @@ const capture = async (tag) => {
   const shell = await page.evaluate(
     () => document.querySelector('canvas')?.dataset['cloudShell'] ?? null
   );
+  // GAL-PLANETARY-RELIEF-001 : la hauteur au-dessus du SOL MESURÉ (relief posé), et le relief servi.
+  const ground = await page.evaluate(() => {
+    const t = (document.getElementById('surface-probe')?.innerText ?? '')
+      .split(/\s+/)
+      .join(' ');
+    const m = /→ ([-0-9.]+) km au-dessus du sol/.exec(t);
+    const badge = document.getElementById('surface-imagery');
+    return {
+      clearanceKm: m ? Number(m[1]) : null,
+      reliefLevel: badge?.dataset['relief'] ?? null,
+      reliefM: badge?.dataset['reliefM'] ?? null,
+      relief: badge?.querySelector('.si-relief')?.textContent ?? null,
+    };
+  });
   const perf = await perfSample();
   frames.push({
     tag,
@@ -242,6 +256,7 @@ const capture = async (tag) => {
     file: name,
     fps,
     shell,
+    ground,
     perf,
     gibs: gibs.ok,
     net: JSON.parse(JSON.stringify(net)),
