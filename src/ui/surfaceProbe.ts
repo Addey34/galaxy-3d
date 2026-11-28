@@ -23,6 +23,7 @@ import {
   texelMagnification,
 } from '@/core/surfaceApproach';
 import { hasDebugFlag } from '@/utils/debugFlags';
+import { ATTACHED_SKIES } from '@/components/celestial/skyApproach';
 
 const NEWLINE = String.fromCharCode(10);
 
@@ -80,6 +81,11 @@ export function setupSurfaceProbe(api: PublicAPI): () => void {
     const lookUp = (window as unknown as { __lookUpDeg?: number }).__lookUpDeg;
     if (typeof lookUp === 'number')
       api.cameraSystem.skyTiltRad = (lookUp * Math.PI) / 180;
+    // GAL-EARTH-LIGHTING-001 : `window.__headingDeg` tourne la visée autour de la verticale (vers le Soleil, à l'opposé).
+    const heading = (window as unknown as { __headingDeg?: number })
+      .__headingDeg;
+    if (typeof heading === 'number')
+      api.cameraSystem.skyHeadingRad = (heading * Math.PI) / 180;
     frames += 1;
     const now = performance.now();
     if (now - windowStart >= 1000) {
@@ -207,7 +213,9 @@ export function setupSurfaceProbe(api: PublicAPI): () => void {
             )} km au-dessus du sol`
       }`,
       `fov             ${round(camera.fov, 1)}° (base ${CAMERA_SETTINGS.fov}°)`,
-      `fps             ${round(fps, 1)}`
+      `fps             ${round(fps, 1)}`,
+      // GAL-EARTH-LIGHTING-001 : le gain d'adaptation posé sur la lumière de l'air (1 sans ciel calculé).
+      `air (adapt.)    ×${round(Math.max(1, ...[...ATTACHED_SKIES].map((s) => s.airGain())), 2)}`
     );
 
     panel.textContent = lines.join(NEWLINE);

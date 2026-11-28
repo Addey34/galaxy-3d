@@ -118,6 +118,20 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
   await page.waitForTimeout(20_000);
   expect(Math.abs((await aim()) - before)).toBeLessThan(0.01);
 
+  // « VISER LE CIEL » (GAL-EARTH-ATMOSPHERE-003, régression intégrée par GAL-EARTH-LIGHTING-001 sans démarrage de
+  // plus) : près du sol la commande est là, relève la visée sans déplacer la caméra (le point sous elle ne bouge
+  // pas), et « Horizon » rend le cadrage initial.
+  const look = page.locator('#sky-look-range');
+  await expect(look).toBeVisible({ timeout: 30_000 });
+  const nadir = await aim();
+  await look.focus();
+  await page.keyboard.press('End');
+  await expect(look).toHaveValue('90');
+  await expect(look).toHaveAttribute('aria-valuetext', /90/);
+  expect(Math.abs((await aim()) - nadir)).toBeLessThan(0.01);
+  await page.locator('#sky-look-reset').click();
+  await expect(look).toHaveValue('0');
+
   for (const url of ign) {
     expect(url).toContain('SERVICE=WMS');
     expect(url).toContain('CRS=EPSG:4326');
