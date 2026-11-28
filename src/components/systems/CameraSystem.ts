@@ -614,6 +614,7 @@ export class CameraSystem {
    */
   private _tiltTowardsHorizon(): void {
     const name = this.currentTarget?.name;
+    this.horizonTiltNow = 0;
     if (!name || this._scaleMode !== 'explo') return;
     const distance = this.camera.position.distanceTo(this.controls.target);
     const ground =
@@ -624,10 +625,13 @@ export class CameraSystem {
       (this.currentTarget?.group.userData['radius'] as number | undefined) ??
       0;
     const tilt = horizonTiltRad(distance, ground, this.camera.fov);
+    this.horizonTiltNow = tilt * this._tiltShare;
     if (tilt > 0) this.camera.rotateX(tilt * this._tiltShare + this.skyTiltRad);
   }
 
-  /** Visée relevée EN PLUS de l'horizon (radians), posée par la sonde `?debug-surface` seulement (mesure du ciel). */
+  /** Relèvement d'horizon de la dernière image (radians) : la commande « regarder le ciel » le lit (`ui/skyLook`). */
+  horizonTiltNow = 0;
+  /** Visée relevée EN PLUS de l'horizon (radians) : la commande « regarder le ciel » (`ui/skyLook`), ou la sonde. */
   skyTiltRad = 0;
 
   /**

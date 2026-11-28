@@ -36,6 +36,7 @@ import {
 } from './surfaceChoices';
 import EDITION_YEARS from '@/config/eoxEditionYears.json';
 import { SURFACE_PANEL_LOAD_RADII } from '@/core/layerDistances';
+import { SKY_LOOK_SHOW_RAD } from '@/core/skyLook';
 import type {
   PlanetarySurfaceEngine,
   SurfaceImageryState,
@@ -549,9 +550,32 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
     bodySelect.value = hiddenBodies.has(name) ? 'off' : 'auto';
   };
 
+  // « Regarder le ciel » (GAL-EARTH-ATMOSPHERE-003) : chargée la première fois que la caméra arrive près du sol
+  // de N'IMPORTE QUEL corps (cadrage d'horizon fort), un seul essai.
+  let skyLook: { dispose(): void } | null = null;
+  let skyLookRequested = false;
+  let disposed = false;
+  const maybeLoadSkyLook = (): void => {
+    if (skyLookRequested || api.cameraSystem.horizonTiltNow < SKY_LOOK_SHOW_RAD)
+      return;
+    skyLookRequested = true;
+    void import('./skyLook')
+      .then(({ setupSkyLook }) => setupSkyLook(api))
+      .then((handle) => {
+        if (disposed) handle.dispose();
+        else skyLook = handle;
+      })
+      .catch((error: unknown) =>
+        Logger.warn(
+          `[Surface] visée vers le ciel indisponible : ${String(error)}`
+        )
+      );
+  };
+
   const tick = (): void => {
     publishBusy();
     publishCloudShell();
+    maybeLoadSkyLook();
     const name = api.cameraSystem.targetName;
     const distance = api.cameraSystem.getDistanceToTargetSceneUnits();
     if (name !== controlsFor) {
@@ -846,6 +870,9 @@ export function setupSurfacePanel(api: PublicAPI): SurfacePanelHandle {
   return {
     dispose: () => {
       unsubscribe();
+      disposed = true;
+      skyLook?.dispose();
+      skyLook = null;
       panelWatcher?.disconnect();
       bodyInfoPanel?.removeEventListener('transitionend', placeBadge);
       window.removeEventListener('resize', placeBadge);

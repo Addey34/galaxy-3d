@@ -619,4 +619,10 @@ export const cardEs: Record<CardMessageKey, string> = {
   'ed.unavailable':
     'No se pudo cargar la observación del {date}: la del {shown} sigue en pantalla.',
   'ed.announce': 'Observación del {date} mostrada',
+  'sky.look.label': 'Mirar al cielo',
+  'sky.look.value': 'elevada {deg}°',
+  'sky.look.reset': 'Horizonte',
+  'sky.look.resetHint': 'Volver al horizonte',
+  'sky.look.hint':
+    'Elevar la vista hacia el cielo (flechas del teclado); la cámara no se desplaza.',
 };
