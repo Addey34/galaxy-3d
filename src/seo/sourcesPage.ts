@@ -104,6 +104,8 @@ export interface HeightfieldProvenance {
     level: number;
     sourcePixelsPerDegree?: number;
   }[];
+  /** Part de l'aire comblée faute de mesure (trous de la source), ou `null` : tout est mesuré. */
+  filledFraction: number | null;
   tiles: number;
   bytes: number;
 }
@@ -120,6 +122,8 @@ export interface HeightManifestSummary {
     global?: boolean;
     area?: { name: string };
     sourcePixelsPerDegree?: number;
+    /** Part de l'aire comblée faute de mesure, déclarée par le cuiseur (GAL-PLANETARY-RELIEF-001). */
+    filled?: { fraction: number };
   }[];
 }
 
@@ -164,13 +168,26 @@ export function heightfieldProvenance(
           })(manifest.coverage.filter((entry) => !entry.global && !entry.area)),
     matrix: manifest.matrix,
     servedBy: manifest.tileOrigin ? new URL(manifest.tileOrigin).host : null,
-    areas: manifest.coverage
-      .filter((entry) => entry.area)
-      .map((entry) => ({
-        name: entry.area!.name,
-        level: Math.max(...(entry.levels ?? [entry.level])),
-        sourcePixelsPerDegree: entry.sourcePixelsPerDegree,
-      })),
+    // Une aire qui franchit l'antiméridien est cuite en DEUX emprises du même nom (Caloris Planitia) : une
+    // formation, une ligne.
+    areas: [
+      ...manifest.coverage
+        .filter((entry) => entry.area)
+        .reduce((byName, entry) => {
+          const level = Math.max(...(entry.levels ?? [entry.level]));
+          const known = byName.get(entry.area!.name);
+          if (!known || level > known.level)
+            byName.set(entry.area!.name, {
+              name: entry.area!.name,
+              level,
+              sourcePixelsPerDegree: entry.sourcePixelsPerDegree,
+            });
+          return byName;
+        }, new Map<string, { name: string; level: number; sourcePixelsPerDegree?: number }>())
+        .values(),
+    ],
+    filledFraction:
+      manifest.coverage.find((entry) => entry.global)?.filled?.fraction ?? null,
     tiles: manifest.tiles,
     bytes: manifest.bytes,
   };
@@ -1178,6 +1195,14 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         : escapeHtml(set.title),
       escapeHtml(
         metres(set.body, set.baseLevel, set.matrix) +
+          (set.filledFraction
+            ? ` · ${L({
+                en: `${(set.filledFraction * 100).toFixed(1)}% of the surface without measurement, filled by interpolation`,
+                fr: `${(set.filledFraction * 100).toFixed(1).replace('.', ',')} % de la surface sans mesure, comblés par interpolation`,
+                es: `${(set.filledFraction * 100).toFixed(1).replace('.', ',')} % de la superficie sin medición, completado por interpolación`,
+                'pt-BR': `${(set.filledFraction * 100).toFixed(1).replace('.', ',')} % da superfície sem medição, preenchidos por interpolação`,
+              })}`
+            : '') +
           (set.reliefBoxes
             ? ` · ${L({
                 en: `${set.reliefBoxes.count} high-relief boxes: `,

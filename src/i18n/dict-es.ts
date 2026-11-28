@@ -432,6 +432,8 @@ export const es: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relieve {title} a {resolution}/píxel',
   'surface.relief.area': 'área nombrada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} y {to}',
+  'surface.relief.filled':
+    '{percent} % de la superficie sin medición, completado por interpolación',
   'surface.buildings.headline':
     'Edificios 3D: {count}. El color de la altura indica su origen. Los tejados se dibujan planos.',
   'surface.buildings.origin.measured': 'medida',

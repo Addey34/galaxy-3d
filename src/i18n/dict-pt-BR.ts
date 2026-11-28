@@ -427,6 +427,8 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relevo {title} a {resolution}/pixel',
   'surface.relief.area': 'área nomeada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} e {to}',
+  'surface.relief.filled':
+    '{percent} % da superfície sem medição, preenchidos por interpolação',
   'surface.buildings.headline':
     'Edifícios 3D: {count}. A cor da altura indica sua origem. Os telhados são desenhados planos.',
   'surface.buildings.origin.measured': 'medida',

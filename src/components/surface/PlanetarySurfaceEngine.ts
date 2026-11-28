@@ -224,6 +224,8 @@ export interface SurfaceReliefState {
   groundResolutionM: number;
   /** Nom publié de l'aire, quand le relief vient d'une aire nommée. */
   areaName: string | null;
+  /** Part comblée faute de mesure, déclarée par le manifeste pour cette entrée (`null` : tout est mesuré). */
+  filledFraction: number | null;
   /** Intervalle d'acquisition du modèle d'élévation. */
   acquired: { from: number; to: number };
   /**
@@ -1343,6 +1345,7 @@ export class PlanetarySurfaceEngine {
           heights.manifest.matrix
         ) * 1000,
       areaName: best.entry.areaName ?? null,
+      filledFraction: best.entry.filledFraction ?? null,
       acquired: heights.set.acquired,
     };
   }

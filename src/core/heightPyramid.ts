@@ -33,6 +33,11 @@ export interface HeightCoverageEntry {
   bounds?: TileBounds;
   /** Nom publié de l'aire, quand c'en est une (répertoire de nomenclature de l'UAI). */
   areaName?: string;
+  /**
+   * Part de l'aire de cette entrée COMBLÉE faute de mesure (0 à 1), déclarée par le cuiseur (trous de
+   * l'altimétrie de Magellan, GAL-PLANETARY-RELIEF-001) : jamais présentée comme une mesure.
+   */
+  filledFraction?: number;
 }
 
 /** La tuile de hauteurs retenue, et l'entrée de couverture qui la fournit. */
