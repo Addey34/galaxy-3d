@@ -626,13 +626,18 @@ export class CameraSystem {
       0;
     const tilt = horizonTiltRad(distance, ground, this.camera.fov);
     this.horizonTiltNow = tilt * this._tiltShare;
-    if (tilt > 0) this.camera.rotateX(tilt * this._tiltShare + this.skyTiltRad);
+    if (tilt <= 0) return;
+    // Cap autour de la verticale du lieu (sonde de mesure seulement), puis relèvement.
+    if (this.skyHeadingRad !== 0) this.camera.rotateZ(this.skyHeadingRad);
+    this.camera.rotateX(tilt * this._tiltShare + this.skyTiltRad);
   }
 
   /** Relèvement d'horizon de la dernière image (radians) : la commande « regarder le ciel » le lit (`ui/skyLook`). */
   horizonTiltNow = 0;
   /** Visée relevée EN PLUS de l'horizon (radians) : la commande « regarder le ciel » (`ui/skyLook`), ou la sonde. */
   skyTiltRad = 0;
+  /** Cap de la visée autour de la verticale du lieu (radians), posé par la sonde `?debug-surface` seulement. */
+  skyHeadingRad = 0;
 
   /**
    * Near/far adaptatifs en mode Explo. À vraie échelle, une planète est un mesh minuscule

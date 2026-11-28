@@ -32,6 +32,16 @@ import {
 import { LIGHTING_SETTINGS } from '@/config/engine';
 import { ATTACHED_SKIES } from './skyApproach';
 import { addAerialPerspective } from './aerialPerspective';
+import {
+  ADAPTATION_REFERENCE_SUN_DEG,
+  altitudeWeight,
+  skyAdaptationGain,
+} from '@/core/skyAdaptation';
+
+/** `?sky-adapt=0` : ciel et voile à l'exposition fixe d'avant (mesure A/B sur le même build). */
+const SKY_ADAPTATION =
+  typeof location === 'undefined' ||
+  new URLSearchParams(location.search).get('sky-adapt') !== '0';
 
 /** Ce que le ciel demande d'un corps. Plus petit qu'un `CelestialObject`, et c'est écrit. */
 export interface SkyBody {
@@ -47,9 +57,17 @@ export interface SkyBody {
    * la perspective aérienne (`aerialPerspective.ts`). Absente, seuls les sols déjà posés l'ont.
    */
   createSurfaceOverlayMaterial?(oceanMatch?: OceanMatch): THREE.Material;
+  /**
+   * Prise en charge d'un matériau posé par un autre moteur (les carreaux de nuages régionaux,
+   * `CloudShellHost`) : enveloppée pour qu'un carreau de NUAGES reçoive le voile de l'air entre l'œil et lui
+   * (GAL-EARTH-LIGHTING-001).
+   */
+  adoptOverlayMaterial?(material: THREE.Material): void;
 }
 
 export interface SkyBinding {
+  /** Gain d'adaptation posé sur la lumière de l'air à la dernière image (`core/skyAdaptation`), 1 hors de l'air. */
+  airGain(): number;
   /** Part des étoiles visible depuis cette caméra à travers cet air (1 hors de lui). */
   starVisibilityFrom(cameraWorld: THREE.Vector3): number;
   /** Rend le matériau d'avant et défait la liaison. */
@@ -76,6 +94,26 @@ export function attachSky(
   const seaLevelKm = (point: THREE.Vector3) =>
     radiusKm * body.figureRatioToward(point);
 
+  // L'ŒIL ADAPTÉ AU CIEL DU LIEU (`core/skyAdaptation`) : la luminance du zénith au niveau de la mer pour la
+  // hauteur du Soleil, rapportée à celle du Soleil à 45°. Ne dépend que de la hauteur du Soleil (mise en
+  // cache au millième de cosinus), posée sur la lumière de l'AIR seulement (`uSunIntensity`).
+  const zenithAtSeaLevel = (sunCos: number) =>
+    zenithSkyLuminance(
+      model,
+      radiusKm,
+      radiusKm + 0.002,
+      sunCos,
+      1,
+      undefined,
+      multiple
+    );
+  const referenceZenith = zenithAtSeaLevel(
+    Math.sin((ADAPTATION_REFERENCE_SUN_DEG * Math.PI) / 180)
+  );
+  let adaptationKey = Number.NaN;
+  let adaptationZenith = referenceZenith;
+  let airGain = 1;
+
   const centre = new THREE.Vector3();
   const toCamera = new THREE.Vector3();
   const toSun = new THREE.Vector3();
@@ -94,7 +132,7 @@ export function attachSky(
       .normalize()
       .transformDirection(camera.matrixWorldInverse);
     u.uCenterView.value.copy(centre).applyMatrix4(camera.matrixWorldInverse);
-    u.uSunIntensity.value = sunIntensity;
+    u.uSunIntensity.value = sunIntensity * airGain;
   };
   const previousHook = mesh.onBeforeRender;
   mesh.onBeforeRender = (_renderer, _scene, camera) => place(camera);
@@ -140,12 +178,26 @@ export function attachSky(
       return tile;
     };
 
+  // LES NUAGES RÉGIONAUX (GAL-EARTH-LIGHTING-001) : le voile de l'air entre l'œil et le carreau, par la même
+  // intégrale (`vertex` : jusqu'au point du nuage, juste vu d'en dessous comme d'au-dessus ; le mode `below` de la
+  // couche mondiale irait au niveau de la mer, faux vu du sol). Ils prennent ainsi la lumière de l'air adaptée du
+  // crépuscule devant eux, comme le ciel derrière. Aucune épaisseur ni lumière interne n'est supposée.
+  const adoptOverlay = body.adoptOverlayMaterial;
+  if (adoptOverlay)
+    body.adoptOverlayMaterial = (overlay: THREE.Material) => {
+      if (overlay.userData['__regionalClouds'] === true)
+        addAerialPerspective(overlay, sky.uniforms, 'vertex');
+      adoptOverlay.call(body, overlay);
+    };
+
   const binding: SkyBinding = {
+    airGain: () => airGain,
     starVisibilityFrom(cameraWorld) {
       body.group.getWorldPosition(centre);
       const kmPerUnit = radiusKm / body.renderedRadius();
       const up = toCamera.subVectors(cameraWorld, centre);
       const cameraKm = up.length() * kmPerUnit;
+      airGain = 1;
       if (!(cameraKm > 0)) return 1;
       up.normalize();
       const groundKm = seaLevelKm(cameraWorld);
@@ -154,6 +206,18 @@ export function attachSky(
         .subVectors(body.sunWorld, centre)
         .normalize()
         .dot(up);
+      if (SKY_ADAPTATION) {
+        const key = Math.round(sunCos * 1000);
+        if (key !== adaptationKey) {
+          adaptationKey = key;
+          adaptationZenith = zenithAtSeaLevel(key / 1000);
+        }
+        airGain = skyAdaptationGain(
+          adaptationZenith,
+          referenceZenith,
+          altitudeWeight(cameraKm - groundKm, model.thicknessKm)
+        );
+      }
       return starVisibility(
         zenithSkyLuminance(
           model,
@@ -175,6 +239,7 @@ export function attachSky(
         surface.onBeforeRender = hook;
       if (createTileMaterial)
         body.createSurfaceOverlayMaterial = createTileMaterial;
+      if (adoptOverlay) body.adoptOverlayMaterial = adoptOverlay;
       material.dispose();
     },
   };

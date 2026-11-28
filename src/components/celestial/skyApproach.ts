@@ -5,4 +5,6 @@
  */
 export const ATTACHED_SKIES = new Set<{
   starVisibilityFrom(cameraWorld: { x: number; y: number; z: number }): number;
+  /** Gain d'adaptation de la lumière de l'air (`core/skyAdaptation`), lu par la sonde `?debug-surface`. */
+  airGain(): number;
 }>();
